@@ -181,6 +181,8 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       OBS$forest_management=array(OBS$forest_management, dim=c(length(met$run_day)))
   }
 
+  steps_per_year = floor(length(met$run_day)[1] / noyears)
+
   # extract information from list to array
   if (modelname == "ACM") {
       MET = array(NA,dim=c(length(met$run_day),(length(met)+2)))
@@ -276,8 +278,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   OBSMAT[,49] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
   OBSMAT[,50] = OBS$harvest_unc           # Extracted C due to harvest varince
   OBSMAT[,51] = OBS$harvest_lag           # Lag period over which to average  (steps)
-  DATA_TEMP = t(cbind(MET,OBSMAT))
-
+  
   # STATIC DATA (1-50)
   # Model ID      = static_data[1]; DALEC_CDEA, DALEC.A1.C2.D2.F2.H2.P4.R2. etc
   # LAT           = static_data[2]; Latitude of site(Degrees)
@@ -346,6 +347,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Other priors
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
   } else if (modelname == "DALEC.C3.M1.#") {
+   
+      # Crop model specific adjustment - disallow observational constraints during the first 12 months
+      OBSMAT[1:steps_per_year,1:dim(OBSMAT)[2]] = -9999
+
       PARPRIORS[11]=11.197440              ; PARPRIORUNC[11]=9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution      
       PARPRIORS[13]=0.21875                ; PARPRIORUNC[13]=0.01 # Respiratory costs of labile transfer
       PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc
@@ -365,33 +370,39 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
       OTHERPRIORS[8] = 0.38                ; OTHERPRIORUNC[8]=0.087 ; OTHERPRIORWEIGHT[8] = noyears 
   } else if (modelname == "DALEC.A3.C3.H2.M1.#") {
+
+      # Crop model specific adjustment - disallow observational constraints during the first 12 months
+      OBSMAT[1:steps_per_year,1:dim(OBSMAT)[2]] = -9999
+
       # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
       # derived from the ATEC experiment
-      PARPRIORS[1] = 0.001490138   ; PARPRIORUNC[1]  = 5.130274e-06 # Decomposition of litter to som (fraction/day at 0C)
+      PARPRIORS[1] = 0.001490138   ; PARPRIORUNC[1]  = 1e-3         # Decomposition of litter to som (fraction/day at 0C)
       PARPRIORS[2] = 0.3718993     ; PARPRIORUNC[2]  = 0.005975296  # Fraction of GPP allocated to autotrophic pool
-      PARPRIORS[3] = 0.03306645    ; PARPRIORUNC[3]  = 8.387188e-05 # Development rate coefficient DS 0-1
-      PARPRIORS[4] = 0.0184994     ; PARPRIORUNC[4]  = 5.176774e-05 # Development rate coefficient DS 1-2
-      PARPRIORS[5] = 0.01149946    ; PARPRIORUNC[5]  = 7.023014e-05 # Potential turnover rate of foliage due to DS (fraction/day)
-      PARPRIORS[6] = 0.01230616    ; PARPRIORUNC[6]  = 7.83327e-05  # Potential turnover rate of stem due to DS (fraction/day)
-      PARPRIORS[7] = 0.04403182    ; PARPRIORUNC[7]  = 0.0001775647 # Potential turnover rate of foliage due to self-shading (fraction/day)
+      PARPRIORS[3] = 0.03306645    ; PARPRIORUNC[3]  = 1e-3         # Development rate coefficient DS 0-1
+      PARPRIORS[4] = 0.0184994     ; PARPRIORUNC[4]  = 1e-3         # Development rate coefficient DS 1-2
+      PARPRIORS[5] = 0.01149946    ; PARPRIORUNC[5]  = 1e-3         # Potential turnover rate of foliage due to DS (fraction/day)
+      PARPRIORS[6] = 0.01230616    ; PARPRIORUNC[6]  = 1e-3         # Potential turnover rate of stem due to DS (fraction/day)
+      PARPRIORS[7] = 0.04403182    ; PARPRIORUNC[7]  = 1e-3 # Potential turnover rate of foliage due to self-shading (fraction/day)
       PARPRIORS[8] = 19.84167      ; PARPRIORUNC[8]  = 31.87518     # No. of vernalisation days for plants to be 50 % vernalised
-      PARPRIORS[9] = 0.005842842   ; PARPRIORUNC[9]  = 2.614342e-05 # Mineralisation rate of litter (fraction/day at 0C)
-      PARPRIORS[10] = 5.609999e-06 ; PARPRIORUNC[10] = 3.626674e-11 # Mineralisation rate of som (fraction/day at 0C)
-      PARPRIORS[11] = 16.87423     ; PARPRIORUNC[11] = 57.98242     # NUE prior derived from ATEC experiment
+      PARPRIORS[9] = 0.005842842   ; PARPRIORUNC[9]  = 1e-3         # Mineralisation rate of litter (fraction/day at 0C)
+      PARPRIORS[10] = 5.609999e-06 ; PARPRIORUNC[10] = 1e-3         # Mineralisation rate of som (fraction/day at 0C)
+      #PARPRIORS[11] = 16.87423     ; PARPRIORUNC[11] = 57.98242     # NUE prior derived from ATEC experiment
+      PARPRIORS[11] = 21.1491      ; PARPRIORUNC[11] = 8.534234     # Ceff: derived from multiple trait values from Kattge et al., (2011)
       PARPRIORS[12] = 666.1406     ; PARPRIORUNC[12] = 1001.097     # Day of year for sowing (applied as modulus 365.25)
-      PARPRIORS[13] = 123.7418     ; PARPRIORUNC[13] = 202.2474    # Phenological heat units for seed emergence (aka growing degree days)
+      PARPRIORS[13] = 123.7418     ; PARPRIORUNC[13] = 202.2474     # Phenological heat units for seed emergence (aka growing degree days)
       PARPRIORS[14] = 308.5741     ; PARPRIORUNC[14] = 1002.084     # Growing season length sowing->harvest days
       #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
       #PARPRIORS[14]=OBS$harvest_doy        ; PARPRIORUNC[14]=OBS$harvest_doy_unc  # Growing season length sowing->harvest days
       if (max(OBS$LAI) > 0) {
           # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
           PARPRIORS[15] = min(7.0,max(OBS$LAI) * 0.488 + 2.5131)
-          PARPRIORUNC[15] = 2.4 # mean confidence interval of linear regression for LAI ranges 1-6
+          PARPRIORUNC[15] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
+          PARPRIORWEIGHT[15] = noyears
       } else {
           PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
       }
       PARPRIORS[16] = -0.0252      ; PARPRIORUNC[16] = 0.00092      # Coefficient relating foliar C to N dilution
-      PARPRIORS[17] = 29.8792      ; PARPRIORUNC[17] = 66.37549     # Leaf carbon per unit area (gC/m2)
+      PARPRIORS[17] = 29.8792      ; PARPRIORUNC[17] = 15.0         # Leaf carbon per unit area (gC/m2)
       #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
       PARPRIORS[18] = 3.950579     ; PARPRIORUNC[18] = 6.286745     # initial labile (gC/m2)
       PARPRIORS[19] = 2.472928     ; PARPRIORUNC[19] = 1.201448     # initial foliage (gC/m2)
@@ -1081,9 +1092,10 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
 #      OTHERPRIORUNC = rep(-9999.0,length.out=100)
 #  }
 
+  # Combine the forcings and observations matrices together
+  DATA_TEMP = t(cbind(MET,OBSMAT))
   # combine the static data
   DATA_STAT = c(PARPRIORS,PARPRIORUNC,PARPRIORWEIGHT,OTHERPRIORS,OTHERPRIORUNC,OTHERPRIORWEIGHT)
-
 
   # Possible location to set all NA values to -9999?
   # This would allow bit by bit replacement of NA to -9999 to be removed

@@ -86,11 +86,11 @@ program cardamom_framework
  ! Assign inflate logical condition
  if (do_inflate_dble == 1) do_inflate = .true.
  ! Sanity check of the cost_function_scaling_char
- if (cost_func_scaling_dble > -1 .and. cost_func_scaling_dble < 4) then
+ if (cost_func_scaling_dble > -1 .and. cost_func_scaling_dble < 4 .and. freq_write > 0) then
      ! All is well
  else
      ! All is not well - complain
-     print*, "ERROR: Command line argument to specify the cost function is incorrect."
+     print*, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
      print*, "Command line should have 7 arguments (in addition to the cardamom.exe)."
      print*, "These are: "
      print*, "1) input file path."

@@ -894,9 +894,7 @@ module cardamom_io
        DATAin%harvest_unc(day) = obstemp(50)
        DATAin%harvest_lag(day) = obstemp(51)
 
-
     end do ! day loop
-
 
     ! Count the total number of observations which are to be used.
     ! This total in some models may be used to inform on a dynamic weighting of the EDCs

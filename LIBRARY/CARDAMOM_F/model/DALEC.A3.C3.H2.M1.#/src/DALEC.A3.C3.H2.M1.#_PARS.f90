@@ -82,9 +82,6 @@ module MODEL_PARAMETERS
     PI%parmin(10) = 1.368925d-06   ! 2000 years at 0oC
     PI%parmax(10) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
-    ! log10 avg foliar N (gN.m-2)
-    !PI%parmin(11) = -0.0001d0 !-0.2218487d0 
-    !PI%parmax(11) = 0.6382028d0
     ! Photosynthetic nitrogen use efficiency (gC/gN/m2/day)
     PI%parmin(11) = 1d0
     PI%parmax(11) = 40d0

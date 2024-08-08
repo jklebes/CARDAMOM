@@ -1254,11 +1254,10 @@ plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
 
-##TLS: DUPLICATE THIS PLOT FOR ADDITIONAL VARIBLES
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_MTTwood_years_to_NPPwood_gCm2day_correlation",outsuffix,".png",sep=""), height = 750, width = 4000, res = 300)
 # Specify any common size variables
-main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.6
-par(mfrow=c(1,3), mar=c(0.05,0.3,0.8,7.2), omi = c(0.01,0.2,0.2,0.2))
+main_lab_cex = 1.5 ; main_lab_padj = 0.4 ; main_lab_adj = 0.5 ; legend_cex = 1.6
+par(mfrow=c(1,3), mar=c(0.01,0.05,0.8,7.2), omi = c(0.01,0.08,0.10,0.20))
 var1 = orig_grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
 var1 = rast(vals = t(var1[,dim(var1)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = alt_grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
@@ -1272,7 +1271,7 @@ plot(var1, range=c(-1,1), col=colour_choices_sign,  bty = "n",
      main="")
 mtext(orig_name, side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(expression(paste("MTTwood~NPPwood",sep="")), side = 2, cex = 1.2, padj = 0.5, adj = 0.5)
+mtext(expression(paste("MRT wood ~ NPPflx wood",sep="")), side = 2, cex = 1.1, padj = 1.5, adj = 0.5)
 plot(var2, range=c(-1,1), col=colour_choices_sign,  bty = "n",
      cex.lab=2, cex.main=2.0, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main="")
@@ -1284,6 +1283,144 @@ plot(var3, main="", range=xrange, col=colour_choices_sign,  bty = "n",
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(paste("Difference",sep=""), cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 dev.off()
+
+# Traits
+# Assign variables
+var1 = alt_grid_output$MTT_wood_years[,,mid_quant]
+var2 = alt_grid_output$MTT_wood_years[,,high_quant] - alt_grid_output$MTT_wood_years[,,low_quant]
+var3 = orig_grid_output$MTT_wood_years[,,mid_quant]
+var4 = orig_grid_output$MTT_wood_years[,,high_quant] - orig_grid_output$MTT_wood_years[,,low_quant]
+var3 = (var1-var3) / abs(var3) ; var3[var3 > 1] = 1 ; var3[var3 < -1] = -1
+var4 = (var2-var4) / abs(var4) ; var4[var4 > 1] = 1 ; var4[var4 < -1] = -1
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+# print summary information to user
+print(paste("Mean wMTT (years; ",alt_name,") = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wMTT difference (-1-1; ",alt_name,"-",orig_name,") = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wMTT CI (years; ",alt_name,") = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wMTT CI difference (-1-1; ",alt_name,"-",orig_name,") = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
+# Convert to raster
+var1 = rast(vals = t((var1)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = rast(vals = t((var2)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((var3)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t((var4)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(quantile(c(values(var1),values(var2)), prob=c(0.01,0.995),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = c(-1,1)
+zrange4 = zrange3
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_MRTwood_MRTwoodCI_plus_difference",outsuffix,".png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.8 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.8
+# Plot differences
+par(mfrow=c(2,2), mar=c(0.6,0.8,2.0,5),omi=c(0.1,0.2,0.1,0.1))
+# Alternate
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("MRT wood CI (years)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+# Relative difference ((alt - orig) / orig)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_sign)
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(paste("Relative change",sep=""), side = 2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_sign)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Traits
+# Assign variables
+var1 = alt_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var2 = (alt_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - alt_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var3 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
+var4 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
+var3 = (var1-var3) / abs(var3) ; var3[var3 > 1] = 1 ; var3[var3 < -1] = -1
+var4 = (var2-var4) / abs(var4) ; var4[var4 > 1] = 1 ; var4[var4 < -1] = -1
+# Interlude plot
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflxwood_rel_reduction_over_stock",outsuffix,".png",sep=""), height = 1200, width = 1800, res = 300)
+par(mfrow=c(1,1), mar=c(2.5,2.5,0.5,0.5), omi=c(0.2,0.2,0.1,0.1))
+plot(as.vector(var4) ~ as.vector(alt_grid_output$mean_wood_gCm2[,,4]*1e-2), 
+     pch=16, ylim=c(-1,1), xlim=c(0,10), ylab="", xlab = "")
+mtext(expression(paste("Mean wood (MgC/ha)",sep="")), side=1, cex=1.2, padj=2.5, adj = 0.5)
+mtext("Relative change", side=2, cex=1.2, padj=-3.0, adj = 0.5)
+abline(0,0,col="grey", lwd=2)
+loess_span = 0.25 ; n_interp = 500
+varx = as.vector(alt_grid_output$mean_wood_gCm2[,,4]*1e-2)
+newvarx = seq(min(as.vector(varx), na.rm=TRUE),max(as.vector(varx), na.rm=TRUE), length.out=n_interp)
+tmp_lm = loess(as.vector(var4) ~ varx, span=loess_span)
+tmp_lm = predict(tmp_lm, newdata = data.frame(varx = newvarx), se=TRUE)
+lines(y = tmp_lm$fit, x = newvarx, lwd=2, col="cyan")
+dev.off()
+# Apply filter
+var1[which(is.na(landfilter))] = NA
+var2[which(is.na(landfilter))] = NA
+var3[which(is.na(landfilter))] = NA
+var4[which(is.na(landfilter))] = NA
+# print summary information to user
+print(paste("Mean wNPPflx (MgC/ha/y; ",alt_name,") = ",round(mean(as.vector(var1),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wNPPflx difference (-1-1; ",alt_name,"-",orig_name,") = ",round(mean(as.vector(var3),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wNPPflx CI (MgC/ha/y; ",alt_name,") = ",round(mean(as.vector(var2),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean wNPPflx CI difference (-1-1; ",alt_name,"-",orig_name,") = ",round(mean(as.vector(var4),na.rm=TRUE),digits=3),sep=""))
+# Convert to raster
+var1 = rast(vals = t((var1)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = rast(vals = t((var2)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((var3)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t((var4)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# ranges
+zrange1 = c(0,1)*max(abs(quantile(c(values(var1),values(var2)), prob=c(0.01,0.999),na.rm=TRUE)))
+zrange2 = zrange1
+zrange3 = c(-1,1)
+zrange4 = zrange3
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflxwood_NPPflxwoodCI_plus_difference",outsuffix,".png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.8 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.8
+# Plot differences
+par(mfrow=c(2,2), mar=c(0.6,0.8,2.0,5),omi=c(0.1,0.2,0.1,0.1))
+# Alternate
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood (MgC/ha/y)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste("NPP wood CI (MgC/ha/y)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+# Relative difference ((alt - orig) / orig)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_sign)
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(paste("Relative change",sep=""), side = 2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_sign)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
 
 ###
 ## Loading and processing of independent observations
@@ -2036,7 +2173,7 @@ dev.off()
 model_flags=c(orig_name,alt_name)
 obs_flags=c("OCO2-MIPv10","MODIS/FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NBE_GPP_Fire_timeseries_comparison_plusCI",outsuffix,".png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+par(mfrow=c(3,1),mai=c(0.35,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 var1  = obs_nbe_mean_domain_TgCyr*1e-3
 var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))*1e-3
@@ -2187,7 +2324,7 @@ dev.off()
 model_flags=c(orig_name,alt_name)
 obs_flags=c("FC/GLEAMv3.7b/MODIS","MODIS/FC/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_ET_GPP_Fire_timeseries_comparison_plusCI",outsuffix,".png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+par(mfrow=c(3,1),mai=c(0.35,0.65,0.3,0.15),omi=c(0.2,0.2,0.3,0.005))
 # Now plot ET, annual time series PgC/yr
 var1  = obs_et_mean_domain_PgH2Oyr
 var2  = cbind(cbind(c(obs_et_mean_domain_PgH2Oyr),c(obs_et_min_domain_PgH2Oyr)),c(obs_et_max_domain_PgH2Oyr))
@@ -2318,33 +2455,33 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_LAI_GPP_NBE_wood_soil_assimilated_observations_fraction_overlap_change",outsuffix,".png",sep=""), height = 2000, width = 5000, res = 300)
-par(mfrow=c(3,5), mar=c(0.0,0.01,0,3.5),omi=c(0.1,0.45,0.2,0.2))
+par(mfrow=c(3,5), mar=c(0.0,0.03,0,2.0),omi=c(0.08,0.45,0.2,0.2))
 # Original
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main="", col=colour_choices_gain)
-mtext(expression(paste("LAI (0-1)", sep="")), side=3, cex = 2.0, padj = 1.2)
+mtext(expression(paste("LAI (0-1)", sep="")), side=3, cex = 1.6, padj = 1.2)
 plot(landmask, add=TRUE, lwd=0.5)
 mtext(orig_name, side=2, cex=1.6, padj = -0.5)
 plot(var2, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("GPP (0-1)", sep="")), side=3, cex = 2.0, padj = 1.1)
+mtext(expression(paste("GPP (0-1)", sep="")), side=3, cex = 1.6, padj = 1.1)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("NBE (0-1)", sep="")), side=3, cex = 2.0, padj = 1.1)
+mtext(expression(paste("NBE (0-1)", sep="")), side=3, cex = 1.6, padj = 1.1)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var4, range=zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Wood (0-1)", sep="")), side=3, cex = 2.0, padj = 1.1)
+mtext(expression(paste("Wood (0-1)", sep="")), side=3, cex = 1.6, padj = 1.1)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var5, range=zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
-mtext(expression(paste("Soil (0-1)", sep="")), side=3, cex = 2.0, padj = 1.1)
+mtext(expression(paste("Soil (0-1)", sep="")), side=3, cex = 1.6, padj = 1.1)
 plot(landmask, add=TRUE, lwd=0.5)
 # Alternate
 plot(var6, range=zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.main=2.5,  bty = "n",
@@ -2391,11 +2528,11 @@ plot(var15, range = zrange15, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, cex.mai
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in assimilated LAI overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var11),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated GPP overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var12),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated NBE overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var13),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated wood overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var14),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated soil overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var15),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated LAI overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var11),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated GPP overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var12),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated NBE overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var13),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated wood overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var14),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated soil overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var15),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Are CARDAMOM models consistent with their assimilated observations
@@ -2491,9 +2628,9 @@ plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in assimilated LAI overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated wood overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in assimilated soil overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated LAI overlap (",alt_name,"-",orig_name,")  = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated wood overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in assimilated soil overlap (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 ###
@@ -2671,7 +2808,7 @@ plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = -0.5, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = -0.5, adj = main_lab_adj) 
 plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -2843,7 +2980,7 @@ plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+mtext(alt_name, side=2,cex=1.6, padj = -0.5)
 plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -2908,7 +3045,7 @@ plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+mtext(alt_name, side=2,cex=1.6, padj = -0.5)
 plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -2931,7 +3068,7 @@ plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2, cex=1.8, padj = -0.5)
 plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -3062,7 +3199,7 @@ plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+mtext(alt_name, side=2,cex=1.6, padj = -0.5)
 plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -3270,7 +3407,7 @@ plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2, cex=1.6, padj = -0.5)
 plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -3446,7 +3583,7 @@ plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+mtext(alt_name, side=2,cex=1.6, padj = -0.5)
 plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -3534,7 +3671,7 @@ plot(var9, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2,cex=1.6, padj = -0.5)
 plot(var10, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -3665,7 +3802,7 @@ plot(var5, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=1.8, padj = -0.5)
+mtext(alt_name, side=2, cex=1.6, padj = -0.5)
 plot(var6, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -3867,7 +4004,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -3877,9 +4014,9 @@ plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Change stocks
@@ -3968,7 +4105,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_sign)
@@ -3978,9 +4115,9 @@ plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      main = "", col=colour_choices_sign)
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Final stocks CI
@@ -4072,7 +4209,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4082,9 +4219,9 @@ plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in CI Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in CI Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in CI DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI Total (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI Biomass (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI DOM (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Change stocks CI
@@ -4162,7 +4299,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -4176,7 +4313,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -4186,9 +4323,9 @@ plot(var9, range = zrange6, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
 # print summary information to user
-print(paste("Mean (-1-1) relative difference in CI Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in CI Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
-print(paste("Mean (-1-1) relative difference in CI DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI Total change (",alt_name,"-",orig_name,")   = ",round(mean(as.vector(var7),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI Biomass change (",alt_name,"-",orig_name,") = ",round(mean(as.vector(var8),na.rm=TRUE),digits=3),sep=""))
+print(paste("Mean (-1-1) Relative change in CI DOM change (",alt_name,"-",orig_name,")     = ",round(mean(as.vector(var9),na.rm=TRUE),digits=3),sep=""))
 dev.off()
 
 # Assign key C flux uncertainties and their uncertainties
@@ -5053,7 +5190,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -5067,7 +5204,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -5106,7 +5243,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
@@ -5115,7 +5252,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 # print summary information to user
@@ -5128,7 +5265,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -5274,7 +5411,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -5283,7 +5420,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05) 
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -5367,7 +5504,7 @@ plot(var4, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(alt_name, side=2,cex=2.0, padj=-0.5)
+mtext(alt_name, side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var5, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
@@ -5381,7 +5518,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Difference",sep=""), side=2, cex=2.0, padj=-0.5)
+mtext(paste("Difference",sep=""), side=2, cex=main_lab_cex, padj=main_lab_padj, adj = main_lab_adj)
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -5433,7 +5570,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -5442,7 +5579,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)                  
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)                  
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -5767,7 +5904,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -5776,7 +5913,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -6105,7 +6242,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 # print summary information to user
@@ -6118,7 +6255,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -6264,7 +6401,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -6273,7 +6410,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj+0.05)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -6424,7 +6561,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -6433,7 +6570,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -6646,7 +6783,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -6655,7 +6792,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -6870,7 +7007,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_gain)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 # print summary information to user
@@ -6883,7 +7020,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -7029,7 +7166,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -7038,7 +7175,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -7330,7 +7467,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -7339,7 +7476,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -7489,7 +7626,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -7498,7 +7635,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
@@ -7648,7 +7785,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -7657,7 +7794,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -7868,7 +8005,7 @@ plot(var6, range=zrange3, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_CI)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -7877,7 +8014,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=rev(colour_choices_sign))
@@ -8103,7 +8240,7 @@ plot(var6, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=colour_choices_loss)
 plot(landmask, add=TRUE, lwd=0.5)
-# Relative Difference
+# Relative change
 var7 = var7 / abs(var1) ; var8 = var8 / abs(var2) ; var9 = var9 / abs(var3)
 var7[var7 > 1] = 1 ; var7[var7 < -1] = -1 ; var8[var8 > 1] = 1 ; var8[var8 < -1] = -1 ; var9[var9 > 1] = 1 ; var9[var9 < -1] = -1 
 zrange4 = c(-1,1) * max(abs(range(c(values(var7),values(var8),values(var9)), na.rm=TRUE)))
@@ -8112,7 +8249,7 @@ plot(var7, range = zrange4, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n"
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))
 plot(landmask, add=TRUE, lwd=0.5)
-mtext(paste("Relative difference (-1-1)",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
+mtext(paste("Relative change",sep=""), side=2, cex = 1.5, padj = main_lab_padj, adj = main_lab_adj)       
 plot(var8, range = zrange5, xaxt = "n", yaxt = "n", mar=NA, cex.lab=2, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
      main = "", col=(colour_choices_sign))

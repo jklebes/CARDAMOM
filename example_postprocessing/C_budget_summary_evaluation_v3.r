@@ -30,10 +30,11 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
@@ -187,13 +188,17 @@ if (length(par_labels) == dim(grid_output$parameters)[3]) {
     var_tmp = cbind(var_tmp,as.vector(grid_output$final_dlai_m2m2[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$final_dCbiomass_gCm2[,,mid_quant]))
     var_tmp = cbind(var_tmp,as.vector(grid_output$final_dCdom_gCm2[,,mid_quant]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$met_array_averages[,,14]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$met_array_averages[,,7]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$met_array_averages[,,16]))
+    var_tmp = cbind(var_tmp,as.vector(grid_output$met_array_averages[,,4]))
     var_tmp = var_tmp[-filter,]
     par_tmp = t(cor(var_tmp,par_tmp))
 
-    colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire","LAI","ET","Esoil","Etrans","Ewet","dLAI","dBIO","dDOM")
+    colnames(par_tmp) <- c("NEE","GPP","Rauto","Rhet","fire","LAI","ET","Esoil","Etrans","Ewet","dLAI","dBIO","dDOM","Ta","P","VPD","SW")
     rownames(par_tmp) <- par_labels
 
-    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 4100, width = 2500, res = 300)
+    png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_between_pixel_parameter_correlations_fluxes.png",sep=""), height = 4100, width = 3000, res = 300)
     par(mfrow=c(1,1), mar=c(0,0,0,0), omi=c(0.0,0.0,0.0,0.0))
     corrplot(par_tmp, method="color", col=col(200), 
              type="full", tl.cex=1.2, number.cex=0.8, cl.cex=1.2, cl.ratio = 0.3,
@@ -2629,7 +2634,7 @@ zrange6 = range(values(var6),na.rm=TRUE)
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_LCA_CUE_wNPP_wMRT_clusters.png",sep=""), height = 1500, width = 5000, res = 300)
 # Set common plotting variables
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
+par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,4.5),omi=c(0.01,0.2,0.01,0.01))
 plot(var1, main="",col = colour_choices_gain, range=zrange1, type="continuous", xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("LCA (gC ",m^-2,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
@@ -2778,7 +2783,7 @@ png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observatio
 # Define some common plotting variables
 main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 # Plot differences
-par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,7),omi=c(0.1,0.1,0.1,0.1))
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,6.2),omi=c(0.1,0.1,0.1,0.1))
 # Begin plotting
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
@@ -4018,7 +4023,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_no_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4070,7 +4075,7 @@ zrange2 = c(0,max(values(var2), na.rm=TRUE))
 zrange3 = c(0,max(values(var3), na.rm=TRUE))
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
@@ -4091,7 +4096,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by ET ensemble, GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_bias_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,1,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1,6.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = (365.25*grid_output$mean_ET_kgH2Om2day[,,mid_quant]) - apply(obs_et_mean_kgH2Om2yr, c(1,2), mean, na.rm=TRUE)
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*var1[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = (365.25*grid_output$mean_gpp_gCm2day[,,mid_quant]) - apply(obs_gpp_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
@@ -4173,7 +4178,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,6.2), omi = c(0.01,0.2,0.3,0.1))
 # C1
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nbe_obs_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_obs_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4209,7 +4214,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by ET ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_no_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*grid_output$mean_ET_kgH2Om2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4244,7 +4249,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by ET ensemble, FC GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_stippling.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*grid_output$mean_ET_kgH2Om2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4282,7 +4287,7 @@ dev.off()
 # Are CARDAMOM models consistent with the range described by ET ensemble, GPP ensemble and GFED / GFAS Fire products
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_fraction_overlap.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,0.9,6.2), omi = c(0.01,0.2,0.3,0.1))
 # C1
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$et_obs_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_obs_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -4371,7 +4376,7 @@ dev.off()
 model_flags=c("CARDAMOM")
 obs_flags=c("FC/GLEAMv3.7b/MODIS","FC/MODIS/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+par(mfrow=c(3,1),mai=c(0.35,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot ET, annual time series PgH2O/yr
 var1  = obs_et_mean_domain_PgH2Oyr
 var2  = cbind(cbind(c(obs_et_mean_domain_PgH2Oyr),c(obs_et_min_domain_PgH2Oyr)),c(obs_et_max_domain_PgH2Oyr))
@@ -4423,7 +4428,7 @@ dev.off()
 model_flags=c("CARDAMOM")
 obs_flags=c("OCO2-MIPv10","FC/GLEAMv3.7b/MODIS","FC/MODIS/Copernicus/FluxSatv2","GFEDv4.1s / GFAS")
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_ET_GPP_Fire_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
-par(mfrow=c(4,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.205,0.2,0.3,0.005))
+par(mfrow=c(4,1),mai=c(0.35,0.65,0.3,0.2),omi=c(0.205,0.2,0.3,0.005))
 # Now plot NBE, annual time series TgC/yr
 var1  = obs_nbe_mean_domain_TgCyr
 var2  = cbind(cbind(c(obs_nbe_mean_domain_TgCyr),c(obs_nbe_min_domain_TgCyr)),c(obs_nbe_max_domain_TgCyr))
@@ -4493,7 +4498,7 @@ dev.off()
 # Comparison of NBE, wood and soil stock change over the analysis period by model
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
-par(mfrow=c(1,3), mar=c(0.05,1,0.05,7.0), omi = c(0.01,0.4,0.3,0.05))
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
 # Create raster
 var1 = rast(vals = t(365.25*-grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -5031,7 +5036,7 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_median.png",sep=""), height = 750, width = 5000, res = 300)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 # Final C stocks, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
@@ -5079,8 +5084,8 @@ zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 # Set common plotting variables
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1500, width = 5000, res = 300)
-par(mfrow=c(2,3), mar=c(3.2,3.0,1.2,1.2),omi=c(0.01,0.10,0.10,0.35))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1500, width = 4800, res = 300)
+par(mfrow=c(2,3), mar=c(3.2,3.0,1.4,1.2),omi=c(0.01,0.10,0.10,0.35))
 # Correlation between Wood MRT and fire
 plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
      cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
@@ -5360,7 +5365,7 @@ zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median.png",sep=""), height = 750, width = 5000, res = 300)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 # Final stock changes, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
@@ -5488,7 +5493,7 @@ zrange2 = c(0,1)
 zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 750, width = 5000, res = 300)
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 # Ecosystem traits, median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
@@ -5536,7 +5541,7 @@ e[3] = ee[3] ; e[4] = ee[4]
 zrange1 = c(0,1)
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Wood_turnover_contribution.png",sep=""), height = 750, width = 4500, res = 300)
-par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,7.2), omi = c(0.01,0.2,0.3,0.1))
+par(mfrow=c(1,3), mar=c(0.05,0.3,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 # Partitioning of wood turnover, median estimate
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", type="continuous", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
      cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
@@ -6264,68 +6269,187 @@ plot(grid_output$MTT_som_years[,,mid_quant]~(HarvestFraction), main="", ylab="",
 dev.off()
 
 # Plot Foliage, fine root, wood NPP allocation fractions main meteorology
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
-par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_meteorology_association.png",sep=""), height = 3200, width = 2800, res = 300)
+par(mfrow=c(4,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 mtext(expression("Foliar NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="Mean Temperature (C)", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 mtext(expression("Root NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
 mtext(expression("Wood NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="Mean precipitation (mm/yr)", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
 # Vapour pressure deficit
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
+# GPP
+plot(as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$NPP_roots_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab="Mean GPP", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$NPP_wood_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)     
 dev.off()
+# Temperature
+print(paste("NPP foliage~Ta R2 = ",round(summary(lm(as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP wood~Ta R2 = ",round(summary(lm(as.vector(grid_output$NPP_wood_fraction[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP roots~Ta R2 = ",round(summary(lm(as.vector(grid_output$NPP_roots_fraction[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+# Precipitation
+print(paste("NPP foliage~P R2 = ",round(summary(lm(as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP wood~P R2 = ",round(summary(lm(as.vector(grid_output$NPP_wood_fraction[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP roots~P R2 = ",round(summary(lm(as.vector(grid_output$NPP_roots_fraction[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+# VPD
+print(paste("NPP foliage~VPD R2 = ",round(summary(lm(as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP wood~VPD R2 = ",round(summary(lm(as.vector(grid_output$NPP_wood_fraction[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP roots~VPD R2 = ",round(summary(lm(as.vector(grid_output$NPP_roots_fraction[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+# GPP
+print(paste("NPP foliage~GPP R2 = ",round(summary(lm(as.vector(grid_output$NPP_foliage_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP wood~GPP R2 = ",round(summary(lm(as.vector(grid_output$NPP_wood_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
+print(paste("NPP roots~GPP R2 = ",round(summary(lm(as.vector(grid_output$NPP_roots_fraction[,,mid_quant])~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
+
 
 # Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
 par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 mtext(expression("Foliar NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 #mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
      mtext(expression("Root NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
      mtext(expression("Wood NPP (0-1)"), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
 # Vapour pressure deficit
 plot(grid_output$NPP_foliage_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_roots_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, ylim=c(0,1))
 plot(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
-     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, ylim=c(0,1))
 dev.off()
 
+# Plot CiCa, GPP, Rhet-litter, Rhet-som against meteorology
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_CiCa_GPP_Rhlitter_Rhsom_meteorology_association.png",sep=""), height = 2400, width = 3000, res = 300)
+par(mfrow=c(4,4), mar=c(3.3,1.9,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Temperature
+plot(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.6)
+mtext(expression(paste("CiCa (0-1)",sep="")), cex = 1.1, padj = 0, side = 3)
+plot(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.6)
+mtext(expression(paste("GPP (MgC h",a^-1,y^-1,")",sep="")), cex = 1.1, padj = 0, side = 3)
+#mtext(expression('C1'), side = 2, cex = 1.6, padj = -2.5, adj = 0.5)
+plot(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.6)
+mtext("Mean air temperature (C)", cex = 1.1, adj = 80, padj = 2.5, side = 1)
+mtext(expression(paste(R[het-litter]," (MgC h",a^-1,y^-1,")",sep="")), cex = 1.1, padj = 0, side = 3)
+plot(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.6)
+mtext(expression(paste(R[het-som]," (MgC h",a^-1,y^-1,")",sep="")), cex = 1.1, padj = 0, side = 3)
+# Precipitation
+plot(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext("Mean precipitation (mm/yr)", cex = 1.1, adj = 9, padj = 2.5, side = 1)
+plot(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Vapour pressure deficit
+plot(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext("Mean VPD (Pa)", cex = 1.1, adj = -1, padj = 2.5, side = 1)     
+plot(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# Soil moisture
+plot(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext("Mean soil moisture (0-30cm; mm)", cex = 1.1, adj = 2, padj = 2.5, side = 1)     
+plot(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+dev.off()
+print("Linear models between CiCa, GPP, Rhet-litter and Rhet-som against mean climate and soil moisture")
+# Temperature
+print(paste("CiCa~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("GPP~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_lit~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_som~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+# Precipitation
+print(paste("CiCa~P R2 = ",round(summary(lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("GPP~P R2 = ",round(summary(lm(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_lit~P R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_som~P R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+# Vapour pressure deficit
+print(paste("CiCa~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("GPP~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_lit~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_som~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+# Soil moisture
+print(paste("CiCa~SM R2 = ",round(summary(lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4])))$adj.r.squared, digits=3),sep=""))
+print(paste("GPP~SM R2 = ",round(summary(lm(as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4])))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_lit~SM R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_litter_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4])))$adj.r.squared, digits=3),sep=""))
+print(paste("Rh_som~SM R2 = ",round(summary(lm(as.vector(grid_output$mean_rhet_som_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4])))$adj.r.squared, digits=3),sep=""))
+mod0 = lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C) + 
+                                                         as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+                                                         as.vector(grid_output$mean_vpd_Pa) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]))
+print(paste("CiCa ~ Ta * VPD * P * SurfWater R2 = ",round(summary(mod0)$adj.r.squared,digits=3),sep=""))
+mod1 = lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C) * 
+                                                         as.vector(grid_output$mean_precipitation_kgH2Om2yr) * 
+                                                         as.vector(grid_output$mean_vpd_Pa) * 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]))
+smod1 = step(mod1, direction="both")
+
+mod2 = lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C) + 
+                                                         as.vector(grid_output$mean_precipitation_kgH2Om2yr) + 
+                                                         as.vector(grid_output$mean_vpd_Pa) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]*grid_output$mean_vpd_Pa) +
+                                                         as.vector(grid_output$mean_precipitation_kgH2Om2yr*grid_output$mean_vpd_Pa))
+mod3 = lm(as.vector(grid_output$mean_CiCa[,,mid_quant])~as.vector(grid_output$mean_temperature_C) + 
+                                                         as.vector(grid_output$mean_vpd_Pa) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]*grid_output$mean_vpd_Pa) +
+                                                         as.vector(grid_output$mean_precipitation_kgH2Om2yr*grid_output$mean_vpd_Pa) + 
+                                                         as.vector(grid_output$mean_SurfWater_kgH2Om2[,,4]*grid_output$mean_precipitation_kgH2Om2yr*grid_output$mean_vpd_Pa))
+print(paste("CiCa ~ Ta * VPD * P * SurfWater R2 = ",round(summary(mod3)$adj.r.squared,digits=3),sep=""))
+
 # Plot Foliage, fine root, wood NPP allocation fractions main meteorology
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association.png",sep=""), height = 2200, width = 2800, res = 300)
-par(mfrow=c(3,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_meteorology_association.png",sep=""), height = 3200, width = 2800, res = 300)
+par(mfrow=c(4,3), mar=c(4,2,1.4,1), omi = c(0.1,0.2,0.12,0.1))
 # Temperature
 plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
@@ -6351,7 +6475,31 @@ plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
 plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+# GPP
+plot(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab=" ", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab="Mean GPP", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+plot(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25), main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
 dev.off()
+print(paste("Between pixel correlation with meteorology and GPP"))
+# Temperature
+print(paste("NPPflx foliage~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx wood~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx roots~Ta R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_temperature_C)))$adj.r.squared, digits=3),sep=""))
+# Precipitation
+print(paste("NPPflx foliage~P R2 = ",round(summary(lm(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx wood~P R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx roots~P R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_precipitation_kgH2Om2yr)))$adj.r.squared, digits=3),sep=""))
+# VPD
+print(paste("NPPflx foliage~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx wood~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx roots~VPD R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_vpd_Pa)))$adj.r.squared, digits=3),sep=""))
+# GPP
+print(paste("NPPflx foliage~GPP R2 = ",round(summary(lm(as.vector(grid_output$mean_combined_alloc_foliage_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx wood~GPP R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
+print(paste("NPPflx roots~GPP R2 = ",round(summary(lm(as.vector(grid_output$mean_alloc_roots_gCm2day[,,mid_quant]*1e-2*365.25)~as.vector(grid_output$mean_gpp_gCm2day[,,mid_quant]*1e-2*365.25)+0))$adj.r.squared, digits=3),sep=""))
 
 # Plot Foliage, fine root, wood NPP allocation fractions against main disturbance
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_flux_disturbance_association.png",sep=""), height = 2200, width = 2800, res = 300)
@@ -6660,51 +6808,51 @@ fudgeit.leg.lab=""
 # Temperature
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Foliar NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", 
      ylab="", xlab="Mean Temperature (C)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Root NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 fudgeit.leg.lab="Relative Density"
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_temperature_C), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_temperature_C, na.rm=TRUE)))
 mtext(expression(paste("Wood NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", 
      ylab="", xlab="Mean precipitation (mm/yr)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_precipitation_kgH2Om2yr), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_precipitation_kgH2Om2yr, na.rm=TRUE)))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="Mean VPD (Pa)", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 fudgeit.leg.lab="Relative Density"
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(grid_output$mean_vpd_Pa), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(grid_output$mean_vpd_Pa, na.rm=TRUE)))
 dev.off()
 
@@ -6715,51 +6863,431 @@ fudgeit.leg.lab=""
 # Temperature
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Foliar NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="No. annual fires", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
 mtext(expression(paste("Root NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(FireFreq), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(FireFreq, na.rm=TRUE)*1.0))
 mtext(expression(paste("Wood NPP (0-1)",sep="")), cex = 1.3, padj = 0, side = 3)
 # Precipitation
 fudgeit.leg.lab=""
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="Annual burned fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(BurnedFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(BurnedFraction, na.rm=TRUE)*1.0))
 # Vapour pressure deficit
 fudgeit.leg.lab=""
 smoothScatter(grid_output$NPP_foliage_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab=" ", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 smoothScatter(grid_output$NPP_roots_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="Annual harvested fraction", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 fudgeit.leg.lab="Relative Density"
 smoothScatter(grid_output$NPP_wood_fraction[,,mid_quant]~(HarvestFraction), main="", ylab="", xlab="", 
      pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8, transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), 
-     colramp=smoothScatter_colours, 
+     colramp=smoothScatter_colours, ylim=c(0,1), 
      nrpoints = 0, postPlotHook = fudgeit, nbin = 1500, xlim = c(0,max(HarvestFraction, na.rm=TRUE)*1.0))
 dev.off()
+
+###
+## Correlation maps
+
+# Convert to raster
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_fraction_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NEE_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_Rauto_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_dCwood_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_dCsom_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_lai_m2m2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask) ; var8 = crop(var8, landmask) ; var9 = crop(var9, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask) ; var8 = mask(var8, landmask) ; var9 = mask(var9, landmask)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(0,1)
+zrange2 = c(0,1)
+zrange3 = c(0,1)
+zrange4 = c(0,1)
+zrange5 = c(0,1)
+zrange6 = c(0,1)
+zrange7 = c(0,1)
+zrange8 = c(0,1)
+zrange9 = c(0,1)
+# Are CARDAMOM models consistent with their assimilated observations
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MTTwood_various_observables_absolute_correlations.png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# Plot differences
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,6.2),omi=c(0.1,0.1,0.1,0.1))
+# Begin plotting
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ NPPflx wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ NPP wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ GPP",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var4, main="",col = (colour_choices_gain), range=zrange4, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ NEE",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var5, main="",col = (colour_choices_gain), range=zrange5, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ ",R[a],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var6, main="",col = (colour_choices_gain), range=zrange6, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ ",R[h],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ ",Delta,"wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ ",Delta,"soil",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("MRT wood ~ LAI",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Convert to raster
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_dCsom_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_gCm2day_to_lai_m2m2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask) ; var8 = crop(var8, landmask) ; var9 = crop(var9, landmask)
+var1 = mask(var1, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask) ; var8 = mask(var8, landmask) ; var9 = mask(var9, landmask)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(0,1)
+zrange3 = c(0,1)
+zrange4 = c(0,1)
+zrange5 = c(0,1)
+zrange6 = c(0,1)
+zrange7 = c(0,1)
+zrange8 = c(0,1)
+zrange9 = c(0,1)
+# Are CARDAMOM models consistent with their assimilated observations
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPPflxwood_various_observables_absolute_correlations.png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# Plot differences
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,6.2),omi=c(0.1,0.1,0.1,0.1))
+# Begin plotting
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ MRT wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ GPP",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var4, main="",col = (colour_choices_gain), range=zrange4, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ NEE",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var5, main="",col = (colour_choices_gain), range=zrange5, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ ",R[a],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var6, main="",col = (colour_choices_gain), range=zrange6, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ ",R[h],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ ",Delta,"wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ ",Delta,"soil",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPPflx wood ~ LAI",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Convert to raster
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_fraction_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_GPP_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_NEE_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_Rauto_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_Rhet_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_dCwood_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_dCsom_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NPP_wood_fraction_to_lai_m2m2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask) ; var8 = crop(var8, landmask) ; var9 = crop(var9, landmask)
+var1 = mask(var1, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask) ; var8 = mask(var8, landmask) ; var9 = mask(var9, landmask)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(0,1)
+zrange3 = c(0,1)
+zrange4 = c(0,1)
+zrange5 = c(0,1)
+zrange6 = c(0,1)
+zrange7 = c(0,1)
+zrange8 = c(0,1)
+zrange9 = c(0,1)
+# Are CARDAMOM models consistent with their assimilated observations
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPPwood_various_observables_absolute_correlations.png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# Plot differences
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,6.2),omi=c(0.1,0.1,0.1,0.1))
+# Begin plotting
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ MRT wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ GPP",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var4, main="",col = (colour_choices_gain), range=zrange4, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ NEE",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var5, main="",col = (colour_choices_gain), range=zrange5, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ ",R[a],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var6, main="",col = (colour_choices_gain), range=zrange6, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ ",R[h],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ ",Delta,"wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ ",Delta,"soil",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NPP wood ~ LAI",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Assign variables
+var1 = abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation)
+var2 = abs(grid_output$MTT_wood_years_to_NEE_gCm2day_correlation)
+var3 = abs(grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation)
+var4 = abs(grid_output$MTT_wood_years_to_dCwood_gCm2_correlation)
+var5 = abs(grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation)
+var6 = abs(grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation)
+var7 = abs(grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation)
+var8 = abs(grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation)
+# Apply filter
+var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var3[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var4[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var5[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var6[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var7[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+var8[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
+# Convert to raster
+var1 = rast(vals = t((var1)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var2 = rast(vals = t((var2)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((var3)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t((var4)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = rast(vals = t((var5)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+var6 = rast(vals = t((var6)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = rast(vals = t((var7)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t((var8)[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Trim to data area
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3) ; var4 = trim(var4) 
+var5 = trim(var5) ; var6 = trim(var6) ; var7 = trim(var7) ; var8 = trim(var8) 
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# Determine ranges
+zrange1 = c(0,1)
+zrange2 = c(0,1)
+zrange3 = c(0,1)
+zrange4 = c(0,1)
+zrange5 = c(0,1)
+zrange6 = c(0,1)
+zrange7 = c(0,1)
+zrange8 = c(0,1)
+# Common variables for labels
+main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"MTTwood_NPPflx_wood_selected_variables_absolute_correlations.png",sep=""), height = 1200, width = 5000, res = 300)
+par(mfrow=c(2,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
+# Mean annual median estimates
+plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=(colour_choices_gain))
+mtext(expression(paste('MRT wood ~ GPP',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('MRT wood ~ NEE',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('MRT wood ~ ',R[het],sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 3.0, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('MRT wood ~ ',Delta,'wood',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+# Mean annual estimates uncertainty
+plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('NPPflx wood ~ GPP',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('NPPflx wood ~ NEE',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var7, range=zrange7, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('NPPflx wood ~ ',R[het],sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, range=zrange8, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
+     cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.4,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+     main = "", col=colour_choices_gain)
+mtext(expression(paste('NPPflx wood ~ ',Delta,'wood',sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Determine the number of viable land pixels in the analysis
+tmp = length(which(is.finite(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation)))
+# How many pixels is the correlation magnitude between uncertainty with 'key' fluxes is greater than 5% of variation
+print("Proportion of pixels at which the correlation between uncertainties for the variables given has R2 > 0.1, or r = 0.3162278")
+print(paste("...MTT wood ~ GPP    = ",round(length(which(abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...MTT wood ~ NEE    = ",round(length(which(abs(grid_output$MTT_wood_years_to_NEE_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...MTT wood ~ Rhet   = ",round(length(which(abs(grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...MTT wood ~ dCwood = ",round(length(which(abs(grid_output$MTT_wood_years_to_dCwood_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep=""))
+print(paste("...NPPflx wood ~ GPP    = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NPPflx wood ~ NEE    = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NPPflx wood ~ Rhet   = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NPPflx wood ~ dCwood = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+
+print("Mean absolute correlation (presented here as R2) across pixels between uncertainties for the variables given")
+print(paste("...MTT wood ~ GPP    = ",round(mean((grid_output$MTT_wood_years_to_GPP_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...MTT wood ~ NEE    = ",round(mean((grid_output$MTT_wood_years_to_NEE_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...MTT wood ~ Rhet   = ",round(mean((grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...MTT wood ~ dCwood = ",round(mean((grid_output$MTT_wood_years_to_dCwood_gCm2_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...NPPflx wood ~ GPP    = ",round(mean((grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...NPPflx wood ~ NEE    = ",round(mean((grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...NPPflx wood ~ Rhet   = ",round(mean((grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
+print(paste("...NPPflx wood ~ dCwood = ",round(mean((grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation**2), na.rm=TRUE),digits=3),sep=""))
+
+tmp1 = which(abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation) > 0.3162278)
+tmp2 = which(abs(grid_output$MTT_wood_years_to_NEE_gCm2day_correlation) > 0.3162278)
+tmp3 = which(abs(grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation) > 0.3162278)
+tmp4 = which(abs(grid_output$MTT_wood_years_to_dCwood_gCm2_correlation) > 0.3162278)
+tmp5 = which(abs(grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation) > 0.3162278)
+tmp6 = which(abs(grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation) > 0.3162278)
+tmp7 = which(abs(grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation) > 0.3162278)
+tmp8 = which(abs(grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation) > 0.3162278)
+
+# Assess the total land areas senstive / correlated with different combinations of the hypothesised data constraints
+print(paste("...fraction of land area which is sensitive to GPP, NEE, Rhet, dCwood; MTT wood = ",round(length(unique(c(tmp1,tmp2,tmp3,tmp4)))/PROJECT$nosites,digits=3)," NPPflx wood = ",round(length(unique(c(tmp5,tmp6,tmp7,tmp8))) / PROJECT$nosites, digits=3),sep=""))
+print(paste("...fraction of land area which is sensitive to GPP, NEE, dCwood; MTT wood = ",round(length(unique(c(tmp1,tmp2,tmp4)))/PROJECT$nosites,digits=3)," NPPflx wood = ",round(length(unique(c(tmp5,tmp6,tmp8))) / PROJECT$nosites, digits=3),sep=""))
+print(paste("...fraction of land area which is sensitive to GPP, dCwood; MTT wood = ",round(length(unique(c(tmp1,tmp4)))/PROJECT$nosites,digits=3)," NPPflx wood = ",round(length(unique(c(tmp5,tmp8))) / PROJECT$nosites, digits=3),sep=""))
+print(paste("...fraction of land area which is sensitive to dCwood for both MTT wood and NPPflx wood = ",round(length(unique(c(tmp4,tmp8)))/PROJECT$nosites,digits=3),sep=""))
+
+print("Proportion of pixels at which the correlation with <GPP, NEE, Rhet, dCwood> are greater than threshold and unique to either MRT or NPPflx")
+tmp = 1-(length(intersect(tmp1,tmp5)) / length(unique(c(tmp1))))
+print(paste("...MTT wood ~ GPP    = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp2,tmp6)) / length(unique(c(tmp2))))
+print(paste("...MTT wood ~ NEE    = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp3,tmp7)) / length(unique(c(tmp3))))
+print(paste("...MTT wood ~ Rhet   = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp4,tmp8)) / length(unique(c(tmp4))))
+print(paste("...MTT wood ~ dCwood = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp1,tmp5)) / length(unique(c(tmp5))))
+print(paste("...NPPflx wood ~ GPP    = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp2,tmp6)) / length(unique(c(tmp6))))
+print(paste("...MNPPflxTT wood ~ NEE    = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp3,tmp7)) / length(unique(c(tmp7))))
+print(paste("...NPPflx wood ~ Rhet   = ",round(tmp,digits=3),sep="")) 
+tmp = 1-(length(intersect(tmp4,tmp8)) / length(unique(c(tmp8))))
+print(paste("...NPPflx wood ~ dCwood = ",round(tmp,digits=3),sep="")) 
+
+print("Proportion of pixels at which the correlation with <GPP, NEE, Rhet, dCwood> are greater than threshold and unique to that constraint")
+tmp0 = unique(c(tmp2,tmp3,tmp4))
+tmp = 1-(length(intersect(tmp1,tmp0)) / length(tmp1))
+print(paste("...MTT wood ~ GPP    = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp1,tmp3,tmp4))
+tmp = 1-(length(intersect(tmp2,tmp0)) / length(tmp2))
+print(paste("...MTT wood ~ NEE    = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp2,tmp1,tmp4))
+tmp = 1-(length(intersect(tmp3,tmp0)) / length(tmp3))
+print(paste("...MTT wood ~ Rhet   = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp2,tmp3,tmp1))
+tmp = 1-(length(intersect(tmp4,tmp0)) / length(tmp4))
+print(paste("...MTT wood ~ dCwood = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp6,tmp7,tmp8))
+tmp = 1-(length(intersect(tmp5,tmp0)) / length(tmp5))
+print(paste("...NPPflx wood ~ GPP    = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp5,tmp7,tmp8))
+tmp = 1-(length(intersect(tmp6,tmp0)) / length(tmp6))
+print(paste("...NPPflx wood ~ NEE    = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp5,tmp6,tmp8))
+tmp = 1-(length(intersect(tmp7,tmp0)) / length(tmp7))
+print(paste("...NPPflx wood ~ Rhet   = ",round(tmp,digits=3),sep="")) 
+tmp0 = unique(c(tmp5,tmp6,tmp7))
+tmp = 1-(length(intersect(tmp8,tmp0)) / length(tmp8))
+print(paste("...NPPflx wood ~ dCwood = ",round(tmp,digits=3),sep="")) 
 
 ###
 ## Investigation of explanatory variables on the minimum biomass resilience to fire

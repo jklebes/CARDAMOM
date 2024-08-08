@@ -613,22 +613,28 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, DIAG, no_years, nn
+    integer :: n, DIAG, no_years, nn, start
     double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,flit  & !
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom    ! fraction of GPP som under eqilibrium conditions
+                       ,ffol  & ! Fraction of GPP to foliage
+                       ,flab  & ! Fraction of GPP to labile pool
+                       ,froot & ! Fraction of GPP to root
+                       ,flit  & !
+                       ,fwood & ! Fraction of GPP to wood
+                       ,fsom    ! fraction of GPP som under eqilibrium conditions
+
+    ! Work out how many completed years there are in the system
+    no_years = int(nint(sum(deltat)/365.25d0))
+    ! We will skip the first year in all cases, 
+    ! due to the model not being capable of initialising 'mid-growing-season'.
+    start = nint(dble(nodays) / dble(no_years))
 
     ! set initial value
-    fauto = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
-    ffol = sum(M_FLUXES(:,4)) / sum(M_FLUXES(:,1))
-    flab = sum(M_FLUXES(:,5)) / sum(M_FLUXES(:,1))
-    froot = sum(M_FLUXES(:,6)) / sum(M_FLUXES(:,1))
-    fwood = sum(M_FLUXES(:,7)) / sum(M_FLUXES(:,1))
+    fauto = sum(M_FLUXES(start:nodays,3)) / sum(M_FLUXES(start:nodays,1))
+    ffol = sum(M_FLUXES(start:nodays,4)) / sum(M_FLUXES(start:nodays,1))
+    flab = sum(M_FLUXES(start:nodays,5)) / sum(M_FLUXES(start:nodays,1))
+    froot = sum(M_FLUXES(start:nodays,6)) / sum(M_FLUXES(start:nodays,1))
+    fwood = sum(M_FLUXES(start:nodays,7)) / sum(M_FLUXES(start:nodays,1))
     fsom = fwood+(froot+flab+ffol)*pars(1)       
     flit = (froot+flab+ffol)
 
@@ -644,7 +650,7 @@ module model_likelihood_module
     EQF = 10d0
 
     ! initialise and then calculate mean gpp values
-    meangpp = sum(M_GPP(1:nodays))/dble(nodays)!        
+    meangpp = sum(M_GPP(start:nodays:nodays))/dble(nodays)!        
 
     ! EDC 11 - SOM steady state within order magnitude of initial conditions
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
@@ -668,9 +674,6 @@ module model_likelihood_module
 
     ! EDC 13
     ! assesses the exponential decay/growth of the Csom pool
-
-    !  work out how many completed years there are in the system
-    no_years=int(nint(sum(deltat)/365.25d0))
 
 !    ! only do this for the Csom pool
 !    do n = 1, 1 !nopools

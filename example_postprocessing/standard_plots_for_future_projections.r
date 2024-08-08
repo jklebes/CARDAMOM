@@ -63,7 +63,6 @@ landmask = project(landmask,"EPSG:4326")
 # Clip to the extent of the CARDAMOM analysis
 landmask = crop(landmask, cardamom_ext)
 
-
 ###
 ## Begin loading into global time series grids
 ###
@@ -235,6 +234,8 @@ colour_choices_CI = colour_choices_CI(100)
 # Define counting function
 counting<-function(var) {return(length(which(is.na(var) == FALSE)))}
 
+do_loads = TRUE
+if (do_loads) {
 # Loop through each ssp scenario
 for (ssp in seq(1, length(ssp_scenarios))) {
      # Loop through all sites
@@ -681,7 +682,11 @@ orig = list(SoilCPrior = SoilCPrior,
             #rhet_trend_normalised = 
             #lai_trend_normalised = 
             )
-               
+
+}
+   
+do_plots = FALSE
+if (do_plots) {            
 ###
 ## Do some timeseries plots...
 
@@ -1626,5 +1631,5 @@ image.plot(orig$co2_trend[ssp,,], main="CO2 trend")
 image.plot(orig$precip_trend[ssp,,], main="Precipitation trend") 
 image.plot(orig$vpd_trend[ssp,,], main="VPD trend")
 
-
+}
 

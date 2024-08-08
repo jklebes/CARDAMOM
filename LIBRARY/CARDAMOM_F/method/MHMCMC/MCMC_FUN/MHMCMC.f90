@@ -275,22 +275,24 @@ contains
 
        ! count iteration whether the current proposal is accepted or rejected
        N%ITER = N%ITER + 1
+print*,nint(N%ITER),MCO%nWRITE
+       if (MCO%nWRITE > 0) then
+           if (mod(nint(N%ITER),MCO%nWRITE) == 0) then
 
-       if (MCO%nWRITE > 0 .and. mod(nint(N%ITER),MCO%nWRITE) == 0) then
+!              ! Debugging print statements
+!              print*,"mcmc: write_mcmc_output done"
 
-!           ! Debugging print statements
-!           print*,"mcmc: write_mcmc_output done"
-
-           ! calculate the likelhood for the actual uncertainties - this avoid
-           ! issues with different phases of the MCMC which may use sub-samples
-           ! of observations or inflated uncertainties to aid parameter
-           ! searching
-           call model_likelihood_default(PARS0, outputP0, outputP0prior)
-           ! Now write out to files
-           call write_mcmc_output(PI%parvar,N%ACCRATE, &
-                                  PI%covariance, &
-                                  PI%mean_par,PI%Nparvar, &
-                                  PARS0,(outputP0+outputP0prior),PI%npars,N%ITER == MCO%nOUT)
+               ! calculate the likelhood for the actual uncertainties - this avoid
+               ! issues with different phases of the MCMC which may use sub-samples
+               ! of observations or inflated uncertainties to aid parameter
+               ! searching
+               call model_likelihood_default(PARS0, outputP0, outputP0prior)
+               ! Now write out to files
+               call write_mcmc_output(PI%parvar,N%ACCRATE, &
+                                      PI%covariance, &
+                                      PI%mean_par,PI%Nparvar, &
+                                      PARS0,(outputP0+outputP0prior),PI%npars,N%ITER == MCO%nOUT)
+           end if 
        end if ! write or not to write
 
        ! time to adapt?
@@ -331,18 +333,20 @@ contains
        end if ! time to adapt?
 
        ! Should I be write(*,*)ing to screen or not?
-       if (MCO%nPRINT > 0 .and. (mod(nint(N%ITER),MCO%nPRINT) == 0)) then
-           write(*,*)"Using multivariate sampling = ",PI%use_multivariate
-           write(*,*)"Total proposal = ",N%ITER," out of ",MCO%nOUT
-           write(*,*)"Total accepted = ",N%ACC
-           write(*,*)"Overall acceptance rate    = ",N%ACC / N%ITER
-           write(*,*)"Local   acceptance rate    = ",N%ACCRATE
-           write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
-           write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
-           write(*,*)"Maximum likelihood = ",Pmax
-           ! NOTE: that -infinity in current obs only indicates failure of EDCs
-           ! but -infinity in both obs and parameter likelihood scores indicates
-           ! that proposed parameters are out of bounds
+       if (MCO%nPRINT > 0) then
+           if (mod(nint(N%ITER),MCO%nPRINT) == 0) then
+               write(*,*)"Using multivariate sampling = ",PI%use_multivariate
+               write(*,*)"Total proposal = ",N%ITER," out of ",MCO%nOUT
+               write(*,*)"Total accepted = ",N%ACC
+               write(*,*)"Overall acceptance rate    = ",N%ACC / N%ITER
+               write(*,*)"Local   acceptance rate    = ",N%ACCRATE
+               write(*,*)"Current obs   = ",P0,"proposed = ",P," log-likelihood"
+               write(*,*)"Current prior = ",P0prior,"proposed = ",Pprior," log-likelihood"
+               write(*,*)"Maximum likelihood = ",Pmax
+               ! NOTE: that -infinity in current obs only indicates failure of EDCs
+               ! but -infinity in both obs and parameter likelihood scores indicates
+               ! that proposed parameters are out of bounds
+           end if 
        end if ! write(*,*) to screen or not
 
     end do ! while conditions

@@ -46,7 +46,7 @@ generate_parameter_maps<-function(PROJECT) {
 
    # Convert avgN log10-normal to gN/m2, in models which use foliar N in gN/m2
    if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#"| PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | PROJECT$model$name ==  "DALEC.A3.C3.H2.M1.#" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | 
        PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" |
        PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
        grid_output$parameters[,,11,] = 10**grid_output$parameters[,,11,]
@@ -540,25 +540,6 @@ generate_parameter_maps<-function(PROJECT) {
        dev.off()
   }
 
-  # Generate generic maps of spatial aggregates of drivers$met
-  for (m in seq(1, length(met_array_names))) {
-       zrange = c(min(as.vector(grid_output$met_array_annual_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$met_array_annual_averages[,,m]),na.rm=TRUE))
-       zrange = zrange + (c(-0.01,0.01) * zrange)
-       if (diff(zrange) == 0) {zrange = c(-0.01,0.01)}
-       fig_name = paste("mean_annual_met_array_maps_",gsub(" ","_",met_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
-       fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
-       fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
-       jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
-       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-       image.plot(x = grid_long, y = grid_lat, z = grid_output$met_array_annual_averages[,,m], col=rev(colour_choices)
-                 ,main=met_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
-                 ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
-                 ,zlim= zrange)
-       map(add=TRUE, lwd = 2)
-       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-       dev.off()
-  }
-
   # inform the user
   print("......now generating assimilated observations figures")
 
@@ -573,26 +554,6 @@ generate_parameter_maps<-function(PROJECT) {
            jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
            par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
            image.plot(x = grid_long, y = grid_lat, z = grid_output$obs_array_averages[,,m], col=rev(colour_choices)
-                     ,main=obs_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
-                     ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
-                     ,zlim=zrange)
-           map(add=TRUE, lwd = 2)
-           #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-           dev.off()
-       }
-  }
-
-  # Generate generic maps of spatial aggregates of drivers$obs
-  for (m in seq(1, length(obs_array_names))) {
-       if (length(which(is.na(grid_output$obs_array_annual_averages[,,m]) != TRUE)) > 0) {
-           zrange = c(min(as.vector(grid_output$obs_array_annual_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$obs_array_annual_averages[,,m]),na.rm=TRUE))
-           zrange = zrange + (c(-0.01,0.01) * zrange)
-           fig_name = paste("mean_annual_obs_array_maps_",gsub(" ","_",obs_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
-           fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
-           fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
-           jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
-           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-           image.plot(x = grid_long, y = grid_lat, z = grid_output$obs_array_annual_averages[,,m], col=rev(colour_choices)
                      ,main=obs_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
                      ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
                      ,zlim=zrange)

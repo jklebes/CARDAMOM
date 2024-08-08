@@ -143,18 +143,18 @@ read_parameter_chains<- function(PROJECT_in,n) {
   pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
-  # just in case
-  if (length(pfile) < 1) {return(-9999)}
+  # Return if no files
+  if (length(pfile) == 0) {return(-9999)}
 
   # Determine the intended name for the STEP files
-  sfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_STEP",sep="")
+  sfile = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_STEP",sep="")
   # select the STEP files only
   sfiles = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_*_STEP",sep="")
 
   # calculate the number of chains
-  chains = seq(1,length(pfile))
+  chains = seq(1, length(pfile))
   # How many parameter sets to take from the end of the available
-  par_vector_length = 100
+  par_vector_length = 100 
   # which site are we on now
   if (use_parallel == FALSE) {
       print("Beginning parameter extraction and chain merge")
@@ -186,9 +186,9 @@ read_parameter_chains<- function(PROJECT_in,n) {
 
        # check for inconsistencies, is there a different number of parameter sets
        # stored than expected - regardless or of more or less
-       if (abs(dim(param_sets)[2] - PROJECT_in$nsubsamples) > 1) {
+       if (abs(dim(param_sets)[2] - PROJECT_in$nsubsamples) > 0) {
            # Check if more parameter sets are more...
-           if (dim(param_sets)[2] > PROJECT_in$nsubsamples ) {
+           if (dim(param_sets)[2] > PROJECT_in$nsubsamples) {
                print('*************************************************************')
                print(paste('Warning! Too many parameter vectors in ',pfile[c],sep=""))
                print('*************************************************************')
@@ -197,7 +197,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
                # keep only the end of the parameter sets
                param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
                status[c] = 2
-           # ...or fewer parameter sets than expected
+               # ...or fewer parameter sets than expected
            } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
                print('*************************************************************')
                print(paste('Warning! Missing parameter vectors in ',pfile[c],sep=""))
@@ -214,15 +214,18 @@ read_parameter_chains<- function(PROJECT_in,n) {
            }
        } # mismatch between expected and actual parameter outputs > 1
 
-       # keep a sample form the end of the chain
-       param_sets = param_sets[,(((dim(param_sets)[2]-par_vector_length)+1):dim(param_sets)[2])]
-       # add these output to the final output variable
-       param_sets_out[1:(PROJECT_in$model$nopars[n]+1),,c]=param_sets
+       # Do not assign if too small
+       if (status[c] != 1) {
+           # keep a sample form the end of the chain
+           param_sets = param_sets[,(((dim(param_sets)[2]-par_vector_length)+1):dim(param_sets)[2])]
+           # add these output to the final output variable
+           param_sets_out[1:(PROJECT_in$model$nopars[n]+1),,c] = param_sets
+       }
        # clean up
        param_sets = 0 ; rm(param_sets)
 
   } # end of chains loop
-
+    
   # Check status of each chain that has been read in
   filter = which(status == 1)
   if (length(filter) > 0) {
@@ -239,6 +242,8 @@ read_parameter_chains<- function(PROJECT_in,n) {
       param_sets_out = array(param_sets_out, dim=c(dim(param_sets_out)[1:2],length(chains)))
   }
 
+  # Potentially dangerous hack, take modulus of parameters which are nominally 1-365, 
+  # but retrieved using broader parameter ranges to aid searching.
   if (PROJECT_in$model$name == "DALEC_1005" || PROJECT_in$model$name == "DALEC_1005a" ||
       PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" ||
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#" ||

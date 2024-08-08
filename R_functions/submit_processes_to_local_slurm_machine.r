@@ -143,3 +143,86 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
 
 ## Use byte compile
 submit_processes_to_local_slurm_machine<-cmpfun(submit_processes_to_local_slurm_machine)
+
+
+###
+## Function to submit processes to eddie
+###
+
+# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE) & J. F. Exbrayat (UoE).
+
+submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_ID) {
+
+    print('PREPARING TO SUBMIT STAGE 3 REPROCESSING TO LOCAL CLUSTER MACHINE (SLURM scheduler assumed)')
+    print('This function should be valid for all CARDAMOM compatible DALEC models functions')
+
+    ## Create the correct slurm job submission script for run_each_site()
+
+    ## default information for cluster submission
+    # number of tasks per array
+    max_nbundle_size = 500
+
+    # number of tasks required
+    ntasks = PROJECT_in$nosites
+    # number of bundles needed for tasks 
+    nbundle=ceiling(ntasks/max_nbundle_size)
+    # number of tasks per bundle
+    ntaskbundles=ceiling(ntasks/nbundle)
+    # make the size bundle specific to adjust for hangers on
+    ntaskbundles=rep(ntaskbundles, times=nbundle)
+    # place any hangers on into the last bundle
+    ntaskbundles[nbundle]=ntaskbundles[nbundle]+(ntasks%%nbundle)
+
+    print(paste('Number of tasks to be submitted = ',ntasks,sep=""))
+    print(paste('Maximum number of tasks allowed = ',max_nbundle_size,sep=""))
+    print(paste('Tasks will be bundled in groups of  ~',mean(ntaskbundles),sep=""))
+    print(paste('Number of bundles to be submitted = ',nbundle,sep=""))
+
+    # Determine the file path for the PROJECT infofile.RData
+    project_path = paste(PROJECT_in$localpath,"/infofile.RData",sep="")
+
+    # Loop through each bundle and submit to the local slurm cluster
+    for (b in seq(1, nbundle)) {
+         # Determine the start and end points of the bundles to be submitted
+         if (b == 1) { bundle_start = 1 } else { bundle_start = sum(ntaskbundles[1:(b-1)] + 1) }
+         bundle_end = sum(ntaskbundles[1:b])
+
+         # Create the shell script for submitting the job to slurm on the local cluster
+         slurm_file = paste(PROJECT_in$exepath,"/slurm_stage_3_submission.sh",sep="")
+         col_sep = "" ; nos_cols = 20
+         write(    c("#!/bin/bash"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = FALSE)
+         write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("# Slurm directives"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("#SBATCH --account=geos_extra"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --job-name=",job_ID,"_Bundle_",b,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("#SBATCH --ntasks=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("#SBATCH --mem=2G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --time=00:05:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --array=",bundle_start,"-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("R --no-save < ",PROJECT_in$paths$cardamom,"/R_functions/run_each_site_slurm.r --args ",PROJECT_in$localpath,"/infofile.RData ",repair," $SLURM_ARRAY_TASK_ID",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+
+         # Record directory to change back in a moment
+         cwd = getwd()
+         # Set working directory to the location of the executable we want to run
+         setwd(PROJECT_in$exepath)
+         # Submit jobs to the local slurm cluster
+         system(paste("sbatch ",slurm_file,sep=""))
+         # Return back to normal working directory
+         setwd(cwd) ; rm(cwd)
+
+    } # loop for submission of batches
+    
+    # Inform the user
+    print("Command issued to local slurm machine")
+
+    # Return back run_mcmc_results()
+    return(0)
+
+} # end of function submit_R_run_each_site_to_local_slurm_machine
+
+## Use byte compile
+submit_R_run_each_site_to_local_slurm_machine<-cmpfun(submit_R_run_each_site_to_local_slurm_machine)

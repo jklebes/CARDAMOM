@@ -51,6 +51,9 @@ cardamom_stage_3 <-function(PROJECT,PROJECTfile) {
                system(paste("rm ",PROJECT$resultspath,"cardamom_outputs_",i,".zip", sep=""))
            }
       }
+      # Check that we have any output files
+      tmp = list.files(PROJECT$resultspath, pattern="PARS")
+      if (length(tmp) == 0) {return(paste("No files can be found in the RESULTS directory")) }
    } # ecdf condition
    # do we run the parameters yet for analysis
    # Changed to a hardcoded run of the analysis
@@ -66,7 +69,7 @@ cardamom_stage_3 <-function(PROJECT,PROJECTfile) {
        # This is more resilient to running incomplete chains
        PROJECT$latter_sample_frac = 0.75 #0.5 # 0.75 #readline("What (latter) fraction of accepted parameters to use (e.g. 0.5)?")
        # Run the parameter back through DALEC
-       run_mcmc_results(PROJECT,stage,repair,grid_override)
+       run_mcmc_results(PROJECT,repair,grid_override)
    }
 
    # now save the project

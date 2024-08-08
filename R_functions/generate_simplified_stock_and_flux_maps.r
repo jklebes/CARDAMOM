@@ -211,6 +211,8 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   } # loop through all "grid_output" objects
 
+  print("...done plotting stocks and fluxes maps...")
+
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)
 

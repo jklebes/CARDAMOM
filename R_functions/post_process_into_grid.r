@@ -771,6 +771,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
                grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation
                grid_output$MTT_wood_years_to_NPP_wood_fraction_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_NPP_wood_fraction_correlation
+               grid_output$MTT_wood_years_to_MTT_som_years_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_MTT_som_years_correlation
                # ...against key other observables
                grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation
                grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation
@@ -779,21 +780,40 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$NPP_wood_gCm2day_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_wood_gCm2_correlation
                grid_output$NPP_wood_gCm2day_to_som_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_som_gCm2_correlation
                grid_output$NPP_wood_gCm2day_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_lai_m2m2_correlation            
-               grid_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_GPP_gCm2day_correlation
-               grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation
-               grid_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation
-               grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation
-               grid_output$NPP_wood_gCm2day_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_wood_gCm2_correlation
-               grid_output$NPP_wood_gCm2day_to_som_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_som_gCm2_correlation
-               grid_output$NPP_wood_gCm2day_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_lai_m2m2_correlation            
+               grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation  
+               grid_output$NPP_wood_gCm2day_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_gCm2day_to_dCsom_gCm2_correlation
+               grid_output$NPP_wood_fraction_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_GPP_gCm2day_correlation
+               grid_output$NPP_wood_fraction_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_NEE_gCm2day_correlation
+               grid_output$NPP_wood_fraction_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_Rauto_gCm2day_correlation
+               grid_output$NPP_wood_fraction_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_Rhet_gCm2day_correlation
+               grid_output$NPP_wood_fraction_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_wood_gCm2_correlation
+               grid_output$NPP_wood_fraction_to_som_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_som_gCm2_correlation
+               grid_output$NPP_wood_fraction_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_lai_m2m2_correlation            
+               grid_output$NPP_wood_fraction_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_dCwood_gCm2_correlation
+               grid_output$NPP_wood_fraction_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$NPP_wood_fraction_to_dCsom_gCm2_correlation
                grid_output$MTT_wood_years_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_GPP_gCm2day_correlation
                grid_output$MTT_wood_years_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_NEE_gCm2day_correlation
                grid_output$MTT_wood_years_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_Rauto_gCm2day_correlation 
                grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_Rhet_gCm2day_correlation
                grid_output$MTT_wood_years_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_wood_gCm2_correlation
                grid_output$MTT_wood_years_to_som_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_som_gCm2_correlation
-               grid_output$MTT_wood_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_lai_m2m2_correlation                              
+               grid_output$MTT_wood_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_lai_m2m2_correlation     
+               grid_output$MTT_wood_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCwood_gCm2_correlation
+               grid_output$MTT_wood_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCsom_gCm2_correlation
            }
+           if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation") == TRUE) {
+               grid_output$MTT_som_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_som_years_parameter_correlation
+               # Assess within pixel correlations with soil turnover
+               grid_output$MTT_som_years_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_GPP_gCm2day_correlation
+               grid_output$MTT_som_years_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_NEE_gCm2day_correlation
+               grid_output$MTT_som_years_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_Rauto_gCm2day_correlation 
+               grid_output$MTT_som_years_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_Rhet_gCm2day_correlation
+               grid_output$MTT_som_years_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_wood_gCm2_correlation
+               grid_output$MTT_som_years_to_som_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_som_gCm2_correlation
+               grid_output$MTT_som_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_lai_m2m2_correlation
+               grid_output$MTT_som_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCwood_gCm2_correlation     
+               grid_output$MTT_som_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCsom_gCm2_correlation
+           }            
 
            # Tidy up
            rm(site_output) ; file.remove(site_output_all[[n]])
