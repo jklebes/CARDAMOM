@@ -10,7 +10,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Determine some useful information for the analysis below
   nos_years = PROJECT$nos_years
   steps_per_year = floor(dim(drivers$met)[1] / nos_years)
-
+print(nos_years)
   # Declare the site level output list object
   site_output = list(num_quantiles = num_quantiles, steps_per_year = steps_per_year, nos_years = nos_years)
 

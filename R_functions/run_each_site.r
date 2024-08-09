@@ -26,7 +26,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       }
       # Otherwise we should assume these variables exist
       parameters = output$parameters ; converged = output$converged ; rm(output)      
-      
+
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect

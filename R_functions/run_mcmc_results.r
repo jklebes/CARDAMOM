@@ -892,6 +892,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
 
   # Calculate the number of years
   PROJECT$nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
+  save(PROJECT, file=paste(PROJECT$localpath,"infofile.RData",sep=""))
 
   # determine what the output file name is here, so that we can check if one already exists
   outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
@@ -940,27 +941,27 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
       # a linux operating system, and one using a slurm job scheduler
 
       # Create a job ID which will be common to all associated tasks
-      job_ID = as.vector(Sys.time()) # this will be unique as the number of seconds since some reference start datetime
+      job_ID = floor(as.vector(Sys.time())) # this will be unique as the number of seconds since some reference start datetime
       # Now we can deploy in anger
       dummy = submit_R_run_each_site_to_local_slurm_machine(PROJECT,repair,job_ID)
 
-      # Having submitted the jobs, we will wait for a period of time loosly related to the number of tasks
-      # being submitted
-      Sys.sleep(PROJECT$nosites * 0.3) # 30 second / 100 typical nos parallel tasks
-
-      # Check whether the slurm scheduler has finished all jobs
-      ongoing = TRUE
-      while(ongoing) {
-         # Query ongoing jobs, assumes only your user name is returned
-         system(paste('squeue -u ',username,' --format="%15j" > q',sep="")) ; q = read.table("q", header=TRUE)
-         # If no more of the job_ID can be found then we will break the loop and continue
-         if (length(which(grepl(job_ID,q[,1]))) > 0) {
-             # Otherwise, we will wait a further 10 minutes and check again
-             file.remove("q") ; Sys.sleep(PROJECT$nosites)
-         } else {
-             file.remove("q") ; ongoing = FALSE 
-         }
-      }
+#      # Having submitted the jobs, we will wait for a period of time loosly related to the number of tasks
+#      # being submitted
+#      Sys.sleep(PROJECT$nosites * 0.3) # 30 second / 100 typical nos parallel tasks
+#
+#      # Check whether the slurm scheduler has finished all jobs
+#      ongoing = TRUE
+#      while(ongoing) {
+#         # Query ongoing jobs, assumes only your user name is returned
+#         system(paste('squeue -u ',username,' --format="%15j" > q',sep="")) ; q = read.table("q", header=TRUE)
+#         # If no more of the job_ID can be found then we will break the loop and continue
+#         if (length(which(grepl(job_ID,q[,1]))) > 0) {
+#             # Otherwise, we will wait a little while and check again
+#             file.remove("q") ; Sys.sleep(PROJECT$nosites*0.03)
+#         } else {
+#             file.remove("q") ; ongoing = FALSE 
+#         }
+#      }
 
       # Create empty output object into which to insert the required file names from the existing files
       site_output_all = vector("list", PROJECT$nosites)

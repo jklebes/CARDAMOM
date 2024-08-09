@@ -141,15 +141,11 @@ read_parameter_chains<- function(PROJECT_in,n) {
 
   # Determine the intended name for the parmeter files
   pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
+
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
   # Return if no files
   if (length(pfile) == 0) {return(-9999)}
-
-  # Determine the intended name for the STEP files
-  sfile = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_STEP",sep="")
-  # select the STEP files only
-  sfiles = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_*_STEP",sep="")
 
   # calculate the number of chains
   chains = seq(1, length(pfile))

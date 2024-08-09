@@ -152,7 +152,7 @@ submit_processes_to_local_slurm_machine<-cmpfun(submit_processes_to_local_slurm_
 # This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
 # Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE) & J. F. Exbrayat (UoE).
 
-submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_ID) {
+submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID) {
 
     print('PREPARING TO SUBMIT STAGE 3 REPROCESSING TO LOCAL CLUSTER MACHINE (SLURM scheduler assumed)')
     print('This function should be valid for all CARDAMOM compatible DALEC models functions')
@@ -166,7 +166,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_I
     # number of tasks required
     ntasks = PROJECT_in$nosites
     # number of bundles needed for tasks 
-    nbundle=ceiling(ntasks/max_nbundle_size)
+    nbundle=ceiling(ntasks/(max_nbundle_size-1))
     # number of tasks per bundle
     ntaskbundles=ceiling(ntasks/nbundle)
     # make the size bundle specific to adjust for hangers on
@@ -184,9 +184,11 @@ submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_I
 
     # Loop through each bundle and submit to the local slurm cluster
     for (b in seq(1, nbundle)) {
-         # Determine the start and end points of the bundles to be submitted
-         if (b == 1) { bundle_start = 1 } else { bundle_start = sum(ntaskbundles[1:(b-1)] + 1) }
-         bundle_end = sum(ntaskbundles[1:b])
+         # Locally extract the size of the current bundle
+         bundle_end = ntaskbundles[b]
+         # and determine the offset required to get to the right site number.
+         # This is done to avoid the SLURM max array counter size limit.
+         if (b == 1) { bundle_offset = 0 } else {bundle_offset = sum(ntaskbundles[1:(b-1)])}
 
          # Create the shell script for submitting the job to slurm on the local cluster
          slurm_file = paste(PROJECT_in$exepath,"/slurm_stage_3_submission.sh",sep="")
@@ -201,9 +203,10 @@ submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_I
          write(    c("#SBATCH --mem=2G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --time=00:05:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("#SBATCH --array=",bundle_start,"-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --array=1-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("R --no-save < ",PROJECT_in$paths$cardamom,"/R_functions/run_each_site_slurm.r --args ",PROJECT_in$localpath,"/infofile.RData ",repair," $SLURM_ARRAY_TASK_ID",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("sitenum=$((SLURM_ARRAY_TASK_ID+",bundle_offset,"))"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("R --no-save < ",PROJECT_in$paths$cardamom,"/R_functions/run_each_site_slurm.r --args ",PROJECT_in$localpath,"/infofile.RData ",repair," $sitenum",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 
          # Record directory to change back in a moment
          cwd = getwd()
@@ -213,6 +216,21 @@ submit_R_run_each_site_to_local_slurm_machine<-function (PROJECT_in,repair,job_I
          system(paste("sbatch ",slurm_file,sep=""))
          # Return back to normal working directory
          setwd(cwd) ; rm(cwd)
+
+         ## Hack to work around maximum number of array jobs being submitted
+         # Check whether the slurm scheduler has finished all jobs
+         Sys.sleep(1) ; ongoing = TRUE
+         while(ongoing) {
+            # Query ongoing jobs, assumes only your user name is returned
+            system(paste('squeue -u ',username,' --format="%20j" > q',sep="")) ; q = read.table("q", header=TRUE)
+            # If no more of the job_ID can be found then we will break the loop and continue
+            if (length(which(grepl(job_ID,q[,1]))) > 0) {
+                # Otherwise, we will wait 30 seconds and check again
+                file.remove("q") ; print("...weighting") ; Sys.sleep(30)
+            } else {
+                file.remove("q") ; ongoing = FALSE 
+            }
+         }
 
     } # loop for submission of batches
     
