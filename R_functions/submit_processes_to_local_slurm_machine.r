@@ -200,7 +200,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
          write(    c(paste("#SBATCH --job-name=",job_ID,"_Bundle_",b,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --ntasks=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c("#SBATCH --mem=2G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --time=00:05:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --array=1-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
@@ -213,6 +213,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
          # Set working directory to the location of the executable we want to run
          setwd(PROJECT_in$exepath)
          # Submit jobs to the local slurm cluster
+         print(paste("...bundle ",b," of ",nbundle,sep=""))
          system(paste("sbatch ",slurm_file,sep=""))
          # Return back to normal working directory
          setwd(cwd) ; rm(cwd)
@@ -226,7 +227,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
             # If no more of the job_ID can be found then we will break the loop and continue
             if (length(which(grepl(job_ID,q[,1]))) > 0) {
                 # Otherwise, we will wait 30 seconds and check again
-                file.remove("q") ; print("...weighting") ; Sys.sleep(30)
+                file.remove("q") ; print("...waiting") ; Sys.sleep(30)
             } else {
                 file.remove("q") ; ongoing = FALSE 
             }
