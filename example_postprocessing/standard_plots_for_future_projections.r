@@ -9,8 +9,8 @@
 # Set the location of cardamom outputs
 cardamom_output_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/"
 # Specify the infofile for the project to be used
-#infofile = paste(cardamom_output_dir,"/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData",sep="")
-infofile = paste(cardamom_output_dir,"/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData",sep="")
+infofile = paste(cardamom_output_dir,"/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData",sep="")
+#infofile = paste(cardamom_output_dir,"/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData",sep="")
 # Load project for climate
 load(infofile) 
 orig_nos_years = length(c(as.vector(PROJECT$start_year):as.vector(PROJECT$end_year)))
@@ -18,8 +18,8 @@ orig_nos_years = length(c(as.vector(PROJECT$start_year):as.vector(PROJECT$end_ye
 # Suffix for the output files
 output_suffix = "_steadystate" # must include "_" at the beginning
 # Location to place the outputs of this script
-#outdir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/RESULTS_PROCESSED/"
-outdir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/RESULTS_PROCESSED/"
+outdir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/RESULTS_PROCESSED/"
+#outdir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/RESULTS_PROCESSED/"
 
 # Which Shared Socioeconomic Pathways (SSPs) do you want to use?
 # Currently available in GCEL are: "ssp119","ssp126","ssp434","ssp245","ssp370","ssp585"
@@ -587,7 +587,7 @@ for (ssp in seq(1, length(ssp_scenarios))) {
 # Plotting code below assumes that the first analysis will be added to a list called "orig" and the second will be "alt"
 # alt = 
 # orig = 
-orig = list(SoilCPrior = SoilCPrior,
+alt = list(SoilCPrior = SoilCPrior,
             LAIobs_m2m2 = LAIobs_m2m2,
             LAIobs_unc_m2m2 = LAIobs_unc_m2m2,
             LAIcount = LAIcount,
@@ -685,7 +685,7 @@ orig = list(SoilCPrior = SoilCPrior,
 
 }
    
-do_plots = FALSE
+do_plots = TRUE
 if (do_plots) {            
 ###
 ## Do some timeseries plots...

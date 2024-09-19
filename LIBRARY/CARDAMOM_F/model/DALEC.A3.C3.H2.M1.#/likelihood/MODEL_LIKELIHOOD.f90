@@ -533,8 +533,7 @@ module model_likelihood_module
 
     ! for development: Tmin should be < topt and topt should be < tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
-                                     .or. pars(28) > pars(27) &
-                                     .or. pars(26) > pars(27))) then
+                                     .or. pars(28) > pars(27))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
@@ -547,8 +546,7 @@ module model_likelihood_module
 
     ! for vernalisation: Tmin < Topt < Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
-                                     .or. pars(31) > pars(30) &
-                                     .or. pars(29) > pars(30))) then
+                                     .or. pars(31) > pars(30))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
@@ -613,30 +611,29 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, DIAG, no_years, nn, start
-    double precision :: mean_pools(nopools), decay_coef, meangpp, EQF, PEDC, infi
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-                       ,ffol  & ! Fraction of GPP to foliage
-                       ,flab  & ! Fraction of GPP to labile pool
-                       ,froot & ! Fraction of GPP to root
-                       ,flit  & !
-                       ,fwood & ! Fraction of GPP to wood
-                       ,fsom    ! fraction of GPP som under eqilibrium conditions
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
+               io_start, io_finish
+    integer, dimension(nodays) :: pool_hak
+    double precision :: infi, mrt!, EQF, etol
+    double precision, dimension(nodays) :: ratio
+    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
+                                            mean_pools, Fin, Fout, Rm, Rs, &
+                                            Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
+    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
+    
+    ! Steady State Attractor:
+    ! Log ratio difference between inputs and outputs of the system.
+    logical, parameter :: old_edcs = .false.
+    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+                                   EQF2 = log(2d0),   & 
+                                   EQF5 = log(5d0),   &
+                                   EQF10 = log(10d0), &
+                                   EQF15 = log(15d0), &
+                                   EQF20 = log(20d0), &
+                                    etol = 0.5d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
     ! Work out how many completed years there are in the system
     no_years = int(nint(sum(deltat)/365.25d0))
-    ! We will skip the first year in all cases, 
-    ! due to the model not being capable of initialising 'mid-growing-season'.
-    start = nint(dble(nodays) / dble(no_years))
-
-    ! set initial value
-    fauto = sum(M_FLUXES(start:nodays,3)) / sum(M_FLUXES(start:nodays,1))
-    ffol = sum(M_FLUXES(start:nodays,4)) / sum(M_FLUXES(start:nodays,1))
-    flab = sum(M_FLUXES(start:nodays,5)) / sum(M_FLUXES(start:nodays,1))
-    froot = sum(M_FLUXES(start:nodays,6)) / sum(M_FLUXES(start:nodays,1))
-    fwood = sum(M_FLUXES(start:nodays,7)) / sum(M_FLUXES(start:nodays,1))
-    fsom = fwood+(froot+flab+ffol)*pars(1)       
-    flit = (froot+flab+ffol)
 
     ! initial value
     infi = 0d0
@@ -645,74 +642,88 @@ module model_likelihood_module
     ! give EDC2 an initial value
     EDC2 = 1
 
-    ! SOM attractor - must be within a factor of 2 from Csom0
-    ! eqiulibrium factor (in comparison with initial conditions)
-    EQF = 10d0
+    ! First calculate total flux for the simulation period
+    ! NOTE: that this code differs from the majority of DALEC models
+    ! as we treat the first year as a spin up to be ignored.
+    io_start = steps_per_year + 1 ; io_finish = nodays
+    if (no_years < 3) then 
+       do fl = 1, nofluxes
+          FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
+          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+          FT_yr2(fl) = FT_yr1(fl)
+       end do    
+    else 
+       do fl = 1, nofluxes
+          FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
+          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+          FT_yr2(fl) = sum(M_FLUXES(((steps_per_year*2)+1):(steps_per_year*3),fl)*deltat(((steps_per_year*2)+1):(steps_per_year*3)))
+       end do
+    end if 
+    ! get total in and out for each dead organic matter pool
 
-    ! initialise and then calculate mean gpp values
-    meangpp = sum(M_GPP(start:nodays:nodays))/dble(nodays)!        
+    ! litter
+    Fin(5)  = FT(12)+FT(32)+FT(33)+FT(34)+FT(35)+FT(36)+FT(37)
+    Fout(5) = FT(13)+FT(15)
+    Fin_yr1(5)  = FT_yr1(12)+FT_yr1(32)+FT_yr1(33)+FT_yr1(34)+FT_yr1(35)+FT_yr1(36)+FT_yr1(37)
+    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)
+    Fin_yr2(5)  = FT_yr2(12)+FT_yr2(32)+FT_yr2(33)+FT_yr2(34)+FT_yr2(35)+FT_yr2(36)+FT_yr2(37)
+    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)
+    ! som
+    Fin(6)  = FT(15)
+    Fout(6) = FT(14)
+    Fin_yr1(6)  = FT_yr1(15)
+    Fout_yr1(6) = FT_yr1(14)
+    Fin_yr2(6)  = FT_yr2(15)
+    Fout_yr2(6) = FT_yr2(14)
 
-    ! EDC 11 - SOM steady state within order magnitude of initial conditions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(23)*EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-    end if
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*fsom)/(pars(10)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(23)/EQF)) then
-       EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-    endif
+    if (EDC2 == 1 .or. DIAG == 1) then
 
-    ! EDC 12 - Litter steady state assumptions
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) > (pars(22)*EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-    endif
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-       ((meangpp*flit)/(pars(9)*0.5d0*exp(resp_rate_temp_coeff*meantemp))) < (pars(22)/EQF)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-    endif
+        ! Foliage + fine root litter
+        ! Estimate MRT (years)
+        pool_hak = 1 ; ratio = 0d0
+        where (M_POOLS(1:nodays,5) > 0d0) ! protection against NaN from division by zero
+               pool_hak = 0 
+               ratio = ((M_FLUXES(1:nodays,13) + M_FLUXES(1:nodays,15)) &
+                       / M_POOLS(1:nodays,5))
+        end where
+        ! Estimate the mean fractional daily loss
+        mrt = sum(ratio) / dble(nodays-sum(pool_hak))
+        ! If daily turnover fraction is less than equivalent of MRT of 1 year, fail.
+        if (mrt < 2.737850787d-3) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        end if 
 
-    ! EDC 13
-    ! assesses the exponential decay/growth of the Csom pool
+    end if ! EDC2 == 1 .or. DIAG == 1
 
-!    ! only do this for the Csom pool
-!    do n = 1, 1 !nopools
-!       if (EDC2 == 1 .or. DIAG == 1) then
-!          decay_coef=expdecay2(M_POOLS(1:(nodays+1),6),deltat,nodays+1)
-!          ! next assess the decay coefficient for meetings the EDC criterion
-!          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-!             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-!          end if ! EDC conditions
-!       end if ! EDC .or. DIAG condition
-!    end do ! pools loop
+    if (EDC2 == 1 .or. DIAG == 1) then
 
-    ! EDC 14
-    ! assesses the exponential decay/growth of the Clit pool
+        ! Dead pools - SOM only
+        do n = 5, 6
+           ! Restrict rates of increase
+           if (abs(log(Fin(n)/Fout(n))) > EQF10) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(10+n-4) = 0
+           end if
+           ! Restrict exponential behaviour at initialisation
+           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(16+n-4) = 0
+           end if
+        end do
 
-!    ! only do this for the Clit pool
-!    do n = 1, 1 !nopools
-!       if (EDC2 == 1 .or. DIAG == 1) then
-!          decay_coef=expdecay2(M_POOLS(1:(nodays+1),5),deltat,nodays+1)
-!          ! next assess the decay coefficient for meetings the EDC criterion
-!          if (abs(-log(2d0)/decay_coef) < (365.25d0*dble(no_years)) .and. decay_coef < 0d0 ) then
-!             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-!          end if ! EDC conditions
-!       end if ! EDC .or. DIAG condition
-!    end do ! pools loop
+    end if ! EDC2 == 1 .or. DIAG == 1
 
     ! we know that the crop model should produce some yield - therefore we
     ! reject parameter sets which generate no yield ever!
     !if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+    !    EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     !endif
     !! Total hack to enforce a massive yield and find out what the parameters do
     !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,21)) < 300d0 ) then
-    !  EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
+    !  EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     !endif
 
     ! We should assume all crops get somewhere close to maturity (2.0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
     endif
 
     !

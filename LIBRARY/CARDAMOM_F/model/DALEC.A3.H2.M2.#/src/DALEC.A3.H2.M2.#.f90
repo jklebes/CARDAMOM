@@ -2706,7 +2706,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !! (1) one cattle is 1 LU and one sheep is 0.11 LU, (2) 1 LU weighs 650 kg, 
     !! (3) an animal demands ≈ 2.5 % (p31) of its weight in the form grass dry matter (DM) when grazing, 
     !! and (4) 47.5 % of DM consists of C (Vertès et al., 2018). 
-    !! This default assumption equates to 1 LSU / ha / day requring ~0.77 gC/m2/day.
+    !! This default assumption equates to 1 LSU / ha / day requiring ~0.77 gC/m2/day.
     
     implicit none
     

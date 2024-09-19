@@ -31,7 +31,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
 #drivers$met[,5] = drivers$met[1,5]
-## HACK to create S2 simulations for GCP / Trendy v12
+## HACK to create S2 simulations for GCP / Trendy v13
 #drivers$met[,8] = 0
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
@@ -92,7 +92,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           # ...if this is a site run save the full ensemble and everything else...
           save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
           # store the parameters and driver information
-          save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
+          save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
 #          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
 #               file=outfile_parameters, compress="gzip", compression_level = 6)

@@ -275,7 +275,6 @@ contains
 
        ! count iteration whether the current proposal is accepted or rejected
        N%ITER = N%ITER + 1
-print*,nint(N%ITER),MCO%nWRITE
        if (MCO%nWRITE > 0) then
            if (mod(nint(N%ITER),MCO%nWRITE) == 0) then
 

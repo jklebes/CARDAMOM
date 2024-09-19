@@ -10,7 +10,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Determine some useful information for the analysis below
   nos_years = PROJECT$nos_years
   steps_per_year = floor(dim(drivers$met)[1] / nos_years)
-print(nos_years)
+
   # Declare the site level output list object
   site_output = list(num_quantiles = num_quantiles, steps_per_year = steps_per_year, nos_years = nos_years)
 
@@ -1178,7 +1178,12 @@ print(nos_years)
           site_output$GRAZINGFractionOfTurnover_biomass = states_all$GRAZINGextracted_biomass_gCm2day + states_all$GRAZINGlitter_biomass_gCm2day
       }      
       # Estimate the ecosystem mean transit (residence) times as a function of natural and disturbance processes
-      # NOTE: rollapply inverts the dimensions from that wanted
+      # NOTE: rollapply inverts the dimensions from that wanted in the annual equivalent
+      # Mean
+      site_output$MTT_biomass_years =  states_all$biomass_gCm2 / site_output$outflux_biomass_gCm2day
+      site_output$MTT_biomass_years[is.infinite(site_output$MTT_biomass_years)] = NA 
+      site_output$MTT_biomass_years = quantile(apply(site_output$MTT_biomass_years,1,mean, na.rm=TRUE) / 365.25, prob=num_quantiles, na.rm = na_flag)
+      # Annual
       site_output$MTT_annual_biomass_years = t( apply(states_all$biomass_gCm2,1, rollapply_mean_annual, step = steps_per_year)
                                               / (apply(site_output$outflux_biomass_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
       site_output$MTT_annual_biomass_years = apply(site_output$MTT_annual_biomass_years,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -1248,7 +1253,12 @@ print(nos_years)
           site_output$GRAZINGFractionOfTurnover_dom = states_all$GRAZINGextracted_dom_gCm2day
       }      
       # Use this information to determine the mean residence times as it evolves over time
-      # NOTE: rollapply inverts the dimensions from that wanted
+      # NOTE: for annual calculation rollapply inverts the dimensions from that wanted
+      # Mean
+      site_output$MTT_dom_years =  states_all$dom_gCm2 / site_output$outflux_dom_gCm2day
+      site_output$MTT_dom_years[is.infinite(site_output$MTT_dom_years)] = NA 
+      site_output$MTT_dom_years = quantile(apply(site_output$MTT_dom_years,1,mean, na.rm=TRUE) / 365.25, prob=num_quantiles, na.rm = na_flag)
+      # Annual
       site_output$MTT_annual_dom_years = t( apply(states_all$dom_gCm2,1, rollapply_mean_annual, step = steps_per_year)
                                           / (apply(site_output$outflux_dom_gCm2day,1, rollapply_mean_annual, step = steps_per_year) * 365.25) )
       site_output$MTT_annual_dom_years = apply(site_output$MTT_annual_dom_years,2,quantile,prob=num_quantiles, na.rm = na_flag)

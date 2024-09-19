@@ -301,34 +301,48 @@ alt_mean_wood = rep(NA, orig_PROJECT$nosites)
 cumarea = 0 
 # Original
 orig_lai_grid = array(NA,dim=c(dims[1],dims[2],nos_years))
-orig_lai_m2m2 = rep(0,nos_years)      ; orig_lai_lower_m2m2 = rep(0,nos_years)      ; orig_lai_upper_m2m2 = rep(0,nos_years)
-orig_et_PgH2Oyr = rep(0,nos_years)    ; orig_et_lower_PgH2Oyr = rep(0,nos_years)    ; orig_et_upper_PgH2Oyr = rep(0,nos_years)
-orig_gpp_TgCyr = rep(0,nos_years)     ; orig_gpp_lower_TgCyr = rep(0,nos_years)     ; orig_gpp_upper_TgCyr = rep(0,nos_years)
-orig_rauto_TgCyr = rep(0,nos_years)   ; orig_rauto_lower_TgCyr = rep(0,nos_years)   ; orig_rauto_upper_TgCyr = rep(0,nos_years)
-orig_rhet_TgCyr = rep(0,nos_years)    ; orig_rhet_lower_TgCyr = rep(0,nos_years)    ; orig_rhet_upper_TgCyr = rep(0,nos_years)
-orig_nee_TgCyr = rep(0,nos_years)     ; orig_nee_lower_TgCyr = rep(0,nos_years)     ; orig_nee_upper_TgCyr = rep(0,nos_years)
-orig_nbe_TgCyr = rep(0,nos_years)     ; orig_nbe_lower_TgCyr = rep(0,nos_years)     ; orig_nbe_upper_TgCyr = rep(0,nos_years)
-orig_fire_TgCyr = rep(0,nos_years)    ; orig_fire_lower_TgCyr = rep(0,nos_years)    ; orig_fire_upper_TgCyr = rep(0,nos_years)
-orig_harvest_TgCyr = rep(0,nos_years) ; orig_harvest_lower_TgCyr = rep(0,nos_years) ; orig_harvest_upper_TgCyr = rep(0,nos_years)
-orig_wood_TgC = rep(0,nos_years)      ; orig_wood_lower_TgC = rep(0,nos_years)      ; orig_wood_upper_TgC = rep(0,nos_years)
-orig_lit_TgC = rep(0,nos_years)       ; orig_lit_lower_TgC = rep(0,nos_years)       ; orig_lit_upper_TgC = rep(0,nos_years)
-orig_litwood_TgC = rep(0,nos_years)   ; orig_litwood_lower_TgC = rep(0,nos_years)   ; orig_litwood_upper_TgC = rep(0,nos_years)
-orig_soil_TgC = rep(0,nos_years)      ; orig_soil_lower_TgC = rep(0,nos_years)      ; orig_soil_upper_TgC = rep(0,nos_years)
+orig_lai_m2m2 = rep(0,nos_years)          ; orig_lai_lower_m2m2 = rep(0,nos_years)          ; orig_lai_upper_m2m2 = rep(0,nos_years)
+orig_et_PgH2Oyr = rep(0,nos_years)        ; orig_et_lower_PgH2Oyr = rep(0,nos_years)        ; orig_et_upper_PgH2Oyr = rep(0,nos_years)
+orig_gpp_TgCyr = rep(0,nos_years)         ; orig_gpp_lower_TgCyr = rep(0,nos_years)         ; orig_gpp_upper_TgCyr = rep(0,nos_years)
+orig_rauto_TgCyr = rep(0,nos_years)       ; orig_rauto_lower_TgCyr = rep(0,nos_years)       ; orig_rauto_upper_TgCyr = rep(0,nos_years)
+orig_rhet_TgCyr = rep(0,nos_years)        ; orig_rhet_lower_TgCyr = rep(0,nos_years)        ; orig_rhet_upper_TgCyr = rep(0,nos_years)
+orig_rhet_litter_TgCyr = rep(0,nos_years) ; orig_rhet_litter_lower_TgCyr = rep(0,nos_years) ; orig_rhet_litter_upper_TgCyr = rep(0,nos_years)
+orig_rhet_soil_TgCyr = rep(0,nos_years)   ; orig_rhet_soil_lower_TgCyr = rep(0,nos_years)   ; orig_rhet_soil_upper_TgCyr = rep(0,nos_years)
+orig_reco_TgCyr = rep(0,nos_years)        ; orig_reco_lower_TgCyr = rep(0,nos_years)        ; orig_reco_upper_TgCyr = rep(0,nos_years)
+orig_npp_TgCyr = rep(0,nos_years)         ; orig_npp_lower_TgCyr = rep(0,nos_years)         ; orig_npp_upper_TgCyr = rep(0,nos_years)
+orig_nee_TgCyr = rep(0,nos_years)         ; orig_nee_lower_TgCyr = rep(0,nos_years)         ; orig_nee_upper_TgCyr = rep(0,nos_years)
+orig_nbe_TgCyr = rep(0,nos_years)         ; orig_nbe_lower_TgCyr = rep(0,nos_years)         ; orig_nbe_upper_TgCyr = rep(0,nos_years)
+orig_fire_TgCyr = rep(0,nos_years)        ; orig_fire_lower_TgCyr = rep(0,nos_years)        ; orig_fire_upper_TgCyr = rep(0,nos_years)
+orig_harvest_TgCyr = rep(0,nos_years)     ; orig_harvest_lower_TgCyr = rep(0,nos_years)     ; orig_harvest_upper_TgCyr = rep(0,nos_years)
+orig_labile_TgC = rep(0,nos_years)        ; orig_labile_lower_TgC = rep(0,nos_years)        ; orig_labile_upper_TgC = rep(0,nos_years)
+orig_foliage_TgC = rep(0,nos_years)       ; orig_foliage_lower_TgC = rep(0,nos_years)       ; orig_foliage_upper_TgC = rep(0,nos_years)
+orig_roots_TgC = rep(0,nos_years)         ; orig_roots_lower_TgC = rep(0,nos_years)         ; orig_roots_upper_TgC = rep(0,nos_years)
+orig_wood_TgC = rep(0,nos_years)          ; orig_wood_lower_TgC = rep(0,nos_years)          ; orig_wood_upper_TgC = rep(0,nos_years)
+orig_lit_TgC = rep(0,nos_years)           ; orig_lit_lower_TgC = rep(0,nos_years)           ; orig_lit_upper_TgC = rep(0,nos_years)
+orig_litwood_TgC = rep(0,nos_years)       ; orig_litwood_lower_TgC = rep(0,nos_years)       ; orig_litwood_upper_TgC = rep(0,nos_years)
+orig_soil_TgC = rep(0,nos_years)          ; orig_soil_lower_TgC = rep(0,nos_years)          ; orig_soil_upper_TgC = rep(0,nos_years)
 # Alternate
 alt_lai_grid = array(NA,dim=c(dims[1],dims[2],nos_years))
-alt_lai_m2m2 = rep(0,nos_years)      ; alt_lai_lower_m2m2 = rep(0,nos_years)      ; alt_lai_upper_m2m2 = rep(0,nos_years)
-alt_et_PgH2Oyr = rep(0,nos_years)    ; alt_et_lower_PgH2Oyr = rep(0,nos_years)    ; alt_et_upper_PgH2Oyr = rep(0,nos_years)
-alt_gpp_TgCyr = rep(0,nos_years)     ; alt_gpp_lower_TgCyr = rep(0,nos_years)     ; alt_gpp_upper_TgCyr = rep(0,nos_years)
-alt_rauto_TgCyr = rep(0,nos_years)   ; alt_rauto_lower_TgCyr = rep(0,nos_years)   ; alt_rauto_upper_TgCyr = rep(0,nos_years)
-alt_rhet_TgCyr = rep(0,nos_years)    ; alt_rhet_lower_TgCyr = rep(0,nos_years)    ; alt_rhet_upper_TgCyr = rep(0,nos_years)
-alt_nee_TgCyr = rep(0,nos_years)     ; alt_nee_lower_TgCyr = rep(0,nos_years)     ; alt_nee_upper_TgCyr = rep(0,nos_years)
-alt_nbe_TgCyr = rep(0,nos_years)     ; alt_nbe_lower_TgCyr = rep(0,nos_years)     ; alt_nbe_upper_TgCyr = rep(0,nos_years)
-alt_fire_TgCyr = rep(0,nos_years)    ; alt_fire_lower_TgCyr = rep(0,nos_years)    ; alt_fire_upper_TgCyr = rep(0,nos_years)
-alt_harvest_TgCyr = rep(0,nos_years) ; alt_harvest_lower_TgCyr = rep(0,nos_years) ; alt_harvest_upper_TgCyr = rep(0,nos_years)
-alt_wood_TgC = rep(0,nos_years)      ; alt_wood_lower_TgC = rep(0,nos_years)      ; alt_wood_upper_TgC = rep(0,nos_years)
-alt_lit_TgC = rep(0,nos_years)       ; alt_lit_lower_TgC = rep(0,nos_years)       ; alt_lit_upper_TgC = rep(0,nos_years)
-alt_litwood_TgC = rep(0,nos_years)   ; alt_litwood_lower_TgC = rep(0,nos_years)   ; alt_litwood_upper_TgC = rep(0,nos_years)
-alt_soil_TgC = rep(0,nos_years)      ; alt_soil_lower_TgC = rep(0,nos_years)      ; alt_soil_upper_TgC = rep(0,nos_years)
+alt_lai_m2m2 = rep(0,nos_years)          ; alt_lai_lower_m2m2 = rep(0,nos_years)          ; alt_lai_upper_m2m2 = rep(0,nos_years)
+alt_et_PgH2Oyr = rep(0,nos_years)        ; alt_et_lower_PgH2Oyr = rep(0,nos_years)        ; alt_et_upper_PgH2Oyr = rep(0,nos_years)
+alt_gpp_TgCyr = rep(0,nos_years)         ; alt_gpp_lower_TgCyr = rep(0,nos_years)         ; alt_gpp_upper_TgCyr = rep(0,nos_years)
+alt_rauto_TgCyr = rep(0,nos_years)       ; alt_rauto_lower_TgCyr = rep(0,nos_years)       ; alt_rauto_upper_TgCyr = rep(0,nos_years)
+alt_rhet_TgCyr = rep(0,nos_years)        ; alt_rhet_lower_TgCyr = rep(0,nos_years)        ; alt_rhet_upper_TgCyr = rep(0,nos_years)
+alt_rhet_litter_TgCyr = rep(0,nos_years) ; alt_rhet_litter_lower_TgCyr = rep(0,nos_years) ; alt_rhet_litter_upper_TgCyr = rep(0,nos_years)
+alt_rhet_soil_TgCyr = rep(0,nos_years)   ; alt_rhet_soil_lower_TgCyr = rep(0,nos_years)   ; alt_rhet_soil_upper_TgCyr = rep(0,nos_years)
+alt_reco_TgCyr = rep(0,nos_years)        ; alt_reco_lower_TgCyr = rep(0,nos_years)        ; alt_reco_upper_TgCyr = rep(0,nos_years)
+alt_npp_TgCyr = rep(0,nos_years)         ; alt_npp_lower_TgCyr = rep(0,nos_years)         ; alt_npp_upper_TgCyr = rep(0,nos_years)
+alt_nee_TgCyr = rep(0,nos_years)         ; alt_nee_lower_TgCyr = rep(0,nos_years)         ; alt_nee_upper_TgCyr = rep(0,nos_years)
+alt_nbe_TgCyr = rep(0,nos_years)         ; alt_nbe_lower_TgCyr = rep(0,nos_years)         ; alt_nbe_upper_TgCyr = rep(0,nos_years)
+alt_fire_TgCyr = rep(0,nos_years)        ; alt_fire_lower_TgCyr = rep(0,nos_years)        ; alt_fire_upper_TgCyr = rep(0,nos_years)
+alt_harvest_TgCyr = rep(0,nos_years)     ; alt_harvest_lower_TgCyr = rep(0,nos_years)     ; alt_harvest_upper_TgCyr = rep(0,nos_years)
+alt_labile_TgC = rep(0,nos_years)        ; alt_labile_lower_TgC = rep(0,nos_years)        ; alt_labile_upper_TgC = rep(0,nos_years)
+alt_foliage_TgC = rep(0,nos_years)       ; alt_foliage_lower_TgC = rep(0,nos_years)       ; alt_foliage_upper_TgC = rep(0,nos_years)
+alt_roots_TgC = rep(0,nos_years)         ; alt_roots_lower_TgC = rep(0,nos_years)         ; alt_roots_upper_TgC = rep(0,nos_years)
+alt_wood_TgC = rep(0,nos_years)          ; alt_wood_lower_TgC = rep(0,nos_years)          ; alt_wood_upper_TgC = rep(0,nos_years)
+alt_lit_TgC = rep(0,nos_years)           ; alt_lit_lower_TgC = rep(0,nos_years)           ; alt_lit_upper_TgC = rep(0,nos_years)
+alt_litwood_TgC = rep(0,nos_years)       ; alt_litwood_lower_TgC = rep(0,nos_years)       ; alt_litwood_upper_TgC = rep(0,nos_years)
+alt_soil_TgC = rep(0,nos_years)          ; alt_soil_lower_TgC = rep(0,nos_years)          ; alt_soil_upper_TgC = rep(0,nos_years)
 ## Initialise trend variables for flux trends
 # Original
 orig_et_trend = array(NA, dim=c(dims[1],dims[2]))
@@ -386,6 +400,15 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              orig_lai_m2m2               = orig_lai_m2m2            + orig_lai_grid[i_loc,j_loc,]
              orig_lai_lower_m2m2         = orig_lai_lower_m2m2      + rollapply(orig_grid_output$lai_m2m2[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
              orig_lai_upper_m2m2         = orig_lai_upper_m2m2      + rollapply(orig_grid_output$lai_m2m2[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+             orig_labile_TgC             = orig_labile_TgC          + rollapply(orig_grid_output$labile_gCm2[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_labile_lower_TgC       = orig_labile_lower_TgC    + rollapply(orig_grid_output$labile_gCm2[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_labile_upper_TgC       = orig_labile_upper_TgC    + rollapply(orig_grid_output$labile_gCm2[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_foliage_TgC            = orig_foliage_TgC         + rollapply(orig_grid_output$foliage_gCm2[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_foliage_lower_TgC      = orig_foliage_lower_TgC   + rollapply(orig_grid_output$foliage_gCm2[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_foliage_upper_TgC      = orig_foliage_upper_TgC   + rollapply(orig_grid_output$foliage_gCm2[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_roots_TgC              = orig_roots_TgC           + rollapply(orig_grid_output$roots_gCm2[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_roots_lower_TgC        = orig_roots_lower_TgC     + rollapply(orig_grid_output$roots_gCm2[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             orig_roots_upper_TgC        = orig_roots_upper_TgC     + rollapply(orig_grid_output$roots_gCm2[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              orig_wood_TgC               = orig_wood_TgC            + rollapply(orig_grid_output$wood_gCm2[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              orig_wood_lower_TgC         = orig_wood_lower_TgC      + rollapply(orig_grid_output$wood_gCm2[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              orig_wood_upper_TgC         = orig_wood_upper_TgC      + rollapply(orig_grid_output$wood_gCm2[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
@@ -409,9 +432,21 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              orig_rauto_TgCyr            = orig_rauto_TgCyr         + (rollapply(orig_grid_output$rauto_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              orig_rauto_lower_TgCyr      = orig_rauto_lower_TgCyr   + (rollapply(orig_grid_output$rauto_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              orig_rauto_upper_TgCyr      = orig_rauto_upper_TgCyr   + (rollapply(orig_grid_output$rauto_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
+             orig_rhet_litter_TgCyr      = orig_rhet_litter_TgCyr       + (rollapply(orig_grid_output$rhet_litter_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             orig_rhet_litter_lower_TgCyr= orig_rhet_litter_lower_TgCyr + (rollapply(orig_grid_output$rhet_litter_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             orig_rhet_litter_upper_TgCyr= orig_rhet_litter_upper_TgCyr + (rollapply(orig_grid_output$rhet_litter_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_rhet_soil_TgCyr        = orig_rhet_soil_TgCyr       + (rollapply(orig_grid_output$rhet_som_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             orig_rhet_soil_lower_TgCyr  = orig_rhet_soil_lower_TgCyr + (rollapply(orig_grid_output$rhet_som_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             orig_rhet_soil_upper_TgCyr  = orig_rhet_soil_upper_TgCyr + (rollapply(orig_grid_output$rhet_som_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
              orig_rhet_TgCyr             = orig_rhet_TgCyr          + (rollapply(orig_grid_output$rhet_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              orig_rhet_lower_TgCyr       = orig_rhet_lower_TgCyr    + (rollapply(orig_grid_output$rhet_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              orig_rhet_upper_TgCyr       = orig_rhet_upper_TgCyr    + (rollapply(orig_grid_output$rhet_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_reco_TgCyr             = orig_reco_TgCyr          + (rollapply(orig_grid_output$reco_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_reco_lower_TgCyr       = orig_reco_lower_TgCyr    + (rollapply(orig_grid_output$reco_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_reco_upper_TgCyr       = orig_reco_upper_TgCyr    + (rollapply(orig_grid_output$reco_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             orig_npp_TgCyr              = orig_npp_TgCyr           + (rollapply(orig_grid_output$npp_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_npp_lower_TgCyr        = orig_npp_lower_TgCyr     + (rollapply(orig_grid_output$npp_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             orig_npp_upper_TgCyr        = orig_npp_upper_TgCyr     + (rollapply(orig_grid_output$npp_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              orig_nee_TgCyr              = orig_nee_TgCyr           + (rollapply(orig_grid_output$nee_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
              orig_nee_lower_TgCyr        = orig_nee_lower_TgCyr     + (rollapply(orig_grid_output$nee_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
              orig_nee_upper_TgCyr        = orig_nee_upper_TgCyr     + (rollapply(orig_grid_output$nee_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
@@ -429,6 +464,15 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              alt_lai_m2m2               = alt_lai_m2m2            + alt_lai_grid[i_loc,j_loc,]
              alt_lai_lower_m2m2         = alt_lai_lower_m2m2      + rollapply(alt_grid_output$lai_m2m2[n,low_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
              alt_lai_upper_m2m2         = alt_lai_upper_m2m2      + rollapply(alt_grid_output$lai_m2m2[n,high_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
+             alt_labile_TgC             = alt_labile_TgC          + rollapply(alt_grid_output$labile_gCm2[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_labile_lower_TgC       = alt_labile_lower_TgC    + rollapply(alt_grid_output$labile_gCm2[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_labile_upper_TgC       = alt_labile_upper_TgC    + rollapply(alt_grid_output$labile_gCm2[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_foliage_TgC            = alt_foliage_TgC         + rollapply(alt_grid_output$foliage_gCm2[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_foliage_lower_TgC      = alt_foliage_lower_TgC   + rollapply(alt_grid_output$foliage_gCm2[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_foliage_upper_TgC      = alt_foliage_upper_TgC   + rollapply(alt_grid_output$foliage_gCm2[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_roots_TgC              = alt_roots_TgC           + rollapply(alt_grid_output$roots_gCm2[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_roots_lower_TgC        = alt_roots_lower_TgC     + rollapply(alt_grid_output$roots_gCm2[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             alt_roots_upper_TgC        = alt_roots_upper_TgC     + rollapply(alt_grid_output$roots_gCm2[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              alt_wood_TgC               = alt_wood_TgC            + rollapply(alt_grid_output$wood_gCm2[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
              alt_wood_lower_TgC         = alt_wood_lower_TgC      + rollapply(alt_grid_output$wood_gCm2[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
              alt_wood_upper_TgC         = alt_wood_upper_TgC      + rollapply(alt_grid_output$wood_gCm2[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
@@ -452,9 +496,21 @@ for (n in seq(1, orig_PROJECT$nosites)) {
              alt_rauto_TgCyr            = alt_rauto_TgCyr         + (rollapply(alt_grid_output$rauto_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              alt_rauto_lower_TgCyr      = alt_rauto_lower_TgCyr   + (rollapply(alt_grid_output$rauto_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
              alt_rauto_upper_TgCyr      = alt_rauto_upper_TgCyr   + (rollapply(alt_grid_output$rauto_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)         
-             alt_rhet_TgCyr             = alt_rhet_TgCyr          + (rollapply(alt_grid_output$rhet_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-             alt_rhet_lower_TgCyr       = alt_rhet_lower_TgCyr    + (rollapply(alt_grid_output$rhet_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
-             alt_rhet_upper_TgCyr       = alt_rhet_upper_TgCyr    + (rollapply(alt_grid_output$rhet_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_rhet_litter_TgCyr      = alt_rhet_litter_TgCyr       + (rollapply(alt_grid_output$rhet_litter_gCm2day[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_litter_lower_TgCyr= alt_rhet_litter_lower_TgCyr + (rollapply(alt_grid_output$rhet_litter_gCm2day[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_litter_upper_TgCyr= alt_rhet_litter_upper_TgCyr + (rollapply(alt_grid_output$rhet_litter_gCm2day[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_rhet_soil_TgCyr        = alt_rhet_soil_TgCyr       + (rollapply(alt_grid_output$rhet_som_gCm2day[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_soil_lower_TgCyr  = alt_rhet_soil_lower_TgCyr + (rollapply(alt_grid_output$rhet_som_gCm2day[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_soil_upper_TgCyr  = alt_rhet_soil_upper_TgCyr + (rollapply(alt_grid_output$rhet_som_gCm2day[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_rhet_TgCyr             = alt_rhet_TgCyr          + (rollapply(alt_grid_output$rhet_gCm2day[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_lower_TgCyr       = alt_rhet_lower_TgCyr    + (rollapply(alt_grid_output$rhet_gCm2day[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_rhet_upper_TgCyr       = alt_rhet_upper_TgCyr    + (rollapply(alt_grid_output$rhet_gCm2day[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_reco_TgCyr             = alt_reco_TgCyr          + (rollapply(alt_grid_output$reco_gCm2day[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_reco_lower_TgCyr       = alt_reco_lower_TgCyr    + (rollapply(alt_grid_output$reco_gCm2day[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_reco_upper_TgCyr       = alt_reco_upper_TgCyr    + (rollapply(alt_grid_output$reco_gCm2day[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
+             alt_npp_TgCyr              = alt_npp_TgCyr           + (rollapply(alt_grid_output$npp_gCm2day[n,mid_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_npp_lower_TgCyr        = alt_npp_lower_TgCyr     + (rollapply(alt_grid_output$npp_gCm2day[n,low_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
+             alt_npp_upper_TgCyr        = alt_npp_upper_TgCyr     + (rollapply(alt_grid_output$npp_gCm2day[n,high_quant,]*alt_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)             
              alt_nee_TgCyr              = alt_nee_TgCyr           + (rollapply(alt_grid_output$nee_gCm2day[n,mid_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
              alt_nee_lower_TgCyr        = alt_nee_lower_TgCyr     + (rollapply(alt_grid_output$nee_gCm2day[n,low_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)   
              alt_nee_upper_TgCyr        = alt_nee_upper_TgCyr     + (rollapply(alt_grid_output$nee_gCm2day[n,high_quant,]*orig_grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
@@ -520,29 +576,42 @@ orig_lai_lower_m2m2 = orig_lai_lower_m2m2 / nos_sites_inc
 orig_lai_upper_m2m2 = orig_lai_upper_m2m2 / nos_sites_inc
 # Now adjust units gC/yr -> TgC/yr
 # Medians
-orig_gpp_TgCyr     = orig_gpp_TgCyr * 1e-12
-orig_rauto_TgCyr   = orig_rauto_TgCyr * 1e-12
-orig_rhet_TgCyr    = orig_rhet_TgCyr * 1e-12
-orig_nee_TgCyr     = orig_nee_TgCyr * 1e-12
-orig_nbe_TgCyr     = orig_nbe_TgCyr * 1e-12
-orig_fire_TgCyr    = orig_fire_TgCyr * 1e-12
-orig_harvest_TgCyr = orig_harvest_TgCyr * 1e-12
-orig_lit_TgC       = orig_lit_TgC * 1e-12
-orig_litwood_TgC   = orig_litwood_TgC * 1e-12
-orig_wood_TgC      = orig_wood_TgC * 1e-12
-orig_soil_TgC      = orig_soil_TgC * 1e-12
+orig_gpp_TgCyr         = orig_gpp_TgCyr * 1e-12
+orig_rauto_TgCyr       = orig_rauto_TgCyr * 1e-12
+orig_rhet_TgCyr        = orig_rhet_TgCyr * 1e-12
+orig_rhet_litter_TgCyr = orig_rhet_litter_TgCyr * 1e-12
+orig_rhet_soil_TgCyr   = orig_rhet_soil_TgCyr * 1e-12
+orig_reco_TgCyr        = orig_reco_TgCyr * 1e-12
+orig_npp_TgCyr         = orig_npp_TgCyr * 1e-12
+orig_nee_TgCyr         = orig_nee_TgCyr * 1e-12
+orig_nbe_TgCyr         = orig_nbe_TgCyr * 1e-12
+orig_fire_TgCyr        = orig_fire_TgCyr * 1e-12
+orig_harvest_TgCyr     = orig_harvest_TgCyr * 1e-12
+orig_labile_TgC        = orig_labile_TgC * 1e-12
+orig_foliage_TgC       = orig_foliage_TgC * 1e-12
+orig_roots_TgC         = orig_roots_TgC * 1e-12
+orig_lit_TgC           = orig_lit_TgC * 1e-12
+orig_litwood_TgC       = orig_litwood_TgC * 1e-12
+orig_wood_TgC          = orig_wood_TgC * 1e-12
+orig_soil_TgC          = orig_soil_TgC * 1e-12
 # lower
-orig_gpp_lower_TgCyr     = orig_gpp_lower_TgCyr * 1e-12
-orig_rauto_lower_TgCyr   = orig_rauto_lower_TgCyr * 1e-12
-orig_rhet_lower_TgCyr    = orig_rhet_lower_TgCyr * 1e-12
-orig_nee_lower_TgCyr     = orig_nee_lower_TgCyr * 1e-12
-orig_nbe_lower_TgCyr     = orig_nbe_lower_TgCyr * 1e-12
-orig_fire_lower_TgCyr    = orig_fire_lower_TgCyr * 1e-12
-orig_harvest_lower_TgCyr = orig_harvest_lower_TgCyr * 1e-12
-orig_lit_lower_TgC       = orig_lit_lower_TgC * 1e-12
-orig_litwood_lower_TgC   = orig_litwood_lower_TgC * 1e-12
-orig_wood_lower_TgC      = orig_wood_lower_TgC * 1e-12
-orig_soil_lower_TgC      = orig_soil_lower_TgC * 1e-12
+orig_gpp_lower_TgCyr         = orig_gpp_lower_TgCyr * 1e-12
+orig_rauto_lower_TgCyr       = orig_rauto_lower_TgCyr * 1e-12
+orig_rhet_litter_lower_TgCyr = orig_rhet_litter_lower_TgCyr * 1e-12
+orig_rhet_soil_lower_TgCyr   = orig_rhet_soil_lower_TgCyr * 1e-12
+orig_reco_lower_TgCyr        = orig_reco_lower_TgCyr * 1e-12
+orig_npp_lower_TgCyr         = orig_npp_lower_TgCyr * 1e-12
+orig_nee_lower_TgCyr         = orig_nee_lower_TgCyr * 1e-12
+orig_nbe_lower_TgCyr         = orig_nbe_lower_TgCyr * 1e-12
+orig_fire_lower_TgCyr        = orig_fire_lower_TgCyr * 1e-12
+orig_harvest_lower_TgCyr     = orig_harvest_lower_TgCyr * 1e-12
+orig_labile_lower_TgC        = orig_labile_lower_TgC * 1e-12
+orig_foliage_lower_TgC       = orig_foliage_lower_TgC * 1e-12
+orig_roots_lower_TgC         = orig_roots_lower_TgC * 1e-12
+orig_lit_lower_TgC           = orig_lit_lower_TgC * 1e-12
+orig_litwood_lower_TgC       = orig_litwood_lower_TgC * 1e-12
+orig_wood_lower_TgC          = orig_wood_lower_TgC * 1e-12
+orig_soil_lower_TgC          = orig_soil_lower_TgC * 1e-12
 # upper
 orig_gpp_upper_TgCyr     = orig_gpp_upper_TgCyr * 1e-12
 orig_rauto_upper_TgCyr   = orig_rauto_upper_TgCyr * 1e-12
@@ -566,41 +635,62 @@ alt_lai_lower_m2m2 = alt_lai_lower_m2m2 / nos_sites_inc
 alt_lai_upper_m2m2 = alt_lai_upper_m2m2 / nos_sites_inc
 # Now adjust units gC/yr -> TgC/yr
 # Medians
-alt_gpp_TgCyr     = alt_gpp_TgCyr * 1e-12
-alt_rauto_TgCyr   = alt_rauto_TgCyr * 1e-12
-alt_rhet_TgCyr    = alt_rhet_TgCyr * 1e-12
-alt_nee_TgCyr     = alt_nee_TgCyr * 1e-12
-alt_nbe_TgCyr     = alt_nbe_TgCyr * 1e-12
-alt_fire_TgCyr    = alt_fire_TgCyr * 1e-12
-alt_harvest_TgCyr = alt_harvest_TgCyr * 1e-12
-alt_lit_TgC       = alt_lit_TgC * 1e-12
-alt_litwood_TgC   = alt_litwood_TgC * 1e-12
-alt_wood_TgC      = alt_wood_TgC * 1e-12
-alt_soil_TgC      = alt_soil_TgC * 1e-12
+alt_gpp_TgCyr         = alt_gpp_TgCyr * 1e-12
+alt_rauto_TgCyr       = alt_rauto_TgCyr * 1e-12
+alt_rhet_TgCyr        = alt_rhet_TgCyr * 1e-12
+alt_rhet_litter_TgCyr = alt_rhet_litter_TgCyr * 1e-12
+alt_rhet_soil_TgCyr   = alt_rhet_soil_TgCyr * 1e-12
+alt_reco_TgCyr        = alt_reco_TgCyr * 1e-12
+alt_npp_TgCyr         = alt_npp_TgCyr * 1e-12
+alt_nee_TgCyr         = alt_nee_TgCyr * 1e-12
+alt_nbe_TgCyr         = alt_nbe_TgCyr * 1e-12
+alt_fire_TgCyr        = alt_fire_TgCyr * 1e-12
+alt_harvest_TgCyr     = alt_harvest_TgCyr * 1e-12
+alt_labile_TgC        = alt_labile_TgC * 1e-12
+alt_foliage_TgC       = alt_foliage_TgC * 1e-12
+alt_roots_TgC         = alt_roots_TgC * 1e-12
+alt_lit_TgC           = alt_lit_TgC * 1e-12
+alt_litwood_TgC       = alt_litwood_TgC * 1e-12
+alt_wood_TgC          = alt_wood_TgC * 1e-12
+alt_soil_TgC          = alt_soil_TgC * 1e-12
 # lower
-alt_gpp_lower_TgCyr     = alt_gpp_lower_TgCyr * 1e-12
-alt_rauto_lower_TgCyr   = alt_rauto_lower_TgCyr * 1e-12
-alt_rhet_lower_TgCyr    = alt_rhet_lower_TgCyr * 1e-12
-alt_nee_lower_TgCyr     = alt_nee_lower_TgCyr * 1e-12
-alt_nbe_lower_TgCyr     = alt_nbe_lower_TgCyr * 1e-12
-alt_fire_lower_TgCyr    = alt_fire_lower_TgCyr * 1e-12
-alt_harvest_lower_TgCyr = alt_harvest_lower_TgCyr * 1e-12
-alt_lit_lower_TgC       = alt_lit_lower_TgC * 1e-12
-alt_litwood_lower_TgC   = alt_litwood_lower_TgC * 1e-12
-alt_wood_lower_TgC      = alt_wood_lower_TgC * 1e-12
-alt_soil_lower_TgC      = alt_soil_lower_TgC * 1e-12
+alt_gpp_upper_TgCyr         = alt_gpp_upper_TgCyr * 1e-12
+alt_rauto_upper_TgCyr       = alt_rauto_upper_TgCyr * 1e-12
+alt_rhet_upper_TgCyr        = alt_rhet_upper_TgCyr * 1e-12
+alt_rhet_litter_upper_TgCyr = alt_rhet_litter_upper_TgCyr * 1e-12
+alt_rhet_soil_upper_TgCyr   = alt_rhet_soil_upper_TgCyr * 1e-12
+alt_reco_upper_TgCyr        = alt_reco_upper_TgCyr * 1e-12
+alt_npp_upper_TgCyr         = alt_npp_upper_TgCyr * 1e-12
+alt_nee_upper_TgCyr         = alt_nee_upper_TgCyr * 1e-12
+alt_nbe_upper_TgCyr         = alt_nbe_upper_TgCyr * 1e-12
+alt_fire_upper_TgCyr        = alt_fire_upper_TgCyr * 1e-12
+alt_harvest_upper_TgCyr     = alt_harvest_upper_TgCyr * 1e-12
+alt_labile_upper_TgC        = alt_labile_upper_TgC * 1e-12
+alt_foliage_upper_TgC       = alt_foliage_upper_TgC * 1e-12
+alt_roots_upper_TgC         = alt_roots_upper_TgC * 1e-12
+alt_lit_upper_TgC           = alt_lit_upper_TgC * 1e-12
+alt_litwood_upper_TgC       = alt_litwood_upper_TgC * 1e-12
+alt_wood_upper_TgC          = alt_wood_upper_TgC * 1e-12
+alt_soil_upper_TgC          = alt_soil_upper_TgC * 1e-12
 # upper
-alt_gpp_upper_TgCyr     = alt_gpp_upper_TgCyr * 1e-12
-alt_rauto_upper_TgCyr   = alt_rauto_upper_TgCyr * 1e-12
-alt_rhet_upper_TgCyr    = alt_rhet_upper_TgCyr * 1e-12
-alt_nee_upper_TgCyr     = alt_nee_upper_TgCyr * 1e-12
-alt_nbe_upper_TgCyr     = alt_nbe_upper_TgCyr * 1e-12
-alt_fire_upper_TgCyr    = alt_fire_upper_TgCyr * 1e-12
-alt_harvest_upper_TgCyr = alt_harvest_upper_TgCyr * 1e-12
-alt_lit_upper_TgC       = alt_lit_upper_TgC * 1e-12
-alt_litwood_upper_TgC   = alt_litwood_upper_TgC * 1e-12
-alt_wood_upper_TgC      = alt_wood_upper_TgC * 1e-12
-alt_soil_upper_TgC      = alt_soil_upper_TgC * 1e-12
+alt_gpp_upper_TgCyr         = alt_gpp_upper_TgCyr * 1e-12
+alt_rauto_upper_TgCyr       = alt_rauto_upper_TgCyr * 1e-12
+alt_rhet_upper_TgCyr        = alt_rhet_upper_TgCyr * 1e-12
+alt_rhet_litter_lower_TgCyr = alt_rhet_litter_lower_TgCyr * 1e-12
+alt_rhet_soil_lower_TgCyr   = alt_rhet_soil_lower_TgCyr * 1e-12
+alt_reco_lower_TgCyr        = alt_reco_lower_TgCyr * 1e-12
+alt_npp_lower_TgCyr         = alt_npp_lower_TgCyr * 1e-12
+alt_nee_lower_TgCyr         = alt_nee_lower_TgCyr * 1e-12
+alt_nbe_lower_TgCyr         = alt_nbe_lower_TgCyr * 1e-12
+alt_fire_lower_TgCyr        = alt_fire_lower_TgCyr * 1e-12
+alt_harvest_lower_TgCyr     = alt_harvest_lower_TgCyr * 1e-12
+alt_labile_lower_TgC        = alt_labile_lower_TgC * 1e-12
+alt_foliage_lower_TgC       = alt_foliage_lower_TgC * 1e-12
+alt_roots_lower_TgC         = alt_roots_lower_TgC * 1e-12
+alt_lit_upper_TgC           = alt_lit_upper_TgC * 1e-12
+alt_litwood_upper_TgC       = alt_litwood_upper_TgC * 1e-12
+alt_wood_upper_TgC          = alt_wood_upper_TgC * 1e-12
+alt_soil_upper_TgC          = alt_soil_upper_TgC * 1e-12
 # Now adjust units kgH2O/yr -> PgH2O/yr
 alt_et_PgH2Oyr       = alt_et_PgH2Oyr * 1e-12
 alt_et_lower_PgH2Oyr = alt_et_lower_PgH2Oyr * 1e-12
@@ -1353,7 +1443,7 @@ var3 = orig_grid_output$mean_alloc_wood_gCm2day[,,mid_quant]*365.25*1e-2
 var4 = (orig_grid_output$mean_alloc_wood_gCm2day[,,high_quant] - orig_grid_output$mean_alloc_wood_gCm2day[,,low_quant])*365.25*1e-2
 var3 = (var1-var3) / abs(var3) ; var3[var3 > 1] = 1 ; var3[var3 < -1] = -1
 var4 = (var2-var4) / abs(var4) ; var4[var4 > 1] = 1 ; var4[var4 < -1] = -1
-# Interlude plot
+# Interlude plot - 1 
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflxwood_rel_reduction_over_stock",outsuffix,".png",sep=""), height = 1200, width = 1800, res = 300)
 par(mfrow=c(1,1), mar=c(2.5,2.5,0.5,0.5), omi=c(0.2,0.2,0.1,0.1))
 plot(as.vector(var4) ~ as.vector(alt_grid_output$mean_wood_gCm2[,,4]*1e-2), 
@@ -1368,6 +1458,37 @@ tmp_lm = loess(as.vector(var4) ~ varx, span=loess_span)
 tmp_lm = predict(tmp_lm, newdata = data.frame(varx = newvarx), se=TRUE)
 lines(y = tmp_lm$fit, x = newvarx, lwd=2, col="cyan")
 dev.off()
+# Interlude plot - 2
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflxwood_rel_reduction_over_precipitation",outsuffix,".png",sep=""), height = 1200, width = 1800, res = 300)
+par(mfrow=c(1,1), mar=c(2.5,2.5,0.5,0.5), omi=c(0.2,0.2,0.1,0.1))
+plot(as.vector(var4) ~ as.vector(alt_grid_output$mean_precipitation_kgH2Om2yr), 
+     pch=16, ylim=c(-1,1), xlim=c(0,4500), ylab="", xlab = "")
+mtext(expression(paste("Mean precipitation (mm/y)",sep="")), side=1, cex=1.2, padj=2.5, adj = 0.5)
+mtext("Relative change", side=2, cex=1.2, padj=-3.0, adj = 0.5)
+abline(0,0,col="grey", lwd=2)
+loess_span = 0.25 ; n_interp = 500
+varx = as.vector(alt_grid_output$mean_precipitation_kgH2Om2yr)
+newvarx = seq(min(as.vector(varx), na.rm=TRUE),max(as.vector(varx), na.rm=TRUE), length.out=n_interp)
+tmp_lm = loess(as.vector(var4) ~ varx, span=loess_span)
+tmp_lm = predict(tmp_lm, newdata = data.frame(varx = newvarx), se=TRUE)
+lines(y = tmp_lm$fit, x = newvarx, lwd=2, col="cyan")
+dev.off()
+# Interlude plot - 3
+png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_NPPflxwood_rel_reduction_over_temperature",outsuffix,".png",sep=""), height = 1200, width = 1800, res = 300)
+par(mfrow=c(1,1), mar=c(2.5,2.5,0.5,0.5), omi=c(0.2,0.2,0.1,0.1))
+plot(as.vector(var4) ~ as.vector(alt_grid_output$mean_temperature_C), 
+     pch=16, ylim=c(-1,1), xlim=c(-22,32), ylab="", xlab = "")
+mtext(expression(paste("Mean air temperature (Celcius)",sep="")), side=1, cex=1.2, padj=2.5, adj = 0.5)
+mtext("Relative change", side=2, cex=1.2, padj=-3.0, adj = 0.5)
+abline(0,0,col="grey", lwd=2)
+loess_span = 0.25 ; n_interp = 500
+varx = as.vector(alt_grid_output$mean_temperature_C)
+newvarx = seq(min(as.vector(varx), na.rm=TRUE),max(as.vector(varx), na.rm=TRUE), length.out=n_interp)
+tmp_lm = loess(as.vector(var4) ~ varx, span=loess_span)
+tmp_lm = predict(tmp_lm, newdata = data.frame(varx = newvarx), se=TRUE)
+lines(y = tmp_lm$fit, x = newvarx, lwd=2, col="cyan")
+dev.off()
+
 # Apply filter
 var1[which(is.na(landfilter))] = NA
 var2[which(is.na(landfilter))] = NA

@@ -161,7 +161,9 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
 
     ## default information for cluster submission
     # number of tasks per array
-    max_nbundle_size = 500
+    max_nbundle_size = 10000
+    # If the slurm account does not already exist in memory assume this one
+    if (exists(slurm_account) == FALSE) { slurm_account = "geos_research" }
 
     # number of tasks required
     ntasks = PROJECT_in$nosites
@@ -196,13 +198,13 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
          write(    c("#!/bin/bash"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = FALSE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("# Slurm directives"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c("#SBATCH --account=geos_extra"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --account=",slurm_account,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --job-name=",job_ID,"_Bundle_",b,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --ntasks=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("#SBATCH --time=00:05:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --time=00:10:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --array=1-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("sitenum=$((SLURM_ARRAY_TASK_ID+",bundle_offset,"))"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
@@ -227,7 +229,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
             # If no more of the job_ID can be found then we will break the loop and continue
             if (length(which(grepl(job_ID,q[,1]))) > 0) {
                 # Otherwise, we will wait 30 seconds and check again
-                file.remove("q") ; print("...waiting") ; Sys.sleep(30)
+                file.remove("q") ; print("...waiting") ; Sys.sleep(60)
             } else {
                 file.remove("q") ; ongoing = FALSE 
             }

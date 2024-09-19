@@ -36,6 +36,7 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
 
@@ -3571,7 +3572,7 @@ for (i in seq(1, PROJECT$long_dim)) {
                            if (tmp2 > 0) {npdf = npdf + 1}
                            grid_output$fire_obs_overlap_fraction[i,j] = grid_output$fire_obs_overlap_fraction[i,j] + tmp2
                            nobs = nobs + 1
-                       } else if (obs_fire_mean_gCm2yr[i,j,t] <= 0.1 & tmp[,t] <= 0.1) {
+                       } else if (obs_fire_mean_gCm2yr[i,j,t] <= 0.01 & max(tmp[,t]) <= 0.01) {
                            nobs = nobs + 1 ; npdf = npdf + 1
                        } 
                    }

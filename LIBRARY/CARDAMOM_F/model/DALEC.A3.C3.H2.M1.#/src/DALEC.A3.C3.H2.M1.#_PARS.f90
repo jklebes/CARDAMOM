@@ -43,8 +43,8 @@ module MODEL_PARAMETERS
     !
 
     ! Decomposition rate (frac/day)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
     ! Fraction of GPP to autotrophic pool
     ! NOTE: this does not include Ra due to C transfers 
@@ -106,7 +106,7 @@ module MODEL_PARAMETERS
     PI%parmax(16) = -0.005d0
 
     ! LMA
-    PI%parmin(17) = 20d0 
+    PI%parmin(17) = 10d0 
     PI%parmax(17) = 100d0
   
     !
@@ -121,7 +121,7 @@ module MODEL_PARAMETERS
     PI%parmax(27) = (36d0+273.15d0)   ! 18,36
     ! optimum temperature for development (oC)
     PI%parmin(28) = ( 8d0+273.15d0) 
-    PI%parmax(28) = (22d0+273.15d0)   ! 8,22
+    PI%parmax(28) = (28d0+273.15d0)   ! 8,28
    
     ! minimum temperature for vernalisation (oC)
     PI%parmin(29) = (-5.3d0+273.15d0)

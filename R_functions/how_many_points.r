@@ -294,22 +294,40 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # Reset any newly created NaN from the merge
         landsea[is.na(landsea)] = 0
 
+        # Set the threshold below which we assume that the pixel will be excluded
+        cover_threshold = 0.5
+
     } else {
 
         # Assume that we have been given a geotiff file where the presence of a value > 0  should be included in the masked area
         landsea = rast(path_to_landsea)
-        # just to be sure enforce the projection to WGS-84
-        target = rast(crs = crs(cardamom_ext), ext = ext(landsea), resolution = res(cardamom_ext))
-        # Resample to correct grid
-        landsea = resample(landsea, target, method="near")
-        # Clip to the extent of the CARDAMOM analysis
+        # Check that all values rage between zero and 1
+        tmp = max(values(landsea), na.rm=TRUE)
+        if (tmp > 1) {
+            print("The path_to_landsea file is expected to be a fractional cover, however, the maximum value is greater than 1")
+            print("The file will instead be treated as a binary presence map, i.e. > 0 is present and set to 1.")
+            landsea[landsea > 0] = 1 ; rm(tmp)
+        }
+        # Ensure the extents of the landsea mask matches the CARDAMOM analysis
         landsea = crop(landsea, cardamom_ext)
+        landsea = extend(landsea, cardamom_ext)
+        # Set all NA to 0, to allow for any averaging
+        landsea[is.na(landsea)] = 0
 
-        # Assume all positive values are to be included
-        landsea[as.vector(landsea) > 0] = 1
-        # Assume everywhere else is not to be included
-        landsea[as.vector(landsea) != 1] = 0
-        landsea[is.na(as.vector(landsea))] = 0
+        # Create raster with the target resolution
+        target = rast(crs = crs(cardamom_ext), ext = ext(landsea), resolution = res(cardamom_ext))
+        # Now depending on whether we are in the correct resolution
+        if (res(landsea)[1] >= res(cardamom_ext)[1] & res(landsea)[2] >= res(cardamom_ext)[2]) {
+            # If the resolution of the land mask is greater or equal to the CARDAMOM analysis we
+            # can use nearest neighbour
+            landsea = resample(landsea, target, method="near")
+        } else { 
+            # If the resolution is finer than the CARDAMOM anaysis we will have to use bilinear
+            landsea = resample(landsea, target, method="bilinear") ; gc() 
+        } # Aggrgeate to resolution
+
+        # Set the threshold below which we assume that the pixel will be excluded
+        cover_threshold = 0.01
 
     } # default landsea mask
 
@@ -361,7 +379,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
              new_pft = lcm[output_i[pft],output_j[pft]]
          }
          # now exclude if not a land site
-         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < 0.5) {
+         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < cover_threshold) {
              remove = append(remove,pft)
          } else {
              pft_keep = append(pft_keep,new_pft)

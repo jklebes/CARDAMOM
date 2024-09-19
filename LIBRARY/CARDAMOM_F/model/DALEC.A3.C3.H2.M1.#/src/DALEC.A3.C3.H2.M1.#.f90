@@ -1053,17 +1053,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! calculate weighted air temperature value based on daily minimum, maximum
       ! and means. This minimises the error introduced when scaling between
       ! daily and sub-daily timesteps
-      airt_weighting(1) = abs(met(3,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! maximum temperature weighting
-      airt_weighting(2) = 0.5d0                                            ! mean temperature
-      airt_weighting(3) = abs(met(2,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! minimum temperature weighting
+      !airt_weighting(1) = abs(met(3,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! maximum temperature weighting
+      !airt_weighting(2) = 0.5d0                                            ! mean temperature
+      !airt_weighting(3) = abs(met(2,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! minimum temperature weighting
 
       ! Heterotrophic respiration rate (Q10):  doubles with
       ! 10 degree temperature rise resprate from soil file = 0.0693
-      resp_rate = 0d0
-      resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(3,n) )) * airt_weighting(1))
-      resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * avtemp   )) * airt_weighting(2))
-      resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(2,n) )) * airt_weighting(3))
-      !resp_rate = 0.5 * exp( resp_rate_temp_coeff * avtemp )
+      !resp_rate = 0d0
+      !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(3,n) )) * airt_weighting(1))
+      !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * avtemp   )) * airt_weighting(2))
+      !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(2,n) )) * airt_weighting(3))
+      resp_rate = 0.5d0 * exp( resp_rate_temp_coeff * avtemp )
 
       ! reallocate day of year to the end of the time step for use in
       ! crop development model

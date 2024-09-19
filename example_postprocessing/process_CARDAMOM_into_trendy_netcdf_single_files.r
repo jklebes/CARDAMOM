@@ -19,6 +19,7 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
 input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB"
 #input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_GEOSCHEM_GOSAT_NBE"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -131,6 +132,7 @@ if (length(which(quantiles_wanted == 0.975)) == 1) {
 # DRIVERS
 AIRT_MIN = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
 AIRT_MAX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
+AIRT_AVG = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
 SWRAD = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
 CO2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
 DOY = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,length(PROJECT$model$timestep_days)))
@@ -222,6 +224,16 @@ if (exists(x = "FIREemiss_litter_gCm2day", where = grid_output)) {FIREemiss_litt
 if (exists(x = "FIREemiss_woodlitter_gCm2day", where = grid_output)) {FIREemiss_woodlitter = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_som_gCm2day", where = grid_output)) {FIREemiss_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "FIREemiss_biomass_gCm2day", where = grid_output)) {FIREemiss_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# Annual mean transit (residence) times
+if (exists(x = "MTT_annual_biomass_years", where = grid_output)) {AMTT_bio = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_labile_years", where = grid_output)) {AMTT_lab = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_foliage_years", where = grid_output)) {AMTT_fol = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_roots_years", where = grid_output)) {AMTT_roots = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_wood_years", where = grid_output)) {AMTT_wood = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_litter_years", where = grid_output)) {AMTT_lit = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_woodlitter_years", where = grid_output)) {AMTT_wlit = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_som_years", where = grid_output)) {AMTT_som = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
+if (exists(x = "MTT_annual_dom_years", where = grid_output)) {AMTT_dom = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
 
 # Fill the output arrays
 for (n in seq(1, length(PROJECT$sites))) {
@@ -239,6 +251,7 @@ for (n in seq(1, length(PROJECT$sites))) {
          # DRIVERS
          AIRT_MIN[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,2]+273.15     # mint C -> K
          AIRT_MAX[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,3]+273.15     # maxt C -> K
+         AIRT_AVG[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,14]+273.15    # meant C -> K
          SWRAD[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,4]*1e6*(1/86400) # SWRAD MJ/m2/day -> W/m2
          CO2[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,5]                 # CO2 ppm
          DOY[grid_output$i_location[n],grid_output$j_location[n],] = drivers$met[,6]                 # Julian day of year
@@ -330,13 +343,22 @@ for (n in seq(1, length(PROJECT$sites))) {
          # NPP (foliar, root, wood; gC/m2/day -> kgC/m2/s)
          if (exists("NPP_root_FLX")) {NPP_root_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_roots_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_wood_FLX")) {NPP_wood_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_wood_gCm2day[n,,]* 1e-3 * (1/86400)}
-         if (exists("NPP_combinedfoliage_FLX")) {NPP_combinedfoliage_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_alloc_foliage_gCm2day[n,,]* 1e-3 * (1/86400)}
-               
+         if (exists("NPP_combinedfoliage_FLX")) {NPP_combinedfoliage_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_alloc_foliage_gCm2day[n,,]* 1e-3 * (1/86400)}               
          # Fire combustion outflux (labile, foliar, wood, fine root, litter, soil; gC/m2/day -> kgC/m2/s)
          if (exists("FIREemiss_litter")) {FIREemiss_litter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_litter_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_woodlitter")) {FIREemiss_woodlitter[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_woodlitter_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_som")) {FIREemiss_som[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_som_gCm2day[n,,] * 1e-3 * (1/86400)}
          if (exists("FIREemiss_bio")) {FIREemiss_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$FIREemiss_biomass_gCm2day[n,,] * 1e-3 * (1/86400)}
+         # Annual mean transit (residence) times
+         if (exists(x = "AMTT_bio")) {AMTT_bio[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_biomass_years[n,,]}
+         if (exists(x = "AMTT_lab")) {AMTT_lab[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_labile_years[n,,]}
+         if (exists(x = "AMTT_fol")) {AMTT_fol[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_foliage_years[n,,]}
+         if (exists(x = "AMTT_roots")) {AMTT_roots[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_roots_years[n,,]}
+         if (exists(x = "AMTT_wood")) {AMTT_wood[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_wood_years[n,,]}
+         if (exists(x = "AMTT_lit")) { AMTT_lit[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_litter_years[n,,]}
+         if (exists(x = "AMTT_wlit")) {AMTT_wlit[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_woodlitter_years[n,,]}
+         if (exists(x = "AMTT_som")) {AMTT_som[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_som_years[n,,]}
+         if (exists(x = "AMTT_dom")) {AMTT_dom[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$MTT_annual_dom_years[n,,]}
 
      } # Does the file exist / has it been processed
 
@@ -364,6 +386,262 @@ var1 = ncvar_def("grid_area", units = "m2", longname = paste("Pixel area",sep=""
                  dim=list(long_dimen,lat_dimen), missval = -99999, prec="single", compression = 9)
 var2 = ncvar_def("land_fraction", units = "1", longname = paste("Fraction of pixel which is land",sep=""), 
                  dim=list(long_dimen,lat_dimen), missval = -99999, prec="single", compression = 9)
+
+###
+## Model forcings
+
+# AIRT_MIN
+if(exists("AIRT_MIN")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"tas_min",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("tas_min", unit="K", longname = "Monthly average of the daily minimum air temperature", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AIRT_MIN)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# AIRT_MAX
+if(exists("AIRT_MAX")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"tas_max",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("tas_max", unit="K", longname = "Monthly average of the daily maximum air temperature", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AIRT_MAX)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# AIRT_AVG
+if(exists("AIRT_AVG")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"tas",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("tas", unit="K", longname = "Monthly average of the daily mean air temperature", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AIRT_AVG)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+        
+# SWRAD
+if(exists("SWRAD")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"rsds",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("rsds", unit="W.m-2", longname = "Monthly average of the daily downwelling shortwave radiation", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, SWRAD)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# CO2
+if(exists("CO2")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"co2",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("co2", unit="ppm", longname = "Monthly average atmospheric CO2 concentration", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, CO2)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# PRECIP
+if(exists("PRECIP")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"pr",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("pr", unit="kg.m-2.s", longname = "Monthly average precipitation rate", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, PRECIP)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# FLOSS_FRAC
+if(exists("FLOSS_FRAC")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"FLOSS_FRAC",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("FLOSS_FRAC", unit="fraction", longname = "Monthly fractional loss of biomass", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, FLOSS_FRAC)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# BURNT_FRAC
+if(exists("BURNT_FRAC")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"burntArea",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("burntArea", unit="fraction", longname = "Monthly fraction burned area", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, BURNT_FRAC)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# WINDSPD
+if(exists("WINDSPD")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"wind_speed",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("wind_speed", unit="m.s-1", longname = "Monthly mean wind speed", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, WINDSPD)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+# VPD
+if(exists("VPD")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"vpd",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   # Median
+   var_new  = ncvar_def("vpd", unit="Pa", longname = "Monthly mean vapour pressure deficit", dim=list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="single",compression = 9)
+   
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, VPD)
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+###
+## Model state variables
 
 # LAI
 if(exists("LAI")) {
@@ -1991,7 +2269,7 @@ if(exists("NPP_wood_FLX")) {
 ###
 
 # Evapotranspiration
-if(exists("ET")) {
+if (exists("ET")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"evapotrans",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2026,7 +2304,7 @@ if(exists("ET")) {
 }
 
 # Transpiration
-if(exists("Etrans")) {
+if (exists("Etrans")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"tran",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2061,7 +2339,7 @@ if(exists("Etrans")) {
 }
 
 # Soil evaporation
-if(exists("Esoil")) {
+if (exists("Esoil")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"evspsblsoi",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2096,7 +2374,7 @@ if(exists("Esoil")) {
 }
 
 # Canopy intercepted rainfall evaporation
-if(exists("Ewetevap")) {
+if (exists("Ewetevap")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"evspsblveg",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2131,7 +2409,7 @@ if(exists("Ewetevap")) {
 }
 
 # Total drainage from soil surface and bottom of soil column
-if(exists("total_drainage")) {
+if (exists("total_drainage")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"mrro",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2161,10 +2439,12 @@ if(exists("total_drainage")) {
    ncvar_put(new_file, var_q4,  total_drainage[,,q4_quant,])   
    ncvar_put(new_file, var_q5,  total_drainage[,,q5_quant,])
    ncvar_put(new_file, var_q6,  total_drainage[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file) 
 }
 
 # Runoff from soil surface 
-if(exists("runoff")) {
+if (exists("runoff")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"runoff",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2194,10 +2474,12 @@ if(exists("runoff")) {
    ncvar_put(new_file, var_q4,  runoff[,,q4_quant,])   
    ncvar_put(new_file, var_q5,  runoff[,,q5_quant,])
    ncvar_put(new_file, var_q6,  runoff[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
 }
 
 # Drainage from the bottom of the soil column
-if(exists("underflow")) {
+if (exists("underflow")) {
    # Define the output file name
    output_name = paste(PROJECT$results_processedpath,output_prefix,"runoff",output_suffix,".nc",sep="")
    # Delete if the file currently exists
@@ -2226,5 +2508,732 @@ if(exists("underflow")) {
    ncvar_put(new_file, var_q3,  underflow[,,q3_quant,])
    ncvar_put(new_file, var_q4,  underflow[,,q4_quant,])   
    ncvar_put(new_file, var_q5,  underflow[,,q5_quant,])
-   ncvar_put(new_file, var_q6,  underflow[,,q6_quant,])   
+   ncvar_put(new_file, var_q6,  underflow[,,q6_quant,])  
+   # Close the existing file to ensure its written
+   nc_close(new_file)     
 }
+
+###
+## C residence times
+###
+
+# Mean transit (residence) time of the biomass C pools
+if (exists(x = "MTT_biomass_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_biomass_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the biomass C pool - "
+   core_varname = "MTT_biomass_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_biomass_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_biomass_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_biomass_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_biomass_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_biomass_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_biomass_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_biomass_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the dead organic matter C pools
+if (exists(x = "MTT_dom_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_dom_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the dead organic matter C pool - "
+   core_varname = "MTT_dom_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_dom_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_dom_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_dom_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_dom_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_dom_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_dom_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_dom_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the labile C pools
+if (exists(x = "MTT_labile_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_labile_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the labile C pool - "
+   core_varname = "MTT_labile_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_labile_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_labile_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_labile_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_labile_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_labile_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_labile_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_labile_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the foliage C pools
+if (exists(x = "MTT_foliage_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_foliage_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the foliage C pool - "
+   core_varname = "MTT_foliage_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_foliage_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_foliage_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_foliage_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_foliage_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_foliage_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_foliage_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_foliage_years[,,q6_quant])  
+   # Close the existing file to ensure its written
+   nc_close(new_file)     
+}
+
+# Mean transit (residence) time of the fine roots C pools
+if (exists(x = "MTT_roots_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_roots_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the fine roots C pool - "
+   core_varname = "MTT_roots_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_roots_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_roots_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_roots_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_roots_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_roots_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_roots_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_roots_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the wood C pools
+if (exists(x = "MTT_wood_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_wood_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the wood C pool - "
+   core_varname = "MTT_wood_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_wood_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_wood_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_wood_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_wood_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_wood_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_wood_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_wood_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the litter C pools
+if (exists(x = "MTT_litter_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_litter_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the litter (foliage + fine roots) C pool - "
+   core_varname = "MTT_litter_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_litter_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_litter_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_litter_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_litter_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_litter_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_litter_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_litter_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Mean transit (residence) time of the wood litter C pools
+if (exists(x = "MTT_woodlitter_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_woodlitter_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the wood litter C pool - "
+   core_varname = "MTT_woodlitter_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_woodlitter_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_woodlitter_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_woodlitter_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_woodlitter_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_woodlitter_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_woodlitter_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_woodlitter_years[,,q6_quant])
+   # Close the existing file to ensure its written
+   nc_close(new_file)       
+}
+
+# Mean transit (residence) time of the soil organic matter C pools
+if (exists(x = "MTT_som_years", where = grid_output)) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"MTT_som_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Mean transit (residence) time of the soil organic matter C pool - "
+   core_varname = "MTT_som_years"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, grid_output$MTT_som_years[,,mid_quant])
+   ncvar_put(new_file, var_q1,  grid_output$MTT_som_years[,,q1_quant])
+   ncvar_put(new_file, var_q2,  grid_output$MTT_som_years[,,q2_quant])
+   ncvar_put(new_file, var_q3,  grid_output$MTT_som_years[,,q3_quant])
+   ncvar_put(new_file, var_q4,  grid_output$MTT_som_years[,,q4_quant])   
+   ncvar_put(new_file, var_q5,  grid_output$MTT_som_years[,,q5_quant])
+   ncvar_put(new_file, var_q6,  grid_output$MTT_som_years[,,q6_quant])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Annual mean transit (residence) time of the biomass C pools
+if (exists(x = "AMTT_bio")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_biomass_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the biomass C pool - "
+   core_varname = "MTT_biomass"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_bio[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_bio[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_bio[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_bio[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_bio[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_bio[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_bio[,,q6_quant,])  
+   # Close the existing file to ensure its written
+   nc_close(new_file)     
+}
+
+# Annual mean transit (residence) time of the labile C pools
+if (exists(x = "AMTT_lab")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_labile_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the labile C pool - "
+   core_varname = "MTT_labile"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_lab[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_lab[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_lab[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_lab[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_lab[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_lab[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_lab[,,q6_quant,]) 
+   # Close the existing file to ensure its written
+   nc_close(new_file)      
+}
+
+# Annual mean transit (residence) time of the foliage C pools
+if (exists(x = "AMTT_fol")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_foliage_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the foliage C pool - "
+   core_varname = "MTT_foliage"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_fol[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_fol[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_fol[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_fol[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_fol[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_fol[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_fol[,,q6_quant,]) 
+   # Close the existing file to ensure its written
+   nc_close(new_file)      
+}
+
+# Annual mean transit (residence) time of the roots C pools
+if (exists(x = "AMTT_roots")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_roots_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the roots C pool - "
+   core_varname = "MTT_roots"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_roots[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_roots[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_roots[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_roots[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_roots[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_roots[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_roots[,,q6_quant,])  
+   # Close the existing file to ensure its written
+   nc_close(new_file)     
+}
+
+# Annual mean transit (residence) time of the wood C pools
+if (exists(x = "AMTT_wood")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_wood_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the wood C pool - "
+   core_varname = "MTT_wood"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_wood[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_wood[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_wood[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_wood[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_wood[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_wood[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_wood[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file) 
+}
+
+# Annual mean transit (residence) time of the litter C pools
+if (exists(x = "AMTT_lit")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_litter_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the fine (foliage + fine root) litter C pool - "
+   core_varname = "MTT_lit"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_lit[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_lit[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_lit[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_lit[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_lit[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_lit[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_lit[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file) 
+}
+
+# Annual mean transit (residence) time of the wood litter C pools
+if (exists(x = "AMTT_wlit")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_woodlitter_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the wood litter C pool - "
+   core_varname = "MTT_wlit"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_wlit[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_wlit[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_wlit[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_wlit[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_wlit[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_wlit[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_wlit[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Annual mean transit (residence) time of the soil organic matter C pools
+if (exists(x = "AMTT_som")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_som_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the soil organic matter C pool - "
+   core_varname = "MTT_som"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_som[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_som[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_som[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_som[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_som[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_som[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_som[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+
+# Annual mean transit (residence) time of the dead organic matter C pools
+if (exists(x = "AMTT_dom")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"annual_MTT_dom_years",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define units
+   units_in = "years"
+   # Define core part of variable long name
+   core_longname = "Annual mean transit (residence) time of the dead organic matter C pool - "
+   core_varname = "MTT_dom"
+   # Define the new variable
+   var_new  = ncvar_def(paste(core_varname,sep=""), unit="years", longname = paste(core_longname,"Median estimate",sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste(core_varname,"_",q1_quant_lab,sep=""), unit="years", longname = paste(core_longname,q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste(core_varname,"_",q2_quant_lab,sep=""), unit="years", longname = paste(core_longname,q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste(core_varname,"_",q3_quant_lab,sep=""), unit="years", longname = paste(core_longname,q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste(core_varname,"_",q4_quant_lab,sep=""), unit="years", longname = paste(core_longname,q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste(core_varname,"_",q5_quant_lab,sep=""), unit="years", longname = paste(core_longname,q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste(core_varname,"_",q6_quant_lab,sep=""), unit="years", longname = paste(core_longname,q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, grid_output$area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, grid_output$land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, AMTT_dom[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  AMTT_dom[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  AMTT_dom[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  AMTT_dom[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  AMTT_dom[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  AMTT_dom[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  AMTT_dom[,,q6_quant,])   
+   # Close the existing file to ensure its written
+   nc_close(new_file)    
+}
+

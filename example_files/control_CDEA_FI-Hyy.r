@@ -29,12 +29,12 @@ username="lsmallma" # put your Edinburgh uun here
 home_computer="ssh.geos.ed.ac.uk"
 
 ## use parallel functions?
-use_parallel = TRUE
+use_parallel = FALSE
 numWorkers = 14 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.31."
+model="DALEC.4."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -161,7 +161,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=4
+stage=5
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

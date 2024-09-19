@@ -41,8 +41,8 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$met_array_averages[slot_i,slot_j,] = site_output$met_array_averages
            grid_output$obs_array_averages[slot_i,slot_j,] = site_output$obs_array_averages
            # Annual averages second
-           grid_output$met_array_annual_averages[slot_i,slot_j,,] = site_output$met_array_averages
-           grid_output$obs_array_annual_averages[slot_i,slot_j,,] = site_output$obs_array_averages           
+           grid_output$met_array_annual_averages[slot_i,slot_j,,] = site_output$met_array_annual_averages
+           grid_output$obs_array_annual_averages[slot_i,slot_j,,] = site_output$obs_array_annual_averages           
            # Mean meteorological conditions
            grid_output$mean_temperature_C[slot_i,slot_j] = site_output$mean_temperature_C
            grid_output$mean_radiation_MJm2day[slot_i,slot_j] = site_output$mean_radiation_MJm2day
@@ -144,6 +144,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_outflux_biomass_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_biomass_gCm2day
                grid_output$mean_biomass_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_biomass_to_litter_gCm2day
                grid_output$mean_combined_biomass_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_biomass_to_litter_gCm2day
+               grid_output$MTT_biomass_years[slot_i,slot_j,] = site_output$MTT_biomass_years
                # Time varying pixel specific with quantiles
                grid_output$biomass_gCm2[n,,] = site_output$biomass_gCm2
                grid_output$dCbiomass_gCm2[n,,] = site_output$dCbiomass_gCm2
@@ -582,6 +583,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$final_dCdom_gCm2[slot_i,slot_j,] = site_output$dCdom_gCm2[,grid_output$time_dim]
                grid_output$mean_outflux_dom_gCm2day[slot_i,slot_j,] = site_output$mean_outflux_dom_gCm2day
                grid_output$mean_rhet_dom_gCm2day[slot_i,slot_j,] = site_output$mean_rhet_dom_gCm2day
+               grid_output$MTT_dom_years[slot_i,slot_j,] = site_output$MTT_dom_years               
                # Pixel specific time varying
                grid_output$dom_gCm2[n,,] = site_output$dom_gCm2
                grid_output$dCdom_gCm2[n,,] = site_output$dCdom_gCm2

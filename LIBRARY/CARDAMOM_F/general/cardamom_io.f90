@@ -158,7 +158,7 @@ module cardamom_io
         DATAin%nopars = 33
         DATAin%nofluxes = 40
     else if (DATAin%ID == 19) then
-        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.#
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 45

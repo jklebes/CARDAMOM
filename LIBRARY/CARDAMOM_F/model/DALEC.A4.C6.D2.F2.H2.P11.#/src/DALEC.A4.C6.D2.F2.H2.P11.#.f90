@@ -1496,7 +1496,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate electron transport + CO2 limited rate of photosynthesis (umolC.m-2.s-1)
     pd_pl = ((co2-ci_pl)*gc)
 
-    ! Determine whether we are robisco / carboylation or electron transport limited photosynthesis
+    ! Determine whether we are robisco / carboxylation or electron transport limited photosynthesis
     ! and update output variables as appropriate
     if (pd_pl > pd_pn) then
         ! Therefore robisco is limiting (umolC/m2/s)

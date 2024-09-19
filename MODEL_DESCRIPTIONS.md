@@ -45,9 +45,10 @@ M = Managed Grassland / arable crops (Table 10)
 | 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.#| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                   | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
-| 29 | <PLACE HOLDER FOR DAVID>     | NA                  | PLACE HOLDER FOR DAVID                              | D. T. Milodowski             | Unpublished |
+| 29 | DALEC.A1.C1.D2.F2.H3.P1.#    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Unpublished |
 | 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.#   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
+| 32 | DALEC.A1.C1.D2.F2.H4.P1.#    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -91,9 +92,11 @@ M = Managed Grassland / arable crops (Table 10)
 
 | Model Name | Short Description                                                          | Details                   |
 |------------|----------------------------------------------------------------------------|---------------------------|
-| H0         | No water cycle representation                                        |                                  |
+| H0         | No water cycle representation                                              |                           |
 | H1         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2). NOTE: that this model version assumes soil water content remains at field capacity but allows supply demand mechanisms. | Published (Smallman & Williams, 2019)  |
 | H2         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2,3,4) | Published (Smallman & Williams, 2019)  |
+| H3         | As H2 but min LWP parameterisable                                     | Unpublished (D. T. Milodowski) |
+| H4         | As H2 but Saxton pedotransfer functions replaced with van Genuchten  | Unpublished (L. Orci-Fernandez) |
 
 #### TABLE 7. Nitrogen pools represented and connected structure sub-models
 

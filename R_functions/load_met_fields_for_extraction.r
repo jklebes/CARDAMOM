@@ -139,7 +139,6 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         lat = array(lat, dim=c(long_dim,lat_dim))
         # break out from the rasters into arrays which we can manipulate
         tmp1 = array(as.vector(unlist(tmp1)), dim=c(long_dim,lat_dim))
-
         # We assume where that the first variable is shortwave radiation or
         # other positive definite variable. Thus, locations which are < 0
         # Are assumed to be non-valid locations
@@ -299,7 +298,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert Trendy air temperature of oC to K
-        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12" | met_source == "trendy_v13") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11" | 
+            met_source == "trendy_v12" | met_source == "trendy_v13") {
             maxt_out = maxt_out + 273.15
             mint_out = mint_out + 273.15
         }
@@ -328,7 +328,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # Assumed format, csv col 1 = year, 2 = month, 3 co2_ppm
         co2_background = read.csv(paste(path_to_co2,"/co2_monthly.csv",sep=""), header=TRUE)
         if (years_to_load[1] < co2_background$year[1] | years_to_load[length(years_to_load)] > co2_background$year[dim(co2_background)[1]]) {
-            stop("Available CO2 information in ./R_functions/co2_monthly.csv does not cover project time frame...")
+            stop("Available CO2 information in ./<path_to_co2>/co2_monthly.csv does not cover project time frame...")
         }
         for (yr in seq(1,length(years_to_load))) {
              # if this includes the extra year add it on to the beginning
@@ -367,7 +367,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 #                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
              }
         } # end of years loop
-#co2 = rep(co2[1], length.out = length(co2))
+
         # create day of run variable
         run_day = seq(1:length(doy))
 
@@ -387,6 +387,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
                       ,mint=mint_out,wind_spd=wind_out,extra_year=extra_year)
 
         # quick sanity check
+        if (any(is.na(as.vector(met_all$swrad)))) {stop(paste("SW_RAD contains NaN summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         if (min(as.vector(met_all$swrad)) < -1) {stop(paste("SW_RAD summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         met_all$swrad[which(met_all$swrad < 0)] = 0
 
