@@ -9,6 +9,8 @@
 check_control_file_defaults<-function() {
 
   ## Set defaults incase missing, NOTE: <<- to assign global
+
+  
   # Analysis options
   if (exists("select_country") == FALSE)                {select_country <<- FALSE}
   if (exists("met_interp") == FALSE)                    {met_interp <<- FALSE}
@@ -89,6 +91,20 @@ check_control_file_defaults<-function() {
   if (exists("request_runtime") == FALSE)               {request_runtime <<- 48}
   if (exists("request_compile_server") == FALSE)        {request_compile_server <<- FALSE}
   if (exists("request_compile_local") == FALSE)         {request_compile_local <<- TRUE}
+  # Computer defaults
+  if (request_use_server & exists("sshpass_key_home") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
+                                                                       The sshpass_key_home variable is missing. 
+                                                                       This please create a passkey for both your home and server machines and specify using 
+                                                                       sshpass_key_home and sshpass_key_server as appropriate")}
+  if (request_use_server & exists("sshpass_key_server") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
+                                                                          The sshpass_key_server variable is missing. 
+                                                                          This please create a passkey for both your home and server machines and specify using 
+                                                                          sshpass_key_home and sshpass_key_server as appropriate")}
+  if (request_use_server & exists("home_computer") == FALSE) {print("A request to run CARDAMOM on a remote server has been made, but not home_computer has been set.
+                                                                     Please specify the address of the home computer used for moving files to and from the remote server")}
+  if (exists("language") == FALSE) {language = "Fortran"} # Assume that the language is Fortran, currently all that actually works
+  if (exists("compiler") == FALSE) {compiler = "gfortran"} # Assume GNU compiler option if intel not specified
+  if (exists("compiler_optimisation") == FALSE) {compiler_optimisation = "-O2"} # tested options are current models are -O2, -O3, -Ofast
 
   ## Check for obvious combination errors
   # Forcings datasets

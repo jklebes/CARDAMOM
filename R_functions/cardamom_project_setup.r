@@ -141,13 +141,13 @@ cardamom_project_setup <- function (paths,PROJECT) {
   # do I compile on eddie?
   if (use_eddie) {
       # are we using eddie or not
-      eddiepath=paste(paths$cardamom_ecdf,project_type,PROJECT$name,sep="/")
-      ecdf_source=paste(paths$cardamom_ecdf,"LIBRARY/",sep="/")
+      eddiepath = paste(paths$cardamom_ecdf,project_type,PROJECT$name,sep="/")
+      ecdf_source = paste(paths$cardamom_ecdf,"LIBRARY/",sep="/")
       # declare the eddie specific paths
-      edatapath=paste(eddiepath,"DATA/",sep="/")
-      eresultspath=paste(eddiepath,"RESULTS/",sep="/")
-      eoestreampath=paste(eddiepath,"OUTPUT_ERROR_STREAM/",sep="/")
-      eexepath=paste(eddiepath,"EXECUTABLES/",sep="/")
+      edatapath = paste(eddiepath,"DATA/",sep="/")
+      eresultspath = paste(eddiepath,"RESULTS/",sep="/")
+      eoestreampath = paste(eddiepath,"OUTPUT_ERROR_STREAM/",sep="/")
+      eexepath = paste(eddiepath,"EXECUTABLES/",sep="/")
 
       # check current host address
       #home_computer=Sys.info()["nodename"]
@@ -164,7 +164,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
                 ,paste("mkdir ",eresultspath,sep="")
                 ,paste("mkdir ",eoestreampath,sep="")
                 ,paste("mkdir ",eexepath,sep="")
-                ,paste("scp ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
+                ,paste("scp -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
                 ,paste("chmod +x ",eexepath,"/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh",sep=""))
 
       # Have we been given this information already?
@@ -174,12 +174,11 @@ cardamom_project_setup <- function (paths,PROJECT) {
           comline = readline("Copy and compile any source code updates to Eddie (TRUE/FALSE)?")
       }
       if (comline) {
-          print("Backup source code currently on eddie first")
-          print("Then copying source code to eddie")
-          print("Finally compile source code on eddie")
+          print("Compiling instructions to backup source code currently on eddie first...")
+          print("...then copying source code to eddie and compile")
           if (project_src == "C") {
               commands = append(commands,c(paste("mv ",ecdf_source,"CARDAMOM_C ",ecdf_source,"CARDAMOM_C_BKP",sep="")
-                               ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
+                               ,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
                                ,paste("gcc ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",ecdf_source,
                                       "CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep="")
                                ,paste("cp ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",eexepath,"/",exe,sep="")))
@@ -190,11 +189,11 @@ cardamom_project_setup <- function (paths,PROJECT) {
               if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
               commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
                                         ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-                                        ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
+                                        ,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
                                         ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
                                         ,paste("rm cardamom.exe") # depends on working directory "executable"
                                         ,paste("rm *.mod")        # depends on working directory "executable"
-                                        ,paste(compiler," -O3 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                                        ,paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
                                                " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
                                                " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                                                " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
@@ -244,11 +243,11 @@ cardamom_project_setup <- function (paths,PROJECT) {
               #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
               if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
               # issue compile commands
-              system(paste(compiler," -O3 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+              system(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
                            " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
                            " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                            " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-#              print(paste(compiler," -O2 ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+#              print(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
 #                           " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
 #                           " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
 #                           " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
@@ -256,9 +255,9 @@ cardamom_project_setup <- function (paths,PROJECT) {
           } # compile executable on local machine too?
 
           # Generate the shared library needed later by R
-          #print(paste("gfortran -fcheck=all -O2 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+          #print(paste("gfortran -fcheck=all ",compiler_optimisation," -shared ../model/",modelname,"/src/",modelname,".f90 ",
           #             "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
-          system(paste("gfortran -fcheck=all -O3 -shared ../model/",modelname,"/src/",modelname,".f90 ",
+          system(paste("gfortran -fcheck=all ",compiler_optimisation," -shared ../model/",modelname,"/src/",modelname,".f90 ",
                        "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
           system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
           # Copy crop development file into position

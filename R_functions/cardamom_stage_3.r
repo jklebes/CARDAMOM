@@ -36,8 +36,6 @@ cardamom_stage_3 <-function(PROJECT,PROJECTfile) {
                 command = c(command,paste("zip -j -r -q ",PROJECT$eresultspath,"cardamom_outputs_",i,".zip ",PROJECT$eresultspath," -i '*_",i,"_PARS'",sep=""))
            }
            command = c(command,paste("scp -r -q ",PROJECT$eresultspath,"cardamom_outputs*.zip ",username,"@",home_computer,":",PROJECT$resultspath,sep=""))
-           #command = c(command,paste("rm ",PROJECT$eresultspath,"cardamom_outputs.zip",sep=""))
-           #command = paste("scp -r ",PROJECT$eresultspath,"* ",username,"@",home_computer,":",PROJECT$resultspath,sep="")
            # Execute on remote server
            ecdf_execute(command,PROJECT$paths$cardamom_cluster)
        } # copy back

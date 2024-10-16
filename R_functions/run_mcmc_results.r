@@ -884,6 +884,7 @@ define_grid_output<-cmpfun(define_grid_output)
 
 run_mcmc_results <- function (PROJECT,repair,grid_override) {
 
+  # Update the user
   print('Welcome to RUN_MCMC_RESULTS!!')
 
   # start marker
@@ -947,24 +948,6 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
       job_ID = floor(as.vector(Sys.time())) # this will be unique as the number of seconds since some reference start datetime
       # Now we can deploy in anger
       dummy = submit_R_run_each_site_to_local_slurm_machine(PROJECT,repair,job_ID)
-
-#      # Having submitted the jobs, we will wait for a period of time loosly related to the number of tasks
-#      # being submitted
-#      Sys.sleep(PROJECT$nosites * 0.3) # 30 second / 100 typical nos parallel tasks
-#
-#      # Check whether the slurm scheduler has finished all jobs
-#      ongoing = TRUE
-#      while(ongoing) {
-#         # Query ongoing jobs, assumes only your user name is returned
-#         system(paste('squeue -u ',username,' --format="%15j" > q',sep="")) ; q = read.table("q", header=TRUE)
-#         # If no more of the job_ID can be found then we will break the loop and continue
-#         if (length(which(grepl(job_ID,q[,1]))) > 0) {
-#             # Otherwise, we will wait a little while and check again
-#             file.remove("q") ; Sys.sleep(PROJECT$nosites*0.03)
-#         } else {
-#             file.remove("q") ; ongoing = FALSE 
-#         }
-#      }
 
       # Create empty output object into which to insert the required file names from the existing files
       site_output_all = vector("list", PROJECT$nosites)

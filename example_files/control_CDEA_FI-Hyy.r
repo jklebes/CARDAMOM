@@ -15,22 +15,26 @@ source("./R_functions/load_all_cardamom_functions.r")
 ## projname
 # Give a runid
 projname="FI-Hyy_example"
+#projname="FI-Hyy_example_O3"
+#projname="FI-Hyy_example_Ofast"
 
 ## Language
 # i.e. "Fortran", "C"
 language="Fortran"
 ## Compiler options (Fortan only)
 compiler="ifort" #"ifort", "gfortran"
+compiler_optimisation = "-Ofast"
 timing=FALSE
 debug=FALSE
 
 ## about you (only valid if working on UoE remote server)
 username="lsmallma" # put your Edinburgh uun here
 home_computer="ssh.geos.ed.ac.uk"
+sshpass_key_home = "~/.ssh/id_rsa_geos.pub" # location of passkey on remote server
 
 ## use parallel functions?
-use_parallel = FALSE
-numWorkers = 14 # number of cores to assign to parallel job
+use_parallel = TRUE
+numWorkers = 3 # number of cores to assign to parallel job
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
@@ -142,6 +146,7 @@ request_nos_chains = 3        # Number of chains CARDAMOM should run for each lo
 request_nos_samples = 10e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
 request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
+request_use_local_slurm = FALSE# Only applies if request_use_server == FALSE
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
 request_compile_server = FALSE# Copy and compile current source code on remote server
 request_compile_local = TRUE  # Compile local copy of the source code 
@@ -161,7 +166,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=5
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

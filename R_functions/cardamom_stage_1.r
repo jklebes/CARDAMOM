@@ -18,13 +18,11 @@ cardamom_stage_1<-function(PROJECT) {
             # Increment
             n = n + 1
             # Check whether the current file exists
-            if (exists(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")) == FALSE) {
+            if (file.exists(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")) == FALSE) {
                 # Escape loop now we know some sites need making
                 check = FALSE ; missing = append(missing,n)
             }
        }
-       # If all files are present we can stop the current proess
-       if (check) {return(paste("CARDAMOM Report: ",stage," completed", sep=""))}
        # Say how many are missing
        print(paste("There are ",length(missing)-1," missing files of ",PROJECT$nosites," sites",sep=""))
    } # repair == 0
@@ -207,8 +205,12 @@ cardamom_stage_1<-function(PROJECT) {
                # Delete this file before creating a new one of the latest input files
                system(paste("rm ",PROJECT$datapath,"cardamom_inputs.zip", sep=""))
            }
+           # Update the user
+           print("Begin compressing *.bin files into zip directory for transfer to remote server...")
            # Compress all input files into zip directory
            system(paste("zip -j -r -q ",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$datapath," -i '*.bin'",sep=""))
+           # Update the user
+           print("...zip directory creation completed")
            # Copy the zip directory to the remote server
            command = paste("scp -r -q ",username,"@",home_computer,":",PROJECT$datapath,"cardamom_inputs.zip ",PROJECT$edatapath,sep="")
            # Unzip on remote server
@@ -216,7 +218,9 @@ cardamom_stage_1<-function(PROJECT) {
            # Remove the zip directory on remote server
            command = c(command,paste("rm ",PROJECT$edatapath,"cardamom_inputs.zip" ,sep=""))
            #command = paste("scp -r ",username,"@",home_computer,":",PROJECT$datapath,"* ",PROJECT$edatapath,sep="")
-           print(command)
+           #print(command)
+           # Update the user
+           print("About to issue commands to remote server to transfer files")
            # Execute command on remote server
            ecdf_execute(command,PROJECT$paths$cardamom_cluster)
            # Delete local copy of the zip directory

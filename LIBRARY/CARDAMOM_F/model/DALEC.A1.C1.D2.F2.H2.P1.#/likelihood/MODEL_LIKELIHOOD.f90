@@ -659,7 +659,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20         !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -755,6 +756,13 @@ module model_likelihood_module
        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
                        *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+    ! Specific calculation of transpiration extraction from the soil surface layer
+    fl = 41 ! transpiration, multiplied by the fraction of transpiration extracted from the 1st root layer.
+    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,48)*deltat(io_start:io_finish))
+    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,48)*deltat(1:steps_per_year))
+    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),48) &
+                    *deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -799,6 +807,13 @@ module model_likelihood_module
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+    ! Surface water pool (0-30cm)
+    Fin(7)  = FT(47) 
+    Fout(7) = FT(42)+FT(41)+FT(46) 
+    Fin_yr1(7)  = FT_yr1(47) 
+    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
+!    Fin_yr2(7)  = FT_yr2(47)
+!    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -834,14 +849,14 @@ module model_likelihood_module
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
-           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
            !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            !end if
-        end do
+        end do ! pool lab, fol, fine root loop 
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
@@ -852,10 +867,10 @@ module model_likelihood_module
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
          if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
              EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
          end if
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
         ! Dead pools
@@ -871,15 +886,33 @@ module model_likelihood_module
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
 !           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
         end do
-
+        ! Water pool(s)
+        n = 7  ! surface water pool
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
     end if ! EDC2 == 1 .or. DIAG == 1
 
     ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values

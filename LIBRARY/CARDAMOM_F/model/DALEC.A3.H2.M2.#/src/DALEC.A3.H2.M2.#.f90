@@ -1167,8 +1167,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! here we assume that the wind speed just inside of the canopy is most important.
     !canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.5d0)-canopy_height))/mixing_length_momentum)
     ! Estimate canopy scaling factor for use with aerodynamic conductance.
+    ! Based on the canopy scaling of photosynthetic capacity due to light from 
+    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_wind_scaling = exp((ustar_Uh/mixing_length_momentum)) &
-                             / (ustar_Uh/mixing_length_momentum)
+                                 / (ustar_Uh/mixing_length_momentum)
 
     ! calculate_soil_conductance
     call calculate_soil_conductance(mixing_length_momentum,local_lai)
@@ -1833,6 +1835,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimate the integral of light interception for use as a leaf to canopy
     ! scaler for photosynthesis, transpiration, and gs
+    ! Based on the canopy scaling of photosynthetic capacity due to light from 
+    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_light_scaling = (1d0-S2) / K
 
     ! check energy balance

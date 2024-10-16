@@ -199,6 +199,7 @@ module CARBON_MODEL_MOD
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
+                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
@@ -216,7 +217,8 @@ module CARBON_MODEL_MOD
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
-                                        runoff, & ! runoff (kgH2O.m-2.day-1)
+                                        runoff, & ! surface water runoff (kgH2O.m-2.day-1)
+                                   infiltrated, & ! surface water infiltrated (kgH2O.m-2.d-1)   
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
                                 previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
@@ -1017,11 +1019,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
        ! Assign all water variables to output variables (kgH2O/m2/day)
-       FLUXES(n,41) =  transpiration   ! transpiration
-       FLUXES(n,42) =  soilevaporation ! soil evaporation
-       FLUXES(n,43) =  wetcanopy_evap  ! wet canopy evaporation
-       FLUXES(n,44) =  runoff          ! soil surface runoff
-       FLUXES(n,45) =  underflow       ! drainage from bottom of soil column
+       FLUXES(n,41) = transpiration   ! transpiration
+       FLUXES(n,42) = soilevaporation ! soil evaporation
+       FLUXES(n,43) = wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,44) = runoff          ! soil surface runoff
+       FLUXES(n,45) = underflow       ! drainage from bottom of soil column
+       FLUXES(n,46) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
+       FLUXES(n,47) = infiltrated     ! soil surface infiltration by rain 
+       FLUXES(n,48) = uptake_fraction(1) ! transpiration extracted from 1st rooting layer (the soil surface)
+       FLUXES(n,49) = uptake_fraction(2) ! transpiration extracted from 2nd rooting layer (dynamic 2nd layer)
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -1344,6 +1350,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine calculate_stomatal_conductance
+
+    use brent_zero, only: zbrent
 
     ! Determines an approximation of canopy scale stomatal conductance (gc)
     ! mmolH2O.m-2.s-1 based on potential hydraulic flow, air temperature and absorbed radiation.
@@ -1741,6 +1749,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! here we assume that the wind speed just inside of the canopy is most important.
     !canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.5d0)-canopy_height))/mixing_length_momentum)
     ! Estimate canopy scaling factor for use with aerodynamic conductance.
+    ! Based on the canopy scaling of photosynthetic capacity due to light from 
+    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_wind_scaling = exp((ustar_Uh/mixing_length_momentum)) &
                              / (ustar_Uh/mixing_length_momentum)
 
@@ -1811,6 +1821,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   subroutine calculate_field_capacity
 
+    use brent_zero, only: zbrent
+    
     ! field capacity calculations for saxton eqns !
 
     implicit none
@@ -2114,6 +2126,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     transmitted_fraction = exp(decay * lai * clump)
     ! Estimate the integral of light interception for use as a leaf to canopy
     ! scaler for photoynthesis, transpiration, and gs
+    ! Based on the canopy scaling of photosynthetic capacity due to light from 
+    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_light_scaling = (1d0-transmitted_fraction) / (-decay*clump)
 
     ! Second, of the radiation which is incident on the canopy what fractions
@@ -2557,8 +2571,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !logical :: iter_soil = .true.
 
     ! set soil water exchanges
-    Esoil = 0d0 ; Esnow = 0d0  
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
+    Esoil = 0d0 ; Esnow = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 
+    underflow = 0d0 ; runoff = 0d0 ; infiltrated = 0d0 ; water_grav_flow = 0d0 ; pot_evap_losses = 0d0
     initial_soilwater = 1d3 * sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     !! Assume leaf transpiration is drawn from the soil based on the
@@ -2672,10 +2686,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
+
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+    water_grav_flow = water_grav_flow * days_per_step_1
+    infiltrated = infiltrated * days_per_step_1
     corrected_ET = corrected_ET * days_per_step_1
     underflow = underflow * days_per_step_1
     runoff = runoff * days_per_step_1
@@ -2856,6 +2872,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
+    infiltrated = infiltrated + (waterchange(1) * 1e3)
 
   end subroutine infiltrate
   !
@@ -2898,9 +2915,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! zero water fluxes
     waterchange = 0d0
 
-    ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+    ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
+    water_grav_flow = water_grav_flow * 1d-3
 
     ! estimate potential drainage rate for the current time period
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
@@ -2950,6 +2968,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
               ! update soil layer below with drained liquid
               waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
               waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
 
           end if ! some liquid water and drainage possible
 
@@ -2969,8 +2989,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     end do ! while condition
 
-    ! convert underflow from MgH2O/m2/day -> kgH2O/m2/day
+    ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
     underflow = underflow * 1d3
+    water_grav_flow = water_grav_flow * 1d3
 
   end subroutine gravitational_drainage
   !
@@ -3060,7 +3081,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! If prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
-        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac * field_capacity(1:nos_soil_layers)
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac !* field_capacity(1:nos_soil_layers)
         ! calculate initial soil water potential
         call soil_water_potential
     endif
@@ -3419,135 +3440,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function ospolynomial
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function zbrent( called_from , func , x1 , x2 , tol , toltol)
-
-    ! This is a bisection routine. When ZBRENT is called, we provide a    !
-    ! reference to a particular function and also two values which bound  !
-    ! the arguments for the function of interest. ZBRENT finds a root of  !
-    ! the function (i.e. the point where the function equals zero), that  !
-    ! lies between the two bounds.                                        !
-    ! There are five exit conditions:                                     !
-    ! 1) The first proposal for the root of the function equals zero      !
-    ! 2) The proposal range has been reduced to less then tol             !
-    ! 3) The magnitude of the function is less than toltol                !
-    ! 4) Maximum number of iterations has been reached                    !
-    ! 5) The root of the function does now lie between supplied bounds    !
-    ! For a full description see Press et al. (1986).                     !
-
-    implicit none
-
-    ! arguments..
-    character(len=*),intent(in) :: called_from    ! name of procedure calling (used to pass through for errors)
-    double precision,intent(in) :: tol, toltol, x1, x2
-
-    ! Interfaces are the correct way to pass procedures as arguments.
-    interface
-      double precision function func( xval )
-        double precision ,intent(in) :: xval
-      end function func
-    end interface
-
-    ! local variables..
-    integer            :: iter
-    integer, parameter :: ITMAX = 8
-    double precision   :: a,b,c,d,e,fa,fb,fc,p,q,r,s,tol1,tol0,xm
-    double precision, parameter :: EPS = 6d-8
-
-    ! calculations...
-    a  = x1
-    b  = x2
-    fa = func( a )
-    fb = func( b )
-    tol0 = tol * 0.5d0
-
-    ! Check that we haven't (by fluke) already started with the root...
-    if ( abs(fa) < toltol ) then
-        zbrent = a
-        return
-    elseif ( abs(fb) < toltol ) then
-        zbrent = b
-        return
-    end if
-    ! Ensure the supplied x-values give y-values that lie either
-    ! side of the root and if not flag an error message...
-!    if (fa * fb > 0d0) then
-        ! tell me otherwise what is going on
-!!       print*,"Supplied values must bracket the root of the function.",new_line('x'),  &
-!!         "     ","You supplied x1:",x1,new_line('x'),                     &
-!!         "     "," and x2:",x2,new_line('x'),                             &
-!!         "     "," which give function values of fa :",fa,new_line('x'),  &
-!!         "     "," and fb:",fb," .",new_line('x'),                        &
-!!         " zbrent was called by: ",trim(called_from)
-!    end if
-    c = b
-    fc = fb
-
-    do iter = 1 , ITMAX
-
-      ! If the new value (f(c)) doesn't bracket
-      ! the root with f(b) then adjust it..
-!      if ( sign(1d0,fb) .eq. sign(1d0,fc) ) then
-      if (fb * fc > 0d0) then
-        c  = a
-        fc = fa
-        d  = b - a
-        e  = d
-      end if
-      if ( abs(fc) .lt. abs(fb) ) then
-        a  = b
-        b  = c
-        c  = a
-        fa = fb
-        fb = fc
-        fc = fa
-      end if
-      tol1 = EPS * abs(b) + tol0
-      xm   = 0.5d0 * ( c - b )
-!      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
-      if ( ( abs(xm) .le. tol1 ) .or. ( abs(fb) < toltol ) ) then
-        zbrent = b
-        return
-      end if
-      if ( ( abs(e) .ge. tol1 ) .and. ( abs(fa) .gt. abs(fb) ) ) then
-        s = fb / fa
-        if ( a .eq. c ) then
-          p = 2d0 * xm * s
-          q = 1d0 - s
-        else
-          q = fa / fc
-          r = fb / fc
-          p = s * ( 2d0 * xm * q * ( q - r ) - ( b - a ) * ( r - 1d0 ) )
-          q = ( q - 1d0 ) * ( r - 1d0 ) * ( s - 1d0 )
-        end if
-        if ( p .gt. 0d0 ) q = -q
-        p = abs( p )
-        if ( (2d0*p) .lt. min( 3d0*xm*q-abs(tol1*q) , abs(e*q) ) ) then
-          e = d
-          d = p / q
-        else
-          d = xm
-          e = d
-        end if
-      else
-        d = xm
-        e = d
-      end if
-      a  = b
-      fa = fb
-      if ( abs(d) .gt. tol1 ) then
-        b = b + d
-      else
-        b = b + sign( tol1 , xm )
-      end if
-      fb = func(b)
-    enddo
-
-    zbrent = b
-
-  end function zbrent
   !
   !------------------------------------------------------------------
   !

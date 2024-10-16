@@ -1436,7 +1436,9 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "GRAZINGextracted_foliage_gCm2day","GRAZINGextracted_roots_gCm2day",
                       "GRAZINGextracted_litter_gCm2day","GRAZINGextracted_som_gCm2day",
                       "GRAZINGlitter_labile_gCm2day","GRAZINGlitter_foliage_gCm2day",
-                      "GRAZINGlitter_roots_gCm2day","leaf_temperature_celcius","soil_temperature_celcius")
+                      "GRAZINGlitter_roots_gCm2day","leaf_temperature_celcius","soil_temperature_celcius",
+                      "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day",
+                      "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction")
                       
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists
