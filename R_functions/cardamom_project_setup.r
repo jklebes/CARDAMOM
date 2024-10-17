@@ -193,7 +193,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
                                         ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
                                         ,paste("rm cardamom.exe") # depends on working directory "executable"
                                         ,paste("rm *.mod")        # depends on working directory "executable"
-                                        ,paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+                                        ,paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../misc/brent_zero/brent_zero.f90",
+                                               " ../model/",modelname,"/src/",modelname,".f90",
                                                " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
                                                " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                                                " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
@@ -243,11 +244,13 @@ cardamom_project_setup <- function (paths,PROJECT) {
               #if (file.exists(paste(paths$cardamom,"LIBRARY/CARDAMOM_F/executable/cardamom.exe",sep=""))) { system(paste("rm cardamom.exe")) }
               if (file.exists(paste(exepath,"/",exe,sep=""))) {system(paste("rm ",exepath,"/",exe,sep=""))}
               # issue compile commands
-              system(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+              system(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../misc/brent_zero/brent_zero.f90",
+                           " ../model/",modelname,"/src/",modelname,".f90",
                            " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
                            " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                            " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
-#              print(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../model/",modelname,"/src/",modelname,".f90",
+#              print(paste(compiler," ",compiler_optimisation," ",compiler_options," ../misc/math_functions.f90 ../misc/oksofar.f90 ../misc/brent_zero/brent_zero.f90",
+#                           " ../model/",modelname,"/src/",modelname,".f90",
 #                           " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
 #                           " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
 #                           " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep=""))
@@ -257,7 +260,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
           # Generate the shared library needed later by R
           #print(paste("gfortran -fcheck=all ",compiler_optimisation," -shared ../model/",modelname,"/src/",modelname,".f90 ",
           #             "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
-          system(paste("gfortran -fcheck=all ",compiler_optimisation," -shared ../model/",modelname,"/src/",modelname,".f90 ",
+          system(paste("gfortran -fcheck=all ",compiler_optimisation," -shared ../misc/brent_zero/brent_zero.f90 ../model/",modelname,"/src/",modelname,".f90 ",
                        "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
           system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
           # Copy crop development file into position
