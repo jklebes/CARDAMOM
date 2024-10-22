@@ -25,17 +25,17 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
 
        # Convert to a raster, assuming standad WGS84 grid
        biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-       biomass_gCm2 = rasterFromXYZ(biomass_gCm2, crs = ("+init=epsg:4326"))
+       biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
        biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-       biomass_uncertainty_gCm2 = rasterFromXYZ(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"))
+       biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
 
        # Create raster with the target crs (technically this bit is not required)
-       target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+       target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
        # Check whether the target and actual analyses have the same CRS
-       if (compareCRS(biomass_gCm2,target) == FALSE) {
+       if (compareGeom(biomass_gCm2,target) == FALSE) {
            # Resample to correct grid
-           biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+           biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() 
+           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() 
        }
        # Extend the extent of the overall grid to the analysis domain
        biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
@@ -45,24 +45,22 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
        biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
        biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
 
-       # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-       # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-       #if (spatial_type == "grid") {
-           if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+       # Adjust spatial resolution of the datasets, this occurs in all cases
+       if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
-               # Create raster with the target resolution
-               target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-               # Resample to correct grid
-               biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-               biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+           # Create raster with the target resolution
+           target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+           # Resample to correct grid
+           biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() 
+           biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc()
 
-           } # Aggrgeate to resolution
-       #} # spatial_type == "grid"
+       } # Aggrgeate to resolution
 
        # extract dimension information for the grid, note the axis switching between raster and actual array
        xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
        # extract the lat / long information needed
-       long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+       long = crds(biomass_gCm2,df=TRUE, na.rm=FALSE)
+       lat  = long$y ; long = long$x
        # restructure into correct orientation
        long = array(long, dim=c(xdim,ydim))
        lat = array(lat, dim=c(xdim,ydim))

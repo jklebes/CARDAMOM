@@ -21,7 +21,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
         # Assume pre-mcmc is not to be used if this is an extended run
         pre_mcmc = 0
     }
-    
+
     # Check presence of PROJECT_in$cost_function_scaling
     if (exists(x = "cost_function_scaling", where = PROJECT_in) == FALSE) {
         # If not, assume default cost function
@@ -90,7 +90,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
     # task run time
     runtimestr=paste(" -l h_rt=",as.numeric(PROJECT_in$chain_runtime),":00:00 ",sep="")
     # task memory needs
-    memorystr=paste(" -l h_vmem=1G",sep="")
+    memorystr=paste(" -l h_vmem=1G -l rl9=true",sep="")
 
     # eddie email link
     if (grepl("@",PROJECT_in$email)) {

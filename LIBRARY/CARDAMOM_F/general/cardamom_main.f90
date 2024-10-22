@@ -12,7 +12,7 @@ program cardamom_framework
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, &
                                     find_edc_initial_values, &
-                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood
+                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -23,6 +23,7 @@ program cardamom_framework
  ! Edinburgh CARDAMOM code and subsequent modifications by:
  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
  ! J. F. Exbrayat (University of Edinburgh)
+ ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
  ! See function / subroutine specific comments for exceptions and contributors
  !!!!!!!!!!!
 
@@ -85,11 +86,11 @@ program cardamom_framework
  ! Assign inflate logical condition
  if (do_inflate_dble == 1) do_inflate = .true.
  ! Sanity check of the cost_function_scaling_char
- if (cost_func_scaling_dble > -1 .and. cost_func_scaling_dble < 4) then
+ if (cost_func_scaling_dble > -1 .and. cost_func_scaling_dble < 4 .and. freq_write > 0) then
      ! All is well
  else
      ! All is not well - complain
-     print*, "ERROR: Command line argument to specify the cost function is incorrect."
+     print*, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
      print*, "Command line should have 7 arguments (in addition to the cardamom.exe)."
      print*, "These are: "
      print*, "1) input file path."
@@ -110,7 +111,7 @@ program cardamom_framework
 
  ! user update
  write(*,*)"Command line options read, moving on now"
-
+ 
  ! seed the random number generator
  ! determine unique (sort of) seed value; based on system time
  call system_clock(time1,time2,time3)
@@ -344,6 +345,8 @@ program cardamom_framework
          call MHMCMC(1d0,model_likelihood,sqrt_model_likelihood)
      else if (cost_func_scaling_dble == 3) then
          call MHMCMC(1d0,model_likelihood,log_model_likelihood)
+     !else if (cost_func_scaling_dble == 4) then
+     !    call MHMCMC(1d0,model_likelihood,log_model_likelihood_dtm)
      end if ! cost_func_scaling_dble == 
      
      ! Let the user know we are done
@@ -353,5 +356,12 @@ program cardamom_framework
 
  ! tidy up by closing all files
  call close_output_files
+
+ ! Final message to the user
+ write(*,*)"==========================================================="
+ write(*,*)"==== CARDAMOM analysis for the current chain completed ===="
+ write(*,*)"==========================================================="
+ write(*,*)"=========================Honestly=========================="
+
 
 end program cardamom_framework

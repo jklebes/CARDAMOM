@@ -57,17 +57,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
             # Convert to a raster, assuming standad WGS84 grid
             biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-            biomass_gCm2 = rasterFromXYZ(biomass_gCm2, crs = ("+init=epsg:4326"))
+            biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
             biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-            biomass_uncertainty_gCm2 = rasterFromXYZ(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"))
+            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
 
             # Create raster with the target crs (technically this bit is not required)
-            target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
             # Check whether the target and actual analyses have the same CRS
-            if (compareCRS(biomass_gCm2,target) == FALSE) {
+            if (compareGeom(biomass_gCm2,target) == FALSE) {
                 # Resample to correct grid
-                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() 
+                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() 
             }
             # Extend if required to the target area
             biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
@@ -77,24 +77,22 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
 
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-            #if (spatial_type == "grid") {
-                if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+            # Adjust spatial resolution of the datasets, this occurs in all cases
+            if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
-                    # Create raster with the target resolution
-                    target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                    # Resample to correct grid
-                    biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-                    biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                # Create raster with the target resolution
+                target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+                # Resample to correct grid
+                biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() 
+                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() 
 
-                } # Aggrgeate to resolution
-            #} # spatial_type == "grid"
+            } # Aggrgeate to resolution
 
             # extract dimension information for the grid, note the axis switching between raster and actual array
             xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
             # extract the lat / long information needed
-            long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+            long = crds(biomass_gCm2,df=TRUE, na.rm=FALSE)
+            lat  = long$y ; long = long$x
             # restructure into correct orientation
             long = array(long, dim=c(xdim,ydim))
             lat = array(lat, dim=c(xdim,ydim))
@@ -164,17 +162,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
             # Convert to a raster, assuming standad WGS84 grid
             biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-            biomass_gCm2 = rasterFromXYZ(biomass_gCm2, crs = ("+init=epsg:4326"))
+            biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
             biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-            biomass_uncertainty_gCm2 = rasterFromXYZ(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"))
+            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
 
             # Create raster with the target crs (technically this bit is not required)
-            target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
             # Check whether the target and actual analyses have the same CRS
-            if (compareCRS(biomass_gCm2,target) == FALSE) {
+            if (compareGeom(biomass_gCm2,target) == FALSE) {
                 # Resample to correct grid
-                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() 
+                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() 
             }
             # extend the extent of the overall grid to the analysis domain
             biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
@@ -184,24 +182,22 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
             biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
 
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here.
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-            if (spatial_type == "grid") {
-                if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+            # Adjust spatial resolution of the datasets, this occurs in all cases
+            if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
-                    # Create raster with the target resolution
-                    target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                    # Resample to correct grid
-                    biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-                    biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+                # Create raster with the target resolution
+                target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+                # Resample to correct grid
+                biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() 
+                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() 
 
-                } # Aggrgeate to resolution
-            } # spatial_type == "grid"
+            } # Aggrgeate to resolution
 
             # extract dimension information for the grid, note the axis switching between raster and actual array
             xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
             # extract the lat / long information needed
-            long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+            long = crds(biomass_gCm2,df=TRUE, na.rm=FALSE)
+            lat  = long$y ; long = long$x
             # restructure into correct orientation
             long = array(long, dim=c(xdim,ydim))
             lat = array(lat, dim=c(xdim,ydim))
@@ -268,16 +264,16 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
              if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
                  # Read in the estimate and uncertainty rasters
-                 biomass = raster(input_file[t])
-                 biomass_uncertainty = raster(input_file_uncertainty[t])
+                 biomass = rast(input_file[t])
+                 biomass_uncertainty = rast(input_file_uncertainty[t])
 
                  # Create raster with the target crs
-                 target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
+                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
-                 if (compareCRS(biomass,target) == FALSE) {
+                 if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
-                     biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
-                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
+                     biomass = resample(biomass, target, method="ngb") ; gc() 
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() 
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  biomass = extend(biomass,cardamom_ext) ; biomass_uncertainty = extend(biomass_uncertainty,cardamom_ext)
@@ -286,20 +282,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
-                     if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
+                 if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
-                         # Create raster with the target resolution
-                         target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                     # Create raster with the target resolution
+                     target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
-                         # Resample to correct grid
-                         biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-                         biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+                     # Resample to correct grid
+                     biomass = resample(biomass, target, method="bilinear") ; gc()
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc()
 
-                     } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 } # Aggrgeate to resolution
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -309,7 +302,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # extract dimension information for the grid, note the axis switching between raster and actual array
                      xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
                      # extract the lat / long information needed
-                     long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
+                     long = crds(biomass,df=TRUE, na.rm=FALSE)
+                     lat  = long$y ; long = long$x
                      # restructure into correct orientation
                      long = array(long, dim=c(xdim,ydim))
                      lat = array(lat, dim=c(xdim,ydim))
@@ -401,16 +395,16 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
              if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
                  # Read in the estimate and uncertainty rasters
-                 biomass = raster(paste(path_to_Cwood,input_file[t],sep=""))
-                 biomass_uncertainty = raster(paste(path_to_Cwood,unc_input_file[t],sep=""))
+                 biomass = rast(paste(path_to_Cwood,input_file[t],sep=""))
+                 biomass_uncertainty = rast(paste(path_to_Cwood,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
+                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
-                 if (compareCRS(biomass,target) == FALSE) {
+                 if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
-                     biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
-                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
+                     biomass = resample(biomass, target, method="ngb") ; gc()
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc()
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  biomass = extend(biomass,cardamom_ext) ; biomass_uncertainty = extend(biomass_uncertainty,cardamom_ext)
@@ -419,20 +413,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
-                     if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
+                 if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
-                         # Create raster with the target resolution
-                         target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                     # Create raster with the target resolution
+                     target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
-                         # Resample to correct grid
-                         biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-                         biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+                     # Resample to correct grid
+                     biomass = resample(biomass, target, method="bilinear") ; gc() 
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() 
 
-                     } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 } # Aggrgeate to resolution
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -442,7 +433,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # extract dimension information for the grid, note the axis switching between raster and actual array
                      xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
                      # extract the lat / long information needed
-                     long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
+                     long = crds(biomass,df=TRUE, na.rm=FALSE)
+                     lat  = long$y ; long = long$x
                      # restructure into correct orientation
                      long = array(long, dim=c(xdim,ydim))
                      lat = array(lat, dim=c(xdim,ydim))
@@ -513,7 +505,12 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # The \\ also specifies that the . is not to be considered a wildcard
         input_file = input_file[grepl("\\.tif$",input_file) == TRUE]
         # Extract the specific files from the original list
+        input_unc_file = input_file[grepl("saatchi_wood_uncertainty_MgCha",input_file) == TRUE]
+        # Extract the specific files from the original list
         input_file = input_file[grepl("saatchi_wood_MgCha",input_file) == TRUE]
+
+        # Sense check
+        if (length(input_unc_file) != length(input_file)) {stop("number of uncertainty and data files differ for Cwood_stock_source = Saatchi_2021")}
 
         # Determine the number of years found
         years_with_obs = gsub("saatchi_wood_MgCha_","",input_file)
@@ -527,34 +524,36 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
              if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
                  # Read in the estimate and uncertainty rasters
-                 biomass = raster(paste(path_to_Cwood,input_file[t],sep=""))
+                 biomass = rast(paste(path_to_Cwood,input_file[t],sep=""))
+                 biomass_unc = rast(paste(path_to_Cwood,input_unc_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
+                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
-                 if (compareCRS(biomass,target) == FALSE) {
+                 if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
-                     biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
+                     biomass = resample(biomass, target, method="ngb") ; gc()
+                     biomass_unc = resample(biomass_unc, target, method="ngb") ; gc() 
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  biomass = extend(biomass,cardamom_ext)
+                 biomass_unc = extend(biomass_unc,cardamom_ext)
                  # Trim the extent of the overall grid to the analysis domain
                  biomass = crop(biomass,cardamom_ext)
+                 biomass_unc = crop(biomass_unc,cardamom_ext)
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
-                     if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
+                 biomass_unc[which(as.vector(biomass_unc) < 0)] = NA
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
+                 if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
-                         # Create raster with the target resolution
-                         target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                     # Create raster with the target resolution
+                     target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+                     # Resample to correct grid
+                     biomass = resample(biomass, target, method="bilinear") ; gc()
+                     biomass_unc = resample(biomass_unc, target, method="bilinear") ; gc() 
 
-                         # Resample to correct grid
-                         biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-
-                     } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 } # Aggrgeate to resolution
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -564,7 +563,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # extract dimension information for the grid, note the axis switching between raster and actual array
                      xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
                      # extract the lat / long information needed
-                     long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
+                     long = crds(biomass,df=TRUE, na.rm=FALSE)
+                     lat  = long$y ; long = long$x
                      # restructure into correct orientation
                      long = array(long, dim=c(xdim,ydim))
                      lat = array(lat, dim=c(xdim,ydim))
@@ -573,6 +573,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
                  # break out from the rasters into arrays which we can manipulate
                  biomass = array(as.vector(unlist(biomass)), dim=c(xdim,ydim))
+                 biomass_unc = array(as.vector(unlist(biomass_unc)), dim=c(xdim,ydim))
 
                  # Determine when in the analysis time series the observations should go
                  # NOTE: We assume the biomass estimate is placed at the beginning of the year
@@ -585,10 +586,12 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # Output variables already exits to append them
                      place_obs_in_step = append(place_obs_in_step, obs_step)
                      biomass_gCm2 = append(biomass_gCm2, as.vector(biomass)) ; rm(biomass)
+                     biomass_uncertainty_gCm2 = append(biomass_uncertainty_gCm2, as.vector(biomass_unc)) ; rm(biomass_unc)
                  } else {
                      # Output variables do not already exist, assign them
                      place_obs_in_step = obs_step ; rm(obs_step)
                      biomass_gCm2 = as.vector(biomass) ; rm(biomass)
+                     biomass_uncertainty_gCm2 = as.vector(biomass_unc) ; rm(biomass_unc)
                  } # obs_step exists
 
              } # Is dataset within the analysis time period?
@@ -597,11 +600,13 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         # Convert MgC/ha -> gCm2 needed for Saatchi et al (2011)
         biomass_gCm2 = biomass_gCm2 * 1e2
+        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 1e2
 
         # Re-construct arrays for output
         idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
         biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
-        biomass_uncertainty_gCm2 = biomass_gCm2 * 0.18
+        biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
+        #biomass_uncertainty_gCm2 = biomass_gCm2 * 0.18 # assume uncertainty is 18 %
         if (done_lat) {
             # Output variables
             return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,
@@ -611,193 +616,6 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
                         biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
         } # done_lat
-
-    } else if (Cwood_stock_source == "UoL_stable_forest") {
-
-        # this is a very bespoke modification so leave it here to avoid getting lost
-        print("Loading UoL Stable Forests AGB...")
-
-        # Data represent the following year
-        years_with_obs = c(2014) ; done_lat = FALSE
-        # determine whether the first year is within the analysis period
-        if (years_with_obs >= as.numeric(start) & years_with_obs <= as.numeric(finish)) {
-
-            done_lat = TRUE
-
-            # Read in estimate and uncertainty rasters
-            # NOTE: that map is above ground, total biomass will be estimated later
-            biomass_gCm2 = raster(paste(path_to_Cwood,"Kenya_0.25deg_AGB_stable_forest_2015_2017.tif", sep=""))
-            biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood,"Kenya_0.25deg_AGB_std_stable_forest_2015_2017.tif", sep=""))
-
-            # Create raster with the target crs
-            target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
-            # Check whether the target and actual analyses have the same CRS
-            if (compareCRS(biomass_gCm2,target) == FALSE) {
-                # Resample to correct grid
-                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-            }
-            # Extend the extent of the overall grid to the analysis domain
-            biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
-            # Trim the extent of the overall grid to the analysis domain
-            biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
-            # now remove the ones that are actual missing data
-            biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
-            biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-            if (spatial_type == "grid") {
-                if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
-
-                    # Create raster with the target resolution
-                    target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-
-                    # Resample to correct grid
-                    biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-                    biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-
-                } # Aggrgeate to resolution
-            } # spatial_type == "grid"
-
-            # extract dimension information for the grid, note the axis switching between raster and actual array
-            xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
-            # extract the lat / long information needed
-            long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
-            # restructure into correct orientation
-            long = array(long, dim=c(xdim,ydim))
-            lat = array(lat, dim=c(xdim,ydim))
-            # break out from the rasters into arrays which we can manipulate
-            biomass_gCm2 = array(as.vector(unlist(biomass_gCm2)), dim=c(xdim,ydim))
-            biomass_uncertainty_gCm2 = array(as.vector(unlist(biomass_uncertainty_gCm2)), dim=c(xdim,ydim))
-
-            # Determine when in the analysis time series the observations should go
-            # NOTE: We assume the biomass estimate is placed at the beginning of the year
-
-            # What year of the analysis does the data fall?
-            place_obs_in_step = which(run_day_selector >= floor(which(analysis_years == years_with_obs) * 365.25))[1]
-            place_obs_in_step = place_obs_in_step - (steps_per_year-1)
-
-            # Re-construct arrays for output
-            idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
-            biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
-            biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
-
-       } # data within analysis period
-
-        # Convert gC/m2 -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 2.083333 * 1e-2
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333 * 1e-2
-        # Use allometry to estimate below ground biomass stock and
-        # combined with the above ground (Mg/ha) to give a total woody biomass estimate
-        # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
-        biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
-        # Now back to desired units gC/m2
-        biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
-
-        if (done_lat) {
-            # Output variables
-            return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,
-                        biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
-        } else {
-            # Output dummy variables
-            return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
-                        biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
-        } # done_lat
-
-    } else if (Cwood_stock_source == "UoL_stable_savannah") {
-
-        # this is a very bespoke modification so leave it here to avoid getting lost
-        print("Loading UoL Stable Savannah AGB...")
-
-        years_with_obs = c(2014) ; done_lat = FALSE
-        # determine whether the first year is within the analysis period
-        if (years_with_obs >= as.numeric(start) & years_with_obs <= as.numeric(finish)) {
-
-            done_lat = TRUE
-
-            # Read in estimate and uncertainty rasters
-            # NOTE: that map is above ground, total biomass will be estimated later
-            biomass_gCm2 = raster(paste(path_to_Cwood,"Kenya_0.25deg_AGB_stable_savannah_2015_2017.tif", sep=""))
-            biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood,"Kenya_0.25deg_AGB_std_stable_savannah_2015_2017.tif", sep=""))
-
-            # Create raster with the target crs
-            target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
-            # Check whether the target and actual analyses have the same CRS
-            if (compareCRS(biomass_gCm2,target) == FALSE) {
-                # Resample to correct grid
-                biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-                biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-            }
-            # Extend the extent of the overall grid to the analysis domain
-            biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
-            # Trim the extent of the overall grid to the analysis domain
-            biomass_gCm2 = crop(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = crop(biomass_uncertainty_gCm2,cardamom_ext)
-            # now remove the ones that are actual missing data
-            biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
-            biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-            # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-            # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-            if (spatial_type == "grid") {
-                if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
-
-                    # Create raster with the target resolution
-                    target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-
-                    # Resample to correct grid
-                    biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-                    biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-
-                } # Aggrgeate to resolution
-            } # spatial_type == "grid"
-
-            # extract dimension information for the grid, note the axis switching between raster and actual array
-            xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
-            # extract the lat / long information needed
-            long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
-            # restructure into correct orientation
-            long = array(long, dim=c(xdim,ydim))
-            lat = array(lat, dim=c(xdim,ydim))
-            # break out from the rasters into arrays which we can manipulate
-            biomass_gCm2 = array(as.vector(unlist(biomass_gCm2)), dim=c(xdim,ydim))
-            biomass_uncertainty_gCm2 = array(as.vector(unlist(biomass_uncertainty_gCm2)), dim=c(xdim,ydim))
-
-            # Determine when in the analysis time series the observations should go
-            # NOTE: We assume the biomass estimate is placed at the beginning of the year
-
-            # What year of the analysis does the data fall?
-            place_obs_in_step = which(run_day_selector >= floor(which(analysis_years == years_with_obs) * 365.25))[1]
-            place_obs_in_step = place_obs_in_step - (steps_per_year-1)
-
-            # Re-construct arrays for output
-            idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
-            biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
-            biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
-
-       } # data within analysis period
-
-        # Convert gC/m2 -> Mg/ha needed for Saatchi et al (2011)
-        biomass_gCm2 = biomass_gCm2 * 2.083333 * 1e-2
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 2.083333 * 1e-2
-        # Use allometry to estimate below ground biomass stock and
-        # combined with the above ground (Mg/ha) to give a total woody biomass estimate
-        # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
-        biomass_gCm2 = biomass_gCm2 + (0.489 * biomass_gCm2 ** 0.89)
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 + (0.489 * biomass_uncertainty_gCm2 ** 0.89)
-        # Now back to desired units gC/m2
-        biomass_gCm2 = biomass_gCm2 * 0.48 * 1e2
-        biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2 * 0.48 * 1e2
-
-       if (done_lat) {
-           # Output variables
-           return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,
-                       biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
-       } else {
-           # Output dummy variables
-           return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
-                       biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
-       } # done_lat
 
     } else if (Cwood_stock_source == "Rainfor") {
 
@@ -813,16 +631,16 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
         # Read in estimate and uncertainty rasters
         # NOTE: this data assimilates total biomass
-        biomass_gCm2 = raster(paste(path_to_Cwood,"wood_biomass_gCm2_2010.tif", sep=""))
-        biomass_uncertainty_gCm2 = raster(paste(path_to_Cwood,"unc_wood_biomass_gCm2_2010.tif", sep=""))
+        biomass_gCm2 = rast(paste(path_to_Cwood,"wood_biomass_gCm2_2010.tif", sep=""))
+        biomass_uncertainty_gCm2 = rast(paste(path_to_Cwood,"unc_wood_biomass_gCm2_2010.tif", sep=""))
 
         # Create raster with the target crs
-        target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass_gCm2), resolution = res(biomass_gCm2))
+        target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
         # Check whether the target and actual analyses have the same CRS
-        if (compareCRS(biomass_gCm2,target) == FALSE) {
+        if (compareGeom(biomass_gCm2,target) == FALSE) {
           # Resample to correct grid
-          biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
-          biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() ; removeTmpFiles()
+          biomass_gCm2 = resample(biomass_gCm2, target, method="ngb") ; gc()
+          biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="ngb") ; gc() 
         }
         # Extend the extent of the overall grid to the analysis domain
         biomass_gCm2 = extend(biomass_gCm2,cardamom_ext) ; biomass_uncertainty_gCm2 = extend(biomass_uncertainty_gCm2,cardamom_ext)
@@ -831,25 +649,23 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # now remove the ones that are actual missing data
         biomass_gCm2[which(as.vector(biomass_gCm2) < 0)] = NA
         biomass_uncertainty_gCm2[which(as.vector(biomass_uncertainty_gCm2) < 0)] = NA
-        # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-        # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-        if (spatial_type == "grid") {
-          if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
+        # Adjust spatial resolution of the datasets, this occurs in all cases
+        if (res(biomass_gCm2)[1] != res(cardamom_ext)[1] | res(biomass_gCm2)[2] != res(cardamom_ext)[2]) {
 
             # Create raster with the target resolution
-            target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
             # Resample to correct grid
-            biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
-            biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() ; removeTmpFiles()
+            biomass_gCm2 = resample(biomass_gCm2, target, method="bilinear") ; gc()
+            biomass_uncertainty_gCm2 = resample(biomass_uncertainty_gCm2, target, method="bilinear") ; gc() 
 
-          } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        } # Aggrgeate to resolution
 
         # extract dimension information for the grid, note the axis switching between raster and actual array
         xdim = dim(biomass_gCm2)[2] ; ydim = dim(biomass_gCm2)[1]
         # extract the lat / long information needed
-        long = coordinates(biomass_gCm2)[,1] ; lat = coordinates(biomass_gCm2)[,2]
+        long = crds(biomass_gCm2,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(xdim,ydim))
         lat = array(lat, dim=c(xdim,ydim))
@@ -898,126 +714,111 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         # this is a very bespoke modification so leave it here to avoid getting lost
         print("Loading UoL Rainfor biomass annually...")
 
-      # Create the full file paths estimates and their uncertainty (MgC/ha)
-      input_file = list.files(path_to_Cwood)
-      # extract only .tif files, $ symbol asks for strings that end in the given pattern
-      # The \\ also specifies that the . is not to be considered a wildcard
-      input_file = input_file[grepl("\\.tif$",input_file) == TRUE]
-      # Extract the uncertainty files from the original list
-      unc_input_file = input_file[grepl("unc_wood",input_file) == TRUE]
-      input_file = input_file[grepl("unc_wood",input_file) == FALSE]
-      # Check that we have the same number of files for both biomass and uncertainty
-      if (length(input_file) != length(unc_input_file)) {stop("Different number of observation and uncertainty files found...")}
-      # Determine the number of years found
-      years_with_obs = gsub("wood_biomass_gCm2_","",input_file)
-      years_with_obs = as.numeric(gsub("\\.tif$","",years_with_obs))
-      print(length(years_with_obs))
-      if (length(years_with_obs) == length(unc_input_file)) {print("Same number of years and uncertainty files...")}
-      # Loop through each year and extract if appropriate
-      done_lat = FALSE
-      for (t in seq(1, length(years_with_obs))) {
+        # Create the full file paths estimates and their uncertainty (MgC/ha)
+        input_file = list.files(path_to_Cwood)
+        # extract only .tif files, $ symbol asks for strings that end in the given pattern
+        # The \\ also specifies that the . is not to be considered a wildcard
+        input_file = input_file[grepl("\\.tif$",input_file) == TRUE]
+        # Extract the uncertainty files from the original list
+        unc_input_file = input_file[grepl("unc_wood",input_file) == TRUE]
+        input_file = input_file[grepl("unc_wood",input_file) == FALSE]
+        # Check that we have the same number of files for both biomass and uncertainty
+        if (length(input_file) != length(unc_input_file)) {stop("Different number of observation and uncertainty files found...")}
+        # Determine the number of years found
+        years_with_obs = gsub("wood_biomass_gCm2_","",input_file)
+        years_with_obs = as.numeric(gsub("\\.tif$","",years_with_obs))
+        print(length(years_with_obs))
+        if (length(years_with_obs) == length(unc_input_file)) {print("Same number of years and uncertainty files...")}
+        # Loop through each year and extract if appropriate
+        done_lat = FALSE
+        for (t in seq(1, length(years_with_obs))) {
 
         # determine whether the first year is within the analysis period
         if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
-          # Read in the estimate and uncertainty rasters
-          biomass = raster(paste(path_to_Cwood,input_file[t],sep=""))
-          biomass_uncertainty = raster(paste(path_to_Cwood,unc_input_file[t],sep=""))
-          print(summary(biomass)[3])
-          # Create raster with the target crs
-          target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
-          # Check whether the target and actual analyses have the same CRS
-          if (compareCRS(biomass,target) == FALSE) {
-            # Resample to correct grid
-            biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
-            biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
-          }
-          # Extend the extent of the overall grid to the analysis domain
-          biomass = extend(biomass,cardamom_ext) ; biomass_uncertainty = extend(biomass_uncertainty,cardamom_ext)
-          # Trim the extent of the overall grid to the analysis domain
-          biomass = crop(biomass,cardamom_ext) ; biomass_uncertainty = crop(biomass_uncertainty,cardamom_ext)
-          # now remove the ones that are actual missing data
-          biomass[which(as.vector(biomass) < 0)] = NA
-          biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-          print(summary(biomass)[3])
-          # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-          # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-          if (spatial_type == "grid") {
+            # Read in the estimate and uncertainty rasters
+            biomass = rast(paste(path_to_Cwood,input_file[t],sep=""))
+            biomass_uncertainty = raster(paste(path_to_Cwood,unc_input_file[t],sep=""))
+            # Create raster with the target crs
+            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+            # Check whether the target and actual analyses have the same CRS
+            if (compareGeom(biomass,target) == FALSE) {
+                # Resample to correct grid
+                biomass = resample(biomass, target, method="ngb") ; gc() 
+                biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() 
+            }
+            # Extend the extent of the overall grid to the analysis domain
+            biomass = extend(biomass,cardamom_ext) ; biomass_uncertainty = extend(biomass_uncertainty,cardamom_ext)
+            # Trim the extent of the overall grid to the analysis domain
+            biomass = crop(biomass,cardamom_ext) ; biomass_uncertainty = crop(biomass_uncertainty,cardamom_ext)
+            # now remove the ones that are actual missing data
+            biomass[which(as.vector(biomass) < 0)] = NA
+            biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
+
+            # Adjust spatial resolution of the datasets, this occurs in all cases
             if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
-              print("different resolutions...")
-              print(res(biomass))
-              # Create raster with the target resolution
-              target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-
-              # Resample to correct grid
-              biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-              biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
-              print(res(biomass))
-              print(summary(biomass)[3])
+                # Create raster with the target resolution
+                target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+                # Resample to correct grid
+                biomass = resample(biomass, target, method="bilinear") ; gc() 
+                biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() 
             } # Aggrgeate to resolution
-          } # spatial_type == "grid"
 
-          # If the first file to be read extract the lat / long information
-          if (done_lat == FALSE) {
-            # Set flag to TRUE, impacts what will be returned from this function
-            done_lat = TRUE
+            # If the first file to be read extract the lat / long information
+            if (done_lat == FALSE) {
+                # Set flag to TRUE, impacts what will be returned from this function
+                done_lat = TRUE
 
-            # extract dimension information for the grid, note the axis switching between raster and actual array
-            xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
-            # extract the lat / long information needed
-            long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
-            # restructure into correct orientation
-            long = array(long, dim=c(xdim,ydim))
-            lat = array(lat, dim=c(xdim,ydim))
-            print(summary(biomass)[3])
-          } # extract lat / long...just the once
+                # extract dimension information for the grid, note the axis switching between raster and actual array
+                xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
+                # extract the lat / long information needed
+                long = crds(biomass,df=TRUE, na.rm=FALSE)
+                lat  = long$y ; long = long$x
+                # restructure into correct orientation
+                long = array(long, dim=c(xdim,ydim))
+                lat = array(lat, dim=c(xdim,ydim))
+            } # extract lat / long...just the once
 
-          # break out from the rasters into arrays which we can manipulate
-          biomass = array(as.vector(unlist(biomass)), dim=c(xdim,ydim))
-          biomass_uncertainty = array(as.vector(unlist(biomass_uncertainty)), dim=c(xdim,ydim))
-          # Determine when in the analysis time series the observations should go
-          # NOTE: We assume the biomass estimate is placed at the beginning of the year
+            # break out from the rasters into arrays which we can manipulate
+            biomass = array(as.vector(unlist(biomass)), dim=c(xdim,ydim))
+            biomass_uncertainty = array(as.vector(unlist(biomass_uncertainty)), dim=c(xdim,ydim))
+            # Determine when in the analysis time series the observations should go
+            # NOTE: We assume the biomass estimate is placed at the beginning of the year
 
-          # What year of the analysis does the data fall?
-          obs_step = which(run_day_selector >= floor(which(analysis_years == years_with_obs[t]) * 365.25))[1]
-          obs_step = obs_step - (steps_per_year-1)
-          # Combine with the other time step
-          if (exists("place_obs_in_step")) {
-          print(years_with_obs[t])
-          print('place_obs_in_step... exists')
-            # Output variables already exits to append them
-            place_obs_in_step = append(place_obs_in_step, obs_step)
-            biomass_gCm2 = append(biomass_gCm2, as.vector(biomass)) ; rm(biomass)
-            biomass_uncertainty_gCm2 = append(biomass_uncertainty_gCm2, as.vector(biomass_uncertainty)) ; rm(biomass_uncertainty)
-            print(summary(biomass_gCm2)[3])
-          } else {
-          print(years_with_obs[t])
-          print('place_obs_in_step... does not exist')
-            # Output variables do not already exist, assign them
-            place_obs_in_step = obs_step ; rm(obs_step)
-            biomass_gCm2 = as.vector(biomass) ; rm(biomass)
-            biomass_uncertainty_gCm2 = as.vector(biomass_uncertainty) ; rm(biomass_uncertainty)
-            print(summary(biomass_gCm2)[3])
-          } # obs_step exists
+            # What year of the analysis does the data fall?
+            obs_step = which(run_day_selector >= floor(which(analysis_years == years_with_obs[t]) * 365.25))[1]
+            obs_step = obs_step - (steps_per_year-1)
+            # Combine with the other time step
+            if (exists("place_obs_in_step")) {
+                # Output variables already exits to append them
+                place_obs_in_step = append(place_obs_in_step, obs_step)
+                biomass_gCm2 = append(biomass_gCm2, as.vector(biomass)) ; rm(biomass)
+                biomass_uncertainty_gCm2 = append(biomass_uncertainty_gCm2, as.vector(biomass_uncertainty)) ; rm(biomass_uncertainty)
+            } else {
+                # Output variables do not already exist, assign them
+                place_obs_in_step = obs_step ; rm(obs_step)
+                biomass_gCm2 = as.vector(biomass) ; rm(biomass)
+                biomass_uncertainty_gCm2 = as.vector(biomass_uncertainty) ; rm(biomass_uncertainty)
+            } # obs_step exists
 
-        } # Is dataset within the analysis time period?
+         } # Is dataset within the analysis time period?
 
-      } # looping available years
-      # Re-construct arrays for output
+        } # looping available years
+
+        # Re-construct arrays for output
         idim = dim(lat)[1] ; jdim = dim(long)[2] ; tdim = length(biomass_gCm2) / (idim * jdim)
         biomass_gCm2 = array(biomass_gCm2, dim=c(idim,jdim,tdim))
         biomass_uncertainty_gCm2 = array(biomass_uncertainty_gCm2, dim=c(idim,jdim,tdim))
-      if (done_lat) {
-      print('successful loading of rainfor data annually')
-        # Output variables
-        return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,
-                    biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
-      } else {
-      print('loading of rainfor data annually failed')
-        # Output dummy variables
-        return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
-                    biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
-      } # done_lat
+
+        if (done_lat) {
+            # Output variables
+            return(list(place_obs_in_step = place_obs_in_step, lat = lat, long = long,
+                        biomass_gCm2 = biomass_gCm2, biomass_uncertainty_gCm2 = biomass_uncertainty_gCm2))
+        } else {
+            # Output dummy variables
+            return(list(place_obs_in_step = -9999, lat = -9999, long = -9999,
+                        biomass_gCm2 = -9999, biomass_uncertainty_gCm2 = -9999))
+        } # done_lat
 
     } else if (Cwood_stock_source == "Biomass_maps_Africa_UoL") {
 
@@ -1047,16 +848,16 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
              if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
                  # Read in the estimate and uncertainty rasters
-                 biomass = raster(paste(path_to_Cwood,input_file[t],sep=""))
-                 biomass_uncertainty = raster(paste(path_to_Cwood,unc_input_file[t],sep=""))
+                 biomass = rast(paste(path_to_Cwood,input_file[t],sep=""))
+                 biomass_uncertainty = rast(paste(path_to_Cwood,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
+                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
-                 if (compareCRS(biomass,target) == FALSE) {
+                 if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
-                     biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
-                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc() ; removeTmpFiles()
+                     biomass = resample(biomass, target, method="ngb") ; gc()
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="ngb") ; gc()
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  biomass = extend(biomass,cardamom_ext) ; biomass_uncertainty = extend(biomass_uncertainty,cardamom_ext)
@@ -1065,20 +866,17 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
                  biomass_uncertainty[which(as.vector(biomass_uncertainty) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
-                     if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
+                 if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
 
-                         # Create raster with the target resolution
-                         target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
+                     # Create raster with the target resolution
+                     target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
 
-                         # Resample to correct grid
-                         biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-                         biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() ; removeTmpFiles()
+                     # Resample to correct grid
+                     biomass = resample(biomass, target, method="bilinear") ; gc() 
+                     biomass_uncertainty = resample(biomass_uncertainty, target, method="bilinear") ; gc() 
 
-                     } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 } # Aggrgeate to resolution
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -1088,7 +886,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # extract dimension information for the grid, note the axis switching between raster and actual array
                      xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
                      # extract the lat / long information needed
-                     long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
+                     long = crds(biomass,df=TRUE, na.rm=FALSE)
+                     lat  = long$y ; long = long$x
                      # restructure into correct orientation
                      long = array(long, dim=c(xdim,ydim))
                      lat = array(lat, dim=c(xdim,ydim))
@@ -1155,18 +954,18 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         print("Loading McNichol AGB maps...")
 
         # Create the full file paths estimates...uncertainty is assumed to be 250gC/m2
-        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
-#        years_with_obs = c(2007)
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
-        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
-        years_with_obs = c(2007:2010)
-#        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_1km.tif",sep="")
+#        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_0.25d.tif",sep="")
 ##        years_with_obs = c(2007)
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_1km.tif",sep=""))
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_1km.tif",sep=""))
-#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_1km.tif",sep=""))
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_0.25d.tif",sep=""))
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_0.25d.tif",sep=""))
+#        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_0.25d.tif",sep=""))
 #        years_with_obs = c(2007:2010)
+        input_file = paste(path_to_Cwood,"mcnicol_AGC2007_1km.tif",sep="")
+#        years_with_obs = c(2007)
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2008_1km.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2009_1km.tif",sep=""))
+        input_file = append(input_file,paste(path_to_Cwood,"mcnicol_AGC2010_1km.tif",sep=""))
+        years_with_obs = c(2007:2010)
 
         # Loop through each year and extract if appropriate
         done_lat = FALSE
@@ -1176,14 +975,14 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
              if (years_with_obs[t] >= as.numeric(start) & years_with_obs[t] <= as.numeric(finish)) {
 
                  # Read in the estimate and uncertainty rasters
-                 biomass = raster(input_file[t])
+                 biomass = rast(input_file[t])
 
                  # Create raster with the target crs
-                 target = raster(crs = ("+init=epsg:4326"), ext = extent(biomass), resolution = res(biomass))
+                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
-                 if (compareCRS(biomass,target) == FALSE) {
+                 if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
-                     biomass = resample(biomass, target, method="ngb") ; gc() ; removeTmpFiles()
+                     biomass = resample(biomass, target, method="ngb") ; gc() 
                  }
                  # Extend the extent of the overall grid to the analysis domain
                  biomass = extend(biomass,cardamom_ext)
@@ -1191,16 +990,13 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass = crop(biomass,cardamom_ext)
                  # now remove the ones that are actual missing data
                  biomass[which(as.vector(biomass) < 0)] = NA
-                 # If this is a gridded analysis and the desired CARDAMOM resolution is coarser than the currently provided then aggregate here
-                 # Despite creation of a cardamom_ext for a site run do not allow aggragation here as tis will damage the fine resolution datasets
-                 if (spatial_type == "grid") {
-                     if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
-                         # Create raster with the target resolution
-                         target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                         # Resample to correct grid
-                         biomass = resample(biomass, target, method="bilinear") ; gc() ; removeTmpFiles()
-                     } # Aggrgeate to resolution
-                 } # spatial_type == "grid"
+                 # Adjust spatial resolution of the datasets, this occurs in all cases
+                 if (res(biomass)[1] != res(cardamom_ext)[1] | res(biomass)[2] != res(cardamom_ext)[2]) {
+                     # Create raster with the target resolution
+                     target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+                     # Resample to correct grid
+                     biomass = resample(biomass, target, method="bilinear") ; gc()
+                 } # Aggrgeate to resolution
 
                  # If the first file to be read extract the lat / long information
                  if (done_lat == FALSE) {
@@ -1210,7 +1006,8 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                      # extract dimension information for the grid, note the axis switching between raster and actual array
                      xdim = dim(biomass)[2] ; ydim = dim(biomass)[1]
                      # extract the lat / long information needed
-                     long = coordinates(biomass)[,1] ; lat = coordinates(biomass)[,2]
+                     long = crds(biomass,df=TRUE, na.rm=FALSE)
+                     lat  = long$y ; long = long$x
                      # restructure into correct orientation
                      long = array(long, dim=c(xdim,ydim))
                      lat = array(lat, dim=c(xdim,ydim))

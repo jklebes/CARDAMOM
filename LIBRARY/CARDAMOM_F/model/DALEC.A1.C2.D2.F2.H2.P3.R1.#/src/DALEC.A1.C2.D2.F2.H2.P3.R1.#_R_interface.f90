@@ -1,9 +1,9 @@
 
 subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                   ,met,pars &
-                  ,out_var1,out_var2,out_var3,lat &
-                  ,nopars,nomet,nofluxes,nopools,pft &
-                  ,nodays,noyears,deltat,nos_iter,soil_frac_clay_in &
+                  ,out_var1,out_var2,out_var3,out_var4,out_var5 &
+                  ,lat,nopars,nomet,nofluxes,nopools,pft &
+                  ,nodays,nos_years,deltat,nos_iter,soil_frac_clay_in &
                   ,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, itemp, ivpd, iphoto, wSWP_time,                    &
@@ -48,7 +48,7 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                         ,fire_dim       &
                         ,pft            & ! plant functional type
                         ,nos_iter       & !
-                        ,noyears        &
+                        ,nos_years        &
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
@@ -65,12 +65,13 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
   double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3   ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
-  integer :: i, y, y_s, y_e, nos_years, steps_per_year
-  integer, dimension(nodays) :: lab_hak, fol_hak, root_hak, wood_hak, lit_hak, &
-                                woodlit_hak, som_hak
+  integer :: i, y, y_s, y_e, steps_per_year
+  integer, dimension(nodays) :: pool_hak
   double precision, dimension(nos_iter) :: woodlitter_to_som_frac
   ! vector of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
@@ -79,16 +80,10 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   double precision, dimension(nodays) :: resid_fol
   integer, dimension(nodays) :: hak ! variable to determine number of NaN
   double precision :: sumNPP
-  double precision, dimension(nodays) :: lai & ! leaf area index
+  double precision, dimension(nodays) :: tmp, tmp1 &
+                                        ,lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
-                                        ,NEE & ! net ecosystem exchange of CO2
-                                 ,lab_filter &
-                                 ,fol_filter &
-                                ,root_filter &
-                                ,wood_filter &
-                                 ,lit_filter &
-                             ,woodlit_filter &
-                                 ,som_filter
+                                        ,NEE   ! net ecosystem exchange of CO2
 
 ! profiling example
 !real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0,total_time = 0
@@ -112,8 +107,6 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
   do i = 2, nodays
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
-  ! number of years in analysis
-  nos_years = nint(sum(deltat)/365.25d0)
   ! number of time steps per year
   steps_per_year = nodays/nos_years
 
@@ -206,80 +199,102 @@ subroutine rdalec9(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      ! misc
      out_var1(i,1:nodays,62) = root_depth_time          ! rooting depth (m)
 
+     !
+     ! Calculate long-term mean of out_var1
+     !
+     
+     ! Loop across each variable
+     do v = 1, output_dim
+        ! Calculate mean value
+        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) / dble(nodays)
+     end do
+
+     !
+     ! Calculate the mean annual of out_var1
+     !
+
+     ! Calculate mean annual
+     s = 1 ; e = steps_per_year
+     do a = 1, nos_years
+        do v = 1, output_dim
+           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
+        end do
+        ! Iterate counters
+        s = s + steps_per_year ; e = s + steps_per_year - 1
+     end do
+     
      !!!
      ! Estimate residence time information
      !!!
 
-     ! Determine locations of zeros in pools to correct turnover calculation
      ! Labile
-     lab_hak = 0 ; lab_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,1) == 0) ! protection against NaN from division by zero
-           lab_hak = 1 ; lab_filter(1:nodays) = 0d0
-     end where
-     ! Foliage
-     fol_hak = 0 ; fol_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,2) == 0) ! protection against NaN from division by zero
-           fol_hak = 1 ; fol_filter(1:nodays) = 0d0
-     end where
-     ! Fine roots
-     root_hak = 0 ; root_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,3) == 0) ! protection against NaN from division by zero
-           root_hak = 1 ; root_filter(1:nodays) = 0d0
-     end where
-     ! Wood
-     wood_hak = 0 ; wood_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,4) == 0) ! protection against NaN from division by zero
-            wood_hak = 1 ; wood_filter(1:nodays) = 0d0
-     end where
-     ! Foliage + fine root litter
-     lit_hak = 0 ; lit_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,5) == 0) ! protection against NaN from division by zero
-            lit_hak = 1 ; lit_filter(1:nodays) = 0d0
-     end where
-     ! Wood litter
-     woodlit_hak = 0 ; woodlit_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,7) == 0) ! protection against NaN from division by zero
-            woodlit_hak = 1 ; woodlit_filter(1:nodays) = 0d0
-     end where
-     ! Soil
-     som_hak = 0 ; som_filter(1:nodays) = 1d0
-     where (POOLS(1:nodays,6) == 0) ! protection against NaN from division by zero
-           som_hak = 1 ; som_filter(1:nodays) = 0d0
-     end where
-
      ! Estimate MRT (years)
-     ! Labile
-     out_var2(i,1) = sum( ((FLUXES(1:nodays,8) + Rg_from_labile + &
-                            fire_emiss_labile + fire_litter_labile + &
-                            harvest_extracted_labile + harvest_residue_labile) &
-                          / POOLS(1:nodays,1)) * lab_filter) / dble(nodays-sum(lab_hak))
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,8) + Rg_from_labile + &
+                    fire_emiss_labile + fire_litter_labile + &
+                    harvest_extracted_labile + harvest_residue_labile) / POOLS(1:nodays,1))
+     end where
+     out_var2(i,1) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Foliage
-     out_var2(i,2) = sum( ((FLUXES(1:nodays,10) + fire_emiss_foliar + fire_litter_foliar + &
-                            harvest_extracted_foliar + harvest_residue_foliar) &
-                          / POOLS(1:nodays,2)) * fol_filter) / dble(nodays-sum(fol_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,2) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,10) + fire_emiss_foliar + fire_litter_foliar + &
+                    harvest_extracted_foliar + harvest_residue_foliar ) / POOLS(1:nodays,2))
+     end where
+     out_var2(i,2) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Fine roots
-     out_var2(i,3) = sum( ((FLUXES(1:nodays,12) + fire_emiss_roots + fire_litter_roots + &
-                            harvest_extracted_roots + harvest_residue_roots) &
-                          / POOLS(1:nodays,3)) * root_filter) / dble(nodays-sum(root_hak))
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,3) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,12) + fire_emiss_roots + fire_litter_roots + &
+                    harvest_extracted_roots + harvest_residue_roots) / POOLS(1:nodays,3))
+     end where
+     out_var2(i,3) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Wood
-     out_var2(i,4) = sum( ((FLUXES(1:nodays,11) + fire_emiss_wood +fire_litter_wood + &
-                            harvest_extracted_wood + harvest_residue_wood) &
-                          / POOLS(1:nodays,4)) * wood_filter) / dble(nodays-sum(wood_hak))
-     ! Litter (foliage+fine roots)
-     out_var2(i,5) = sum( ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) &
-                           + fire_emiss_litter + fire_litter_litter + harvest_extracted_litter) &
-                          / POOLS(1:nodays,5)) * lit_filter) / dble(nodays-sum(lit_hak))
-     ! Litwood
-     out_var2(i,6) = sum( ((FLUXES(1:nodays,20) + FLUXES(1:nodays,4) &
-                           + fire_emiss_woodlitter + fire_litter_woodlitter + harvest_extracted_woodlitter) &
-                          / POOLS(1:nodays,7)) * woodlit_filter) / dble(nodays-sum(woodlit_hak))
-     ! Soil
-     out_var2(i,7) = sum( ((FLUXES(1:nodays,14) + fire_emiss_som + fire_litter_som + harvest_extracted_som) &
-                          / POOLS(1:nodays,6)) * som_filter) / dble(nodays-sum(som_hak))
-
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,4) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,11) + fire_emiss_wood +fire_litter_wood + &
+                    harvest_extracted_wood + harvest_residue_wood ) / POOLS(1:nodays,4))
+     end where
+     out_var2(i,4) = sum(tmp) / dble(nodays-sum(pool_hak))
+     ! Foliage + fine root litter
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,5) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) + &
+                    fire_emiss_litter + fire_litter_litter + harvest_extracted_litter) / POOLS(1:nodays,5))
+     end where
+     out_var2(i,5) = sum(tmp) / dble(nodays-sum(pool_hak))
+     ! Wood litter
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0 ; tmp1= 0d0
+     where (POOLS(1:nodays,7) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,20) + FLUXES(1:nodays,4) + &
+                    fire_emiss_woodlitter + fire_litter_woodlitter + &
+                    harvest_extracted_woodlitter) / POOLS(1:nodays,7))
+            tmp1 = FLUXES(1:nodays,20) / POOLS(1:nodays,7)
+     end where
+     out_var2(i,6) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Keep track of the fraction of wood litter transfer to som, this value is needed for the steady state estimation
-     woodlitter_to_som_frac(i) = sum( (FLUXES(1:nodays,20) / POOLS(1:nodays,7)) * woodlit_filter) &
-                               / dble(nodays-sum(woodlit_hak))
+     woodlitter_to_som_frac(i) = sum(tmp1) / dble(nodays-sum(pool_hak))
+     ! Soil
+     ! Estimate MRT (years)
+     pool_hak = 1 ; tmp = 0d0
+     where (POOLS(1:nodays,6) > 0d0) ! protection against NaN from division by zero
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,14) + fire_emiss_som + fire_litter_som + harvest_extracted_som) &
+                  / POOLS(1:nodays,6))
+     end where
+     out_var2(i,7) = sum(tmp) / dble(nodays-sum(pool_hak))
 
      !
      ! Estimate pool inputs needed for steady state calculation

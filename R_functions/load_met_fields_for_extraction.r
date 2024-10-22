@@ -20,7 +20,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
     } else {
 
-        if (met_source == "trendy_v9" | met_source == "trendy_v11") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12" | met_source == "trendy_v13") {
 
             # declare variable ids needed to select files / infile variables
             varid = c("dswrf","tmx","pre","vpd","tmn","wsp")
@@ -51,7 +51,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # tidy
             nc_close(data1)
 
-            # If we are using the GSI model we need the 21 days (or month) before the start date of the simulation, so we need to check if we have this information
+            # If we are using the GSI model we need the 30 days (or month) before the start date of the simulation, so we need to check if we have this information
             # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
             extra_year = FALSE
             present = 0
@@ -96,7 +96,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # tidy
             nc_close(data1)
 
-            # If we are using the GSI model we need the 21 days (or month) before the start date of the simulation, so we need to check if we have this information
+            # If we are using the GSI model we need the 30 days (or month) before the start date of the simulation, so we need to check if we have this information
             # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
             extra_year = FALSE ; present = 0
             for (lag in seq(1,length(varid))) {
@@ -113,39 +113,32 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # This dependes on the lat / long / tmp1 spatially matching each other AND
         # latitude ranging -90/90 and longitude ranging -180/180 degrees
         tmp1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(tmp1))
-        tmp1 = rasterFromXYZ(tmp1, crs = ("+init=epsg:4326"))
+        tmp1 = rast(tmp1, crs = ("+init=epsg:4326"), type="xyz")
 
         # Extend the extent of the overall grid to the analysis domain
         tmp1 = extend(tmp1,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         tmp1 = crop(tmp1,cardamom_ext)
         tmp1[which(as.vector(tmp1) == -9999)] = NA
-        # If this is a gridded analysis and the desired CARDAMOM resolution is
-        # coarser than the currently provided then aggregate here. Despite
-        # creation of a cardamom_ext for a site run do not allow aggragation here
-        # as this will damage the fine resolution datasets
-        if (spatial_type == "grid") {
-            if (res(tmp1)[1] < res(cardamom_ext)[1] | res(tmp1)[2] < res(cardamom_ext)[2]) {
-
-                # Create raster with the target resolution
-                target = raster(crs = crs(cardamom_ext), ext = extent(cardamom_ext), resolution = res(cardamom_ext))
-                # Resample to correct grid
-                tmp1 = resample(tmp1, target, method="bilinear") ; gc() ; removeTmpFiles()
-
-            } # Aggrgeate to resolution
-        } # spatial_type == "grid"
+        # Match resolutions
+        if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) {
+            # Create raster with the target resolution
+            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
+            # Resample to correct grid
+            tmp1 = resample(tmp1, target, method="bilinear") ; gc() 
+        } # Aggrgeate to resolution
 
         # Extract dimension information for the aggregated grid
         # NOTE the axis switching between raster and actual array
         long_dim = dim(tmp1)[2] ; lat_dim = dim(tmp1)[1]
         # extract the lat / long information needed
-        long = coordinates(tmp1)[,1] ; lat = coordinates(tmp1)[,2]
+        long = crds(tmp1,df=TRUE, na.rm=FALSE)
+        lat  = long$y ; long = long$x
         # restructure into correct orientation
         long = array(long, dim=c(long_dim,lat_dim))
         lat = array(lat, dim=c(long_dim,lat_dim))
         # break out from the rasters into arrays which we can manipulate
         tmp1 = array(as.vector(unlist(tmp1)), dim=c(long_dim,lat_dim))
-
         # We assume where that the first variable is shortwave radiation or
         # other positive definite variable. Thus, locations which are < 0
         # Are assumed to be non-valid locations
@@ -275,19 +268,19 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             rm(maxt_out_list)
         }
         if (varid[3] != "") {
-            for (i in seq(1, length(precip_out_list))) {precip_out=append(precip_out,precip_out_list[[i]]$var_out)}
+            for (i in seq(1, length(precip_out_list))) {precip_out = append(precip_out,precip_out_list[[i]]$var_out)}
             rm(precip_out_list)
         }
         if (varid[4] != "") {
-            for (i in seq(1, length(vpd_out_list))) {vpd_out=append(vpd_out,vpd_out_list[[i]]$var_out)}
+            for (i in seq(1, length(vpd_out_list))) {vpd_out = append(vpd_out,vpd_out_list[[i]]$var_out)}
             rm(vpd_out_list)
         }
         if (varid[5] != "") {
-            for (i in seq(1, length(mint_out_list))) {mint_out=append(mint_out,mint_out_list[[i]]$var_out)}
+            for (i in seq(1, length(mint_out_list))) {mint_out = append(mint_out,mint_out_list[[i]]$var_out)}
             rm(mint_out_list)
         }
         if (varid[6] != "") {
-            for (i in seq(1, length(wind_out_list))) {wind_out=append(wind_out,wind_out_list[[i]]$var_out)}
+            for (i in seq(1, length(wind_out_list))) {wind_out = append(wind_out,wind_out_list[[i]]$var_out)}
             rm(wind_out_list)
         }
 
@@ -305,7 +298,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert Trendy air temperature of oC to K
-        if (met_source == "trendy_v9" | met_source == "trendy_v11") {
+        if (met_source == "trendy_v9" | met_source == "trendy_v11" | 
+            met_source == "trendy_v12" | met_source == "trendy_v13") {
             maxt_out = maxt_out + 273.15
             mint_out = mint_out + 273.15
         }
@@ -334,7 +328,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # Assumed format, csv col 1 = year, 2 = month, 3 co2_ppm
         co2_background = read.csv(paste(path_to_co2,"/co2_monthly.csv",sep=""), header=TRUE)
         if (years_to_load[1] < co2_background$year[1] | years_to_load[length(years_to_load)] > co2_background$year[dim(co2_background)[1]]) {
-            stop("Available CO2 information in ./R_functions/co2_monthly.csv does not cover project time frame...")
+            stop("Available CO2 information in ./<path_to_co2>/co2_monthly.csv does not cover project time frame...")
         }
         for (yr in seq(1,length(years_to_load))) {
              # if this includes the extra year add it on to the beginning
@@ -373,7 +367,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 #                co2 = append(co2,rep(380,length.out=(nos_days*steps_in_day)))
              }
         } # end of years loop
-#co2 = rep(co2[1], length.out = length(co2))
+
         # create day of run variable
         run_day = seq(1:length(doy))
 
@@ -393,6 +387,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
                       ,mint=mint_out,wind_spd=wind_out,extra_year=extra_year)
 
         # quick sanity check
+        if (any(is.na(as.vector(met_all$swrad)))) {stop(paste("SW_RAD contains NaN summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         if (min(as.vector(met_all$swrad)) < -1) {stop(paste("SW_RAD summary: ",summary(as.vector(met_all$swrad)),sep="")) }
         met_all$swrad[which(met_all$swrad < 0)] = 0
 

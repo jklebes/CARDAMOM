@@ -45,10 +45,10 @@ generate_parameter_maps<-function(PROJECT) {
    timestep_days = rep(timestep_days, length.out=grid_output$time_dim)
 
    # Convert avgN log10-normal to gN/m2, in models which use foliar N in gN/m2
-   if (PROJECT$model$name == "DALEC_GSI_BUCKET"| PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR" |
-       PROJECT$model$name == "DALECN_GSI_BUCKET" | PROJECT$model$name == "DALEC_BUCKET" |
-       PROJECT$model$name == "DALEC" | PROJECT$model$name == "DALEC_G5" |
-       PROJECT$model$name == "DALEC_G6" | PROJECT$model$name == "DALEC_BUCKET_CanAGE") {
+   if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#"| PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | 
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
        grid_output$parameters[,,11,] = 10**grid_output$parameters[,,11,]
    }
 
@@ -69,33 +69,33 @@ generate_parameter_maps<-function(PROJECT) {
           # remove non-constrained parameters (i.e. those not actually used in this analysis)
           initial_conditions=c(18:23)
           par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions),median_loc]
-          if (PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR") {
+          if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC_BUCKET") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37,41),median_loc]
-          } else if (PROJECT$model$name == "DALEC") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,35,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC_GSI_BUCKET_CanAGE") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,35,37,41),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET") {
+          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM_FARQUHAR_BUCKET") {
+          } else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_wMRT") {
+          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB") {
+          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
           } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg") {
+          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P6.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24,28),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24,28),median_loc]
-          } else if (PROJECT$model$name == "DALEC_G5" | PROJECT$model$name == "DALEC_G6") {
+          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,37,41),median_loc]
           } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
               par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,27,36),median_loc]
@@ -202,7 +202,7 @@ generate_parameter_maps<-function(PROJECT) {
   } # reprocessing or not?
 
   # inform the user
-  print("......now generating parameter maps")
+  print("......now generating parameter correlations matrix")
 
   # describe parameter numbers with log liklihood added on the end
   character_bit=rep("p",times=(PROJECT$model$nopars[1]))
@@ -211,17 +211,25 @@ generate_parameter_maps<-function(PROJECT) {
   par_names=c(paste(character_bit,number_bit,sep=""),"log-likelihood")
 
   # create tempory array of parameters for the covariance analysis
-  figname = paste("parameter_correlations_median_",gsub("%","_",PROJECT$name),".jpeg",sep="")
-  jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
-  par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  tmp=array(grid_output$parameters[,,1:dim(grid_output$parameters)[3],median_loc],dim=c(prod(dim(grid_output$parameters)[1:2]),(dim(grid_output$parameters)[3])))
-  image.plot(cor(tmp,use="na.or.complete", method="spearman"), main="Median Parameter Correlation (Spearmans)")
-  dev.off()
+  tmp = array(grid_output$parameters[,,1:dim(grid_output$parameters)[3],median_loc],dim=c(prod(dim(grid_output$parameters)[1:2]),(dim(grid_output$parameters)[3])))
+  tmp = cor(tmp,use="na.or.complete", method="spearman")
+  if (any(is.finite(tmp))) {
+      figname = paste("parameter_correlations_median_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+      jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
+      par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+      image.plot(cor(tmp,use="na.or.complete", method="spearman"), main="Median Parameter Correlation (Spearmans)")
+      dev.off()
+  } else {
+      print("WARNING: problem with the grid_output$parameters array as correlation analysis returned NaN or Inf")
+  }
 
   ###
   ## Some things that are really parameters but are dependent on the evolution of state variables so need more information to be calculated
   # assign this value once as aall arrays have the same number of values present
   colour_choices=colour_choices_upper(prod(c(PROJECT$long_dim,PROJECT$lat_dim)))
+
+  # inform the user
+  print("......now generating NPP allocation figures")
 
   # create map of NPP allocation fractions
   if (exists(x = "NPP_foliage_fraction", where = grid_output)) {
@@ -301,6 +309,9 @@ generate_parameter_maps<-function(PROJECT) {
       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
       dev.off()
   }
+
+  # inform the user
+  print("......now generating mean transit time figures")
 
   # create map of residence times
   if (exists(x = "MTT_foliage_years", where = grid_output)) {
@@ -462,8 +473,12 @@ generate_parameter_maps<-function(PROJECT) {
       dev.off()
   }
 
+  # inform the user
+  print("......now generating parameter figures")
+
   # now everything has been loaded into a nice array we begin plotting
   for (p in seq(1,dim(grid_output$parameters)[3])) {
+       if (any(is.finite(as.vector(grid_output$parameters[,,p,median_loc])))) {
        ###
        ## Histrograms of parameters
        jpeg(file=paste("parameter_hist_median_",par_names[p],"_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
@@ -500,7 +515,53 @@ generate_parameter_maps<-function(PROJECT) {
        map(add=TRUE, lwd = 2)
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
+       }
   } # parameter loop
+  
+  # inform the user
+  print("......now generating forcings figures")
+
+  # Generate generic maps of spatial aggregates of drivers$met
+  for (m in seq(1, length(met_array_names))) {
+       zrange = c(min(as.vector(grid_output$met_array_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$met_array_averages[,,m]),na.rm=TRUE))
+       zrange = zrange + (c(-0.01,0.01) * zrange)
+       if (diff(zrange) == 0) {zrange = c(-0.01,0.01)}
+       fig_name = paste("mean_met_array_maps_",gsub(" ","_",met_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+       fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+       fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+       jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+       image.plot(x = grid_long, y = grid_lat, z = grid_output$met_array_averages[,,m], col=rev(colour_choices)
+                 ,main=met_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
+                 ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                 ,zlim= zrange)
+       map(add=TRUE, lwd = 2)
+       #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+       dev.off()
+  }
+
+  # inform the user
+  print("......now generating assimilated observations figures")
+
+  # Generate generic maps of spatial aggregates of drivers$obs
+  for (m in seq(1, length(obs_array_names))) {
+       if (length(which(is.na(grid_output$obs_array_averages[,,m]) != TRUE)) > 0) {
+           zrange = c(min(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE))
+           zrange = zrange + (c(-0.01,0.01) * zrange)
+           fig_name = paste("mean_obs_array_maps_",gsub(" ","_",obs_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+           fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+           fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+           jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+           par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+           image.plot(x = grid_long, y = grid_lat, z = grid_output$obs_array_averages[,,m], col=rev(colour_choices)
+                     ,main=obs_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
+                     ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                     ,zlim=zrange)
+           map(add=TRUE, lwd = 2)
+           #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+           dev.off()
+       }
+  }
 
   # mean temperature
   jpeg(file=paste("mean_temperature_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)

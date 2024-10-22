@@ -8,10 +8,15 @@
 
 ## available_countries, a function to provide a list of the countries which can be specified in the site_name
 ## to define the CARDAMOM analysis area
-available_countries <-function() {
+available_countries <-function(cardamom_dir) {
 
-   # Load the shapefile CARDAMOM uses as default to define its land sea mask
-   landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   if (missing(cardamom_dir)) { 
+       # Load the shapefile CARDAMOM uses as default to define its land sea mask
+       landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+   } else {
+       # Load the shapefile CARDAMOM uses as default to define its land sea mask
+       landmask = vect(paste(cardamom_dir,"/R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx",sep=""))
+   }
    # Extract the list of country names used in the mask
    country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
    # For consistency / allowability of using the country name in a file path,
@@ -152,25 +157,33 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     if (use_lcm == "LCM2007") {
 #        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/LCM2007/LCM2007_with_lat_long.nc")
 #        lcm=ncvar_get(data2,"LCM2007")
-        lcm = raster("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
-        # Reproject onto the WGS84 grid
-        lcm = projectRaster(lcm, ext = cardamom_ext, crs = CRS("+init=epsg:4326"), method = "ngb")
+        lcm = rast("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
+        # Reproject the crs from British National Grid to WGS-84
+        lcm = project(lcm, ("+init=epsg:4326"), method="near", align = FALSE) ; gc()
+        # Create target grid in the correct resolution for the analysis
+        target = rast(crs = ("+init=epsg:4326"), res = res(cardamom_ext), ext=ext(lcm))
+        # Extend the extent of the overall grid to the analysis domain
+        lcm = extend(lcm,cardamom_ext)
+        # Trim the extent of the overall grid to the analysis domain
+        lcm = crop(lcm,cardamom_ext) 
         # Aggregate to approximately the right resolution
-        if (grid_type == "UK") {
-            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
-        } else {
-            target_ratio = max(0.1666667,resolution) / res(lcm)
-        }
-        agg_fun = function(pixels, na.rm) {
-           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
-               return(modal(pixels[pixels > 0], na.rm=na.rm))
-           } else {
-               return(0)
-           }
-        }
-        lcm = aggregate(lcm, fact = floor(target_ratio), fun = agg_fun)
+#        if (grid_type == "UK") {
+#            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
+#        } else {
+            target_ratio = res(cardamom_ext) / res(lcm)
+#        }
+#        # We need to aggregate assuming domiant or modal value
+#        # Define function for aggregation
+#        agg_fun = function(pixels, na.rm) {
+#           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
+#               return(modal(pixels[pixels > 0], na.rm=na.rm))
+#           } else {
+#               return(0)
+#           }
+#        }
+        lcm = terra::aggregate(lcm, fact = target_ratio, fun = "modal")
         # Extract lat / long
-        lat_lcm = coordinates(lcm)
+        lat_lcm = crds(lcm,df=TRUE, na.rm=FALSE)
         # Convert into arrays
         long_lcm = array(lat_lcm[,1], dim=c(dim(lcm)[2],dim(lcm)[1])) ; lat_lcm = array(lat_lcm[,2], dim=c(dim(lcm)[2],dim(lcm)[1]))
         lcm = array(lcm, dim=c(dim(lcm)[2],dim(lcm)[1]))
@@ -239,17 +252,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     print("Generating land sea mask")
 
     if (path_to_landsea == "default") {
+
         # load global shape file for land sea mask
-        landmask = shapefile("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
+        landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
         # just to be sure enforce the projection to WGS-84
-        landmask = spTransform(landmask,CRS("+init=epsg:4326"))
+        landmask = project(landmask,"EPSG:4326")
         # Clip to the extent of the CARDAMOM analysis
         landmask = crop(landmask, cardamom_ext)
 
         # create raster, passing the raster values corresponding to the sovereign state
         # NOTE: the actual value assigned is linked the factor levels
-        landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last")
-        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "last", getCover=TRUE)
+        landsea = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "max")
+        landsea_frac = rasterize(landmask,cardamom_ext,factor(landmask$SOVEREIGNT), fun = "max", cover=TRUE)
 
         # Sometimes we want to simulate a particular country, which we will check now...
         country_match = factor(landmask$SOVEREIGNT) ; country_match = levels(country_match)
@@ -259,52 +273,70 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         # given in the land mask we are using...?
         if (length(which(grepl(sitename,country_match) == TRUE)) > 0 & select_country) {
             # if so then loop through the land areas which fall within the correct country
-            country_match = which(grepl(sitename,country_match) == TRUE)
-            keep = rep(0,length(landsea))
-            for (i in seq(1, length(country_match))) {
-                 keep[as.vector(landsea) == country_match[i]] = 1
+            country_match_loc = which(grepl(sitename,country_match) == TRUE)
+            for (i in seq(1, length(country_match_loc))) {
+                 landsea[which(as.vector(landsea) == country_match_loc[i])] = -1
             }
+            landsea[which(as.vector(landsea) > 0)] = 0
+            landsea[which(as.vector(landsea) == -1)] = 1
         } else {
             # otherwise just assume we are interested in all land areas...
-            keep = rep(0,length(landsea))
-            keep[is.na(as.vector(landsea)) == FALSE] = 1
+            landsea[landsea > 0] = 1
         } # country or all land area filter?
-        # Set non country areas to NA, and all other to 1
-        landsea[keep == 0] = NA
         # Add a buffer based on the land sea fraction to avoid missing land area we want
-        landsea_frac_buffer = boundaries(landsea, type="outer")*landsea_frac
+        landsea_frac_buffer = boundaries(landsea, inner=FALSE)*landsea_frac
         # Set all actual data to 1
-        landsea[as.vector(landsea) > 0] = 1
+        landsea[landsea > 0] = 1
         # set missing data to 0
-        landsea[is.na(as.vector(landsea))] = 0
+        landsea[is.na(landsea)] = 0
         # Now combine the maps, giving a complete landsea fractional map
         landsea = (landsea*landsea_frac) + landsea_frac_buffer
         # Reset any newly created NaN from the merge
-        landsea[is.na(as.vector(landsea))] = 0
+        landsea[is.na(landsea)] = 0
+
+        # Set the threshold below which we assume that the pixel will be excluded
+        cover_threshold = 0.5
 
     } else {
 
         # Assume that we have been given a geotiff file where the presence of a value > 0  should be included in the masked area
-        landsea = raster(path_to_landsea)
-        # just to be sure enforce the projection to WGS-84
-        target = raster(crs = crs(cardamom_ext), ext = extent(landsea), resolution = res(landsea))
-        # Resample to correct grid
-        landsea = resample(landsea, target, method="ngb", na.rm=TRUE)
-        # Clip to the extent of the CARDAMOM analysis
+        landsea = rast(path_to_landsea)
+        # Check that all values rage between zero and 1
+        tmp = max(values(landsea), na.rm=TRUE)
+        if (tmp > 1) {
+            print("The path_to_landsea file is expected to be a fractional cover, however, the maximum value is greater than 1")
+            print("The file will instead be treated as a binary presence map, i.e. > 0 is present and set to 1.")
+            landsea[landsea > 0] = 1 ; rm(tmp)
+        }
+        # Ensure the extents of the landsea mask matches the CARDAMOM analysis
         landsea = crop(landsea, cardamom_ext)
+        landsea = extend(landsea, cardamom_ext)
+        # Set all NA to 0, to allow for any averaging
+        landsea[is.na(landsea)] = 0
 
-        # Assume all positive values are to be included
-        landsea[as.vector(landsea) > 0] = 1
-        # Assume everywhere else is not to be included
-        landsea[as.vector(landsea) != 1] = 0
-        landsea[is.na(as.vector(landsea))] = 0
+        # Create raster with the target resolution
+        target = rast(crs = crs(cardamom_ext), ext = ext(landsea), resolution = res(cardamom_ext))
+        # Now depending on whether we are in the correct resolution
+        if (res(landsea)[1] >= res(cardamom_ext)[1] & res(landsea)[2] >= res(cardamom_ext)[2]) {
+            # If the resolution of the land mask is greater or equal to the CARDAMOM analysis we
+            # can use nearest neighbour
+            landsea = resample(landsea, target, method="near")
+        } else { 
+            # If the resolution is finer than the CARDAMOM anaysis we will have to use bilinear
+            landsea = resample(landsea, target, method="bilinear") ; gc() 
+        } # Aggrgeate to resolution
+
+        # Set the threshold below which we assume that the pixel will be excluded
+        cover_threshold = 0.01
 
     } # default landsea mask
 
     # trim to the actual data area
     #landsea = trim(landsea, padding = 3)
     # extract lat/long information for the raster version
-    landsea_long = coordinates(landsea)[,1] ; landsea_lat = coordinates(landsea)[,2]
+    # extract the lat / long information needed
+    landsea_long = crds(landsea,df=TRUE, na.rm=FALSE)
+    landsea_lat  = landsea_long$y ; landsea_long = landsea_long$x
     # arrange them into the correct lat / long orientations
     landsea_dim = dim(landsea) ; landsea = as.vector(landsea)
 
@@ -347,7 +379,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
              new_pft = lcm[output_i[pft],output_j[pft]]
          }
          # now exclude if not a land site
-         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < 0.5) {
+         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < cover_threshold) {
              remove = append(remove,pft)
          } else {
              pft_keep = append(pft_keep,new_pft)

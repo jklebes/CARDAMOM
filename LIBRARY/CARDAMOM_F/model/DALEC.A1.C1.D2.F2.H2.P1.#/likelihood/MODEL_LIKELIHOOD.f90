@@ -436,7 +436,7 @@ module model_likelihood_module
 !    ! Debugging print statements
 !    print*,"log_model_likelihood: done"
 
-  end subroutine log_model_likelihood  
+  end subroutine log_model_likelihood
   !
   !------------------------------------------------------------------
   !
@@ -511,7 +511,7 @@ module model_likelihood_module
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2014).
+    ! steady state contraints (Bloom et al., 2015).
 
     implicit none
 
@@ -640,6 +640,7 @@ module model_likelihood_module
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
                io_start, io_finish
     double precision :: infi !, EQF, etol
+    !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -658,7 +659,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20         !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -712,6 +714,26 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
 
+!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
+!    ! Assesses whether the mean LAI in the summer months (June, July, August)
+!    ! is greater than the mean outwith. This ensures the peak LAI in the season
+!    ! is summer time.
+!    if ((EDC2 == 1 .or. DIAG == 1)) then
+!        ! Set values for vectors used to select summer vs non-summer time points.
+!        tmp1 = 0d0 ; tmp2 = 1d0
+!        ! Where condition sets tmp1 == 1 for days of year for JJA
+!        where (met(6,:) > 150d0 .and. met(6,:) < 245d0) tmp1 = 1d0
+!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
+!        ! during summer but 1 elsewhere
+!        tmp2 = tmp2 - tmp1
+!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
+!        ! The sum of each of these variables is also conveniently the number of values to 
+!        ! be averaged over.
+!        if (sum(M_LAI * tmp1) / sum(tmp1) < sum(M_LAI * tmp2) / sum(tmp2)) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!        end if 
+!    end if
+
     ! Equilibrium factor (in comparison with initial conditions)
 !    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
@@ -734,6 +756,13 @@ module model_likelihood_module
        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
                        *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+    ! Specific calculation of transpiration extraction from the soil surface layer
+    fl = 41 ! transpiration, multiplied by the fraction of transpiration extracted from the 1st root layer.
+    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,48)*deltat(io_start:io_finish))
+    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,48)*deltat(1:steps_per_year))
+    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),48) &
+                    *deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -778,6 +807,13 @@ module model_likelihood_module
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+    ! Surface water pool (0-30cm)
+    Fin(7)  = FT(47) 
+    Fout(7) = FT(42)+FT(41)+FT(46) 
+    Fin_yr1(7)  = FT_yr1(47) 
+    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
+!    Fin_yr2(7)  = FT_yr2(47)
+!    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -801,6 +837,8 @@ module model_likelihood_module
 
         ! Living pools
         do n = 1, 3
+!        do n = 1, 3, 2 ! labile + fine root
+        !do n = 3, 3 ! fine root only
            ! Restrict mean rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
@@ -811,14 +849,14 @@ module model_likelihood_module
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
-           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
            !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            !end if
-        end do
+        end do ! pool lab, fol, fine root loop 
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
@@ -829,14 +867,15 @@ module model_likelihood_module
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
          if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
              EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
          end if
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
         ! Dead pools
-        do n = 5, 6
+        do n = 5, 6  ! Litter + som
+!        do n = 6, 6   ! som only
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
@@ -847,15 +886,33 @@ module model_likelihood_module
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
+                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
 !           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
         end do
-
+        ! Water pool(s)
+        n = 7  ! surface water pool
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
     end if ! EDC2 == 1 .or. DIAG == 1
 
     ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
@@ -863,10 +920,10 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
     end if
 
-    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
-    end if
+!    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+!   end if
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -1389,6 +1446,19 @@ module model_likelihood_module
        likelihood = likelihood-tot_exp
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        likelihood = likelihood-tot_exp
+    endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -1771,6 +1841,19 @@ module model_likelihood_module
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nfoliage_to_litter))
+     endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -2151,6 +2234,19 @@ module model_likelihood_module
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_mortality)))
     endif
+
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nfoliage_to_litter)))
+     endif
 
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
@@ -2533,6 +2629,19 @@ module model_likelihood_module
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_mortality))))
     endif
 
+    ! Leaf litter log-likelihood
+    if (DATAin%nfoliage_to_litter > 0) then
+        tot_exp = 0d0
+        do n = 1, DATAin%nfoliage_to_litter
+            dn = DATAin%foliage_to_litterpts(n)
+            s = max(0,dn-nint(DATAin%foliage_to_litter_lag(dn)))+1
+            ! Estimate the mean allocation to wood over the lag period
+            tmp_var = sum(DATAin%M_FLUXES(s:dn,10)) / DATAin%foliage_to_litter_lag(dn)
+            tot_exp = tot_exp+((tmp_var-DATAin%foliage_to_litter(dn)) / DATAin%foliage_to_litter_unc(dn))**2
+        end do
+        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nfoliage_to_litter))))
+    endif
+
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
@@ -2678,8 +2787,8 @@ module model_likelihood_module
     ! don't forget to return
     return
 
-  end function log_scale_likelihood    
-  !
-  !------------------------------------------------------------------
-  !
+  end function log_scale_likelihood
+!
+!------------------------------------------------------------------
+!
 end module model_likelihood_module

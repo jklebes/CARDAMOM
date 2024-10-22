@@ -66,7 +66,7 @@ subroutine rdalec26(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
 
   ! local variables
   integer :: i, y, y_s, y_e, nos_years, steps_per_year
-  integer, dimension(nodays) :: fol_hak, root_hak, wood_hak, lit_hak, som_hak
+  integer, dimension(nodays) :: pool_hak
   double precision, dimension(nos_iter) :: litwood_to_som_frac
   ! vector of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
@@ -75,14 +75,10 @@ subroutine rdalec26(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   double precision, dimension(nodays) :: resid_fol
   integer, dimension(nodays) :: hak ! variable to determine number of NaN
   double precision :: sumNPP
-  double precision, dimension(nodays) :: lai & ! leaf area index
+  double precision, dimension(nodays) :: tmp &
+                                        ,lai & ! leaf area index
                                         ,GPP & ! Gross primary productivity
-                                        ,NEE & ! net ecosystem exchange of CO2
-                                 ,fol_filter &
-                                ,root_filter &
-                                ,wood_filter &
-                                 ,lit_filter &
-                                 ,som_filter
+                                        ,NEE   ! net ecosystem exchange of CO2
 
   ! crop development parameters declared here. These are also found in
   ! MHMCMC_STRUCTURES PI%

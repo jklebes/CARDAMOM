@@ -12,35 +12,22 @@
 ###
 ## Job specific information
 
-print("Begin creation of GCP compatible ascii file for annual NBP / GPP / RECO / RHET / RAUTO / FIRE / HARV / LAI / ET / BIO / DOM")
+print("Begin creation of GCP compatible ascii file for annual NBP / NBE / NEE / NPP / GPP / RECO / RHET / RHET_LIT / RHET_SOM / RAUTO / FIRE / HARV / LAI / ET / BIO / DOM / LAB / FOL / ROOT / WOOD / LIT / SOM")
 
 # set working directory
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_CsomPriorNCSCD/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_NBP_CsomPriorNCSDC3m/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Trendyv9_historical/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/reccap2_permafrost_1deg_C7_isimip3a_agb_lca_gpp_fire_NBP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Mexico_1deg_C7_agb_lca_gpp_fire_NBP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/Miombo_0.5deg_allWood/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM_FARQUHAR_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM_FARQUHAR_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_GPP_FIRE/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_NBE/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_constantCO2/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_2010_2020/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_etol_EQF_harsh/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_GCP_LCA_AGB_ACM2_LUE/"
-
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM_FARQUHAR_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM_FARQUHAR_BUCKET_MHMCMC/global_2_2.5deg_C7_GCP_AGB/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP_NBE"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP"
+#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS//DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_NBE"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -52,7 +39,7 @@ output_suffix = "" # begin with "_"
 
 # load needed libraries
 library(ncdf4)
-library(raster)
+library(terra)
 library(compiler)
 
 # Load needed functions 
@@ -121,6 +108,18 @@ NBP_global_PgCyr = rep(0, nos_years)
 NBP_north_PgCyr = rep(0, nos_years)
 NBP_tropics_PgCyr = rep(0, nos_years)
 NBP_south_PgCyr = rep(0, nos_years)
+NBE_global_PgCyr = rep(0, nos_years)
+NBE_north_PgCyr = rep(0, nos_years)
+NBE_tropics_PgCyr = rep(0, nos_years)
+NBE_south_PgCyr = rep(0, nos_years)
+NEE_global_PgCyr = rep(0, nos_years)
+NEE_north_PgCyr = rep(0, nos_years)
+NEE_tropics_PgCyr = rep(0, nos_years)
+NEE_south_PgCyr = rep(0, nos_years)
+NPP_global_PgCyr = rep(0, nos_years)
+NPP_north_PgCyr = rep(0, nos_years)
+NPP_tropics_PgCyr = rep(0, nos_years)
+NPP_south_PgCyr = rep(0, nos_years)
 GPP_global_PgCyr = rep(0, nos_years)
 GPP_north_PgCyr = rep(0, nos_years)
 GPP_tropics_PgCyr = rep(0, nos_years)
@@ -133,6 +132,14 @@ RHET_global_PgCyr = rep(0, nos_years)
 RHET_north_PgCyr = rep(0, nos_years)
 RHET_tropics_PgCyr = rep(0, nos_years)
 RHET_south_PgCyr = rep(0, nos_years)
+RHET_LIT_global_PgC = rep(0, nos_years)
+RHET_LIT_north_PgC = rep(0, nos_years)
+RHET_LIT_tropics_PgC = rep(0, nos_years)
+RHET_LIT_south_PgC = rep(0, nos_years)
+RHET_SOM_global_PgC = rep(0, nos_years)
+RHET_SOM_north_PgC = rep(0, nos_years)
+RHET_SOM_tropics_PgC = rep(0, nos_years)
+RHET_SOM_south_PgC = rep(0, nos_years)
 RAUTO_global_PgCyr = rep(0, nos_years)
 RAUTO_north_PgCyr = rep(0, nos_years)
 RAUTO_tropics_PgCyr = rep(0, nos_years)
@@ -161,11 +168,47 @@ ET_global_PgH2Oyr = rep(0, nos_years)
 ET_north_PgH2Oyr = rep(0, nos_years)
 ET_tropics_PgH2Oyr = rep(0, nos_years)
 ET_south_PgH2Oyr = rep(0, nos_years)
+LAB_global_PgC = rep(0, nos_years)
+LAB_north_PgC = rep(0, nos_years)
+LAB_tropics_PgC = rep(0, nos_years)
+LAB_south_PgC = rep(0, nos_years)
+FOL_global_PgC = rep(0, nos_years)
+FOL_north_PgC = rep(0, nos_years)
+FOL_tropics_PgC = rep(0, nos_years)
+FOL_south_PgC = rep(0, nos_years)
+ROOT_global_PgC = rep(0, nos_years)
+ROOT_north_PgC = rep(0, nos_years)
+ROOT_tropics_PgC = rep(0, nos_years)
+ROOT_south_PgC = rep(0, nos_years)
+WOOD_global_PgC = rep(0, nos_years)
+WOOD_north_PgC = rep(0, nos_years)
+WOOD_tropics_PgC = rep(0, nos_years)
+WOOD_south_PgC = rep(0, nos_years)
+LIT_global_PgC = rep(0, nos_years)
+LIT_north_PgC = rep(0, nos_years)
+LIT_tropics_PgC = rep(0, nos_years)
+LIT_south_PgC = rep(0, nos_years)
+SOM_global_PgC = rep(0, nos_years)
+SOM_north_PgC = rep(0, nos_years)
+SOM_tropics_PgC = rep(0, nos_years)
+SOM_south_PgC = rep(0, nos_years)
 # Minimum CI
 NBP_global_PgCyr_minCI = rep(0, nos_years)
 NBP_north_PgCyr_minCI = rep(0, nos_years)
 NBP_tropics_PgCyr_minCI = rep(0, nos_years)
 NBP_south_PgCyr_minCI = rep(0, nos_years)
+NBE_global_PgCyr_minCI = rep(0, nos_years)
+NBE_north_PgCyr_minCI = rep(0, nos_years)
+NBE_tropics_PgCyr_minCI = rep(0, nos_years)
+NBE_south_PgCyr_minCI = rep(0, nos_years)
+NEE_global_PgCyr_minCI = rep(0, nos_years)
+NEE_north_PgCyr_minCI = rep(0, nos_years)
+NEE_tropics_PgCyr_minCI = rep(0, nos_years)
+NEE_south_PgCyr_minCI = rep(0, nos_years)
+NPP_global_PgCyr_minCI = rep(0, nos_years)
+NPP_north_PgCyr_minCI = rep(0, nos_years)
+NPP_tropics_PgCyr_minCI = rep(0, nos_years)
+NPP_south_PgCyr_minCI = rep(0, nos_years)
 GPP_global_PgCyr_minCI = rep(0, nos_years)
 GPP_north_PgCyr_minCI = rep(0, nos_years)
 GPP_tropics_PgCyr_minCI = rep(0, nos_years)
@@ -178,6 +221,14 @@ RHET_global_PgCyr_minCI = rep(0, nos_years)
 RHET_north_PgCyr_minCI = rep(0, nos_years)
 RHET_tropics_PgCyr_minCI = rep(0, nos_years)
 RHET_south_PgCyr_minCI = rep(0, nos_years)
+RHET_LIT_global_PgC_minCI = rep(0, nos_years)
+RHET_LIT_north_PgC_minCI = rep(0, nos_years)
+RHET_LIT_tropics_PgC_minCI = rep(0, nos_years)
+RHET_LIT_south_PgC_minCI = rep(0, nos_years)
+RHET_SOM_global_PgC_minCI = rep(0, nos_years)
+RHET_SOM_north_PgC_minCI = rep(0, nos_years)
+RHET_SOM_tropics_PgC_minCI = rep(0, nos_years)
+RHET_SOM_south_PgC_minCI = rep(0, nos_years)
 RAUTO_global_PgCyr_minCI = rep(0, nos_years)
 RAUTO_north_PgCyr_minCI = rep(0, nos_years)
 RAUTO_tropics_PgCyr_minCI = rep(0, nos_years)
@@ -206,11 +257,47 @@ ET_global_PgH2Oyr_minCI = rep(0, nos_years)
 ET_north_PgH2Oyr_minCI = rep(0, nos_years)
 ET_tropics_PgH2Oyr_minCI = rep(0, nos_years)
 ET_south_PgH2Oyr_minCI = rep(0, nos_years)
+LAB_global_PgC_minCI = rep(0, nos_years)
+LAB_north_PgC_minCI = rep(0, nos_years)
+LAB_tropics_PgC_minCI = rep(0, nos_years)
+LAB_south_PgC_minCI = rep(0, nos_years)
+FOL_global_PgC_minCI = rep(0, nos_years)
+FOL_north_PgC_minCI = rep(0, nos_years)
+FOL_tropics_PgC_minCI = rep(0, nos_years)
+FOL_south_PgC_minCI = rep(0, nos_years)
+ROOT_global_PgC_minCI = rep(0, nos_years)
+ROOT_north_PgC_minCI = rep(0, nos_years)
+ROOT_tropics_PgC_minCI = rep(0, nos_years)
+ROOT_south_PgC_minCI = rep(0, nos_years)
+WOOD_global_PgC_minCI = rep(0, nos_years)
+WOOD_north_PgC_minCI = rep(0, nos_years)
+WOOD_tropics_PgC_minCI = rep(0, nos_years)
+WOOD_south_PgC_minCI = rep(0, nos_years)
+LIT_global_PgC_minCI = rep(0, nos_years)
+LIT_north_PgC_minCI = rep(0, nos_years)
+LIT_tropics_PgC_minCI = rep(0, nos_years)
+LIT_south_PgC_minCI = rep(0, nos_years)
+SOM_global_PgC_minCI = rep(0, nos_years)
+SOM_north_PgC_minCI = rep(0, nos_years)
+SOM_tropics_PgC_minCI = rep(0, nos_years)
+SOM_south_PgC_minCI = rep(0, nos_years)
 # Lower CI
 NBP_global_PgCyr_lowCI = rep(0, nos_years)
 NBP_north_PgCyr_lowCI = rep(0, nos_years)
 NBP_tropics_PgCyr_lowCI = rep(0, nos_years)
 NBP_south_PgCyr_lowCI = rep(0, nos_years)
+NBE_global_PgCyr_lowCI = rep(0, nos_years)
+NBE_north_PgCyr_lowCI = rep(0, nos_years)
+NBE_tropics_PgCyr_lowCI = rep(0, nos_years)
+NBE_south_PgCyr_lowCI = rep(0, nos_years)
+NEE_global_PgCyr_lowCI = rep(0, nos_years)
+NEE_north_PgCyr_lowCI = rep(0, nos_years)
+NEE_tropics_PgCyr_lowCI = rep(0, nos_years)
+NEE_south_PgCyr_lowCI = rep(0, nos_years)
+NPP_global_PgCyr_lowCI = rep(0, nos_years)
+NPP_north_PgCyr_lowCI = rep(0, nos_years)
+NPP_tropics_PgCyr_lowCI = rep(0, nos_years)
+NPP_south_PgCyr_lowCI = rep(0, nos_years)
 GPP_global_PgCyr_lowCI = rep(0, nos_years)
 GPP_north_PgCyr_lowCI = rep(0, nos_years)
 GPP_tropics_PgCyr_lowCI = rep(0, nos_years)
@@ -223,6 +310,14 @@ RHET_global_PgCyr_lowCI = rep(0, nos_years)
 RHET_north_PgCyr_lowCI = rep(0, nos_years)
 RHET_tropics_PgCyr_lowCI = rep(0, nos_years)
 RHET_south_PgCyr_lowCI = rep(0, nos_years)
+RHET_LIT_global_PgC_lowCI = rep(0, nos_years)
+RHET_LIT_north_PgC_lowCI = rep(0, nos_years)
+RHET_LIT_tropics_PgC_lowCI = rep(0, nos_years)
+RHET_LIT_south_PgC_lowCI = rep(0, nos_years)
+RHET_SOM_global_PgC_lowCI = rep(0, nos_years)
+RHET_SOM_north_PgC_lowCI = rep(0, nos_years)
+RHET_SOM_tropics_PgC_lowCI = rep(0, nos_years)
+RHET_SOM_south_PgC_lowCI = rep(0, nos_years)
 RAUTO_global_PgCyr_lowCI = rep(0, nos_years)
 RAUTO_north_PgCyr_lowCI = rep(0, nos_years)
 RAUTO_tropics_PgCyr_lowCI = rep(0, nos_years)
@@ -251,11 +346,47 @@ ET_global_PgH2Oyr_lowCI = rep(0, nos_years)
 ET_north_PgH2Oyr_lowCI = rep(0, nos_years)
 ET_tropics_PgH2Oyr_lowCI = rep(0, nos_years)
 ET_south_PgH2Oyr_lowCI = rep(0, nos_years)
+LAB_global_PgC_lowCI = rep(0, nos_years)
+LAB_north_PgC_lowCI = rep(0, nos_years)
+LAB_tropics_PgC_lowCI = rep(0, nos_years)
+LAB_south_PgC_lowCI = rep(0, nos_years)
+FOL_global_PgC_lowCI = rep(0, nos_years)
+FOL_north_PgC_lowCI = rep(0, nos_years)
+FOL_tropics_PgC_lowCI = rep(0, nos_years)
+FOL_south_PgC_lowCI = rep(0, nos_years)
+ROOT_global_PgC_lowCI = rep(0, nos_years)
+ROOT_north_PgC_lowCI = rep(0, nos_years)
+ROOT_tropics_PgC_lowCI = rep(0, nos_years)
+ROOT_south_PgC_lowCI = rep(0, nos_years)
+WOOD_global_PgC_lowCI = rep(0, nos_years)
+WOOD_north_PgC_lowCI = rep(0, nos_years)
+WOOD_tropics_PgC_lowCI = rep(0, nos_years)
+WOOD_south_PgC_lowCI = rep(0, nos_years)
+LIT_global_PgC_lowCI = rep(0, nos_years)
+LIT_north_PgC_lowCI = rep(0, nos_years)
+LIT_tropics_PgC_lowCI = rep(0, nos_years)
+LIT_south_PgC_lowCI = rep(0, nos_years)
+SOM_global_PgC_lowCI = rep(0, nos_years)
+SOM_north_PgC_lowCI = rep(0, nos_years)
+SOM_tropics_PgC_lowCI = rep(0, nos_years)
+SOM_south_PgC_lowCI = rep(0, nos_years)
 # Upper CI
 NBP_global_PgCyr_highCI = rep(0, nos_years)
 NBP_north_PgCyr_highCI = rep(0, nos_years)
 NBP_tropics_PgCyr_highCI = rep(0, nos_years)
 NBP_south_PgCyr_highCI = rep(0, nos_years)
+NBE_global_PgCyr_highCI = rep(0, nos_years)
+NBE_north_PgCyr_highCI = rep(0, nos_years)
+NBE_tropics_PgCyr_highCI = rep(0, nos_years)
+NBE_south_PgCyr_highCI = rep(0, nos_years)
+NEE_global_PgCyr_highCI = rep(0, nos_years)
+NEE_north_PgCyr_highCI = rep(0, nos_years)
+NEE_tropics_PgCyr_highCI = rep(0, nos_years)
+NEE_south_PgCyr_highCI = rep(0, nos_years)
+NPP_global_PgCyr_highCI = rep(0, nos_years)
+NPP_north_PgCyr_highCI = rep(0, nos_years)
+NPP_tropics_PgCyr_highCI = rep(0, nos_years)
+NPP_south_PgCyr_highCI = rep(0, nos_years)
 GPP_global_PgCyr_highCI = rep(0, nos_years)
 GPP_north_PgCyr_highCI = rep(0, nos_years)
 GPP_tropics_PgCyr_highCI = rep(0, nos_years)
@@ -268,6 +399,14 @@ RHET_global_PgCyr_highCI = rep(0, nos_years)
 RHET_north_PgCyr_highCI = rep(0, nos_years)
 RHET_tropics_PgCyr_highCI = rep(0, nos_years)
 RHET_south_PgCyr_highCI = rep(0, nos_years)
+RHET_LIT_global_PgC_highCI = rep(0, nos_years)
+RHET_LIT_north_PgC_highCI = rep(0, nos_years)
+RHET_LIT_tropics_PgC_highCI = rep(0, nos_years)
+RHET_LIT_south_PgC_highCI = rep(0, nos_years)
+RHET_SOM_global_PgC_highCI = rep(0, nos_years)
+RHET_SOM_north_PgC_highCI = rep(0, nos_years)
+RHET_SOM_tropics_PgC_highCI = rep(0, nos_years)
+RHET_SOM_south_PgC_highCI = rep(0, nos_years)
 RAUTO_global_PgCyr_highCI = rep(0, nos_years)
 RAUTO_north_PgCyr_highCI = rep(0, nos_years)
 RAUTO_tropics_PgCyr_highCI = rep(0, nos_years)
@@ -296,11 +435,47 @@ ET_global_PgH2Oyr_highCI = rep(0, nos_years)
 ET_north_PgH2Oyr_highCI = rep(0, nos_years)
 ET_tropics_PgH2Oyr_highCI = rep(0, nos_years)
 ET_south_PgH2Oyr_highCI = rep(0, nos_years)
+LAB_global_PgC_highCI = rep(0, nos_years)
+LAB_north_PgC_highCI = rep(0, nos_years)
+LAB_tropics_PgC_highCI = rep(0, nos_years)
+LAB_south_PgC_highCI = rep(0, nos_years)
+FOL_global_PgC_highCI = rep(0, nos_years)
+FOL_north_PgC_highCI = rep(0, nos_years)
+FOL_tropics_PgC_highCI = rep(0, nos_years)
+FOL_south_PgC_highCI = rep(0, nos_years)
+ROOT_global_PgC_highCI = rep(0, nos_years)
+ROOT_north_PgC_highCI = rep(0, nos_years)
+ROOT_tropics_PgC_highCI = rep(0, nos_years)
+ROOT_south_PgC_highCI = rep(0, nos_years)
+WOOD_global_PgC_highCI = rep(0, nos_years)
+WOOD_north_PgC_highCI = rep(0, nos_years)
+WOOD_tropics_PgC_highCI = rep(0, nos_years)
+WOOD_south_PgC_highCI = rep(0, nos_years)
+LIT_global_PgC_highCI = rep(0, nos_years)
+LIT_north_PgC_highCI = rep(0, nos_years)
+LIT_tropics_PgC_highCI = rep(0, nos_years)
+LIT_south_PgC_highCI = rep(0, nos_years)
+SOM_global_PgC_highCI = rep(0, nos_years)
+SOM_north_PgC_highCI = rep(0, nos_years)
+SOM_tropics_PgC_highCI = rep(0, nos_years)
+SOM_south_PgC_highCI = rep(0, nos_years)
 # Maximum CI
 NBP_global_PgCyr_maxCI = rep(0, nos_years)
 NBP_north_PgCyr_maxCI = rep(0, nos_years)
 NBP_tropics_PgCyr_maxCI = rep(0, nos_years)
 NBP_south_PgCyr_maxCI = rep(0, nos_years)
+NBE_global_PgCyr_maxCI = rep(0, nos_years)
+NBE_north_PgCyr_maxCI = rep(0, nos_years)
+NBE_tropics_PgCyr_maxCI = rep(0, nos_years)
+NBE_south_PgCyr_maxCI = rep(0, nos_years)
+NEE_global_PgCyr_maxCI = rep(0, nos_years)
+NEE_north_PgCyr_maxCI = rep(0, nos_years)
+NEE_tropics_PgCyr_maxCI = rep(0, nos_years)
+NEE_south_PgCyr_maxCI = rep(0, nos_years)
+NPP_global_PgCyr_maxCI = rep(0, nos_years)
+NPP_north_PgCyr_maxCI = rep(0, nos_years)
+NPP_tropics_PgCyr_maxCI = rep(0, nos_years)
+NPP_south_PgCyr_maxCI = rep(0, nos_years)
 GPP_global_PgCyr_maxCI = rep(0, nos_years)
 GPP_north_PgCyr_maxCI = rep(0, nos_years)
 GPP_tropics_PgCyr_maxCI = rep(0, nos_years)
@@ -313,6 +488,14 @@ RHET_global_PgCyr_maxCI = rep(0, nos_years)
 RHET_north_PgCyr_maxCI = rep(0, nos_years)
 RHET_tropics_PgCyr_maxCI = rep(0, nos_years)
 RHET_south_PgCyr_maxCI = rep(0, nos_years)
+RHET_LIT_global_PgC_maxCI = rep(0, nos_years)
+RHET_LIT_north_PgC_maxCI = rep(0, nos_years)
+RHET_LIT_tropics_PgC_maxCI = rep(0, nos_years)
+RHET_LIT_south_PgC_maxCI = rep(0, nos_years)
+RHET_SOM_global_PgC_maxCI = rep(0, nos_years)
+RHET_SOM_north_PgC_maxCI = rep(0, nos_years)
+RHET_SOM_tropics_PgC_maxCI = rep(0, nos_years)
+RHET_SOM_south_PgC_maxCI = rep(0, nos_years)
 RAUTO_global_PgCyr_maxCI = rep(0, nos_years)
 RAUTO_north_PgCyr_maxCI = rep(0, nos_years)
 RAUTO_tropics_PgCyr_maxCI = rep(0, nos_years)
@@ -341,6 +524,30 @@ ET_global_PgH2Oyr_maxCI = rep(0, nos_years)
 ET_north_PgH2Oyr_maxCI = rep(0, nos_years)
 ET_tropics_PgH2Oyr_maxCI = rep(0, nos_years)
 ET_south_PgH2Oyr_maxCI = rep(0, nos_years)
+LAB_global_PgC_maxCI = rep(0, nos_years)
+LAB_north_PgC_maxCI = rep(0, nos_years)
+LAB_tropics_PgC_maxCI = rep(0, nos_years)
+LAB_south_PgC_maxCI = rep(0, nos_years)
+FOL_global_PgC_maxCI = rep(0, nos_years)
+FOL_north_PgC_maxCI = rep(0, nos_years)
+FOL_tropics_PgC_maxCI = rep(0, nos_years)
+FOL_south_PgC_maxCI = rep(0, nos_years)
+ROOT_global_PgC_maxCI = rep(0, nos_years)
+ROOT_north_PgC_maxCI = rep(0, nos_years)
+ROOT_tropics_PgC_maxCI = rep(0, nos_years)
+ROOT_south_PgC_maxCI = rep(0, nos_years)
+WOOD_global_PgC_maxCI = rep(0, nos_years)
+WOOD_north_PgC_maxCI = rep(0, nos_years)
+WOOD_tropics_PgC_maxCI = rep(0, nos_years)
+WOOD_south_PgC_maxCI = rep(0, nos_years)
+LIT_global_PgC_maxCI = rep(0, nos_years)
+LIT_north_PgC_maxCI = rep(0, nos_years)
+LIT_tropics_PgC_maxCI = rep(0, nos_years)
+LIT_south_PgC_maxCI = rep(0, nos_years)
+SOM_global_PgC_maxCI = rep(0, nos_years)
+SOM_north_PgC_maxCI = rep(0, nos_years)
+SOM_tropics_PgC_maxCI = rep(0, nos_years)
+SOM_south_PgC_maxCI = rep(0, nos_years)
 
 # Counters
 nos_global = 0
@@ -370,6 +577,21 @@ for (n in seq(1, length(PROJECT$sites))) {
          NBP_global_PgCyr_lowCI = NBP_global_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          NBP_global_PgCyr_highCI = NBP_global_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          NBP_global_PgCyr_maxCI = NBP_global_PgCyr_maxCI + (grid_output$mean_annual_nbp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBE_global_PgCyr = NBE_global_PgCyr + (grid_output$mean_annual_nbe_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBE_global_PgCyr_minCI = NBE_global_PgCyr_minCI + (grid_output$mean_annual_nbe_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBE_global_PgCyr_lowCI = NBE_global_PgCyr_lowCI + (grid_output$mean_annual_nbe_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBE_global_PgCyr_highCI = NBE_global_PgCyr_highCI + (grid_output$mean_annual_nbe_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NBE_global_PgCyr_maxCI = NBE_global_PgCyr_maxCI + (grid_output$mean_annual_nbe_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NEE_global_PgCyr = NEE_global_PgCyr + (grid_output$mean_annual_nee_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NEE_global_PgCyr_minCI = NEE_global_PgCyr_minCI + (grid_output$mean_annual_nee_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NEE_global_PgCyr_lowCI = NEE_global_PgCyr_lowCI + (grid_output$mean_annual_nee_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NEE_global_PgCyr_highCI = NEE_global_PgCyr_highCI + (grid_output$mean_annual_nee_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NEE_global_PgCyr_maxCI = NEE_global_PgCyr_maxCI + (grid_output$mean_annual_nee_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NPP_global_PgCyr = NPP_global_PgCyr + (grid_output$mean_annual_npp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NPP_global_PgCyr_minCI = NPP_global_PgCyr_minCI + (grid_output$mean_annual_npp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NPP_global_PgCyr_lowCI = NPP_global_PgCyr_lowCI + (grid_output$mean_annual_npp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NPP_global_PgCyr_highCI = NPP_global_PgCyr_highCI + (grid_output$mean_annual_npp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         NPP_global_PgCyr_maxCI = NPP_global_PgCyr_maxCI + (grid_output$mean_annual_npp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          GPP_global_PgCyr = GPP_global_PgCyr + (grid_output$mean_annual_gpp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          GPP_global_PgCyr_minCI = GPP_global_PgCyr_minCI + (grid_output$mean_annual_gpp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          GPP_global_PgCyr_lowCI = GPP_global_PgCyr_lowCI + (grid_output$mean_annual_gpp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -385,6 +607,16 @@ for (n in seq(1, length(PROJECT$sites))) {
          RHET_global_PgCyr_lowCI = RHET_global_PgCyr_lowCI + (grid_output$mean_annual_rhet_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          RHET_global_PgCyr_highCI = RHET_global_PgCyr_highCI + (grid_output$mean_annual_rhet_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          RHET_global_PgCyr_maxCI = RHET_global_PgCyr_maxCI + (grid_output$mean_annual_rhet_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_LIT_global_PgC = RHET_LIT_global_PgC + (grid_output$mean_annual_rhet_litter_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_LIT_global_PgC_minCI = RHET_LIT_global_PgC_minCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_LIT_global_PgC_lowCI = RHET_LIT_global_PgC_lowCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_LIT_global_PgC_highCI = RHET_LIT_global_PgC_highCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_LIT_global_PgC_maxCI = RHET_LIT_global_PgC_maxCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_SOM_global_PgC = RHET_SOM_global_PgC + (grid_output$mean_annual_rhet_som_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_SOM_global_PgC_minCI = RHET_SOM_global_PgC_minCI + (grid_output$mean_annual_rhet_som_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_SOM_global_PgC_lowCI = RHET_SOM_global_PgC_lowCI + (grid_output$mean_annual_rhet_som_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_SOM_global_PgC_highCI = RHET_SOM_global_PgC_highCI + (grid_output$mean_annual_rhet_som_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         RHET_SOM_global_PgC_maxCI = RHET_SOM_global_PgC_maxCI + (grid_output$mean_annual_rhet_som_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          RAUTO_global_PgCyr = RAUTO_global_PgCyr + (grid_output$mean_annual_rauto_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          RAUTO_global_PgCyr_minCI = RAUTO_global_PgCyr_minCI + (grid_output$mean_annual_rauto_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          RAUTO_global_PgCyr_lowCI = RAUTO_global_PgCyr_lowCI + (grid_output$mean_annual_rauto_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -396,10 +628,10 @@ for (n in seq(1, length(PROJECT$sites))) {
          FIRE_global_PgCyr_highCI = FIRE_global_PgCyr_highCI + (grid_output$mean_annual_fire_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          FIRE_global_PgCyr_maxCI = FIRE_global_PgCyr_maxCI + (grid_output$mean_annual_fire_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          HARV_global_PgCyr = HARV_global_PgCyr + (grid_output$mean_annual_harvest_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-         HARV_global_PgCyr_minCI = HARV_global_PgCyr_minCI + (grid_output$mean_annual_harvest_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-         HARV_global_PgCyr_lowCI = HARV_global_PgCyr_lowCI + (grid_output$mean_annual_harvest_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         HARV_global_PgCyr_minCI = HARV_global_PgCyr_minCI   + (grid_output$mean_annual_harvest_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         HARV_global_PgCyr_lowCI = HARV_global_PgCyr_lowCI   + (grid_output$mean_annual_harvest_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          HARV_global_PgCyr_highCI = HARV_global_PgCyr_highCI + (grid_output$mean_annual_harvest_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
-         HARV_global_PgCyr_maxCI = HARV_global_PgCyr_maxCI + (grid_output$mean_annual_harvest_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         HARV_global_PgCyr_maxCI = HARV_global_PgCyr_maxCI   + (grid_output$mean_annual_harvest_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          LAI_global_m2m2 = LAI_global_m2m2 + (grid_output$mean_annual_lai_m2m2[n,mid_quant,])
          LAI_global_m2m2_minCI = LAI_global_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,min_quant,])
          LAI_global_m2m2_lowCI = LAI_global_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
@@ -420,6 +652,36 @@ for (n in seq(1, length(PROJECT$sites))) {
          ET_global_PgH2Oyr_lowCI = ET_global_PgH2Oyr_lowCI + (grid_output$mean_annual_ET_kgH2Om2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
          ET_global_PgH2Oyr_highCI = ET_global_PgH2Oyr_highCI + (grid_output$mean_annual_ET_kgH2Om2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
          ET_global_PgH2Oyr_maxCI = ET_global_PgH2Oyr_maxCI + (grid_output$mean_annual_ET_kgH2Om2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
+         LAB_global_PgC = LAB_global_PgC + (grid_output$mean_annual_labile_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LAB_global_PgC_minCI = LAB_global_PgC_minCI + (grid_output$mean_annual_labile_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LAB_global_PgC_lowCI = LAB_global_PgC_lowCI + (grid_output$mean_annual_labile_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LAB_global_PgC_highCI = LAB_global_PgC_highCI + (grid_output$mean_annual_labile_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LAB_global_PgC_maxCI = LAB_global_PgC_maxCI + (grid_output$mean_annual_labile_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         FOL_global_PgC = FOL_global_PgC + (grid_output$mean_annual_foliage_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         FOL_global_PgC_minCI = FOL_global_PgC_minCI + (grid_output$mean_annual_foliage_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         FOL_global_PgC_lowCI = FOL_global_PgC_lowCI + (grid_output$mean_annual_foliage_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         FOL_global_PgC_highCI = FOL_global_PgC_highCI + (grid_output$mean_annual_foliage_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         FOL_global_PgC_maxCI = FOL_global_PgC_maxCI + (grid_output$mean_annual_foliage_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         ROOT_global_PgC = ROOT_global_PgC + (grid_output$mean_annual_roots_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         ROOT_global_PgC_minCI = ROOT_global_PgC_minCI + (grid_output$mean_annual_roots_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         ROOT_global_PgC_lowCI = ROOT_global_PgC_lowCI + (grid_output$mean_annual_roots_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         ROOT_global_PgC_highCI = ROOT_global_PgC_highCI + (grid_output$mean_annual_roots_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         ROOT_global_PgC_maxCI = ROOT_global_PgC_maxCI + (grid_output$mean_annual_roots_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         WOOD_global_PgC = WOOD_global_PgC + (grid_output$mean_annual_wood_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         WOOD_global_PgC_minCI = WOOD_global_PgC_minCI + (grid_output$mean_annual_wood_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         WOOD_global_PgC_lowCI = WOOD_global_PgC_lowCI + (grid_output$mean_annual_wood_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         WOOD_global_PgC_highCI = WOOD_global_PgC_highCI + (grid_output$mean_annual_wood_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         WOOD_global_PgC_maxCI = WOOD_global_PgC_maxCI + (grid_output$mean_annual_wood_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LIT_global_PgC = LIT_global_PgC + (grid_output$mean_annual_litter_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LIT_global_PgC_minCI = LIT_global_PgC_minCI + (grid_output$mean_annual_litter_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LIT_global_PgC_lowCI = LIT_global_PgC_lowCI + (grid_output$mean_annual_litter_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LIT_global_PgC_highCI = LIT_global_PgC_highCI + (grid_output$mean_annual_litter_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         LIT_global_PgC_maxCI = LIT_global_PgC_maxCI + (grid_output$mean_annual_litter_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         SOM_global_PgC = SOM_global_PgC + (grid_output$mean_annual_som_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         SOM_global_PgC_minCI = SOM_global_PgC_minCI + (grid_output$mean_annual_som_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         SOM_global_PgC_lowCI = SOM_global_PgC_lowCI + (grid_output$mean_annual_som_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         SOM_global_PgC_highCI = SOM_global_PgC_highCI + (grid_output$mean_annual_som_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+         SOM_global_PgC_maxCI = SOM_global_PgC_maxCI + (grid_output$mean_annual_som_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
                            
          # Where appropriate accumulate tropical
          if (grid_output$lat[i,j] <= 30 & grid_output$lat[i,j] >= -30) {
@@ -432,6 +694,21 @@ for (n in seq(1, length(PROJECT$sites))) {
              NBP_tropics_PgCyr_lowCI = NBP_tropics_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_tropics_PgCyr_highCI = NBP_tropics_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_tropics_PgCyr_maxCI = NBP_tropics_PgCyr_maxCI + (grid_output$mean_annual_nbp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_tropics_PgCyr = NBE_tropics_PgCyr + (grid_output$mean_annual_nbe_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_tropics_PgCyr_minCI = NBE_tropics_PgCyr_minCI + (grid_output$mean_annual_nbe_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_tropics_PgCyr_lowCI = NBE_tropics_PgCyr_lowCI + (grid_output$mean_annual_nbe_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_tropics_PgCyr_highCI = NBE_tropics_PgCyr_highCI + (grid_output$mean_annual_nbe_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_tropics_PgCyr_maxCI = NBE_tropics_PgCyr_maxCI + (grid_output$mean_annual_nbe_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_tropics_PgCyr = NEE_tropics_PgCyr + (grid_output$mean_annual_nee_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_tropics_PgCyr_minCI = NEE_tropics_PgCyr_minCI + (grid_output$mean_annual_nee_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_tropics_PgCyr_lowCI = NEE_tropics_PgCyr_lowCI + (grid_output$mean_annual_nee_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_tropics_PgCyr_highCI = NEE_tropics_PgCyr_highCI + (grid_output$mean_annual_nee_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_tropics_PgCyr_maxCI = NEE_tropics_PgCyr_maxCI + (grid_output$mean_annual_nee_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_tropics_PgCyr = NPP_tropics_PgCyr + (grid_output$mean_annual_npp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_tropics_PgCyr_minCI = NPP_tropics_PgCyr_minCI + (grid_output$mean_annual_npp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_tropics_PgCyr_lowCI = NPP_tropics_PgCyr_lowCI + (grid_output$mean_annual_npp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_tropics_PgCyr_highCI = NPP_tropics_PgCyr_highCI + (grid_output$mean_annual_npp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_tropics_PgCyr_maxCI = NPP_tropics_PgCyr_maxCI + (grid_output$mean_annual_npp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_tropics_PgCyr = GPP_tropics_PgCyr + (grid_output$mean_annual_gpp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_tropics_PgCyr_minCI = GPP_tropics_PgCyr_minCI + (grid_output$mean_annual_gpp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_tropics_PgCyr_lowCI = GPP_tropics_PgCyr_lowCI + (grid_output$mean_annual_gpp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -447,6 +724,16 @@ for (n in seq(1, length(PROJECT$sites))) {
              RHET_tropics_PgCyr_lowCI = RHET_tropics_PgCyr_lowCI + (grid_output$mean_annual_rhet_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_tropics_PgCyr_highCI = RHET_tropics_PgCyr_highCI + (grid_output$mean_annual_rhet_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_tropics_PgCyr_maxCI = RHET_tropics_PgCyr_maxCI + (grid_output$mean_annual_rhet_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_tropics_PgC = RHET_LIT_tropics_PgC + (grid_output$mean_annual_rhet_litter_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_tropics_PgC_minCI = RHET_LIT_tropics_PgC_minCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_tropics_PgC_lowCI = RHET_LIT_tropics_PgC_lowCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_tropics_PgC_highCI = RHET_LIT_tropics_PgC_highCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_tropics_PgC_maxCI = RHET_LIT_tropics_PgC_maxCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_tropics_PgC = RHET_SOM_tropics_PgC + (grid_output$mean_annual_rhet_som_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_tropics_PgC_minCI = RHET_SOM_tropics_PgC_minCI + (grid_output$mean_annual_rhet_som_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_tropics_PgC_lowCI = RHET_SOM_tropics_PgC_lowCI + (grid_output$mean_annual_rhet_som_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_tropics_PgC_highCI = RHET_SOM_tropics_PgC_highCI + (grid_output$mean_annual_rhet_som_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_tropics_PgC_maxCI = RHET_SOM_tropics_PgC_maxCI + (grid_output$mean_annual_rhet_som_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_tropics_PgCyr = RAUTO_tropics_PgCyr + (grid_output$mean_annual_rauto_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_tropics_PgCyr_minCI = RAUTO_tropics_PgCyr_minCI + (grid_output$mean_annual_rauto_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_tropics_PgCyr_lowCI = RAUTO_tropics_PgCyr_lowCI + (grid_output$mean_annual_rauto_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -482,6 +769,66 @@ for (n in seq(1, length(PROJECT$sites))) {
              ET_tropics_PgH2Oyr_lowCI = ET_tropics_PgH2Oyr_lowCI + (grid_output$mean_annual_ET_kgH2Om2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_tropics_PgH2Oyr_highCI = ET_tropics_PgH2Oyr_highCI + (grid_output$mean_annual_ET_kgH2Om2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_tropics_PgH2Oyr_maxCI = ET_tropics_PgH2Oyr_maxCI + (grid_output$mean_annual_ET_kgH2Om2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
+             LAB_tropics_PgC = LAB_tropics_PgC + (grid_output$mean_annual_labile_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_minCI = LAB_tropics_PgC_minCI + (grid_output$mean_annual_labile_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_lowCI = LAB_tropics_PgC_lowCI + (grid_output$mean_annual_labile_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_highCI = LAB_tropics_PgC_highCI + (grid_output$mean_annual_labile_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_maxCI = LAB_tropics_PgC_maxCI + (grid_output$mean_annual_labile_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC = FOL_tropics_PgC + (grid_output$mean_annual_foliage_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_minCI = FOL_tropics_PgC_minCI + (grid_output$mean_annual_foliage_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_lowCI = FOL_tropics_PgC_lowCI + (grid_output$mean_annual_foliage_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_highCI = FOL_tropics_PgC_highCI + (grid_output$mean_annual_foliage_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_maxCI = FOL_tropics_PgC_maxCI + (grid_output$mean_annual_foliage_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC = ROOT_tropics_PgC + (grid_output$mean_annual_roots_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_minCI = ROOT_tropics_PgC_minCI + (grid_output$mean_annual_roots_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_lowCI = ROOT_tropics_PgC_lowCI + (grid_output$mean_annual_roots_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_highCI = ROOT_tropics_PgC_highCI + (grid_output$mean_annual_roots_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_maxCI = ROOT_tropics_PgC_maxCI + (grid_output$mean_annual_roots_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC = WOOD_tropics_PgC + (grid_output$mean_annual_wood_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_minCI = WOOD_tropics_PgC_minCI + (grid_output$mean_annual_wood_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_lowCI = WOOD_tropics_PgC_lowCI + (grid_output$mean_annual_wood_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_highCI = WOOD_tropics_PgC_highCI + (grid_output$mean_annual_wood_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_maxCI = WOOD_tropics_PgC_maxCI + (grid_output$mean_annual_wood_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC = LIT_tropics_PgC + (grid_output$mean_annual_litter_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_minCI = LIT_tropics_PgC_minCI + (grid_output$mean_annual_litter_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_lowCI = LIT_tropics_PgC_lowCI + (grid_output$mean_annual_litter_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_highCI = LIT_tropics_PgC_highCI + (grid_output$mean_annual_litter_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_maxCI = LIT_tropics_PgC_maxCI + (grid_output$mean_annual_litter_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC = SOM_tropics_PgC + (grid_output$mean_annual_som_gCm2[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_minCI = SOM_tropics_PgC_minCI + (grid_output$mean_annual_som_gCm2[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_lowCI = SOM_tropics_PgC_lowCI + (grid_output$mean_annual_som_gCm2[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_highCI = SOM_tropics_PgC_highCI + (grid_output$mean_annual_som_gCm2[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_maxCI = SOM_tropics_PgC_maxCI + (grid_output$mean_annual_som_gCm2[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC = LAB_tropics_PgC + (grid_output$mean_annual_labile_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_minCI = LAB_tropics_PgC_minCI + (grid_output$mean_annual_labile_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_lowCI = LAB_tropics_PgC_lowCI + (grid_output$mean_annual_labile_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_highCI = LAB_tropics_PgC_highCI + (grid_output$mean_annual_labile_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_tropics_PgC_maxCI = LAB_tropics_PgC_maxCI + (grid_output$mean_annual_labile_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC = FOL_tropics_PgC + (grid_output$mean_annual_foliage_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_minCI = FOL_tropics_PgC_minCI + (grid_output$mean_annual_foliage_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_lowCI = FOL_tropics_PgC_lowCI + (grid_output$mean_annual_foliage_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_highCI = FOL_tropics_PgC_highCI + (grid_output$mean_annual_foliage_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_tropics_PgC_maxCI = FOL_tropics_PgC_maxCI + (grid_output$mean_annual_foliage_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC = ROOT_tropics_PgC + (grid_output$mean_annual_roots_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_minCI = ROOT_tropics_PgC_minCI + (grid_output$mean_annual_roots_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_lowCI = ROOT_tropics_PgC_lowCI + (grid_output$mean_annual_roots_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_highCI = ROOT_tropics_PgC_highCI + (grid_output$mean_annual_roots_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_tropics_PgC_maxCI = ROOT_tropics_PgC_maxCI + (grid_output$mean_annual_roots_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC = WOOD_tropics_PgC + (grid_output$mean_annual_wood_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_minCI = WOOD_tropics_PgC_minCI + (grid_output$mean_annual_wood_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_lowCI = WOOD_tropics_PgC_lowCI + (grid_output$mean_annual_wood_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_highCI = WOOD_tropics_PgC_highCI + (grid_output$mean_annual_wood_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_tropics_PgC_maxCI = WOOD_tropics_PgC_maxCI + (grid_output$mean_annual_wood_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC = LIT_tropics_PgC + (grid_output$mean_annual_litter_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_minCI = LIT_tropics_PgC_minCI + (grid_output$mean_annual_litter_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_lowCI = LIT_tropics_PgC_lowCI + (grid_output$mean_annual_litter_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_highCI = LIT_tropics_PgC_highCI + (grid_output$mean_annual_litter_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_tropics_PgC_maxCI = LIT_tropics_PgC_maxCI + (grid_output$mean_annual_litter_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC = SOM_tropics_PgC + (grid_output$mean_annual_som_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_minCI = SOM_tropics_PgC_minCI + (grid_output$mean_annual_som_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_lowCI = SOM_tropics_PgC_lowCI + (grid_output$mean_annual_som_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_highCI = SOM_tropics_PgC_highCI + (grid_output$mean_annual_som_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_tropics_PgC_maxCI = SOM_tropics_PgC_maxCI + (grid_output$mean_annual_som_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          }
 
          # Where appropriate accumulate north
@@ -495,6 +842,21 @@ for (n in seq(1, length(PROJECT$sites))) {
              NBP_north_PgCyr_lowCI = NBP_north_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_north_PgCyr_highCI = NBP_north_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_north_PgCyr_maxCI = NBP_north_PgCyr_maxCI + (grid_output$mean_annual_nbp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_north_PgCyr = NBE_north_PgCyr + (grid_output$mean_annual_nbe_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_north_PgCyr_minCI = NBE_north_PgCyr_minCI + (grid_output$mean_annual_nbe_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_north_PgCyr_lowCI = NBE_north_PgCyr_lowCI + (grid_output$mean_annual_nbe_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_north_PgCyr_highCI = NBE_north_PgCyr_highCI + (grid_output$mean_annual_nbe_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_north_PgCyr_maxCI = NBE_north_PgCyr_maxCI + (grid_output$mean_annual_nbe_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_north_PgCyr = NEE_north_PgCyr + (grid_output$mean_annual_nee_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_north_PgCyr_minCI = NEE_north_PgCyr_minCI + (grid_output$mean_annual_nee_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_north_PgCyr_lowCI = NEE_north_PgCyr_lowCI + (grid_output$mean_annual_nee_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_north_PgCyr_highCI = NEE_north_PgCyr_highCI + (grid_output$mean_annual_nee_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_north_PgCyr_maxCI = NEE_north_PgCyr_maxCI + (grid_output$mean_annual_nee_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_north_PgCyr = NPP_north_PgCyr + (grid_output$mean_annual_npp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_north_PgCyr_minCI = NPP_north_PgCyr_minCI + (grid_output$mean_annual_npp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_north_PgCyr_lowCI = NPP_north_PgCyr_lowCI + (grid_output$mean_annual_npp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_north_PgCyr_highCI = NPP_north_PgCyr_highCI + (grid_output$mean_annual_npp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_north_PgCyr_maxCI = NPP_north_PgCyr_maxCI + (grid_output$mean_annual_npp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_north_PgCyr = GPP_north_PgCyr + (grid_output$mean_annual_gpp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_north_PgCyr_minCI = GPP_north_PgCyr_minCI + (grid_output$mean_annual_gpp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_north_PgCyr_lowCI = GPP_north_PgCyr_lowCI + (grid_output$mean_annual_gpp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -510,6 +872,16 @@ for (n in seq(1, length(PROJECT$sites))) {
              RHET_north_PgCyr_lowCI = RHET_north_PgCyr_lowCI + (grid_output$mean_annual_rhet_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_north_PgCyr_highCI = RHET_north_PgCyr_highCI + (grid_output$mean_annual_rhet_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_north_PgCyr_maxCI = RHET_north_PgCyr_maxCI + (grid_output$mean_annual_rhet_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_north_PgC = RHET_LIT_north_PgC + (grid_output$mean_annual_rhet_litter_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_north_PgC_minCI = RHET_LIT_north_PgC_minCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_north_PgC_lowCI = RHET_LIT_north_PgC_lowCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_north_PgC_highCI = RHET_LIT_north_PgC_highCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_north_PgC_maxCI = RHET_LIT_north_PgC_maxCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_north_PgC = RHET_SOM_north_PgC + (grid_output$mean_annual_rhet_som_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_north_PgC_minCI = RHET_SOM_north_PgC_minCI + (grid_output$mean_annual_rhet_som_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_north_PgC_lowCI = RHET_SOM_north_PgC_lowCI + (grid_output$mean_annual_rhet_som_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_north_PgC_highCI = RHET_SOM_north_PgC_highCI + (grid_output$mean_annual_rhet_som_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_north_PgC_maxCI = RHET_SOM_north_PgC_maxCI + (grid_output$mean_annual_rhet_som_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_north_PgCyr = RAUTO_north_PgCyr + (grid_output$mean_annual_rauto_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_north_PgCyr_minCI = RAUTO_north_PgCyr_minCI + (grid_output$mean_annual_rauto_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_north_PgCyr_lowCI = RAUTO_north_PgCyr_lowCI + (grid_output$mean_annual_rauto_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -545,6 +917,36 @@ for (n in seq(1, length(PROJECT$sites))) {
              ET_north_PgH2Oyr_lowCI = ET_north_PgH2Oyr_lowCI + (grid_output$mean_annual_ET_kgH2Om2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_north_PgH2Oyr_highCI = ET_north_PgH2Oyr_highCI + (grid_output$mean_annual_ET_kgH2Om2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_north_PgH2Oyr_maxCI = ET_north_PgH2Oyr_maxCI + (grid_output$mean_annual_ET_kgH2Om2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
+             LAB_north_PgC = LAB_north_PgC + (grid_output$mean_annual_labile_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_north_PgC_minCI = LAB_north_PgC_minCI + (grid_output$mean_annual_labile_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_north_PgC_lowCI = LAB_north_PgC_lowCI + (grid_output$mean_annual_labile_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_north_PgC_highCI = LAB_north_PgC_highCI + (grid_output$mean_annual_labile_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_north_PgC_maxCI = LAB_north_PgC_maxCI + (grid_output$mean_annual_labile_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_north_PgC = FOL_north_PgC + (grid_output$mean_annual_foliage_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_north_PgC_minCI = FOL_north_PgC_minCI + (grid_output$mean_annual_foliage_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_north_PgC_lowCI = FOL_north_PgC_lowCI + (grid_output$mean_annual_foliage_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_north_PgC_highCI = FOL_north_PgC_highCI + (grid_output$mean_annual_foliage_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_north_PgC_maxCI = FOL_north_PgC_maxCI + (grid_output$mean_annual_foliage_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_north_PgC = ROOT_north_PgC + (grid_output$mean_annual_roots_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_north_PgC_minCI = ROOT_north_PgC_minCI + (grid_output$mean_annual_roots_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_north_PgC_lowCI = ROOT_north_PgC_lowCI + (grid_output$mean_annual_roots_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_north_PgC_highCI = ROOT_north_PgC_highCI + (grid_output$mean_annual_roots_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_north_PgC_maxCI = ROOT_north_PgC_maxCI + (grid_output$mean_annual_roots_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_north_PgC = WOOD_north_PgC + (grid_output$mean_annual_wood_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_north_PgC_minCI = WOOD_north_PgC_minCI + (grid_output$mean_annual_wood_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_north_PgC_lowCI = WOOD_north_PgC_lowCI + (grid_output$mean_annual_wood_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_north_PgC_highCI = WOOD_north_PgC_highCI + (grid_output$mean_annual_wood_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_north_PgC_maxCI = WOOD_north_PgC_maxCI + (grid_output$mean_annual_wood_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_north_PgC = LIT_north_PgC + (grid_output$mean_annual_litter_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_north_PgC_minCI = LIT_north_PgC_minCI + (grid_output$mean_annual_litter_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_north_PgC_lowCI = LIT_north_PgC_lowCI + (grid_output$mean_annual_litter_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_north_PgC_highCI = LIT_north_PgC_highCI + (grid_output$mean_annual_litter_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_north_PgC_maxCI = LIT_north_PgC_maxCI + (grid_output$mean_annual_litter_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_north_PgC = SOM_north_PgC + (grid_output$mean_annual_som_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_north_PgC_minCI = SOM_north_PgC_minCI + (grid_output$mean_annual_som_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_north_PgC_lowCI = SOM_north_PgC_lowCI + (grid_output$mean_annual_som_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_north_PgC_highCI = SOM_north_PgC_highCI + (grid_output$mean_annual_som_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_north_PgC_maxCI = SOM_north_PgC_maxCI + (grid_output$mean_annual_som_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          }
 
          # Where appropriate accumulate south
@@ -558,6 +960,21 @@ for (n in seq(1, length(PROJECT$sites))) {
              NBP_south_PgCyr_lowCI = NBP_south_PgCyr_lowCI + (grid_output$mean_annual_nbp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_south_PgCyr_highCI = NBP_south_PgCyr_highCI + (grid_output$mean_annual_nbp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              NBP_south_PgCyr_maxCI = NBP_south_PgCyr_maxCI + (grid_output$mean_annual_nbp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_south_PgCyr = NBE_south_PgCyr + (grid_output$mean_annual_nbe_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_south_PgCyr_minCI = NBE_south_PgCyr_minCI + (grid_output$mean_annual_nbe_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_south_PgCyr_lowCI = NBE_south_PgCyr_lowCI + (grid_output$mean_annual_nbe_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_south_PgCyr_highCI = NBE_south_PgCyr_highCI + (grid_output$mean_annual_nbe_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NBE_south_PgCyr_maxCI = NBE_south_PgCyr_maxCI + (grid_output$mean_annual_nbe_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_south_PgCyr = NEE_south_PgCyr + (grid_output$mean_annual_nee_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_south_PgCyr_minCI = NEE_south_PgCyr_minCI + (grid_output$mean_annual_nee_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_south_PgCyr_lowCI = NEE_south_PgCyr_lowCI + (grid_output$mean_annual_nee_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_south_PgCyr_highCI = NEE_south_PgCyr_highCI + (grid_output$mean_annual_nee_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NEE_south_PgCyr_maxCI = NEE_south_PgCyr_maxCI + (grid_output$mean_annual_nee_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_south_PgCyr = NPP_south_PgCyr + (grid_output$mean_annual_npp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_south_PgCyr_minCI = NPP_south_PgCyr_minCI + (grid_output$mean_annual_npp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_south_PgCyr_lowCI = NPP_south_PgCyr_lowCI + (grid_output$mean_annual_npp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_south_PgCyr_highCI = NPP_south_PgCyr_highCI + (grid_output$mean_annual_npp_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             NPP_south_PgCyr_maxCI = NPP_south_PgCyr_maxCI + (grid_output$mean_annual_npp_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_south_PgCyr = GPP_south_PgCyr + (grid_output$mean_annual_gpp_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_south_PgCyr_minCI = GPP_south_PgCyr_minCI + (grid_output$mean_annual_gpp_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              GPP_south_PgCyr_lowCI = GPP_south_PgCyr_lowCI + (grid_output$mean_annual_gpp_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -573,6 +990,16 @@ for (n in seq(1, length(PROJECT$sites))) {
              RHET_south_PgCyr_lowCI = RHET_south_PgCyr_lowCI + (grid_output$mean_annual_rhet_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_south_PgCyr_highCI = RHET_south_PgCyr_highCI + (grid_output$mean_annual_rhet_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RHET_south_PgCyr_maxCI = RHET_south_PgCyr_maxCI + (grid_output$mean_annual_rhet_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_south_PgC = RHET_LIT_south_PgC + (grid_output$mean_annual_rhet_litter_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_south_PgC_minCI = RHET_LIT_south_PgC_minCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_south_PgC_lowCI = RHET_LIT_south_PgC_lowCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_south_PgC_highCI = RHET_LIT_south_PgC_highCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_LIT_south_PgC_maxCI = RHET_LIT_south_PgC_maxCI + (grid_output$mean_annual_rhet_litter_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_south_PgC = RHET_SOM_south_PgC + (grid_output$mean_annual_rhet_som_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_south_PgC_minCI = RHET_SOM_south_PgC_minCI + (grid_output$mean_annual_rhet_som_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_south_PgC_lowCI = RHET_SOM_south_PgC_lowCI + (grid_output$mean_annual_rhet_som_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_south_PgC_highCI = RHET_SOM_south_PgC_highCI + (grid_output$mean_annual_rhet_som_gCm2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             RHET_SOM_south_PgC_maxCI = RHET_SOM_south_PgC_maxCI + (grid_output$mean_annual_rhet_som_gCm2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_south_PgCyr = RAUTO_south_PgCyr + (grid_output$mean_annual_rauto_gCm2day[n,mid_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_south_PgCyr_minCI = RAUTO_south_PgCyr_minCI + (grid_output$mean_annual_rauto_gCm2day[n,min_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              RAUTO_south_PgCyr_lowCI = RAUTO_south_PgCyr_lowCI + (grid_output$mean_annual_rauto_gCm2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -608,6 +1035,36 @@ for (n in seq(1, length(PROJECT$sites))) {
              ET_south_PgH2Oyr_lowCI = ET_south_PgH2Oyr_lowCI + (grid_output$mean_annual_ET_kgH2Om2day[n,low_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_south_PgH2Oyr_highCI = ET_south_PgH2Oyr_highCI + (grid_output$mean_annual_ET_kgH2Om2day[n,high_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
              ET_south_PgH2Oyr_maxCI = ET_south_PgH2Oyr_maxCI + (grid_output$mean_annual_ET_kgH2Om2day[n,max_quant,]*deltat*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-12)
+             LAB_south_PgC = LAB_south_PgC + (grid_output$mean_annual_labile_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_south_PgC_minCI = LAB_south_PgC_minCI + (grid_output$mean_annual_labile_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_south_PgC_lowCI = LAB_south_PgC_lowCI + (grid_output$mean_annual_labile_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_south_PgC_highCI = LAB_south_PgC_highCI + (grid_output$mean_annual_labile_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LAB_south_PgC_maxCI = LAB_south_PgC_maxCI + (grid_output$mean_annual_labile_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_south_PgC = FOL_south_PgC + (grid_output$mean_annual_foliage_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_south_PgC_minCI = FOL_south_PgC_minCI + (grid_output$mean_annual_foliage_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_south_PgC_lowCI = FOL_south_PgC_lowCI + (grid_output$mean_annual_foliage_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_south_PgC_highCI = FOL_south_PgC_highCI + (grid_output$mean_annual_foliage_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             FOL_south_PgC_maxCI = FOL_south_PgC_maxCI + (grid_output$mean_annual_foliage_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_south_PgC = ROOT_south_PgC + (grid_output$mean_annual_roots_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_south_PgC_minCI = ROOT_south_PgC_minCI + (grid_output$mean_annual_roots_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_south_PgC_lowCI = ROOT_south_PgC_lowCI + (grid_output$mean_annual_roots_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_south_PgC_highCI = ROOT_south_PgC_highCI + (grid_output$mean_annual_roots_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             ROOT_south_PgC_maxCI = ROOT_south_PgC_maxCI + (grid_output$mean_annual_roots_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_south_PgC = WOOD_south_PgC + (grid_output$mean_annual_wood_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_south_PgC_minCI = WOOD_south_PgC_minCI + (grid_output$mean_annual_wood_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_south_PgC_lowCI = WOOD_south_PgC_lowCI + (grid_output$mean_annual_wood_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_south_PgC_highCI = WOOD_south_PgC_highCI + (grid_output$mean_annual_wood_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             WOOD_south_PgC_maxCI = WOOD_south_PgC_maxCI + (grid_output$mean_annual_wood_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_south_PgC = LIT_south_PgC + (grid_output$mean_annual_litter_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_south_PgC_minCI = LIT_south_PgC_minCI + (grid_output$mean_annual_litter_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_south_PgC_lowCI = LIT_south_PgC_lowCI + (grid_output$mean_annual_litter_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_south_PgC_highCI = LIT_south_PgC_highCI + (grid_output$mean_annual_litter_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             LIT_south_PgC_maxCI = LIT_south_PgC_maxCI + (grid_output$mean_annual_litter_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_south_PgC = SOM_south_PgC + (grid_output$mean_annual_som_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_south_PgC_minCI = SOM_south_PgC_minCI + (grid_output$mean_annual_som_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_south_PgC_lowCI = SOM_south_PgC_lowCI + (grid_output$mean_annual_som_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_south_PgC_highCI = SOM_south_PgC_highCI + (grid_output$mean_annual_som_gCm2[n,high_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
+             SOM_south_PgC_maxCI = SOM_south_PgC_maxCI + (grid_output$mean_annual_som_gCm2[n,max_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          }
 
      } # Does the file exist / has it been processed
@@ -653,6 +1110,48 @@ output = data.frame(Year = years, Global = NBP_global_PgCyr, North = NBP_north_P
 ## Begin writing out NBP to file
 
 write.table(output,file = paste(out_dir,"/",output_prefix,"NBP",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine NBE together the data into an output variable
+
+output = data.frame(Year = years, Global = NBE_global_PgCyr, North = NBE_north_PgCyr, Tropics = NBE_tropics_PgCyr, South = NBE_south_PgCyr,
+                                  Global_2.5pc = NBE_global_PgCyr_minCI, North_2.5pc = NBE_north_PgCyr_minCI, Tropics_2.5pc = NBE_tropics_PgCyr_minCI, South_2.5pc = NBE_south_PgCyr_minCI,
+                                  Global_25pc = NBE_global_PgCyr_lowCI, North_25pc = NBE_north_PgCyr_lowCI, Tropics_25pc = NBE_tropics_PgCyr_lowCI, South_25pc = NBE_south_PgCyr_lowCI,
+                                  Global_75pc = NBE_global_PgCyr_highCI, North_75pc = NBE_north_PgCyr_highCI, Tropics_75pc = NBE_tropics_PgCyr_highCI, South_75pc = NBE_south_PgCyr_highCI,
+                                  Global_97.5pc = NBE_global_PgCyr_maxCI, North_97.5pc = NBE_north_PgCyr_maxCI, Tropics_97.5pc = NBE_tropics_PgCyr_maxCI, South_97.5pc = NBE_south_PgCyr_maxCI)
+                                  
+###
+## Begin writing out NBE to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"NBE",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine NEE together the data into an output variable
+
+output = data.frame(Year = years, Global = NEE_global_PgCyr, North = NEE_north_PgCyr, Tropics = NEE_tropics_PgCyr, South = NEE_south_PgCyr,
+                                  Global_2.5pc = NEE_global_PgCyr_minCI, North_2.5pc = NEE_north_PgCyr_minCI, Tropics_2.5pc = NEE_tropics_PgCyr_minCI, South_2.5pc = NEE_south_PgCyr_minCI,
+                                  Global_25pc = NEE_global_PgCyr_lowCI, North_25pc = NEE_north_PgCyr_lowCI, Tropics_25pc = NEE_tropics_PgCyr_lowCI, South_25pc = NEE_south_PgCyr_lowCI,
+                                  Global_75pc = NEE_global_PgCyr_highCI, North_75pc = NEE_north_PgCyr_highCI, Tropics_75pc = NEE_tropics_PgCyr_highCI, South_75pc = NEE_south_PgCyr_highCI,
+                                  Global_97.5pc = NEE_global_PgCyr_maxCI, North_97.5pc = NEE_north_PgCyr_maxCI, Tropics_97.5pc = NEE_tropics_PgCyr_maxCI, South_97.5pc = NEE_south_PgCyr_maxCI)
+                                  
+###
+## Begin writing out NEE to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"NEE",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine NPP together the data into an output variable
+
+output = data.frame(Year = years, Global = NPP_global_PgCyr, North = NPP_north_PgCyr, Tropics = NPP_tropics_PgCyr, South = NPP_south_PgCyr,
+                                  Global_2.5pc = NPP_global_PgCyr_minCI, North_2.5pc = NPP_north_PgCyr_minCI, Tropics_2.5pc = NPP_tropics_PgCyr_minCI, South_2.5pc = NPP_south_PgCyr_minCI,
+                                  Global_25pc = NPP_global_PgCyr_lowCI, North_25pc = NPP_north_PgCyr_lowCI, Tropics_25pc = NPP_tropics_PgCyr_lowCI, South_25pc = NPP_south_PgCyr_lowCI,
+                                  Global_75pc = NPP_global_PgCyr_highCI, North_75pc = NPP_north_PgCyr_highCI, Tropics_75pc = NPP_tropics_PgCyr_highCI, South_75pc = NPP_south_PgCyr_highCI,
+                                  Global_97.5pc = NPP_global_PgCyr_maxCI, North_97.5pc = NPP_north_PgCyr_maxCI, Tropics_97.5pc = NPP_tropics_PgCyr_maxCI, South_97.5pc = NPP_south_PgCyr_maxCI)
+                                  
+###
+## Begin writing out NPP to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"NPP",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 
 ###
 ## Combine GPP together the data into an output variable
@@ -704,6 +1203,34 @@ output = data.frame(Year = years, Global = RAUTO_global_PgCyr, North = RAUTO_nor
                                   Global_25pc = RAUTO_global_PgCyr_lowCI, North_25pc = RAUTO_north_PgCyr_lowCI, Tropics_25pc = RAUTO_tropics_PgCyr_lowCI, South_25pc = RAUTO_south_PgCyr_lowCI,
                                   Global_75pc = RAUTO_global_PgCyr_highCI, North_75pc = RAUTO_north_PgCyr_highCI, Tropics_75pc = RAUTO_tropics_PgCyr_highCI, South_75pc = RAUTO_south_PgCyr_highCI,
                                   Global_97.5pc = RAUTO_global_PgCyr_maxCI, North_97.5pc = RAUTO_north_PgCyr_maxCI, Tropics_97.5pc = RAUTO_tropics_PgCyr_maxCI, South_97.5pc = RAUTO_south_PgCyr_maxCI)
+
+###
+## Combine RHET_LIT together the data into an output variable
+
+output = data.frame(Year = years, Global = RHET_LIT_global_PgC, North = RHET_LIT_north_PgC, Tropics = RHET_LIT_tropics_PgC, South = RHET_LIT_south_PgC,
+                                  Global_2.5pc = RHET_LIT_global_PgC_minCI, North_2.5pc = RHET_LIT_north_PgC_minCI, Tropics_2.5pc = RHET_LIT_tropics_PgC_minCI, South_2.5pc = RHET_LIT_south_PgC_minCI,
+                                  Global_25pc = RHET_LIT_global_PgC_lowCI, North_25pc = RHET_LIT_north_PgC_lowCI, Tropics_25pc = RHET_LIT_tropics_PgC_lowCI, South_25pc = RHET_LIT_south_PgC_lowCI,
+                                  Global_75pc = RHET_LIT_global_PgC_highCI, North_75pc = RHET_LIT_north_PgC_highCI, Tropics_75pc = RHET_LIT_tropics_PgC_highCI, South_75pc = RHET_LIT_south_PgC_highCI,
+                                  Global_97.5pc = RHET_LIT_global_PgC_maxCI, North_97.5pc = RHET_LIT_north_PgC_maxCI, Tropics_97.5pc = RHET_LIT_tropics_PgC_maxCI, South_97.5pc = RHET_LIT_south_PgC_maxCI)
+                                  
+###
+## Begin writing out RHET_LIT to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"RHET_LIT",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine RHET_SOM together the data into an output variable
+
+output = data.frame(Year = years, Global = RHET_SOM_global_PgC, North = RHET_SOM_north_PgC, Tropics = RHET_SOM_tropics_PgC, South = RHET_SOM_south_PgC,
+                                  Global_2.5pc = RHET_SOM_global_PgC_minCI, North_2.5pc = RHET_SOM_north_PgC_minCI, Tropics_2.5pc = RHET_SOM_tropics_PgC_minCI, South_2.5pc = RHET_SOM_south_PgC_minCI,
+                                  Global_25pc = RHET_SOM_global_PgC_lowCI, North_25pc = RHET_SOM_north_PgC_lowCI, Tropics_25pc = RHET_SOM_tropics_PgC_lowCI, South_25pc = RHET_SOM_south_PgC_lowCI,
+                                  Global_75pc = RHET_SOM_global_PgC_highCI, North_75pc = RHET_SOM_north_PgC_highCI, Tropics_75pc = RHET_SOM_tropics_PgC_highCI, South_75pc = RHET_SOM_south_PgC_highCI,
+                                  Global_97.5pc = RHET_SOM_global_PgC_maxCI, North_97.5pc = RHET_SOM_north_PgC_maxCI, Tropics_97.5pc = RHET_SOM_tropics_PgC_maxCI, South_97.5pc = RHET_SOM_south_PgC_maxCI)
+                                  
+###
+## Begin writing out RHET_SOM to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"RHET_SOM",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 
 ###
 ## Begin writing out RAUTO to file
@@ -793,4 +1320,88 @@ output = data.frame(Year = years, Global = ET_global_PgH2Oyr, North = ET_north_P
 ## Begin writing out ET to file
 
 write.table(output,file = paste(out_dir,"/",output_prefix,"ET",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine LAB together the data into an output variable
+
+output = data.frame(Year = years, Global = LAB_global_PgC, North = LAB_north_PgC, Tropics = LAB_tropics_PgC, South = LAB_south_PgC,
+                                  Global_2.5pc = LAB_global_PgC_minCI, North_2.5pc = LAB_north_PgC_minCI, Tropics_2.5pc = LAB_tropics_PgC_minCI, South_2.5pc = LAB_south_PgC_minCI,
+                                  Global_25pc = LAB_global_PgC_lowCI, North_25pc = LAB_north_PgC_lowCI, Tropics_25pc = LAB_tropics_PgC_lowCI, South_25pc = LAB_south_PgC_lowCI,
+                                  Global_75pc = LAB_global_PgC_highCI, North_75pc = LAB_north_PgC_highCI, Tropics_75pc = LAB_tropics_PgC_highCI, South_75pc = LAB_south_PgC_highCI,
+                                  Global_97.5pc = LAB_global_PgC_maxCI, North_97.5pc = LAB_north_PgC_maxCI, Tropics_97.5pc = LAB_tropics_PgC_maxCI, South_97.5pc = LAB_south_PgC_maxCI)
+                                  
+###
+## Begin writing out LAB to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"LAB",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine FOL together the data into an output variable
+
+output = data.frame(Year = years, Global = FOL_global_PgC, North = FOL_north_PgC, Tropics = FOL_tropics_PgC, South = FOL_south_PgC,
+                                  Global_2.5pc = FOL_global_PgC_minCI, North_2.5pc = FOL_north_PgC_minCI, Tropics_2.5pc = FOL_tropics_PgC_minCI, South_2.5pc = FOL_south_PgC_minCI,
+                                  Global_25pc = FOL_global_PgC_lowCI, North_25pc = FOL_north_PgC_lowCI, Tropics_25pc = FOL_tropics_PgC_lowCI, South_25pc = FOL_south_PgC_lowCI,
+                                  Global_75pc = FOL_global_PgC_highCI, North_75pc = FOL_north_PgC_highCI, Tropics_75pc = FOL_tropics_PgC_highCI, South_75pc = FOL_south_PgC_highCI,
+                                  Global_97.5pc = FOL_global_PgC_maxCI, North_97.5pc = FOL_north_PgC_maxCI, Tropics_97.5pc = FOL_tropics_PgC_maxCI, South_97.5pc = FOL_south_PgC_maxCI)
+                                  
+###
+## Begin writing out FOL to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"FOL",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine ROOT together the data into an output variable
+
+output = data.frame(Year = years, Global = ROOT_global_PgC, North = ROOT_north_PgC, Tropics = ROOT_tropics_PgC, South = ROOT_south_PgC,
+                                  Global_2.5pc = ROOT_global_PgC_minCI, North_2.5pc = ROOT_north_PgC_minCI, Tropics_2.5pc = ROOT_tropics_PgC_minCI, South_2.5pc = ROOT_south_PgC_minCI,
+                                  Global_25pc = ROOT_global_PgC_lowCI, North_25pc = ROOT_north_PgC_lowCI, Tropics_25pc = ROOT_tropics_PgC_lowCI, South_25pc = ROOT_south_PgC_lowCI,
+                                  Global_75pc = ROOT_global_PgC_highCI, North_75pc = ROOT_north_PgC_highCI, Tropics_75pc = ROOT_tropics_PgC_highCI, South_75pc = ROOT_south_PgC_highCI,
+                                  Global_97.5pc = ROOT_global_PgC_maxCI, North_97.5pc = ROOT_north_PgC_maxCI, Tropics_97.5pc = ROOT_tropics_PgC_maxCI, South_97.5pc = ROOT_south_PgC_maxCI)
+                                  
+###
+## Begin writing out ROOT to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"ROOT",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine WOOD together the data into an output variable
+
+output = data.frame(Year = years, Global = WOOD_global_PgC, North = WOOD_north_PgC, Tropics = WOOD_tropics_PgC, South = WOOD_south_PgC,
+                                  Global_2.5pc = WOOD_global_PgC_minCI, North_2.5pc = WOOD_north_PgC_minCI, Tropics_2.5pc = WOOD_tropics_PgC_minCI, South_2.5pc = WOOD_south_PgC_minCI,
+                                  Global_25pc = WOOD_global_PgC_lowCI, North_25pc = WOOD_north_PgC_lowCI, Tropics_25pc = WOOD_tropics_PgC_lowCI, South_25pc = WOOD_south_PgC_lowCI,
+                                  Global_75pc = WOOD_global_PgC_highCI, North_75pc = WOOD_north_PgC_highCI, Tropics_75pc = WOOD_tropics_PgC_highCI, South_75pc = WOOD_south_PgC_highCI,
+                                  Global_97.5pc = WOOD_global_PgC_maxCI, North_97.5pc = WOOD_north_PgC_maxCI, Tropics_97.5pc = WOOD_tropics_PgC_maxCI, South_97.5pc = WOOD_south_PgC_maxCI)
+                                  
+###
+## Begin writing out WOOD to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"WOOD",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine LIT together the data into an output variable
+
+output = data.frame(Year = years, Global = LIT_global_PgC, North = LIT_north_PgC, Tropics = LIT_tropics_PgC, South = LIT_south_PgC,
+                                  Global_2.5pc = LIT_global_PgC_minCI, North_2.5pc = LIT_north_PgC_minCI, Tropics_2.5pc = LIT_tropics_PgC_minCI, South_2.5pc = LIT_south_PgC_minCI,
+                                  Global_25pc = LIT_global_PgC_lowCI, North_25pc = LIT_north_PgC_lowCI, Tropics_25pc = LIT_tropics_PgC_lowCI, South_25pc = LIT_south_PgC_lowCI,
+                                  Global_75pc = LIT_global_PgC_highCI, North_75pc = LIT_north_PgC_highCI, Tropics_75pc = LIT_tropics_PgC_highCI, South_75pc = LIT_south_PgC_highCI,
+                                  Global_97.5pc = LIT_global_PgC_maxCI, North_97.5pc = LIT_north_PgC_maxCI, Tropics_97.5pc = LIT_tropics_PgC_maxCI, South_97.5pc = LIT_south_PgC_maxCI)
+                                  
+###
+## Begin writing out LIT to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"LIT",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine SOM together the data into an output variable
+
+output = data.frame(Year = years, Global = SOM_global_PgC, North = SOM_north_PgC, Tropics = SOM_tropics_PgC, South = SOM_south_PgC,
+                                  Global_2.5pc = SOM_global_PgC_minCI, North_2.5pc = SOM_north_PgC_minCI, Tropics_2.5pc = SOM_tropics_PgC_minCI, South_2.5pc = SOM_south_PgC_minCI,
+                                  Global_25pc = SOM_global_PgC_lowCI, North_25pc = SOM_north_PgC_lowCI, Tropics_25pc = SOM_tropics_PgC_lowCI, South_25pc = SOM_south_PgC_lowCI,
+                                  Global_75pc = SOM_global_PgC_highCI, North_75pc = SOM_north_PgC_highCI, Tropics_75pc = SOM_tropics_PgC_highCI, South_75pc = SOM_south_PgC_highCI,
+                                  Global_97.5pc = SOM_global_PgC_maxCI, North_97.5pc = SOM_north_PgC_maxCI, Tropics_97.5pc = SOM_tropics_PgC_maxCI, South_97.5pc = SOM_south_PgC_maxCI)
+                                  
+###
+## Begin writing out SOM to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"SOM",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 
