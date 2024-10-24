@@ -27,10 +27,12 @@ module CARBON_MODEL_MOD
            ,wSWP_time        &
            ,rSWP_time        &
            ,cica_time        &
+           ,root_depth_time        &
            ,gs_demand_supply_ratio &
            ,gs_total_canopy               &
            ,gb_total_canopy               &
            ,canopy_par_MJday_time         &
+           ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -182,6 +184,7 @@ module CARBON_MODEL_MOD
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
+                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)                                            
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
@@ -200,6 +203,7 @@ module CARBON_MODEL_MOD
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
+                                   infiltrated, & ! surface water infiltrated (kgH2O.m-2.d-1)                                           
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
                       new_depth,previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
@@ -288,6 +292,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                       daylength_seconds_1, &
                                             rainfall_time, &
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
+                                          root_depth_time, &
+                                        snow_storage_time, & ! Total ecosystem snow storage
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
@@ -491,7 +497,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays))
+                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays), &
+                 snow_storage_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -835,6 +842,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snow_melt = 0d0
        end if
+       snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -985,6 +993,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       ! Assign all water variables to output variables (kgH2O/m2/day)
+       FLUXES(n,41) = transpiration   ! transpiration
+       FLUXES(n,42) = soilevaporation ! soil evaporation
+       FLUXES(n,43) = wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,44) = runoff          ! soil surface runoff
+       FLUXES(n,45) = underflow       ! drainage from bottom of soil column
+       FLUXES(n,46) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
+       FLUXES(n,47) = infiltrated     ! soil surface infiltration by rain 
+       FLUXES(n,48) = uptake_fraction(1) ! transpiration extracted from 1st rooting layer (the soil surface)
+       FLUXES(n,49) = uptake_fraction(2) ! transpiration extracted from 2nd rooting layer (dynamic 2nd layer)       
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -2452,8 +2470,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !logical :: iter_soil = .true.
 
     ! set soil water exchanges
-    Esoil = 0d0 ; Esnow = 0d0  
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
+    Esoil = 0d0 ; Esnow = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 
+    underflow = 0d0 ; runoff = 0d0 ; infiltrated = 0d0 ; water_grav_flow = 0d0 ; pot_evap_losses = 0d0
     initial_soilwater = 1d3 * sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     !! Assume leaf transpiration is drawn from the soil based on the
@@ -2567,10 +2585,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
+
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+    water_grav_flow = water_grav_flow * days_per_step_1
+    infiltrated = infiltrated * days_per_step_1
     corrected_ET = corrected_ET * days_per_step_1
     underflow = underflow * days_per_step_1
     runoff = runoff * days_per_step_1
@@ -2751,6 +2771,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
+    infiltrated = infiltrated + (waterchange(1) * 1e3)
 
   end subroutine infiltrate
   !
@@ -2796,6 +2817,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
+    water_grav_flow = water_grav_flow * 1d-3
 
     ! estimate potential drainage rate for the current time period
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
@@ -2845,6 +2867,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
               ! update soil layer below with drained liquid
               waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
               waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
 
           end if ! some liquid water and drainage possible
 
@@ -2864,8 +2888,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     end do ! while condition
 
-    ! convert underflow from MgH2O/m2/day -> kgH2O/m2/day
+    ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
     underflow = underflow * 1d3
+    water_grav_flow = water_grav_flow * 1d3
 
   end subroutine gravitational_drainage
   !
@@ -2955,7 +2980,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! If prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
-        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac * field_capacity(1:nos_soil_layers)
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac 
         ! calculate initial soil water potential
         call soil_water_potential
     endif

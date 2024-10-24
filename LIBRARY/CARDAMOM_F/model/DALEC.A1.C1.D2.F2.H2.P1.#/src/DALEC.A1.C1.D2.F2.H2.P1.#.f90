@@ -1300,7 +1300,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate CO2 limited rate of photosynthesis (umolC.m-2.s-1)
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    !pd = ((co2-ci)/rc) * umol_to_gC * dayl_hours_fraction
     pd = ((co2-ci)/rc)
 
     !
@@ -1381,10 +1380,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! maximum possible evaporation for the day.
         ! This will then be reduced based on CO2 limits for diffusion based
         ! photosynthesis
-!        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-!              + (ET_demand_coef * aerodynamic_conductance * leaf_canopy_wind_scaling)
-!        denom = (denom / (lambda * max_supply * mmol_to_kg_water)) - slope
-!        potential_conductance = (aerodynamic_conductance * leaf_canopy_wind_scaling) / (denom / psych)
         denom = slope * (((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)) &
               + (ET_demand_coef * aerodynamic_conductance * leaf_canopy_wind_scaling)
         denom = (denom / (lambda * max_supply * mmol_to_kg_water)) - slope
@@ -1392,14 +1387,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! convert m.s-1 to mmolH2O.m-2.d-1, per unit ground area, note that this
         ! is implicitly the canopy scaled value
-!        potential_conductance = potential_conductance * convert_ms1_mol_1 * 1d3 * dayl_seconds
         potential_conductance = potential_conductance * convert_ms1_mmol_1
         ! if conditions are dew forming then set conductance to maximum as we
         ! are not going to be limited by water demand
-!        if (potential_conductance <= 0d0 .or. &
-!            potential_conductance > max_gs*leaf_canopy_light_scaling*dayl_seconds) then
-!            potential_conductance = max_gs*leaf_canopy_light_scaling*dayl_seconds
-!        end if
         if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*leaf_canopy_light_scaling) then
             potential_conductance = max_gs*leaf_canopy_light_scaling
         end if
@@ -1408,8 +1398,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! photosynthesis limits on gs through iterative solution
 
         ! Determine the appropriate canopy scaled gs increment and return threshold
-!        delta_gs = 1d0 * leaf_canopy_light_scaling * dayl_seconds ! mmolH2O/m2leaf/d
-!        iWUE_step = iWUE * leaf_canopy_light_scaling * dayl_seconds ! gC/mmolH2Ogs/d
         delta_gs = 1d0 * leaf_canopy_light_scaling ! mmolH2O/m2leaf/s
         iWUE_step = iWUE * leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s
 
@@ -1542,7 +1530,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Change units of potential stomatal conductance
     ! (mmolH2O.m-2.d-1 -> m.s-1).
     ! Note assumption of sea surface pressure only
- !   gs = (stomatal_conductance / convert_ms1_mmol_1) * dayl_seconds_1
     gs = stomatal_conductance / convert_ms1_mmol_1
     ! Scale aerodynamic conductance to canopy scale
     gb = aerodynamic_conductance * leaf_canopy_wind_scaling
@@ -1745,9 +1732,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! based on Harman & Finnigan (2008); neutral conditions only
     call log_law_decay
 
-    ! now we are interested in the within canopy wind speed,
-    ! here we assume that the wind speed just inside of the canopy is most important.
-    !canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.5d0)-canopy_height))/mixing_length_momentum)
     ! Estimate canopy scaling factor for use with aerodynamic conductance.
     ! Based on the canopy scaling of photosynthetic capacity due to light from 
     ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
@@ -1811,9 +1795,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
     ! 1/vonkarman * 0.31 = 0.7710906
     canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
-
-    ! set minimum value for wind speed at canopy top (m.s-1)
-!    canopy_wind = max(min_wind,canopy_wind)
 
   end subroutine log_law_decay
   !
@@ -2033,11 +2014,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
                  soil_iso_to_net_const
     ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
-    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
     soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
     ! Estimate the mean soil surface temperature as a result of net radiation update
     soilT = (((longwave_release_soil - delta_iso) / emiss_boltz) ** (0.25d0)) - freeze
-!    print*,longwave_release_soil, delta_iso, emiss_boltz, freeze,meant
+
     ! Apply linear correction to canopy isothermal->net longwave radiation
     ! balance based on absorbed shortwave radiation
     delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
@@ -3081,7 +3061,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! If prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
-        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac !* field_capacity(1:nos_soil_layers)
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac 
         ! calculate initial soil water potential
         call soil_water_potential
     endif

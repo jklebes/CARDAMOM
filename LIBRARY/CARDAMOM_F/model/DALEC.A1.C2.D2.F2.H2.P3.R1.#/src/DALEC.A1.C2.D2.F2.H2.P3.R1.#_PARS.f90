@@ -220,8 +220,8 @@ module MODEL_PARAMETERS
     PI%parmin(37) = 1d0
     PI%parmax(37) = 10000d0
 
-    ! Initial soil water - fraction of field capacity
-    PI%parmin(35) = 0.50d0
+    ! Initial soil water fraction
+    PI%parmin(35) = 0.01d0
     PI%parmax(35) = 1.00d0
 
     !

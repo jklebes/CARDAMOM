@@ -187,9 +187,8 @@ module MODEL_PARAMETERS
     PI%parmin(34) = 0.1d0!/7d0 
     PI%parmax(34) = 1.0d0!/7d0
 
-    ! Initial soil water
-    ! a fraction of field capacity
-    PI%parmin(35) = 0.50d0
+    ! Initial soil water fraction
+    PI%parmin(35) = 0.01d0
     PI%parmax(35) = 1.00d0
 
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %

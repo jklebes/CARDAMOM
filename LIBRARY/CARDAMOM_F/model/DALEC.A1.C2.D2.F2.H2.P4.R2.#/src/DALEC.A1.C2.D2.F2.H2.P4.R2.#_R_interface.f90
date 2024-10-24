@@ -25,7 +25,7 @@ subroutine rdalec11(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
                               fire_residue_to_woodlitter,fire_residue_to_som,                  &
                               gs_demand_supply_ratio, cica_time, Rg_from_labile,               &
                               gs_total_canopy, gb_total_canopy, canopy_par_MJday_time,         &
-                              root_depth_time, Rm_from_labile
+                              root_depth_time, Rm_from_labile, snow_storage_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -183,22 +183,32 @@ subroutine rdalec11(output_dim,aNPP_dim,MTT_dim,SS_dim,fire_dim &
      out_var1(i,1:nodays,48) = POOLS(1:nodays,6)        ! som (gC/m2)
      ! Water cycle related
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,19)      ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,50) = POOLS(1:nodays,8)        ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,51) = wSWP_time(1:nodays)      ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,26)      ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,51) = FLUXES(1:nodays,27)      ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,52) = FLUXES(1:nodays,28)      ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,53) = FLUXES(1:nodays,29)      ! runoff (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,54) = FLUXES(1:nodays,30)      ! underflow (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,55) = FLUXES(1:nodays,31)      ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,56) = FLUXES(1:nodays,32)      ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,57) = FLUXES(1:nodays,33)      ! Etrans extracted from 1st layer (0-1)
+     out_var1(i,1:nodays,58) = FLUXES(1:nodays,34)      ! Etrans extracted from 2nd layer (0-1)
+     out_var1(i,1:nodays,59) = POOLS(1:nodays,8)        ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,60) = wSWP_time(1:nodays)      ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,61) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,52) = lai                      ! LAI (m2/m2)
-     out_var1(i,1:nodays,53) = FLUXES(1:nodays,18)      ! GSI value (0-1)
-     out_var1(i,1:nodays,54) = itemp(1:nodays)          ! GSI temp component (0-1)
-     out_var1(i,1:nodays,55) = iphoto(1:nodays)         ! GSI photoperiod component (0-1)
-     out_var1(i,1:nodays,56) = ivpd(1:nodays)           ! GSI vpd component (0-1)
+     out_var1(i,1:nodays,62) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,63) = FLUXES(1:nodays,18)      ! GSI value (0-1)
+     out_var1(i,1:nodays,64) = itemp(1:nodays)          ! GSI temp component (0-1)
+     out_var1(i,1:nodays,65) = iphoto(1:nodays)         ! GSI photoperiod component (0-1)
+     out_var1(i,1:nodays,66) = ivpd(1:nodays)           ! GSI vpd component (0-1)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,57) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,58) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,59) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,60) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,61) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,67) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,68) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,69) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,70) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,71) = cica_time                ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,62) = root_depth_time          ! rooting depth (m)
+     out_var1(i,1:nodays,72) = root_depth_time          ! rooting depth (m)
 
      !
      ! Calculate long-term mean of out_var1

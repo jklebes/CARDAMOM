@@ -91,17 +91,17 @@ module cardamom_io
         ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 6) then
         ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 35
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 7) then
         ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 36
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 8) then
         ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.#
         DATAin%nopools = 7
@@ -111,7 +111,7 @@ module cardamom_io
         ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 10) then
         ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.#
         DATAin%nopools = 7
@@ -121,7 +121,7 @@ module cardamom_io
         ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 12) then
         ! ID = 12 - DALEC.C4.D1.F2.#
         DATAin%nopools = 3
@@ -141,7 +141,7 @@ module cardamom_io
         ! ID = 15 - DALEC.A3.C3.H2.M1.# i.e. the CROP model
         DATAin%nopools = 10
         DATAin%nopars = 38
-        DATAin%nofluxes = 42
+        DATAin%nofluxes = 46
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.M2.#
         DATAin%nopools = 5
@@ -151,52 +151,52 @@ module cardamom_io
         ! ID = 17 - DALEC.A3.H2.M2.#
         DATAin%nopools = 6
         DATAin%nopars = 37
-        DATAin%nofluxes = 51
+        DATAin%nofluxes = 55
     else if (DATAin%ID == 18) then
         ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 19) then
         ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.#
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 21) then
         ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.#
         DATAin%nopools = 7
         DATAin%nopars = 34
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 23) then
         ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 51
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_1005
         DATAin%nopools = 8
@@ -211,17 +211,17 @@ module cardamom_io
         ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 31) then
         ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.#
         DATAin%nopools = 7
         DATAin%nopars = 40
-        DATAin%nofluxes = 46
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 32) then
         ! ID = 32 -
     else if (DATAin%ID == 33) then

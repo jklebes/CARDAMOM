@@ -156,16 +156,20 @@ subroutine rdalec17(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,53) = FLUXES(1:nodays,49)         ! wet canopy evaporation (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,54) = FLUXES(1:nodays,50)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,55) = FLUXES(1:nodays,51)         ! underflow (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,56) = POOLS(1:nodays,6)           ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,57) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
-     out_var1(i,1:nodays,58) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
+     out_var1(i,1:nodays,56) = FLUXES(1:nodays,52)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,57) = FLUXES(1:nodays,53)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,58) = FLUXES(1:nodays,54)         ! Etrans extracted from 1st layer (0-1)
+     out_var1(i,1:nodays,59) = FLUXES(1:nodays,55)         ! Etrans extracted from 2nd layer (0-1)
+     out_var1(i,1:nodays,60) = POOLS(1:nodays,6)           ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,61) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,62) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! misc
-     out_var1(i,1:nodays,59) = root_depth_time          ! rooting depth (m)
+     out_var1(i,1:nodays,63) = root_depth_time          ! rooting depth (m)
      ! GSI and components
-     out_var1(i,1:nodays,60) = FLUXES(1:nodays,18)      ! growing season index
-     out_var1(i,1:nodays,61) = FLUXES(1:nodays,15)      ! temperature contribution to GSI
-     out_var1(i,1:nodays,62) = FLUXES(1:nodays,16)      ! photo-period contribution to GSI
-     out_var1(i,1:nodays,63) = FLUXES(1:nodays,17)      ! VPD contribution to GSI
+     out_var1(i,1:nodays,64) = FLUXES(1:nodays,18)      ! growing season index
+     out_var1(i,1:nodays,65) = FLUXES(1:nodays,15)      ! temperature contribution to GSI
+     out_var1(i,1:nodays,66) = FLUXES(1:nodays,16)      ! photo-period contribution to GSI
+     out_var1(i,1:nodays,67) = FLUXES(1:nodays,17)      ! VPD contribution to GSI
 
      !
      ! Calculate long-term mean of out_var1

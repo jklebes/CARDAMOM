@@ -10,7 +10,8 @@ subroutine rdalec6(output_dim,MTT_dim,SS_dim &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
-                             ,canopy_par_MJday_time, Rg_from_labile
+                             ,canopy_par_MJday_time, Rg_from_labile &
+                             ,root_depth_time, snow_storage_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -150,17 +151,29 @@ subroutine rdalec6(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,47) = POOLS(1:nodays,8)        ! wood litter (gC/m2)
      out_var1(i,1:nodays,48) = POOLS(1:nodays,6)        ! som (gC/m2)
      ! Water cycle related
-     out_var1(i,1:nodays,49) = FLUXES(1:nodays,29)      ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,50) = POOLS(1:nodays,7)        ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,51) = wSWP_time(1:nodays)      ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,49) = FLUXES(1:nodays,29)         ! Evapotranspiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,46)         ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,51) = FLUXES(1:nodays,47)         ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,52) = FLUXES(1:nodays,48)         ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,53) = FLUXES(1:nodays,49)         ! runoff (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,54) = FLUXES(1:nodays,50)         ! underflow (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,55) = FLUXES(1:nodays,51)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,56) = FLUXES(1:nodays,52)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,57) = FLUXES(1:nodays,53)         ! Etrans extracted from 1st layer (0-1)
+     out_var1(i,1:nodays,58) = FLUXES(1:nodays,54)         ! Etrans extracted from 2nd layer (0-1)
+     out_var1(i,1:nodays,59) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,60) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,61) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,52) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,62) = lai                         ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,53) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,54) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,55) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,56) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,57) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,63) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,64) = gs_total_canopy             ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,65) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,66) = gb_total_canopy             ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,67) = cica_time                   ! ratio of leaf internal to external CO2
+     ! misc
+     out_var1(i,1:nodays,68) = root_depth_time             ! rooting depth (m)
 
      !
      ! Calculate long-term mean of out_var1

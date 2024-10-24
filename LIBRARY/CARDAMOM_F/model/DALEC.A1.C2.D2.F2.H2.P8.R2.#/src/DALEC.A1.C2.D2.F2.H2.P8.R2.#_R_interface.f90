@@ -11,7 +11,8 @@ subroutine rdalec24(output_dim,MTT_dim,SS_dim &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
                              ,canopy_par_MJday_time, Rg_from_labile &
-                             ,NCCE, root_depth_time, Rm_from_labile, CMI
+                             ,NCCE, root_depth_time, Rm_from_labile, CMI &
+                             ,snow_storage_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -151,21 +152,31 @@ subroutine rdalec24(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,47) = POOLS(1:nodays,6)        ! som (gC/m2)
      ! Water cycle related
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,19)      ! Evapotranspiration (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,49) = POOLS(1:nodays,8)        ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,50) = wSWP_time(1:nodays)      ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,49) = FLUXES(1:nodays,46)      ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,47)      ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,51) = FLUXES(1:nodays,48)      ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,52) = FLUXES(1:nodays,49)      ! runoff (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,53) = FLUXES(1:nodays,50)      ! underflow (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,54) = FLUXES(1:nodays,51)      ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,55) = FLUXES(1:nodays,52)      ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,56) = FLUXES(1:nodays,53)      ! Etrans extracted from 1st layer (0-1)
+     out_var1(i,1:nodays,57) = FLUXES(1:nodays,54)      ! Etrans extracted from 2nd layer (0-1)
+     out_var1(i,1:nodays,58) = POOLS(1:nodays,8)        ! surface water (kgH2O.m-2.30cmdepth)
+     out_var1(i,1:nodays,59) = wSWP_time(1:nodays)      ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,60) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,51) = lai                      ! LAI (m2/m2)
-     out_var1(i,1:nodays,52) = FLUXES(1:nodays,18)      ! Canopy Growth Index (CGI) value
-     out_var1(i,1:nodays,53) = CMI(1:nodays)           ! Canopy Mortality Index (CMI) value
-     out_var1(i,1:nodays,54) = NCCE(1:nodays)           ! Net Canopy C export (NCCE; gCm2day)
+     out_var1(i,1:nodays,61) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,62) = FLUXES(1:nodays,18)      ! Canopy Growth Index (CGI) value
+     out_var1(i,1:nodays,63) = CMI(1:nodays)            ! Canopy Mortality Index (CMI) value
+     out_var1(i,1:nodays,64) = NCCE(1:nodays)           ! Net Canopy C export (NCCE; gCm2day)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,55) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,56) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,57) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,58) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
-     out_var1(i,1:nodays,59) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,65) = gs_demand_supply_ratio   ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,66) = gs_total_canopy          ! stomatal conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,67) = canopy_par_MJday_time    ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,68) = gb_total_canopy          ! boundary conductance (mmolH2O/m2ground/day)
+     out_var1(i,1:nodays,69) = cica_time                ! ratio of leaf internal to external CO2
      ! Misc
-     out_var1(i,1:nodays,60) = root_depth_time          ! root depth (m)
+     out_var1(i,1:nodays,70) = root_depth_time          ! root depth (m)
 
      !
      ! Calculate long-term mean of out_var1

@@ -128,6 +128,7 @@ module CARBON_MODEL_MOD
            ,dayl_hours                    &
            ,dayl_hours_fraction           &
            ,snow_storage                  &
+           ,snow_storage_time             &
            ,canopy_storage                &
            ,intercepted_rainfall          &
            ,harvest_residue_to_litter     &
@@ -379,6 +380,7 @@ module CARBON_MODEL_MOD
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
+                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)                                            
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
@@ -395,44 +397,45 @@ module CARBON_MODEL_MOD
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
                                      max_depth, & ! maximum possible root depth (m)
-                                         root_k, & ! biomass to reach half max_depth
-                                         runoff, & ! runoff (kgH2O.m-2.day-1)
-                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
-                       new_depth,previous_depth, & ! depth of bottom of soil profile
-                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
-                                          ustar, & ! friction velocity (m.s-1)
-                                       ustar_Uh, &
-                                 air_density_kg, & ! air density kg/m3
-                                 ET_demand_coef, & ! air_density_kg * vpd_kPa * cpair
-                                         roughl, & ! roughness length (m)
-                                   displacement, & ! zero plane displacement (m)
-                                     max_supply, & ! maximum water supply (mmolH2O/m2/day)
-                                          meant, & ! mean air temperature (oC)
-                                          leafT, & ! canopy temperature (oC)
-                               mean_annual_temp, &
-                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
-                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
-                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
-                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
-                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
-                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+                                        root_k, & ! biomass to reach half max_depth
+                                        runoff, & ! runoff (kgH2O.m-2.day-1)
+                                   infiltrated, & ! surface water infiltrated (kgH2O.m-2.d-1)                                            
+                                     underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
+                      new_depth,previous_depth, & ! depth of bottom of soil profile
+                                   canopy_wind, & ! wind speed (m.s-1) at canopy top
+                                         ustar, & ! friction velocity (m.s-1)
+                                      ustar_Uh, &
+                                air_density_kg, & ! air density kg/m3
+                                ET_demand_coef, & ! air_density_kg * vpd_kPa * cpair
+                                        roughl, & ! roughness length (m)
+                                  displacement, & ! zero plane displacement (m)
+                                    max_supply, & ! maximum water supply (mmolH2O/m2/day)
+                                         meant, & ! mean air temperature (oC)
+                                         leafT, & ! canopy temperature (oC)
+                              mean_annual_temp, &
+                            canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
+                              canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
+                              soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
+                              canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
+                                soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
+                                 sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
                           stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
-                        aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
-                               soil_conductance, & ! soil surface conductance (m.s-1)
-                              convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
-                             convert_ms1_mmol_1, & ! Conversion ratio for m/s -> mmol/m2/s
-                            air_vapour_pressure, & ! Vapour pressure of the air (kPa)
-                                         lambda, & ! latent heat of vapourisation (J.kg-1)
-                                          psych, & ! psychrometric constant (kPa K-1)
-                                          slope, & ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
-                         water_vapour_diffusion, & ! Water vapour diffusion coefficient in (m2/s)
-                              dynamic_viscosity, & ! dynamic viscosity (kg.m-2.s-1)
-                            kinematic_viscosity, & ! kinematic viscosity (m2.s-1)
-                                   snow_storage, & ! snow storage (kgH2O/m2)
-                                 canopy_storage, & ! water storage on canopy (kgH2O.m-2)
-                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
+                       aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
+                              soil_conductance, & ! soil surface conductance (m.s-1)
+                             convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
+                            convert_ms1_mmol_1, & ! Conversion ratio for m/s -> mmol/m2/s
+                           air_vapour_pressure, & ! Vapour pressure of the air (kPa)
+                                        lambda, & ! latent heat of vapourisation (J.kg-1)
+                                         psych, & ! psychrometric constant (kPa K-1)
+                                         slope, & ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
+                        water_vapour_diffusion, & ! Water vapour diffusion coefficient in (m2/s)
+                             dynamic_viscosity, & ! dynamic viscosity (kg.m-2.s-1)
+                           kinematic_viscosity, & ! kinematic viscosity (m2.s-1)
+                                  snow_storage, & ! snow storage (kgH2O/m2)
+                                canopy_storage, & ! water storage on canopy (kgH2O.m-2)
+                          intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
   ! Module level variables for ACM_GPP_ET parameters
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
@@ -491,9 +494,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
                                     canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
                                                 cica_time, & ! Internal vs ambient CO2 concentrations
-                                          root_depth_time, & ! rooting depth (m)
-                                                rSWP_time, &
-                                                wSWP_time    ! Soil water potential weighted by root supply of water
+                                          root_depth_time, &
+                                        snow_storage_time, & ! Total ecosystem snow storage
+                                                rSWP_time, & ! Soil water potential weighted by access water
+                                                wSWP_time    ! Soil water potential weighted by supply of water
 
   save
 
@@ -946,7 +950,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  rainfall_time(nodays),                &
                  Rg_from_labile(nodays),               &
                  cica_time(nodays),                    &
-                 root_depth_time(nodays))
+                 root_depth_time(nodays),              &
+                 snow_storage_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -1196,6 +1201,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snow_melt = 0d0
        end if
+       snow_storage_time(n) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -1380,6 +1386,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       ! Assign all water variables to output variables (kgH2O/m2/day)
+       FLUXES(n,26) = transpiration   ! transpiration
+       FLUXES(n,27) = soilevaporation ! soil evaporation
+       FLUXES(n,28) = wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,29) = runoff          ! soil surface runoff
+       FLUXES(n,30) = underflow       ! drainage from bottom of soil column
+       FLUXES(n,31) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
+       FLUXES(n,32) = infiltrated     ! soil surface infiltration by rain 
+       FLUXES(n,33) = uptake_fraction(1) ! transpiration extracted from 1st rooting layer (the soil surface)
+       FLUXES(n,34) = uptake_fraction(2) ! transpiration extracted from 2nd rooting layer (dynamic 2nd layer)       
 
        !!!!!!!!!!
        ! deal first with deforestation
@@ -2967,8 +2983,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !logical :: iter_soil = .true.
 
     ! set soil water exchanges
-    Esoil = 0d0 ; Esnow = 0d0  
-    underflow = 0d0 ; runoff = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 ; pot_evap_losses = 0d0
+    Esoil = 0d0 ; Esnow = 0d0 ; corrected_ET = 0d0 ; evaporation_losses = 0d0 
+    underflow = 0d0 ; runoff = 0d0 ; infiltrated = 0d0 ; water_grav_flow = 0d0 ; pot_evap_losses = 0d0
     initial_soilwater = 1d3 * sum(soil_waterfrac(1:nos_soil_layers) * layer_thickness(1:nos_soil_layers))
 
     !! Assume leaf transpiration is drawn from the soil based on the
@@ -3082,10 +3098,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
+
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+    water_grav_flow = water_grav_flow * days_per_step_1
+    infiltrated = infiltrated * days_per_step_1
     corrected_ET = corrected_ET * days_per_step_1
     underflow = underflow * days_per_step_1
     runoff = runoff * days_per_step_1
@@ -3266,6 +3284,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
+    infiltrated = infiltrated + (waterchange(1) * 1e3)
 
   end subroutine infiltrate
   !
@@ -3311,6 +3330,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
+    water_grav_flow = water_grav_flow * 1d-3
 
     ! estimate potential drainage rate for the current time period
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
@@ -3360,6 +3380,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
               ! update soil layer below with drained liquid
               waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
               waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
 
           end if ! some liquid water and drainage possible
 
@@ -3379,8 +3401,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     end do ! while condition
 
-    ! convert underflow from MgH2O/m2/day -> kgH2O/m2/day
+    ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
     underflow = underflow * 1d3
+    water_grav_flow = water_grav_flow * 1d3
 
   end subroutine gravitational_drainage
   !
@@ -3470,7 +3493,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if prior value has been given
     if (input_soilwater_frac > -9998d0) then
         ! calculate initial soil water fraction
-        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac * field_capacity(1:nos_soil_layers)
+        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
         ! calculate initial soil water potential
         call soil_water_potential
     endif

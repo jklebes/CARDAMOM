@@ -203,9 +203,9 @@ module MODEL_PARAMETERS
     PI%parmin(25) = 0.1d0 
     PI%parmax(25) = 1d0
 
-    ! Soil water fraction (m3/m3)
-    PI%parmin(38) = 0.1d0 
-    PI%parmax(38) = 0.9d0
+    ! Initial soil water fraction
+    PI%parmin(38) = 0.01d0
+    PI%parmax(38) = 1.00d0
 
     ! Read in the crop type specific development file
     call crop_development_parameters(PI%stock_seed_labile,PI%DS_shoot &

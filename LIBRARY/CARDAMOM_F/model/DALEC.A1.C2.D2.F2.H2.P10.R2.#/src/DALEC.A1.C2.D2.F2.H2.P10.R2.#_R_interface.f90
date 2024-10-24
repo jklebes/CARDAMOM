@@ -16,9 +16,10 @@ subroutine rdalec26(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
                               fire_loss_labile, fire_loss_foliar, fire_loss_roots, &
                               fire_loss_wood, fire_loss_litter, fire_loss_litwood, &
                               fire_loss_som, fire_residue_to_litter, &
-                              fire_residue_to_litwood,fire_residue_to_som,       &
-                              gs_demand_supply_ratio, cica_time, &
-                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time
+                              fire_residue_to_litwood,fire_residue_to_som,        &
+                              gs_demand_supply_ratio, cica_time, root_depth_time, &
+                              gs_total_canopy, gb_total_canopy, canopy_par_MJday_time, &
+                                                            
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
