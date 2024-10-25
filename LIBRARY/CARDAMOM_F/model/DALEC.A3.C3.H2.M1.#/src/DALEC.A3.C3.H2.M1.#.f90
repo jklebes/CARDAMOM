@@ -1165,15 +1165,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! store soil water content of surface (mm)
       POOLS(n,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
       ! Assign all water variables to output variables (kgH2O/m2/day)
-      FLUXES(n,38) = transpiration   ! transpiration
-      FLUXES(n,39) = soilevaporation ! soil evaporation
-      FLUXES(n,40) = wetcanopy_evap  ! wet canopy evaporation
-      FLUXES(n,41) = runoff          ! soil surface runoff
-      FLUXES(n,42) = underflow       ! drainage from bottom of soil column
-      FLUXES(n,43) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
-      FLUXES(n,44) = infiltrated     ! soil surface infiltration by rain 
-      FLUXES(n,45) = uptake_fraction(1) ! transpiration extracted from 1st rooting layer (the soil surface)
-      FLUXES(n,46) = uptake_fraction(2) ! transpiration extracted from 2nd rooting layer (dynamic 2nd layer)
+      FLUXES(n,38) = transpiration   ! transpiration (kgH2O/m2/day)
+      FLUXES(n,39) = soilevaporation ! soil evaporation (kgH2O/m2/day)
+      FLUXES(n,40) = wetcanopy_evap  ! wet canopy evaporation (kgH2O/m2/day)
+      FLUXES(n,41) = runoff          ! soil surface runoff (kgH2O/m2/day)
+      FLUXES(n,42) = underflow       ! drainage from bottom of soil column (kgH2O/m2/day)
+      FLUXES(n,43) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd (kgH2O/m2/day)
+      FLUXES(n,44) = infiltrated     ! soil surface infiltration by rain (kgH2O/m2/day)
+      FLUXES(n,45) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
+      FLUXES(n,46) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)
 
       ! labile pool
       POOLS(n+1,1) = stock_labile

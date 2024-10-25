@@ -901,15 +901,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,6) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
        ! Assign all water variables to output variables (kgH2O/m2/day)
-       FLUXES(n,47) = transpiration   ! transpiration
-       FLUXES(n,48) = soilevaporation ! soil evaporation
-       FLUXES(n,49) = wetcanopy_evap  ! wet canopy evaporation
-       FLUXES(n,50) = runoff
-       FLUXES(n,51) = underflow
-       FLUXES(n,52) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
-       FLUXES(n,53) = infiltrated     ! soil surface infiltration by rain 
-       FLUXES(n,54) = uptake_fraction(1) ! transpiration extracted from 1st rooting layer (the soil surface)
-       FLUXES(n,55) = uptake_fraction(2) ! transpiration extracted from 2nd rooting layer (dynamic 2nd layer)       
+       FLUXES(n,47) = transpiration   ! transpiration  (kgH2O/m2/day)
+       FLUXES(n,48) = soilevaporation ! soil evaporation  (kgH2O/m2/day)
+       FLUXES(n,49) = wetcanopy_evap  ! wet canopy evaporation  (kgH2O/m2/day)
+       FLUXES(n,50) = runoff          ! surface run off  (kgH2O/m2/day)
+       FLUXES(n,51) = underflow       ! drainage from the bottom of the soil column (kgH2O/m2/day)
+       FLUXES(n,52) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd  (kgH2O/m2/day)
+       FLUXES(n,53) = infiltrated     ! soil surface infiltration by rain  (kgH2O/m2/day)
+       FLUXES(n,54) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
+       FLUXES(n,55) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)       
 
       ! CUTTING 
       ! ------------------------------------------------------------------------------------------------------------- ! 

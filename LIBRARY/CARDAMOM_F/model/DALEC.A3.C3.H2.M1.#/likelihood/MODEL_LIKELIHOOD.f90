@@ -611,8 +611,8 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
-               io_start, io_finish
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, &
+               nd, fl, fs, io_start, io_finish
     integer, dimension(nodays) :: pool_hak
     double precision :: infi, mrt!, EQF, etol
     double precision, dimension(nodays) :: ratio
@@ -625,12 +625,13 @@ module model_likelihood_module
     ! Log ratio difference between inputs and outputs of the system.
     logical, parameter :: old_edcs = .false.
     double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
-                                   EQF2 = log(2d0),   & 
+                                   EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
                                    EQF5 = log(5d0),   &
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.5d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20         !
 
     ! Work out how many completed years there are in the system
     no_years = int(nint(sum(deltat)/365.25d0))
@@ -652,14 +653,29 @@ module model_likelihood_module
           FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
           FT_yr2(fl) = FT_yr1(fl)
        end do    
+       ! Specific calculation of transpiration extraction from the soil surface layer
+       fl = 38 ! transpiration multiplied by ...
+       fs = 45 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
+       FT_yr2(fl) = FT_yr1(fl)                       
     else 
        do fl = 1, nofluxes
           FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
           FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
           FT_yr2(fl) = sum(M_FLUXES(((steps_per_year*2)+1):(steps_per_year*3),fl)*deltat(((steps_per_year*2)+1):(steps_per_year*3)))
        end do
+       ! Specific calculation of transpiration extraction from the soil surface layer
+       fl = 38 ! transpiration multiplied by ...
+       fs = 45 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
+       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                       *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+                       *deltat((steps_per_year+1):(steps_per_year*2)))
     end if 
-    ! get total in and out for each dead organic matter pool
+
+    ! Get total in and out for each dead organic matter pool
 
     ! litter
     Fin(5)  = FT(12)+FT(32)+FT(33)+FT(34)+FT(35)+FT(36)+FT(37)
@@ -675,6 +691,14 @@ module model_likelihood_module
     Fout_yr1(6) = FT_yr1(14)
     Fin_yr2(6)  = FT_yr2(15)
     Fout_yr2(6) = FT_yr2(14)
+    ! Surface water pool (0-30cm)
+    ! 44 = infiltrated, 39 = soil evaporation, 38 = transpiration from top soil, 43 = drainage from top soil
+    Fin(8)  = FT(44) 
+    Fout(8) = FT(39)+FT(38)+FT(43) 
+    Fin_yr1(8)  = FT_yr1(44) 
+    Fout_yr1(8) = FT_yr1(39)+FT_yr1(38)+FT_yr1(43) 
+!    Fin_yr2(8)  = FT_yr2(44)
+!    Fout_yr2(8) = FT_yr2(39)+FT_yr2(38)+FT_yr2(43)
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
@@ -704,10 +728,30 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(10+n-4) = 0
            end if
            ! Restrict exponential behaviour at initialisation
-           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(16+n-4) = 0
            end if
         end do
+
+        ! Water pool(s)
+        n = 8  ! surface water pool
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
 
     end if ! EDC2 == 1 .or. DIAG == 1
 

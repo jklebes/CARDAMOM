@@ -765,7 +765,7 @@ module model_likelihood_module
     ! declare local variables
     logical :: found
     integer :: y, n, DIAG, no_years, nn, nnn, num_EDC, i, io_start, io_finish, &
-               steps_per_year, steps_per_month, fl
+               steps_per_year, steps_per_month, fl, fs
     double precision :: meangpp, sumgpp, sumnpp, &
                         tmp, tmp1, tmp2, tmp3, tmp4, tmp5, temp_response, &
                         hold, infi, Rs, dble_nodays, &
@@ -803,7 +803,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20         !
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -1125,6 +1126,14 @@ module model_likelihood_module
            FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
            FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
         end do
+        ! Specific calculation of transpiration extraction from the soil surface layer
+        fl = 46 ! transpiration multiplied by ...
+        fs = 53 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
+        FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                        *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+                        *deltat((steps_per_year+1):(steps_per_year*2)))
 
         ! Determine total in and out fluxes for each pool
         ! labile
@@ -1182,6 +1191,14 @@ module model_likelihood_module
         Fout_yr1(7) = FT_yr1(4)+FT_yr1(20)+FT_yr1(27)+FT_yr1(33)+FT_yr1(39)
         Fin_yr2(7)  = FT_yr2(11)+FT_yr2(44)
         Fout_yr2(7) = FT_yr2(4)+FT_yr2(20)+FT_yr2(27)+FT_yr2(33)+FT_yr2(39)
+        ! Surface water pool (0-30cm)
+        ! 52 = infiltrated, 47 = soil evaporation, 46 = transpiration from top soil, 51 = drainage from top soil
+        Fin(8)  = FT(52) 
+        Fout(8) = FT(47)+FT(46)+FT(51) 
+        Fin_yr1(8)  = FT_yr1(52) 
+        Fout_yr1(8) = FT_yr1(47)+FT_yr1(46)+FT_yr1(51) 
+!        Fin_yr2(8)  = FT_yr2(52)
+!        Fout_yr2(8) = FT_yr2(47)+FT_yr2(46)+FT_yr2(51)
 
         ! C pools (labile, foliage fine roots, wood, litter, som, wood litter)
         do n = 1, 7
@@ -1190,8 +1207,8 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
-           !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > etol) then
-           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
+           !if (abs(log(Fin_yr1(n)/Fout_yr1(n)) - log(Fin_yr2(n)/Fout_yr2(n))) > C_etol) then
+           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(31+n-1) = 0
            end if
         end do
@@ -1221,6 +1238,26 @@ module model_likelihood_module
         if ( SSsom < SSlitwood ) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(38) = 0
         end if
+
+        ! Water pool(s)
+        n = 8  ! surface water pool
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+        end if
+        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
 
     endif ! doing the big arrays then?
 

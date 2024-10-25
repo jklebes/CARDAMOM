@@ -607,6 +607,7 @@ module model_likelihood_module
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat,steps_per_year &
                         ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                         ,meantemp,EDC2)
+
     use cardamom_structures, only: DATAin
 
     ! Determines whether the dynamical contraints for the search of the initial
@@ -637,7 +638,7 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
+    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
     double precision :: infi !, EQF, etol
     !double precision, dimension(nodays) :: tmp1, tmp2
@@ -757,11 +758,12 @@ module model_likelihood_module
                        *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
     ! Specific calculation of transpiration extraction from the soil surface layer
-    fl = 41 ! transpiration, multiplied by the fraction of transpiration extracted from the 1st root layer.
-    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,48)*deltat(io_start:io_finish))
-    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,48)*deltat(1:steps_per_year))
+    fl = 41 ! transpiration multiplied by ...
+    fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
     FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
-                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),48) &
+                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
                     *deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
@@ -808,6 +810,7 @@ module model_likelihood_module
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
     ! Surface water pool (0-30cm)
+    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
     Fin(7)  = FT(47) 
     Fout(7) = FT(42)+FT(41)+FT(46) 
     Fin_yr1(7)  = FT_yr1(47) 

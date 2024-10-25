@@ -724,6 +724,7 @@ module model_likelihood_module
                        ,in_lit, out_lit  &
                        ,in_litwood, out_litwood  &
                        ,in_som, out_som  &
+                       ,in_surf, out_surf &
                        ,in_out_lab_yr1  &
                        ,in_out_fol_yr1  &
                        ,in_out_root_yr1 &
@@ -731,6 +732,7 @@ module model_likelihood_module
                        ,in_out_lit_yr1  &
                        ,in_out_litwood_yr1  &
                        ,in_out_som_yr1  &
+                       ,in_out_surf_yr1 &
                        ,in_out_lab_yr2  &
                        ,in_out_fol_yr2  &
                        ,in_out_root_yr2 &
@@ -738,6 +740,7 @@ module model_likelihood_module
                        ,in_out_lit_yr2  &
                        ,in_out_litwood_yr2  &
                        ,in_out_som_yr2  &
+                       ,in_out_surf_yr2 &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
                        ,sumlab_yr1      &
@@ -771,7 +774,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.05d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20         !
 
     ! initial value
     infi = 0d0 ; dble_nodays = dble(nodays)
@@ -1096,6 +1100,23 @@ module model_likelihood_module
 
         ! Determine the input / output ratio
 
+        ! Soil surface water
+!        in_out_surf = sum(M_FLUXES(:,32)) &
+!                    / sum((M_FLUXES(:,26)*M_FLUXES(:,33))+M_FLUXES(:,27)+M_FLUXES(:,32))
+
+        in_surf     = sum(M_FLUXES(io_start:io_finish,32))
+        out_surf    = sum((M_FLUXES(io_start:io_finish,26)*M_FLUXES(io_start:io_finish,33)) &
+                         +M_FLUXES(io_start:io_finish,27)+M_FLUXES(io_start:io_finish,32))
+
+        in_out_surf_yr1 = sum(M_FLUXES(1:steps_per_year,32))
+                        / sum((M_FLUXES(1:steps_per_year,26)*M_FLUXES(1:steps_per_year,33)) &
+                          +M_FLUXES(1:steps_per_year,27)+M_FLUXES(1:steps_per_year,32))
+        in_out_surf_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),32))
+                        / sum((M_FLUXES((steps_per_year+1):(steps_per_year*2),26) &
+                              *M_FLUXES((steps_per_year+1):(steps_per_year*2),33)) &
+                          +M_FLUXES((steps_per_year+1):(steps_per_year*2),27) &
+                          +M_FLUXES((steps_per_year+1):(steps_per_year*2),32))
+
         ! Clabile
 !        in_out_lab     = sumlab / sum(M_FLUXES(:,8)+Rg_from_labile+Rm_from_labile+fire_loss_labile+harvest_loss_labile)
         in_lab         = sum(M_FLUXES(io_start:io_finish,5))
@@ -1238,7 +1259,7 @@ module model_likelihood_module
         ! Labile
 !        Rs = in_out_lab * (jan_mean_pools(1) / jan_first_pools(1))
 !        if (abs(Rs-in_out_lab) > 0.1d0 .or. abs(log(in_out_lab)) > EQF10) then
-        if (abs(abs(log(in_out_lab_yr1) - log(in_out_lab_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_lab_yr1) - log(in_out_lab_yr2))) > C_etol .or. &
             abs(log(in_lab/out_lab)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
         end if
@@ -1246,7 +1267,7 @@ module model_likelihood_module
         ! Foliage
 !        Rs = in_out_fol * (jan_mean_pools(2) / jan_first_pools(2))
 !        if (abs(Rs-in_out_fol) > 0.1d0 .or. abs(log(in_out_fol)) > EQF10) then
-        if (abs(abs(log(in_out_fol_yr1) - log(in_out_fol_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_fol_yr1) - log(in_out_fol_yr2))) > C_etol .or. &
             abs(log(in_fol/out_fol)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
         end if
@@ -1254,7 +1275,7 @@ module model_likelihood_module
         ! Fine roots
 !        Rs = in_out_root * (jan_mean_pools(3) / jan_first_pools(3))
 !        if (abs(Rs-in_out_root) > 0.1d0 .or. abs(log(in_out_root)) > EQF10) then
-        if (abs(abs(log(in_out_root_yr1) - log(in_out_root_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_root_yr1) - log(in_out_root_yr2))) > C_etol .or. &
             abs(log(in_root/out_root)) > EQF2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
         end if
@@ -1262,7 +1283,7 @@ module model_likelihood_module
         ! Wood
 !        Rs = in_out_wood * (jan_mean_pools(4) / jan_first_pools(4))
 !        if (abs(Rs-in_out_wood) > 0.1d0 .or. abs(log(in_out_wood)) > EQF10) then
-        if (abs(abs(log(in_out_wood_yr1) - log(in_out_wood_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_wood_yr1) - log(in_out_wood_yr2))) > C_etol .or. &
             abs(log(in_wood/out_wood)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
         end if
@@ -1270,7 +1291,7 @@ module model_likelihood_module
         ! Foliage and root litter
 !        Rs = in_out_lit * (jan_mean_pools(5) / jan_first_pools(5))
 !        if (abs(Rs-in_out_lit) > 0.1d0 .or. abs(log(in_out_lit)) > EQF10) then
-        if (abs(abs(log(in_out_lit_yr1) - log(in_out_lit_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_lit_yr1) - log(in_out_lit_yr2))) > C_etol .or. &
             abs(log(in_lit/out_lit)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
         end if
@@ -1278,7 +1299,7 @@ module model_likelihood_module
         ! Soil organic matter
 !        Rs = in_out_som * (jan_mean_pools(6) / jan_first_pools(6))
 !        if (abs(Rs-in_out_som) > 0.1d0 .or. abs(log(in_out_som)) > EQF10) then
-        if (abs(abs(log(in_out_som_yr1) - log(in_out_som_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_som_yr1) - log(in_out_som_yr2))) > etC_etolol .or. &
             abs(log(in_som/out_som)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(26) = 0
         end if
@@ -1286,7 +1307,7 @@ module model_likelihood_module
         ! Coarse+fine woody debris
 !        Rs = in_out_litwood * (jan_mean_pools(7) / jan_first_pools(7))
 !        if (abs(Rs-in_out_litwood) > 0.1d0 .or. abs(log(in_out_litwood)) > EQF10) then
-        if (abs(abs(log(in_out_litwood_yr1) - log(in_out_litwood_yr2))) > etol .or. &
+        if (abs(abs(log(in_out_litwood_yr1) - log(in_out_litwood_yr2))) > C_etol .or. &
             abs(log(in_litwood/out_litwood)) > EQF5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(27) = 0
         end if
@@ -1326,6 +1347,14 @@ module model_likelihood_module
 !        if (pars(37) / (in_out_wood * jan_mean_pools(4)) > 0.60d0  ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
 !        end if
+
+        ! Soil surface water
+!        Rs = in_out_surf * (jan_mean_pools(8) / jan_first_pools(8))
+!        if (abs(Rs-in_out_surf) > 0.1d0 .or. abs(log(in_out_surf)) > EQF10) then
+        if (abs(abs(log(in_out_surf_yr1)) - abs(log(in_out_surf_yr2))) > H2O_etol .or. &
+            abs(log(in_surf/out_surf)) > EQF5) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+        end if
 
     endif ! doing the big arrays then?
 

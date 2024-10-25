@@ -736,6 +736,7 @@ module model_likelihood_module
                        ,in_lit, out_lit  &
                        ,in_woodlitter, out_woodlitter  &
                        ,in_som, out_som  &
+                       ,in_surf, out_surf &
                        ,in_out_lab_yr1  &
                        ,in_out_fol_yr1  &
                        ,in_out_root_yr1 &
@@ -743,6 +744,7 @@ module model_likelihood_module
                        ,in_out_lit_yr1  &
                        ,in_out_woodlitter_yr1  &
                        ,in_out_som_yr1  &
+                       ,in_surf_yr1, out_surf_yr1 &
                        ,in_out_lab_yr2  &
                        ,in_out_fol_yr2  &
                        ,in_out_root_yr2 &
@@ -750,6 +752,7 @@ module model_likelihood_module
                        ,in_out_lit_yr2  &
                        ,in_out_woodlitter_yr2  &
                        ,in_out_som_yr2  &
+                       ,in_surf_yr2, out_surf_yr2 &
                        ,torfol      & ! yearly average turnover
                        ,torlab      & !
                        ,sumlab_yr1      &
@@ -1030,6 +1033,9 @@ module model_likelihood_module
         sumwood_yr1 = sum(M_FLUXES(1:steps_per_year,7)) ; sumwood_yr2 = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),7))
 
         ! Determine the input / output ratio
+
+        ! Soil surface water pool
+        26, 33
 
         ! Clabile
 !        in_out_lab     = sumlab &
