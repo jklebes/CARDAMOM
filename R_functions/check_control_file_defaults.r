@@ -85,7 +85,7 @@ check_control_file_defaults<-function() {
   if (exists("request_use_EDCs") == FALSE)              {request_use_EDCs <<- TRUE}
   if (exists("request_extended_mcmc") == FALSE)         {request_extended_mcmc <<- 10e6}
   if (exists("request_cost_function_scaling") == FALSE) {request_cost_function_scaling <<- 0}
-  # Computer options
+  # Computer running / compiler locations
   if (exists("request_use_server") == FALSE)            {request_use_server <<- FALSE}
   if (exists("request_use_local_slurm") == FALSE)       {request_use_local_slurm <<- FALSE} 
   if (exists("request_runtime") == FALSE)               {request_runtime <<- 48}
@@ -102,9 +102,14 @@ check_control_file_defaults<-function() {
                                                                           sshpass_key_home and sshpass_key_server as appropriate")}
   if (request_use_server & exists("home_computer") == FALSE) {print("A request to run CARDAMOM on a remote server has been made, but not home_computer has been set.
                                                                      Please specify the address of the home computer used for moving files to and from the remote server")}
+  # Compiler options
   if (exists("language") == FALSE) {language = "Fortran"} # Assume that the language is Fortran, currently all that actually works
   if (exists("compiler") == FALSE) {compiler = "gfortran"} # Assume GNU compiler option if intel not specified
   if (exists("compiler_optimisation") == FALSE) {compiler_optimisation = "-O2"} # tested options are current models are -O2, -O3, -Ofast
+  # Slurm options
+  if (exists("slurm_concurrent_cpus") == FALSE) {slurm_concurrent_cpus = 60} # number of concurrent cpus allowed by slurm
+  if (exists("slurm_max_run_time") == FALSE) {slurm_max_run_time = 12} # Number of hours which will be asked for task in stage 3 
+  if (request_use_local_slurm & exists("slurm_account") == FALSE) {print("The slurm local cluster has been requested for use but no slurm account has been specified (e.g. slurm_account = 'geos_research')")} 
 
   ## Check for obvious combination errors
   # Forcings datasets

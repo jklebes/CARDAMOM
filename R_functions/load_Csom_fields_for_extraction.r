@@ -226,8 +226,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Assume in all cases than a zero prior value should be classed as missing data
         Csom[Csom < 1] = NA
-        # assume uncertainty half that of HWSD as more targetted analysis, 0.5 * ~47 %
-        Csom_unc = array(Csom * 0.47 * 0.5, dim=c(xdim,ydim))
+        # assume uncertainty half that of HWSD as more targetted analysis, 0.25 * ~47 %
+        Csom_unc = array(Csom * 0.47 * 0.25, dim=c(xdim,ydim))
         # With a minimum bound assumption
         Csom_unc[Csom_unc < 100] = 100
         # Ensure consistency for missing values

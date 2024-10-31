@@ -80,9 +80,7 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
 
     ## default information for cluster submission
     # number of tasks per array
-    max_nbundle_size = 1000
-    # If the slurm account does not already exist in memory assume this one
-    if (exists("slurm_account") == FALSE) { slurm_account = "geos_research" }
+    max_nbundle_size = 5000
 
     # number of tasks required
     ntasks=PROJECT_in$nochains*PROJECT_in$nosites
@@ -164,12 +162,16 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
 
     ## default information for cluster submission
     # number of tasks per array
-    max_nbundle_size = 5000
-    # If the slurm account does not already exist in memory assume this one
-    if (exists("slurm_account") == FALSE) { slurm_account = "geos_research" }
+    max_nbundle_size = 5000 
+    # Max expected time per site in seconds
+    max_time_per_site = 60
+    # Determine maximum allowed per task
+    max_per_task = (slurm_max_run_time * 3600) / max_time_per_site
+    # Estimate the number of sites to be ran per task, 
+    sites_per_task = min(max_per_task,ceiling(PROJECT_in$nosites / slurm_concurrent_cpus))
 
     # number of tasks required
-    ntasks = PROJECT_in$nosites
+    ntasks = ceiling(PROJECT_in$nosites / sites_per_task)
     # number of bundles needed for tasks 
     nbundle = ceiling(ntasks/(max_nbundle_size-1))
     # number of tasks per bundle
@@ -180,11 +182,12 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
     ntaskbundles[nbundle] = ntaskbundles[nbundle]+(ntasks%%nbundle)
 
     # Update the user
+    print(paste('Number of sites per task = ',sites_per_task,sep=""))
     print(paste('Number of tasks to be submitted = ',ntasks,sep=""))
     print(paste('Maximum number of tasks allowed = ',max_nbundle_size,sep=""))
     print(paste('Tasks will be bundled in groups of  ~',mean(ntaskbundles),sep=""))
     print(paste('Number of bundles to be submitted = ',nbundle,sep=""))
-# MAKE SCRIPT NOW RUN MULTIPLE SITES PER TASKS
+
     # Determine the file path for the PROJECT infofile.RData
     project_path = paste(PROJECT_in$localpath,"/infofile.RData",sep="")
 
@@ -208,11 +211,14 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
          write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("#SBATCH --time=00:30:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --time=",slurm_max_run_time,":00:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --array=[1-",bundle_end,"]",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c("sitenum=$((SLURM_ARRAY_TASK_ID+",bundle_offset,"))"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("R --no-save < ",PROJECT_in$paths$cardamom,"/R_functions/run_each_site_slurm.r --args ",PROJECT_in$localpath,"/infofile.RData ",repair," $sitenum",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("for i in {1..",sites_per_task,"}"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("do"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("    sitenum=$((i + ((SLURM_ARRAY_TASK_ID-1)*",sites_per_task,")+",bundle_offset*sites_per_task,"))"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("     R --no-save < ",PROJECT_in$paths$cardamom,"/R_functions/run_each_site_slurm.r --args ",PROJECT_in$localpath,"/infofile.RData ",repair," $sitenum",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("done"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 
          # Record directory to change back in a moment
          cwd = getwd()
@@ -261,7 +267,7 @@ submit_R_run_each_site_to_local_slurm_machine<-function(PROJECT_in,repair,job_ID
        # If anything is still on the cluster we should continue to wait
        if (length(which(grepl(job_ID,q[,1]))) > 0) {
            # Otherwise, we will wait 60 seconds and check again
-           file.remove("q") ; print("...waiting") ; Sys.sleep(60)                
+           file.remove("q") ; print("....waiting") ; Sys.sleep(60)                
        } else {
            # All tasks with this ID have now completely left the cluster
            # we should move on
