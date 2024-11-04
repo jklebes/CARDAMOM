@@ -25,3 +25,5 @@ LIBRARY/zbrent-testcompile/
 CARDAMOM_F/misc/brent_zero/cardamom_zbrent.*
 
 **/*gprof*.txt
+
+build/
