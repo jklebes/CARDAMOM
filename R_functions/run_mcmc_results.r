@@ -1,5 +1,34 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-# The functions contained within this file were created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Functions run and manage input / output data for DALEC runs (part of stage 3).
+# 
+# Author: T. Luke Smallman (12/11/2024)
+# Exceptions states below in specific functions
+#
+#########################################################################################
 
 rollapply_mean_annual_max<-function(var_in, step) {
 
@@ -748,6 +777,16 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$mean_gb_mmolH2Om2s = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gb_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
+          if (any(check_list == "leaf_temperature_celcius") == TRUE) {
+              # Canopy temperature 
+              grid_output$mean_annual_leaf_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_leaf_temperature_celcius = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$leaf_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Soil temperature
+              grid_output$mean_annual_soil_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_soil_temperature_celcius = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$soil_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
 
           # Create overlap statistics variables - may not always get filled in the end
 #          if (any(check_list == "gpp_assim_data_overlap_fraction") == TRUE) {
@@ -782,6 +821,14 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$rauto_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rhet_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$fire_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          # If CiCa
+          if (any(check_list == "CiCa_parameter_correlation") == TRUE) {
+              grid_output$CiCa_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          }
+          # If Leaf Water Potential
+          if (any(check_list == "LWP_parameter_correlation") == TRUE) {
+              grid_output$LWP_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          }
           # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
           if (any(check_list == "MTT_wood_years_parameter_correlation") == TRUE) {
               grid_output$MTT_wood_years_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))

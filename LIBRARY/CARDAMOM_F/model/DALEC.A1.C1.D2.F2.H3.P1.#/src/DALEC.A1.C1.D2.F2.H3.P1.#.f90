@@ -1,22 +1,47 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! This file contains the source code of DALEC.A1.C1.D2.F2.H3.P1
+!
+! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
+! This version of DALEC is derived from the following primary references:
+! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
+! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
+! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
+! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
+! Subsequent modifications by:
+! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+! J. F. Exbrayat (University of Edinburgh)
+! D. T. Milodowski (University of Edinburgh, d.t.milodowski@ed.ac.uk)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module CARBON_MODEL_MOD
 
   implicit none
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
-  ! This version of DALEC is derived from the following primary references:
-  ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
-  ! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
-  ! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
-  ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
-  ! Subsequent modifications by:
-  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
   ! make all private
   private
@@ -199,7 +224,7 @@ module CARBON_MODEL_MOD
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
                                             water_flux_mmolH2Om2s, &    ! potential transpiration flux (mmolH2O.m-2.s-1)
-                                            conductance_mmolH2OMPam2s    ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)
+                                            conductance_mmolH2OMPam2s   ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
@@ -224,7 +249,7 @@ module CARBON_MODEL_MOD
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
-                                          mLWP, & ! mean leaf water potential (Mpa)
+                                          mLWP, & ! mean leaf water potential (MPa)
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
@@ -964,7 +989,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !LWP = SWP(1:nos_root_layers) - head*canopy_height &
        !     - transpiration*uptake_fraction(1:nos_root_layers) &
        !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
-       mLWP =  wSWP - transpiration * Reff
+       mLWP =  wSWP - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff)
        LWP_time(n) = mLWP
        ! Store in POOLS object
        !FLUXES(n,46) = mLWP
@@ -1344,7 +1369,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
 
     ! don't forget to return
     return
@@ -2231,7 +2256,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! reset water flux
     total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; mLWP = 0d0; wSWP = 0d0 ; rSWP = 0d0
-    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0 ; conductance_mmolH2OMPam2s = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear

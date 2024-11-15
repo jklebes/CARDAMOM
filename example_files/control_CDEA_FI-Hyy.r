@@ -27,18 +27,22 @@ compiler_optimisation = "-Ofast"
 timing=FALSE
 debug=FALSE
 
-## about you (only valid if working on UoE remote server)
-username="lsmallma" # put your Edinburgh uun here
-home_computer="ssh.geos.ed.ac.uk"
-sshpass_key_home = "~/.ssh/id_rsa_geos.pub" # location of passkey on remote server
-
 ## use parallel functions?
-use_parallel = TRUE
-numWorkers = 3 # number of cores to assign to parallel job
+use_parallel=FALSE
+numWorkers=4 # number of cores to assign to parallel job
+## Slurm options, if in use
+slurm_account = "geos_research"
+slurm_concurrent_cpus = 60 # maximum number of concurrent cpus for slurm, impacts stage 3
+slurm_max_run_time = 12    # Number of hours per task to be requested in stage 3
+## about you
+username="lsmallma"
+home_computer="xrdp.geos.ed.ac.uk"
+sshpass_key_home = "~/.ssh/id_rsa_geos.pub" # location of passkey for home server on remote server
+sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote server on home server
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -146,7 +150,7 @@ request_nos_chains = 3        # Number of chains CARDAMOM should run for each lo
 request_nos_samples = 10e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
 request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
-request_use_local_slurm = FALSE# Only applies if request_use_server == FALSE
+request_use_local_slurm = TRUE# Only applies if request_use_server == FALSE
 request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
 request_compile_server = FALSE# Copy and compile current source code on remote server
 request_compile_local = TRUE  # Compile local copy of the source code 

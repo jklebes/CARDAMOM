@@ -93,7 +93,7 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
   real ( kind = dp )  ::  t  
   real ( kind = dp ) tol      ! for iteratively updated tolerance
   integer            :: iter
-  integer, parameter:: ITMAX = 8
+  integer, parameter:: ITMAX = 10
 
   
   interface

@@ -1,14 +1,42 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function which determines how many grid cells
-## are within the defined box
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
-## available_countries, a function to provide a list of the countries which can be specified in the site_name
-## to define the CARDAMOM analysis area
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Functions which determines how many grid cells
+# are within the defined project domain. Also, some which translate 
+# between various plant functional type classifications
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
+
 available_countries <-function(cardamom_dir) {
+
+   ## Function description
+   ## available_countries(), provides a list of the countries 
+   ## which can be specified in the site_name variable.
+   ## Can define a more specific CARDAMOM analysis area
 
    if (missing(cardamom_dir)) { 
        # Load the shapefile CARDAMOM uses as default to define its land sea mask

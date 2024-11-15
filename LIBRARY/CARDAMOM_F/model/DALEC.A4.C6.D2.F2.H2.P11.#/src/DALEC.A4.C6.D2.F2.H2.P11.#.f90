@@ -1,22 +1,50 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! This file contains the source code of DALEC.A1.C1.D2.F2.H1.P1
+!
+! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
+! This version of DALEC is derived from the following primary references:
+! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
+! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
+! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
+! Sellers (1985) Canopy reflectance, photosynthesis and transpiration.
+!                International Journal of Remote Sensing, 6(8), 1335-1772, doi: 10.1080/01431168508948283
+! von Craemmer (2013), Steady State Photosynthesis Modelling, Plant Cell and Environment, 36, 1613-1630
+! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
+! Subsequent modifications by:
+! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+! J. F. Exbrayat (University of Edinburgh)
+! D. T. Milodowski (University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module CARBON_MODEL_MOD
 
   implicit none
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
-  ! This version of DALEC is derived from the following primary references:
-  ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
-  ! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
-  ! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
-  ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
-  ! Subsequent modifications by:
-  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
   ! make all private
   private
@@ -35,6 +63,9 @@ module CARBON_MODEL_MOD
            ,gb_total_canopy        &
            ,canopy_par_MJday_time  &
            ,snow_storage_time&
+           ,LWP_time         &
+           ,minlwp           &
+           ,Reff_time        &
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -173,7 +204,8 @@ module CARBON_MODEL_MOD
   double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                            water_flux_mmolH2Om2s, & ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                        conductance_mmolH2OMPam2s    ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                             SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
@@ -194,6 +226,7 @@ module CARBON_MODEL_MOD
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
+                                          Reff, & ! Effective total hydraulic resistance (MPa.m2.s.mmolH2O-1)
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
@@ -334,7 +367,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           root_depth_time, &
                                         snow_storage_time, &
                                                 rSWP_time, & ! Soil water potential weighted by access water
-                                                wSWP_time    ! Soil water potential weighted by supply of water
+                                                wSWP_time, & ! Soil water potential weighted by supply of water
+                                                Reff_time, & ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
+                                                 LWP_time    ! mean Leaf Water Potential (MPa)
 
   contains
   !
@@ -571,7 +606,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
                  daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
                  rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays), &
-                 leafT_time(nodays),soilT_time(nodays))
+                 leafT_time(nodays),soilT_time(nodays),LWP_time(nodays),Reff_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -936,8 +971,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call calculate_radiation_balance
        canopy_par_MJday_time(n) = canopy_par_MJday
        ! Update steady state soil temperature
-       call calculate_soil_temperature_update(tmp)
-       soilT = soilT + tmp
+       ! NOTE: Commented out due to lack of ground heat flux term, 
+       !       resulting in extreme warming and cooling
+       !call calculate_soil_temperature_update(tmp)
+       !soilT = soilT + tmp
        soilT_time(n) = soilT
 
        !!!!!!!!!!
@@ -952,6 +989,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call calculate_Rtot
        ! Pass wSWP to output variable
        wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; root_depth_time(n) = root_reach
+       Reff_time(n) = Reff
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
@@ -992,6 +1030,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
        endif
 
+       ! Estimate average leaf water potential based on effective hydraulic resistance, wSWP and transpiration.
+       ! Positive LWPs can be estimated given very small gs and cold temperatures.
+       ! Debugging print statements
+       !print*,"Estimate LWP"
+       !LWP = SWP(1:nos_root_layers) - head*canopy_height &
+       !     - transpiration*uptake_fraction(1:nos_root_layers) &
+       !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
+       LWP_time(n) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
+       ! Determine the difference between leaf water potential and the soil weighted, 
+       ! this represents the potential hydraulic draw through the soil-plant-atmosphere continnum
+       deltaWP = wSWP - LWP_time(n) ! positive value now implies a flow to canopy
        ! temprate (i.e. temperature modified rate of metabolic activity))
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
        ! Seasonal canopy growth and leaffall factors
@@ -1005,7 +1054,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Accumulate this time steps labile C (gC.m-2.day-1)
        FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
        available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
-
        if (available_labile > 0d0) then
            ! Estimate the labile:biomass ratio.
            ! Limits / restricts labile use when supply is low
@@ -1030,13 +1078,28 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                    ! modified to provide equivalent values for the existing modified_arrhenious()
                    ! but with an adjustable reference temperature
                    fT_limit_wood = fT_limit_wood * modified_arrhenious(303.15d0,Ha_growth,Hd_growth,dS_growth,leafT+freeze)                                     
-                   ! Specific limitation of water supply on wood
-                   if (total_water_flux > pars(40)) then
-                       fW_limit_wood = (total_water_flux - pars(40)) / ((total_water_flux - pars(40)) + pars(39))
-                       !print*,fW_limit_wood ,total_water_flux,pars(40) ,pars(39)
+                   ! Specific limitation of hydraulic limitation on wood growth,
+                   ! deltaWP = wSWP - LWP as proxy, where a positive value imples water supply
+                   if (deltaWP > 0d0) then
+                       fW_limit_wood = min(1d0,max(0d0,(deltaWP - pars(39)) / (pars(40)-pars(39))))
                    else 
                        fW_limit_wood = 0d0
                    end if
+                   ! Specific limitation of hydraulic limitation on wood growth,
+                   ! leaf water potential used as a proxy. 
+!                   if (LWP_time(n) < pars(40)) then
+!                       fW_limit_wood = min(1d0,max(0d0,(LWP_time(n) - pars(39)) / (pars(40)-pars(39))))
+!                       !print*,fW_limit_wood ,LWP_time(n),pars(40),pars(39),Reff
+!                   else 
+!                       fW_limit_wood = 1d0
+!                   end if
+!                   ! Specific limitation of water supply on wood
+!                   if (total_water_flux > pars(40)) then
+!                       fW_limit_wood = (total_water_flux - pars(40)) / ((total_water_flux - pars(40)) + pars(39))
+!                       !print*,fW_limit_wood ,total_water_flux,pars(40) ,pars(39)
+!                   else 
+!                       fW_limit_wood = 0d0
+!                   end if
                else 
                    fT_limit_wood = 0d0 ; fW_limit_wood = 0d0
                end if
@@ -1515,7 +1578,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end if
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2 .or. acm_gpp_stage_2 < 0d0) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
 
     ! don't forget to return
     return
@@ -1629,7 +1692,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! lowest
             if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
         else
-
             ! In all other cases iterate
             stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
                                           find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs,iWUE_step*0.10d0)
@@ -2358,7 +2420,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
 
     ! Determine Tleaf-Tair
-    Tdiff = warming_term - cooling_term
+    !Tdiff = warming_term - cooling_term
+    Tdiff = min(20d0,max(-20d0,warming_term - cooling_term))
 
     ! Return function
     return
@@ -2402,7 +2465,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine Tleaf-Tair
     Tdiff = (isothermal_net * total_thermal_resistance) &
           / (air_density_kg * cpair)
-
+    Tdiff = min(20d0,max(-20d0,Tdiff))
     ! After calculation the following can be used to update the canopy net radiation balance
     ! by adjusting the canopy absorbed longwave. Note currently not coding to update the overall 
     ! ecosystem level radiation balance as a result. Here we assume that at this point leafT is 
@@ -2477,7 +2540,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  / ((psych*total_water_resistance) + (slope * total_thermal_resistance))
 
     ! Determine Tleaf-Tair
-    Tdiff = warming_term - cooling_term
+    !Tdiff = warming_term - cooling_term
+    Tdiff = min(20d0,max(-20d0,warming_term - cooling_term))
 
     ! Return function
     return
@@ -2663,8 +2727,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0
-    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0 ; Reff = 0d0 
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0 ; conductance_mmolH2OMPam2s = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear
@@ -2805,6 +2869,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! calculate sum value (mmolH2O.m-2.s-1)
     total_water_flux = sum(water_flux_mmolH2Om2s)
+    ! calculate effective resistance
+    ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
+    ! through the model structure/
+    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
+
     ! wSWP based on the conductance due to the roots themselves.
     ! The idea being that the plant may hedge against growth based on the majority of the
     ! profile being dry while not losing leaves within some toleration.
@@ -2991,7 +3060,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     !! Assume leaf transpiration is drawn from the soil based on the
     !! update_fraction estimated in calculate_Rtot
-    pot_evap_losses = Eleaf * uptake_fraction
+     pot_evap_losses = Eleaf * uptake_fraction
     !! Assume all soil evaporation comes from the soil surface only
     !pot_evap_losses(1) = pot_evap_losses(1) + Esoil
 
@@ -3104,6 +3173,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
+    water_grav_flow = water_grav_flow * days_per_step_1
+    infiltrated = infiltrated * days_per_step_1
     corrected_ET = corrected_ET * days_per_step_1
     underflow = underflow * days_per_step_1
     runoff = runoff * days_per_step_1
@@ -3285,7 +3356,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
-    infiltrated = infiltrated + (waterchange(1) * 1e3)
+    infiltrated = infiltrated + (waterchange(1) * 1d3)
 
   end subroutine infiltrate
   !
@@ -3743,7 +3814,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soilR2 = root_resist / (root_mass*root_reach_in)
     ! Estimate the total hydraulic resistance for the layer
     Rtot_layer = transpiration_resistance + soilR1 + soilR2
-
+    ! Track for later diagnosis of the effective canopy leaf water potential
+    if (demand > 0d0) conductance_mmolH2OMPam2s(root_layer) = 1d0/Rtot_layer
     ! Estimate the soil to plant flow of water mmolH2O/m2/s
     water_flux_mmolH2Om2s(root_layer) = demand/Rtot_layer
 

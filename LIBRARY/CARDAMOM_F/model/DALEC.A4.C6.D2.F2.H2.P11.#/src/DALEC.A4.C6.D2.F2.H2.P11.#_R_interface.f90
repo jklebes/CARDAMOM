@@ -1,3 +1,33 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Subroutine to allow direct interface between DALEC.A4.C1.D2.F2.H2.P11 and the R code
+!
+! Author: T. Luke Smallman (02/05/2024)
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine rdalec31(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
@@ -11,18 +41,11 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
                              ,canopy_par_MJday_time, root_depth_time &
-                             ,snow_storage_time, leafT_time, soilT_time
+                             ,snow_storage_time, leafT_time, soilT_time &
+                             ,LWP_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
   implicit none
   ! declare input variables
@@ -171,6 +194,8 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,62) = root_depth_time             ! rooting depth (m)
      out_var1(i,1:nodays,63) = leafT_time                  ! day time mean canopy temperature (oC)
      out_var1(i,1:nodays,64) = soilT_time                  ! day time mean soil temperature (oC)
+     ! mean Leaf Water Potential
+     out_var1(i,1:nodays,65) = LWP_time(1:nodays)          ! mean LWP (MPa)
 
      !
      ! Calculate long-term mean of out_var1

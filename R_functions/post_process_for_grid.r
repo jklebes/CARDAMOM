@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to post-process CARDAMOM output for a gridded analysis
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to post-process CARDAMOM output for a gridded analysis.
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,num_quantiles,na_flag,converged,states_all) {
 
@@ -1431,6 +1455,16 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       dCbio = states_all$gb_mmolH2Om2s - states_all$gb_mmolH2Om2s[,1] # difference in dom from initial
       site_output$dgb_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
+  if (any(check_list == "leaf_temperature_celcius") == TRUE) {
+      # Canopy temperature 
+      site_output$mean_annual_leaf_temperature_celcius = apply(states_all$mean_annual_leaf_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_leaf_temperature_celcius = quantile(states_all$mean_leaf_temperature_celcius, prob=num_quantiles, na.rm = na_flag)
+      site_output$leaf_temperature_celcius = apply(states_all$leaf_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      # Soil temperature
+      site_output$mean_annual_soil_temperature_celcius = apply(states_all$mean_annual_soil_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_soil_temperature_celcius = quantile(states_all$mean_soil_temperature_celcius, prob=num_quantiles, na.rm = na_flag)
+      site_output$soil_temperature_celcius = apply(states_all$soil_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+  }
 
   ###
   # Aggregate model ensemble - observation uncertainty consistency
@@ -1471,6 +1505,14 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$rauto_parameter_correlation = states_all$rauto_parameter_correlation
   site_output$rhet_parameter_correlation = states_all$rhet_parameter_correlation
   site_output$fire_parameter_correlation = states_all$fire_parameter_correlation
+  # If CiCa retrieved
+  if (any(check_list == "CiCa_parameter_correlation")) {
+      site_output$CiCa_parameter_correlation = states_all$CiCa_parameter_correlation
+  }
+  # If LWP retrieved
+  if (any(check_list == "LWP_parameter_correlation")) {
+      site_output$LWP_parameter_correlation = states_all$LWP_parameter_correlation
+  }
   # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
   if (any(check_list == "MTT_wood_years_parameter_correlation")) {
       site_output$MTT_wood_years_parameter_correlation = states_all$MTT_wood_years_parameter_correlation

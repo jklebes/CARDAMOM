@@ -1,17 +1,42 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk), 
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Module contains all subroutine and functions relevant to determining the log-likelihood
+! of DALEC.A4.C6.D2.F2.H2.P11 as a function of observations and ecological dynamical constraints.
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module model_likelihood_module
   implicit none
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
   ! make all private
   private
@@ -463,20 +488,20 @@ module model_likelihood_module
 
     ! Run model
 
+    print*,"sanity_check: carbon_model run 1"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-!print*,"sanity_check: carbon_model done 1"
+    print*,"sanity_check: carbon_model run 2"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
-!print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
@@ -525,8 +550,10 @@ module model_likelihood_module
   !
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
+    !use CARBON_MODEL_MOD, only: minlwp
+
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2014).
+    ! steady state contraints (Bloom & Williams 2015).
 
     implicit none
 
@@ -588,31 +615,37 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
-    ! Water supply minimum for wood growth must be smaller than 50 % restriction
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) > pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+    ! Leaf water potential (MPa) at which suppression begins is smaller (i.e. more negative) than full suppression
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
-  
+
+!    ! Leaf water potential (MPa) at which full suppression is achieved must be greater than minlwp,
+!    ! i.e. growth should be more limited than photosynthesis
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. minlwp > pars(39)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+!    endif
+
     ! Temperature threshold values for wood should be greater than their corresponding fine root value
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
-!    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-!    endif
-!    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-!    endif
-!    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
-!    endif
+    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    endif
+    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    endif
+    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    endif
 
     ! could always add more / remove some
 
@@ -713,13 +746,13 @@ module model_likelihood_module
     ! ensure ratio between Cfoliar and Croot is less than 5
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     end if
 
     ! Equilibrium factor (in comparison with initial conditions)
@@ -829,7 +862,7 @@ module model_likelihood_module
         do n = 1, 3
            ! Restrict mean rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
 !           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
@@ -838,7 +871,7 @@ module model_likelihood_module
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
            ! Restrict exponential behaviour at initialisation
            !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
@@ -848,7 +881,7 @@ module model_likelihood_module
         ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 4
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
 !        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
 !                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
@@ -856,7 +889,7 @@ module model_likelihood_module
 !        end if
          if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                    abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
          end if
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
@@ -865,7 +898,7 @@ module model_likelihood_module
         do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
 !           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
@@ -874,7 +907,7 @@ module model_likelihood_module
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
 !           ! Restrict exponential behaviour at initialisation
 !           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
@@ -886,7 +919,7 @@ module model_likelihood_module
         n = 7  ! surface water pool
         ! Restrict rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Restrict rates from deviating unrealistically from the mean
 !        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
@@ -895,7 +928,7 @@ module model_likelihood_module
 !        end if
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
         end if
 !        ! Restrict exponential behaviour at initialisation
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
@@ -906,12 +939,12 @@ module model_likelihood_module
 
     ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(40) = 0
     end if
 
 !    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
 !    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(41) = 0
 !    end if
 
     ! Finally we would not expect that the mean labile stock is greater than
@@ -926,7 +959,7 @@ module model_likelihood_module
     lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
     if (EDC2 == 1 .or. DIAG == 1) then
         if (maxval(lab_ratio) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(39) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
         endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -1233,7 +1266,7 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, cica_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1580,6 +1613,11 @@ module model_likelihood_module
         likelihood = likelihood-tot_exp
     endif
 
+    !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
+    !tot_exp = sum(cica_time) / dble(DATAin%nodays)
+    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !likelihood = likelihood-tot_exp
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -1603,7 +1641,7 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness,cica_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1961,6 +1999,11 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-tot_exp
     endif
 
+    !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
+    !tot_exp = sum(cica_time) / dble(DATAin%nodays)
+    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !scale_likelihood = scale_likelihood-tot_exp
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -1984,7 +2027,7 @@ module model_likelihood_module
   !
   double precision function sqrt_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness,cica_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2342,6 +2385,11 @@ module model_likelihood_module
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     endif
 
+    !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
+    !tot_exp = sum(cica_time) / dble(DATAin%nodays)
+    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
+
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
@@ -2365,7 +2413,7 @@ module model_likelihood_module
   !
   double precision function log_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness,cica_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2722,6 +2770,11 @@ module model_likelihood_module
         tot_exp = DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     endif
+
+    !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
+    !tot_exp = sum(cica_time) / dble(DATAin%nodays)
+    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !log_scale_likelihood = log_scale_likelihood-tot_exp
 
     ! the likelihood scores for each observation are subject to multiplication
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across

@@ -1,19 +1,43 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk), 
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! This file contains the source code of DALEC.A1.C1.D2.F2.H1.P1
+!
+! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
+! This version of DALEC is derived from the following primary references:
+! Williams et al., (2005), doi: 10.1111 /j.1365-2486.2004.091.x
+! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
+! Subsequent modifications by:
+! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module CARBON_MODEL_MOD
 
 implicit none
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
-  ! This version of DALEC is derived from the following primary references:
-  ! Williams et al., (2005), doi: 10.1111 /j.1365-2486.2004.091.x
-  ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
-  ! Subsequent modifications by:
-  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
 ! make all private
 private

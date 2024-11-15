@@ -1,11 +1,35 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-# Derive stocks and fluxes used in the calculation of gridded aggregates
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Functions to derive stocks and fluxes used in the calculation of gridded aggregates
 # These are variables which for a site analysis would be easy to calculate
 # from the ensembles but difficult if not determined here and now before aggregation
-###
-
-# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
 
@@ -117,6 +141,15 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
           states_all$fire_parameter_correlation = array(0, dim = c(PROJECT$model$nopars[n],1))
       }
   }
+  # Avoid error flag when no fire
+  if (any(check_list == "CiCa")) {
+      states_all$CiCa_parameter_correlation = cor(tmp,rowMeans(states_all$CiCa))
+  }
+  # Avoid error flag when no LWP
+  if (any(check_list == "LWP_MPa")) {
+      states_all$LWP_parameter_correlation = cor(tmp,rowMeans(states_all$LWP_MPa))
+  }
+
   # Determine whether have have both mean transit time and allocation to wood
   if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
       # As both exist determine their correlations with parameters...

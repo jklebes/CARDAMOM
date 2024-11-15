@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to load gridded dataset of soil prior information from HWSD
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to load soil C area maps from gridded datasets
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spatial_type) {
 
@@ -226,8 +250,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Assume in all cases than a zero prior value should be classed as missing data
         Csom[Csom < 1] = NA
-        # assume uncertainty half that of HWSD as more targetted analysis, 0.25 * ~47 %
-        Csom_unc = array(Csom * 0.47 * 0.25, dim=c(xdim,ydim))
+        # assume uncertainty half that of HWSD as more targetted analysis, 0.5 * ~47 %
+        Csom_unc = array(Csom * 0.47 * 0.5, dim=c(xdim,ydim))
         # With a minimum bound assumption
         Csom_unc[Csom_unc < 100] = 100
         # Ensure consistency for missing values
@@ -293,8 +317,8 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Assume in all cases than a zero prior value should be classed as missing data
         Csom[Csom < 1] = NA
-        # assume uncertainty, ~47 %
-        Csom_unc = array(Csom * 0.47, dim=c(xdim,ydim))
+        # assume uncertainty half that of HWSD as more targetted analysis, 0.5 * ~47 %
+        Csom_unc = array(Csom * 0.47 * 0.5, dim=c(xdim,ydim))
         # With a minimum bound assumption
         Csom_unc[Csom_unc < 100] = 100
         # Ensure consistency for missing values

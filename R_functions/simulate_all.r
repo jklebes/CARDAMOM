@@ -1,7 +1,34 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to generate mean state variable information by running the parameters and model choice
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to generate mean state variable information by running the parameters and model choice
+# 
+# Author: T. Luke Smallman (12/11/2024)
+# Exceptions states below in specific functions
+#
+#########################################################################################
 
 # Function to actually restrict values of a double precision numeric into single precision allowed range
 # Note: modified from "readBrukerFlexData" library
@@ -3835,7 +3862,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A4.C6.D2.F2.H2.P11.#") {
-      output_dim = 64 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 65 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec31",output_dim=as.integer(output_dim)
                               ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -4063,6 +4090,10 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       soil_temperature_celcius = output[,,64],
                       mean_soil_temperature_celcius = output_mean[,64],
                       mean_annual_soil_temperature_celcius = output_annual[,,64],   
+                      # Plant water stress
+                      LWP_MPa = output[,,65],
+                      mean_LWP_MPa = output_mean[,65],
+                      mean_annual_LWP_MPa = output_annual[,,65],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
