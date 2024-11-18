@@ -226,14 +226,12 @@ module CARBON_MODEL_MOD
                                             water_flux_mmolH2Om2s, &    ! potential transpiration flux (mmolH2O.m-2.s-1)
                                             conductance_mmolH2OMPam2s   ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
-                                            SWP_initial, &
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
                                         water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)                                            
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
-                                 soil_waterfrac_initial, &
                                                porosity, & ! soil layer porosity, (fraction)
                                        porosity_initial, &
                                         layer_thickness, & ! thickness of soil layers (m)
@@ -263,7 +261,6 @@ module CARBON_MODEL_MOD
                                 ET_demand_coef, & ! air_density_kg * vpd_kPa * cpair
                                         roughl, & ! roughness length (m)
                                   displacement, & ! zero plane displacement (m)
-                                    max_supply, & ! maximum water supply (mmolH2O/m2/day)
                                          meant, & ! mean air temperature (oC)
                                          leafT, & ! canopy day time temperature temperature (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
@@ -616,8 +613,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         call initialise_soils(soil_frac_clay,soil_frac_sand)
         call update_soil_initial_conditions(pars(24))
         ! save the initial conditions for later
-        soil_waterfrac_initial = soil_waterfrac
-        SWP_initial = SWP
         field_capacity_initial = field_capacity
         porosity_initial = porosity
 
@@ -628,8 +623,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !
 
         total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
-        soil_waterfrac = soil_waterfrac_initial
-        SWP = SWP_initial
         field_capacity = field_capacity_initial
         porosity = porosity_initial
 
@@ -815,6 +808,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
+    meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
     leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
@@ -1421,10 +1415,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate stomatal conductance under H2O and CO2 limitations
     !!!!!!!!!!
 
-    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall .and. leafT > Vc_minT) then
-
-        ! Determine potential water flow rate (mmolH2O.m-2.s-1)
-        max_supply = total_water_flux
+    if (aerodynamic_conductance > vsmall .and. total_water_flux > vsmall .and. &
+        leafT > Vc_minT .and. leaf_canopy_light_scaling > vsmall) then
 
         ! Pass minimum conductance from local parameter to global value
         !minimum_conductance = min_gs * leaf_canopy_light_scaling * dayl_seconds
@@ -1434,25 +1426,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! maximum possible evaporation for the day.
         ! This will then be reduced based on CO2 limits for diffusion based
         ! photosynthesis
-!        denom = slope * ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2) &
-!              + (ET_demand_coef * aerodynamic_conductance * leaf_canopy_wind_scaling)
-!        denom = (denom / (lambda * max_supply * mmol_to_kg_water)) - slope
-!        potential_conductance = (aerodynamic_conductance * leaf_canopy_wind_scaling) / (denom / psych)
         denom = slope * (((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)) &
               + (ET_demand_coef * aerodynamic_conductance * leaf_canopy_wind_scaling)
-        denom = (denom / (lambda * max_supply * mmol_to_kg_water)) - slope
+        denom = (denom / (lambda * total_water_flux * mmol_to_kg_water)) - slope
         potential_conductance = (aerodynamic_conductance * leaf_canopy_wind_scaling) / (denom / psych)
 
         ! convert m.s-1 to mmolH2O.m-2.d-1, per unit ground area, note that this
         ! is implicitly the canopy scaled value
-!        potential_conductance = potential_conductance * convert_ms1_mol_1 * 1d3 * dayl_seconds
         potential_conductance = potential_conductance * convert_ms1_mmol_1
         ! if conditions are dew forming then set conductance to maximum as we
         ! are not going to be limited by water demand
-!        if (potential_conductance <= 0d0 .or. &
-!            potential_conductance > max_gs*leaf_canopy_light_scaling*dayl_seconds) then
-!            potential_conductance = max_gs*leaf_canopy_light_scaling*dayl_seconds
-!        end if
         if (potential_conductance <= 0d0 .or. potential_conductance > max_gs*leaf_canopy_light_scaling) then
             potential_conductance = max_gs*leaf_canopy_light_scaling
         end if
@@ -1461,8 +1444,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! photosynthesis limits on gs through iterative solution
 
         ! Determine the appropriate canopy scaled gs increment and return threshold
-!        delta_gs = 1d0 * leaf_canopy_light_scaling * dayl_seconds ! mmolH2O/m2leaf/d
-!        iWUE_step = iWUE * leaf_canopy_light_scaling * dayl_seconds ! gC/mmolH2Ogs/d
         delta_gs = 1d0 * leaf_canopy_light_scaling ! mmolH2O/m2leaf/s
         iWUE_step = iWUE * leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s
 
@@ -1482,6 +1463,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 ! Exception being if both are positive - therefore assume
                 ! lowest
                 if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+            else if (potential_conductance < minimum_conductance) then
+                ! If the potential conductance is less than the hardcoded minimum 
+                ! assume stomatal conductance is the minimum and move on.
+                stomatal_conductance = minimum_conductance
             else
 
                 ! In all other cases iterate
@@ -1495,8 +1480,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! if no LAI then there can be no stomatal conductance
         potential_conductance = max_gs ; minimum_conductance = vsmall
         stomatal_conductance = vsmall
-        ! set minimum (computer) precision level flow
-        max_supply = vsmall
 
     endif ! if aerodynamic conductance > vsmall
 
@@ -3084,17 +3067,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     integer :: i
 
-    ! Default assumption to be field capacity
-    soil_waterfrac = field_capacity
-    SWP = SWP_initial
-
-    ! If prior value has been given
-    if (input_soilwater_frac > -9998d0) then
-        ! calculate initial soil water fraction
-        soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac 
-        ! calculate initial soil water potential
-        call soil_water_potential
-    endif
+    ! calculate initial soil water fraction
+    soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac 
+    ! calculate initial soil water potential
+    call soil_water_potential
 
     ! Seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers

@@ -520,6 +520,10 @@ module model_likelihood_module
            print*,"Sum abs error over time: pool = ",i
            print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
         end do
+        print*,"First time step for all fluxes in run 1"
+        print*,local_fluxes(1,:)
+        print*,"First time step for all fluxes in run 2"
+        print*,DATAin%M_FLUXES(1,:)
         stop
     end if
 
@@ -550,7 +554,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
-    !use CARBON_MODEL_MOD, only: minlwp
+    use CARBON_MODEL_MOD, only: minlwp
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom & Williams 2015).
@@ -610,25 +614,49 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! GPP potential growth rates for foliage and fine roots scannot be 5 orders of magnitude different
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(3)+pars(13)) > (5d0*pars(4)) .or. ((pars(3)+pars(13))*5d0) < pars(4))) then
+    ! GPP potential growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(13)) > (5d0*pars(4))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
-    ! Leaf water potential (MPa) at which suppression begins is smaller (i.e. more negative) than full suppression
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
+    ! GPP potential growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(3)+pars(13))*5d0) < pars(4)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
-!    ! Leaf water potential (MPa) at which full suppression is achieved must be greater than minlwp,
-!    ! i.e. growth should be more limited than photosynthesis
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. minlwp > pars(39)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-!    endif
+    ! Weighted soil water potential (MPa) at which suppression of wood growth begins 
+    ! is smaller (i.e. more negative) than full suppression
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    endif
+
+    ! Weighted soil water potential (MPa) at which suppression of foliar growth
+    ! begins is smaller (i.e. more negative) than full suppression
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) < pars(41)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+    endif
+    ! Weighted soil water potential (MPa) at which full suppression is achieved must be greater than minlwp,
+    ! i.e. growth should be more limited than photosynthesis
+    if ((EDC1 == 1 .or. DIAG == 1) .and. minlwp > pars(41)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    endif
+
+    ! Wood growth should be more sensitive than foliage growth.
+    ! We impose this by assuming that the min/max parameters for wood 
+    ! must be less negative than their corresponding one for foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) > pars(40)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    endif
+    ! Wood growth should be more sensitive than foliage growth.
+    ! We impose this by assuming that the min/max parameters for wood 
+    ! must be less negative than their corresponding one for foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(41) > pars(39)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    endif
 
     ! Temperature threshold values for wood should be greater than their corresponding fine root value
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -636,15 +664,15 @@ module model_likelihood_module
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
     endif
 
     ! could always add more / remove some
@@ -744,15 +772,17 @@ module model_likelihood_module
 
     ! EDC 6
     ! ensure ratio between Cfoliar and Croot is less than 5
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > (mean_pools(3)*5d0)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+    end if
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)*5d0) < mean_pools(3) ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     end if
 
     ! Equilibrium factor (in comparison with initial conditions)

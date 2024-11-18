@@ -192,18 +192,19 @@ module MODEL_PARAMETERS
 !    ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is prevented
 !    PI%parmin(40) = 0.001d0
 !    PI%parmax(40) = 5d0
-!    ! Leaf water potential (MPa) at which wood growth is fully suppressed
-!    PI%parmin(39) = -5d0
-!    PI%parmax(39) =  0d0
-!    ! Leaf water potential (MPa) at which wood growth suppression begins
-!    PI%parmin(40) = -5d0
-!    PI%parmax(40) =  0d0
-    ! deltaWP (LWP-SWP, MPa) at which wood growth is fully suppressed
-    PI%parmin(39) = 0d0
-    PI%parmax(39) = 5d0
-    ! deltaWP (LWP-SWP, MPa) at which wood growth suppression begins
-    PI%parmin(40) = 0d0
-    PI%parmax(40) = 5d0
+    ! wSWP water potential (MPa) at which wood growth is fully suppressed
+    PI%parmin(39) = -5d0
+    PI%parmax(39) =  0d0
+    ! wSWP water potential (MPa) at which wood growth suppression begins
+    PI%parmin(40) = -5d0
+    PI%parmax(40) =  0d0
+
+    ! wSWP water potential (MPa) at which leaf growth is fully suppressed
+    PI%parmin(41) = -5d0
+    PI%parmax(41) =  0d0
+    ! wSWP water potential (MPa) at which leaf growth suppression begins
+    PI%parmin(42) = -5d0
+    PI%parmax(42) =  0d0
 
     !
     ! INITIAL VALUES DECLARED HERE
