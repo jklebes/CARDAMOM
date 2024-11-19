@@ -3862,7 +3862,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A4.C6.D2.F2.H2.P11.#") {
-      output_dim = 65 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 72 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec31",output_dim=as.integer(output_dim)
                               ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -4094,6 +4094,28 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       LWP_MPa = output[,,65],
                       mean_LWP_MPa = output_mean[,65],
                       mean_annual_LWP_MPa = output_annual[,,65],
+                      # C allocation diagnositics
+                      LabBio_limitation = output[,,66],
+                      mean_LabBio_limitation = output_mean[,66],
+                      mean_annual_LabBio_limitation = output_annual[,,66],
+                      foliage_leafT_limitation = output[,,67],
+                      mean_foliage_leafT_limitation = output_mean[,67],
+                      mean_annual_foliage_leafT_limitation = output_annual[,,67],
+                      roots_leafT_limitation = output[,,68],
+                      mean_roots_leafT_limitation = output_mean[,68],
+                      mean_annual_roots_leafT_limitation = output_annual[,,68],
+                      wood_leafT_limitation = output[,,69],
+                      mean_wood_leafT_limitation = output_mean[,69],
+                      mean_annual_wood_leafT_limitation = output_annual[,,69],
+                      foliage_wSWP_limitation = output[,,70],
+                      mean_foliage_wSWP_limitation = output_mean[,70],
+                      mean_annual_foliage_wSWP_limitation = output_annual[,,70],
+                      roots_wSWP_limitation = output[,,71],
+                      mean_roots_wSWP_limitation = output_mean[,71],
+                      mean_annual_roots_wSWP_limitation = output_annual[,,71],
+                      wood_wSWP_limitation = output[,,72],
+                      mean_wood_wSWP_limitation = output_mean[,72],
+                      mean_annual_wood_wSWP_limitation = output_annual[,,72],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

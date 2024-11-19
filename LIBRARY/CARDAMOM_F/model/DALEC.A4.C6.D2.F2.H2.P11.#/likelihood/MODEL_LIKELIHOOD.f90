@@ -637,7 +637,7 @@ module model_likelihood_module
     endif
     ! Weighted soil water potential (MPa) at which full suppression is achieved must be greater than minlwp,
     ! i.e. growth should be more limited than photosynthesis
-    if ((EDC1 == 1 .or. DIAG == 1) .and. minlwp > pars(41)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) > pars(41)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
@@ -771,32 +771,14 @@ module model_likelihood_module
     !
 
     ! EDC 6
-    ! ensure ratio between Cfoliar and Croot is less than 5
-    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > (mean_pools(3)*5d0)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-    end if
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)*5d0) < mean_pools(3) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-    end if
+!    ! ensure ratio between Cfoliar and Croot is less than 5
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > (mean_pools(3)*5d0)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+!    end if
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)*5d0) < mean_pools(3) ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+!    end if
 
-    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
-    ! the empirical phenology but mechanistic hydrology / photosynthesis
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-    end if
-
-    ! Equilibrium factor (in comparison with initial conditions)
-!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
-    ! Pool exponential decay tolerance
-!    etol = 0.3d0 !0.1d0
-
-    ! first calculate total flux for the whole simulation period
-!    do fl = 1, nofluxes
-!        FT(fl) = 0
-!        do nd = 1, nodays
-!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-!        end do
-!    end do
     ! First calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
@@ -872,58 +854,44 @@ module model_likelihood_module
     ! input and outputs are outside of steady state approximation.
     ! See Bloom et al., 2016 PNAS for details
 
-!    ! iterate to check whether Fin/Fout is within EQF limits
-!    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools / jan_first_pools)
-!    do n = 1, nopools-1
-!       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-!       end if
-!       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!       end if
-!    end do
-
     if (EDC2 == 1 .or. DIAG == 1) then
 
-        ! Living pools
-        do n = 1, 3
-           ! Restrict mean rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-           ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!        ! Living pools
+!        do n = 1, 3
+!           ! Restrict mean rates of increase
+!           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
-           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
-           end if
-           ! Restrict exponential behaviour at initialisation
-           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           !end if
-        end do
-        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-        end if
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!           ! Restrict rates from deviating unrealistically from the mean
+!!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!           end if
+!           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!           end if
+!           ! Restrict exponential behaviour at initialisation
+!           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           !end if
+!        end do
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 4
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
-         end if
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
+!!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!        end if
+!         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!         end if
+!!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
@@ -967,16 +935,6 @@ module model_likelihood_module
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
-    ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(40) = 0
-    end if
-
-!    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(41) = 0
-!    end if
-
     ! Finally we would not expect that the mean labile stock is greater than
     ! 8 % of the total ecosystem carbon stock, as we need structure to store
     ! labile.
@@ -986,12 +944,12 @@ module model_likelihood_module
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     ! Estimate the labile ratio, also used below
-    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
-    if (EDC2 == 1 .or. DIAG == 1) then
-        if (maxval(lab_ratio) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
-        endif
-    endif ! EDC2 == 1 .or. DIAG == 1
+!    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        if (maxval(lab_ratio) > 0.125d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
+!        endif
+!    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions

@@ -195,7 +195,15 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,63) = leafT_time                  ! day time mean canopy temperature (oC)
      out_var1(i,1:nodays,64) = soilT_time                  ! day time mean soil temperature (oC)
      ! mean Leaf Water Potential
-     out_var1(i,1:nodays,65) = LWP_time(1:nodays)          ! mean LWP (MPa)
+     out_var1(i,1:nodays,65) = LWP_time                    ! mean LWP (MPa)
+     ! C allocation diagnositics
+     out_var1(i,1:nodays,66) = FLUXES(1:nodays,50)           ! Labile:biomass ratio limitation (0-1)
+     out_var1(i,1:nodays,67) = FLUXES(1:nodays,51)           ! Temperature limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,68) = FLUXES(1:nodays,52)           ! Temperature limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,69) = FLUXES(1:nodays,53)           ! Temperature limitation on wood growth (0-1)
+     out_var1(i,1:nodays,70) = FLUXES(1:nodays,54)           ! wSWP limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,71) = FLUXES(1:nodays,55)           ! wSWP limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,72) = FLUXES(1:nodays,56)           ! wSWP limitation on wood growth (0-1)
 
      !
      ! Calculate long-term mean of out_var1

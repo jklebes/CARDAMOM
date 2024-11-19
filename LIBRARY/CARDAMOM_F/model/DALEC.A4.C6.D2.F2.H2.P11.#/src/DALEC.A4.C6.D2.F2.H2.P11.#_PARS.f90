@@ -73,11 +73,11 @@ module MODEL_PARAMETERS
 
     ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
     PI%parmin(3) = 0.001d0
-    PI%parmax(3) = 8d0
+    PI%parmax(3) = 10d0
 
     ! Potential rate of direct labile to fine root (gC/m2/day)
-    PI%parmin(4) = 0.1d0
-    PI%parmax(4) = 8d0
+    PI%parmin(4) = 0.01d0
+    PI%parmax(4) = 10d0
 
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
@@ -166,32 +166,26 @@ module MODEL_PARAMETERS
     PI%parmax(32) = 0.99d0
 
     ! labile:biomass at which growth is limited by 50 %
-    PI%parmin(33) = 0.005d0 ! 0.5 %
-    PI%parmax(33) = 0.1d0   ! 10 %
+    PI%parmin(33) = 0.001d0  ! 0.1 %
+    PI%parmax(33) = 0.10d0   ! 10 %
 
-    ! Temperature (oC) above p36 at which fine root growth is limited by 50 %
-    PI%parmin(34) = 1d0
+    ! Temperature (oC) above p36 at which foliage and fine root growth is limited by 50 %
+    PI%parmin(34) = 0.1d0
     PI%parmax(34) = 10d0
     ! Temperature (oC) above p37 at which wood growth is limited by 50 %
-    PI%parmin(35) = 1d0
+    PI%parmin(35) = 0.1d0
     PI%parmax(35) = 10d0
-    ! Temperature (oC) at which fine root growth is prevented
-    PI%parmin(36) =  0.01d0 !-8d0
-    PI%parmax(36) =  8d0
+    ! Temperature (oC) at which foliage and fine root growth is prevented
+    PI%parmin(36) = 0d0 
+    PI%parmax(36) = 8d0
     ! Temperature (oC) at which wood growth is prevented
-    PI%parmin(37) = 1d0
+    PI%parmin(37) = 0d0
     PI%parmax(37) = 8d0
 
     ! Potential growth rate of wood (gC/m2/day)
-    PI%parmin(38) = 0.05d0
-    PI%parmax(38) = 8d0
+    PI%parmin(38) = 0.01d0
+    PI%parmax(38) = 10d0
 
-!    ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is limited by 50 %
-!    PI%parmin(39) = 0.001d0
-!    PI%parmax(39) = 5d0
-!    ! Potential supply of water from roots (mmolH2O/m2/s) at which wood growth is prevented
-!    PI%parmin(40) = 0.001d0
-!    PI%parmax(40) = 5d0
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0
     PI%parmax(39) =  0d0
@@ -205,6 +199,10 @@ module MODEL_PARAMETERS
     ! wSWP water potential (MPa) at which leaf growth suppression begins
     PI%parmin(42) = -5d0
     PI%parmax(42) =  0d0
+
+    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
+    PI%parmin(43) = -8d0
+    PI%parmax(43) = -0.5d0
 
     !
     ! INITIAL VALUES DECLARED HERE
