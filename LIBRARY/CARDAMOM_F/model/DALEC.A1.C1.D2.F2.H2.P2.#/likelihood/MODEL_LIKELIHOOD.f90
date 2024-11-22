@@ -1168,7 +1168,7 @@ module model_likelihood_module
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
-    where (parpriors > -9999) local_likelihood = ((pars-parpriors)/parpriorunc)**2
+    where (parpriors > -9999d0) local_likelihood = ((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
 
     ! dont for get to return
@@ -1331,6 +1331,8 @@ module model_likelihood_module
         end do ! loop years
     endif ! nFire > 0
 !print*,"likelihood: Fire done"
+
+    ! LAI log-likelihood
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI

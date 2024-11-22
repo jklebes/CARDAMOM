@@ -1069,7 +1069,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! Specific limitation of hydraulic limitation on leaf growth,
                ! wSWP as proxy.
                FLUXES(n,54) = min(1d0,max(0d0,(wSWP - pars(41)) / (pars(42)-pars(41))))
-               ! Specific limitation of temperature on wood - note that p37 is assumed to be larger than p36
+               ! Specific limitation of temperature and wSWP on wood.
+               ! NOTE: p37 is assumed to be larger than p36
                if (leafT > pars(37) .and. wSWP > pars(39)) then
                    ! Estimate the minimum temperature threshold value (typically ~5oC)
                    ! Faatchi et al., (2014), plus various referenes

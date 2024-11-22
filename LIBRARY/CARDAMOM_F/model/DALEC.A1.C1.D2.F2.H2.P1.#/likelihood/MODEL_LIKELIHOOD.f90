@@ -1416,6 +1416,7 @@ module model_likelihood_module
         end do ! loop years
     endif ! nFire > 0
 !print*,"likelihood: Fire done"
+    ! LAI log-likelihood
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
@@ -1532,6 +1533,21 @@ module model_likelihood_module
          ! note that division is the uncertainty
          tot_exp = tot_exp+((tmp_var-DATAin%Cfolmax_stock(dn)) / DATAin%Cfolmax_stock_unc(dn))**2
        end do
+       likelihood = likelihood-tot_exp
+    endif
+
+    ! Cagb log-likelihood (i.e. branch, stem, no CR)
+    if (DATAin%nCagb_stock > 0) then
+       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0
+       ! Estimate the above ground component using 
+       mid_state = mid_state * (1d0-pars(28))
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
+                       -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
+                     / DATAin%Cagb_stock_unc(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))**2)
+       ! Combine with existing likelihood estimate
        likelihood = likelihood-tot_exp
     endif
 
@@ -1943,6 +1959,21 @@ module model_likelihood_module
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_stock))
     endif
 
+    ! Cagb log-likelihood (i.e. branch, stem, no CR)
+    if (DATAin%nCagb_stock > 0) then
+       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0
+       ! Estimate the above ground component using 
+       mid_state = mid_state * (1d0-pars(28))
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
+                       -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
+                     / DATAin%Cagb_stock_unc(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))**2)
+       ! Combine with existing likelihood estimate
+       scale_likelihood = scale_likelihood-tot_exp
+    endif
+
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
@@ -2337,6 +2368,21 @@ module model_likelihood_module
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_stock)))
     endif
 
+    ! Cagb log-likelihood (i.e. branch, stem, no CR)
+    if (DATAin%nCagb_stock > 0) then
+       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0
+       ! Estimate the above ground component using 
+       mid_state = mid_state * (1d0-pars(28))
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
+                       -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
+                     / DATAin%Cagb_stock_unc(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))**2)
+       ! Combine with existing likelihood estimate
+       sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
+    endif
+
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
@@ -2729,6 +2775,21 @@ module model_likelihood_module
                      / DATAin%Cwood_stock_unc(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)))**2)
        ! Combine with existing likelihood estimate
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_stock))))
+    endif
+
+    ! Cagb log-likelihood (i.e. branch, stem, no CR)
+    if (DATAin%nCagb_stock > 0) then
+       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+                 * 0.5d0
+       ! Estimate the above ground component using 
+       mid_state = mid_state * (1d0-pars(28))
+       ! Vectorised version of loop to estimate cost function
+       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
+                       -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
+                     / DATAin%Cagb_stock_unc(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))**2)
+       ! Combine with existing likelihood estimate
+       log_scale_likelihood = log_scale_likelihood-tot_exp
     endif
 
     ! Croots log-likelihood

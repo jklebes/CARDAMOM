@@ -614,49 +614,39 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! GPP potential growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(3)+pars(13)) > (5d0*pars(4))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif
-
-    ! GPP potential growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((pars(3)+pars(13))*5d0) < pars(4)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-
     ! Weighted soil water potential (MPa) at which suppression of wood growth begins 
     ! is smaller (i.e. more negative) than full suppression
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! Weighted soil water potential (MPa) at which suppression of foliar growth
     ! begins is smaller (i.e. more negative) than full suppression
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) < pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
     ! Weighted soil water potential (MPa) at which full suppression is achieved must be greater than minlwp,
     ! i.e. growth should be more limited than photosynthesis
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) > pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
 
     ! Wood growth should be more sensitive than foliage growth.
     ! We impose this by assuming that the min/max parameters for wood 
     ! must be less negative than their corresponding one for foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) > pars(40)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
     ! Wood growth should be more sensitive than foliage growth.
     ! We impose this by assuming that the min/max parameters for wood 
     ! must be less negative than their corresponding one for foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(41) > pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
 
     ! Temperature threshold values for wood should be greater than their corresponding fine root value
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -664,15 +654,15 @@ module model_likelihood_module
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
     ! could always add more / remove some
@@ -685,6 +675,7 @@ module model_likelihood_module
                         ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                         ,meantemp,EDC2)
     use cardamom_structures, only: DATAin
+    use math_functions, only: linear_model_gradient
 
     ! Determines whether the dynamical contraints for the search of the initial
     ! parameters has been successful or whether or not we should abandon the
@@ -718,8 +709,7 @@ module model_likelihood_module
                io_start, io_finish
     double precision :: infi !, EQF, etol
     double precision, dimension(nodays) :: lab_ratio
-    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
-                                            mean_pools, Fin, Fout, Rm, Rs, &
+    double precision, dimension(nopools) :: mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
@@ -736,8 +726,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.20         !
+                                  C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.20d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -747,39 +737,15 @@ module model_likelihood_module
     EDC2 = 1
     infi = 0d0
 
-    ! derive mean pools
-    do n = 1, nopools-1
-       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+    ! derive mean pools for first year
+    do n = 1, nopools
+       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
     end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
-    ! Determine the mean January pool sizes
-    jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
-    do n = 1, nopools-1
-      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
-      do y = 1, DATAin%nos_years
-         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
-         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
-      end do
-      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
-    end do
-
-    !
-    ! Begin EDCs here
-    !
-
-    ! EDC 6
-!    ! ensure ratio between Cfoliar and Croot is less than 5
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. mean_pools(2) > (mean_pools(3)*5d0)) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-!    end if
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)*5d0) < mean_pools(3) ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-!    end if
-
-    ! First calculate total flux for the simulation period
+    ! Calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
@@ -849,6 +815,29 @@ module model_likelihood_module
     Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
 !    Fin_yr2(7)  = FT_yr2(47)
 !    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
+
+    !
+    ! Begin EDCs here
+    !
+
+    ! Mean foliage pool in 1st year should not differ from roots by more than 5 fold 
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)) > (5d0*mean_pools(3))) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+    endif
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_pools(2))*5d0) < mean_pools(3)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+    endif
+
+
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+    endif
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+    endif
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -944,12 +933,27 @@ module model_likelihood_module
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     ! Estimate the labile ratio, also used below
-!    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
-!    if (EDC2 == 1 .or. DIAG == 1) then
-!        if (maxval(lab_ratio) > 0.125d0) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
-!        endif
-!    endif ! EDC2 == 1 .or. DIAG == 1
+    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume max value can't be twice the observed values
+        if (maxval(lab_ratio) > 0.25d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
+        endif
+    endif ! EDC2 == 1 .or. DIAG == 1
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume the mean value can't be greater than largest observed value
+        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
+    ! The lab:bio ratio is not expected to change radically over time. Thus we quantify it's gradient
+    ! and disallow gradients (Delta lab:bio per day) which deviate signficantly
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume the mean value can't be greater than largest observed value
+        if (abs(linear_model_gradient(met(1,1:nodays),lab_ratio,nodays)) > 1.5d-5) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -984,7 +988,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_pools(pools,pool_number,averaging_period,nopools)
+  double precision function cal_mean_pools(pools,averaging_period)
 
     ! Function calculate the mean values of model pools / states across the
     ! entire simulation run
@@ -992,20 +996,12 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: nopools          & !
-                          ,pool_number      & !
-                          ,averaging_period   !
+    integer, intent(in) :: averaging_period   !
 
-    double precision,dimension(averaging_period,nopools), intent (in) :: pools
-
-    ! declare local variables
-    integer :: c
-
-    ! initial conditions
-    cal_mean_pools = 0d0
+    double precision,dimension(averaging_period), intent (in) :: pools
 
     ! loop through now
-    cal_mean_pools = sum(pools(1:averaging_period,pool_number))/dble(averaging_period)
+    cal_mean_pools = sum(pools(1:averaging_period))/dble(averaging_period)
 
     ! ensure return command issued
     return
@@ -1603,7 +1599,7 @@ module model_likelihood_module
 
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
-    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
     !likelihood = likelihood-tot_exp
 
     ! the likelihood scores for each observation are subject to multiplication
@@ -1989,7 +1985,7 @@ module model_likelihood_module
 
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
-    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
     !scale_likelihood = scale_likelihood-tot_exp
 
     ! the likelihood scores for each observation are subject to multiplication
@@ -2375,7 +2371,7 @@ module model_likelihood_module
 
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
-    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
     !sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
 
     ! the likelihood scores for each observation are subject to multiplication
@@ -2761,7 +2757,7 @@ module model_likelihood_module
 
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
-    !tot_exp = ((tot_exp - 0.7d0) / 0.1d0)**2
+    !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
     !log_scale_likelihood = log_scale_likelihood-tot_exp
 
     ! the likelihood scores for each observation are subject to multiplication

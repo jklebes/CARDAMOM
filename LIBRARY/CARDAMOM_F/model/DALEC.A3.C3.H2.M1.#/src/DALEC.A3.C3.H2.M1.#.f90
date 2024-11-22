@@ -3477,7 +3477,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Remaining NPP is then allocated to storage organ
     alloc_to_storage_organ = max(0d0,npp_shoot - alloc_to_foliage - alloc_to_stem)
 
-    ! Assuming allocatio to storage organ is > 0 ensure flux is limited by
+    ! Assuming allocation to storage organ is > 0 ensure flux is limited by
     ! maximum growth rate potential, i.e. growth potential increases with size
     ! existing yield
     alloc_to_labile = 0d0 ; resp_cost_npp_to_labile = 0d0

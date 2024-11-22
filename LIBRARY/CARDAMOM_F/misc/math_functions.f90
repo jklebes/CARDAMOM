@@ -52,7 +52,7 @@ module math_functions
             random_multivariate, increment_covariance_matrix, &
             par2nor, nor2par, log_par2nor, log_nor2par, &
             cholesky_factor, inverse_matrix, matrix_vector_func, &
-            calculate_variance, increment_variance
+            calculate_variance, increment_variance, linear_model_gradient
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -797,6 +797,47 @@ module math_functions
     return
 
   end subroutine log_nor2par
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function linear_model_gradient(x,y,interval)
+
+    ! Function to calculate the gradient of a linear model for a given depentent
+    ! variable (y) based on predictive variable (x). The typical use of this
+    ! function will in fact be to assume that x is time.
+
+    implicit none
+
+    ! declare input variables
+    integer :: interval ! the total number of variables being regressed over
+    double precision, dimension(interval) :: x,y 
+
+    ! declare local variables
+    double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
+
+    ! calculate the sum of x
+    sum_x = sum(x)
+    ! calculate the sum of y
+    sum_y = sum(y)
+    ! calculate the sum of squares of x
+    !sumsq_x = sum(x*x)
+    ! calculate the sum of the product of xy
+    !sum_product_xy = sum(x*y)
+    ! calculate the gradient
+    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    ! Linear regression done as single line to reduce assignment requirements
+    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+
+    ! for future reference here is how to calculate the intercept
+!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
+!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+
+    ! don't forget to return to the user
+    return
+
+  end function linear_model_gradient
   !
   !------------------------------------------------------------------
   !

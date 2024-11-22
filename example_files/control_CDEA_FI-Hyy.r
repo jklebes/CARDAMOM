@@ -14,6 +14,7 @@ source("./R_functions/load_all_cardamom_functions.r")
 
 ## projname
 # Give a runid
+#projname="FI-Hyy_example_noflx"
 projname="FI-Hyy_example"
 #projname="FI-Hyy_example_O3"
 #projname="FI-Hyy_example_Ofast"
@@ -88,13 +89,13 @@ fapar_source=" " # "COPERNICUS" or "MODIS" or "site_specific"
 Csom_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 sand_clay_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 soilwater_initial_source = " " # initial soil water fraction (m3/m3)
-Evap_source="site_specific"        # " " or "site_specific"
+Evap_source=" "#"site_specific"        # " " or "site_specific"
 Cwood_inc_source = " " # "site_specific" or " " or "Rainfor"
 Cwood_mortality_source = " " # "site_specific" or " " or "Rainfor"
 fire_source=" " # " " or "site_specific" or "Global_Combined"
 GPP_source=" " 	# " " or "site_specific" or "Global_Combined"
 Reco_source=" " 	# " " or "site_specific"
-NEE_source="site_specific" # " " or "site_specific"
+NEE_source=" "#"site_specific" # " " or "site_specific"
 nbe_source = " " # " " or "site_specific" or "Global_Combined" or "GEOSCHEM" or "OCO2MIP"
 harvest_source = ""
 foliage_to_litter_source = " " # " " or "site_specific"
@@ -147,7 +148,7 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
 request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
-request_nos_samples = 100e6   # Total number of parameter samples / iterations to be explored
+request_nos_samples = 10e6   # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
 request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
 request_use_local_slurm = TRUE# Only applies if request_use_server == FALSE
@@ -170,7 +171,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=3
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
