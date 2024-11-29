@@ -57,10 +57,13 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # error check
 
   # test for convergence and whether or not there is any single chain which can be removed in they do not converge
-  notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars))
+  notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars)) ; kept_chains = seq(1,dim(parameters)[3])
   while (dim(parameters)[3] > 2 & notconv) {
      if (use_parallel == FALSE) {print("begin convergence checking")}
      converged = have_chains_converged(parameters)
+     # If all chains are kept then we do not need to update kept_chains,
+     # otherwise we will need to adjust below.
+
      # if log-likelihood has passed then we are not interested
      if (converged[length(converged)] == "FAIL") {
          #if (use_parallel == FALSE) {print("...not converged begin removing potential parameter vectors")}
@@ -80,13 +83,15 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
                 if (CI90[1] > CI90[2]) {
                     # rejected chain (while others converge) is actually better and the others have gotten stuck in a local minima.
                     # we will now assume that we use the single good chain instead...
-                    parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2))
+                    parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2)) # Update parameter array
+                    kept_chains = kept_chains[(i-1)] # Update tracker of kept parameter chains
                     notconv = FALSE ; i = (i-1) * -1
                     if (use_parallel == FALSE) {print(paste("............chain ",i*-1," only has been accepted",sep=""))}
                 } else {
                     # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
                     notconv = FALSE ; i = i-1 # converged now?
-                    parameters = parameters[,,-i]
+                    parameters = parameters[,,-i] # Update parameter array
+                    kept_chains = kept_chains[-i] # Update tracker of kept parameter chains
                     if (use_parallel == FALSE) {print(paste("............chain rejected = ",i,sep=""))}
                 }
             }
@@ -99,6 +104,8 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
                 parameters = parameters[,,-i]
                 # Update the maximum likelihood vector also
                 max_likelihood = max_likelihood[-i]
+                # Update the tracker of kept parameter chains
+                kept_chains = kept_chains[-i]
                 # Update the user
                 if (use_parallel == FALSE) {print(paste(".........single chain removal couldn't find convergence; removing lowest likelihood chain = ",i,sep=""))}
                 # reset counter
@@ -118,7 +125,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # if more than 2 chains
 
   # Return parameters to user
-  return(list(parameters = parameters,converged = converged))
+  return(list(parameters = parameters,converged = converged, kept_chains = kept_chains))
 
 } # end function determine_parameter_chains_to_run
 ## Use byte compile

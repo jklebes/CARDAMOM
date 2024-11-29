@@ -1045,82 +1045,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Accumulate this time steps labile C (gC.m-2.day-1)
        FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
        available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
-       if (available_labile > 0d0) then
-           ! Estimate the labile:biomass ratio.
-           ! Limits / restricts labile use when supply is low
-           FLUXES(n,50) = (available_labile / (available_labile + sum(POOLS(n,2:4)))) 
-           FLUXES(n,50) = FLUXES(n,50) / (FLUXES(n,50) + pars(33))
-
-           ! Estimate the temperature limitation on foliage, fine root and wood growth
-           if (leafT > pars(36) .and. wSWP > pars(41)) then
-               ! Calculate the baseline temperature response function
-               ! NOTE: these are based on rice, maize, Arabidopsis (below) only. 
-               ! No more recent mechanistic estimates could be found
-               ! Modified Arrhenious function for temperature effect on tissue growth
-               ! Cabon et al., (2020), doi: 10.1111/nph.16456
-               ! NOTE: that the equation and parameters from Cabon et al., (2020) have been
-               ! modified to provide equivalent values for the existing modified_arrhenious()
-               ! but with an adjustable reference temperature
-               leafT_adj = modified_arrhenious(303.15d0,Ha_growth,Hd_growth,dS_growth,leafT+freeze)                                     
-               ! Now calculate the minimum temperature threshold coefficient,
-               ! combine with the modified arrhenious function
-               FLUXES(n,52) = ((leafT-pars(36)) / ((leafT-pars(36)) + pars(34))) * leafT_adj
-               FLUXES(n,51) = FLUXES(n,52)
-               ! Specific limitation of hydraulic limitation on leaf growth,
-               ! wSWP as proxy.
-               FLUXES(n,54) = min(1d0,max(0d0,(wSWP - pars(41)) / (pars(42)-pars(41))))
-               ! Specific limitation of temperature and wSWP on wood.
-               ! NOTE: p37 is assumed to be larger than p36
-               if (leafT > pars(37) .and. wSWP > pars(39)) then
-                   ! Estimate the minimum temperature threshold value (typically ~5oC)
-                   ! Faatchi et al., (2014), plus various referenes
-                   FLUXES(n,53) = (leafT-pars(37)) / ((leafT-pars(37)) + pars(35))
-                   ! Combine with the modified arrhenious function for temperature impacts
-                   FLUXES(n,53) = FLUXES(n,53) * leafT_adj
-                   ! Specific limitation of hydraulic limitation on wood growth,
-                   ! wSWP as proxy.
-                   FLUXES(n,56) = min(1d0,max(0d0,(wSWP - pars(39)) / (pars(40)-pars(39))))
-               end if
-           end if
-
-           !
-           ! Labile allocation to plant tissues (gC/m2/day)
-           !
-
-           ! Aseasonal labile to foliage rate (gC.m-2.day-1)
-           ! Function of potential growth, available labile supply (lab:bio) and temperature limitation
-           ! In the case of wood, there is also a water supply limitation
-           FLUXES(n,4) = pars(3)*FLUXES(n,50)*FLUXES(n,51)*FLUXES(n,54)
-           ! Labile to root rate (gC.m-2.day-1)
-           FLUXES(n,6) = pars(4)*FLUXES(n,50)*FLUXES(n,52)
-           ! Labile to wood rate
-           FLUXES(n,7) = pars(38)*FLUXES(n,50)*FLUXES(n,53)*FLUXES(n,56)
-                       
-           ! Seasonal labile to foliage rate 
-           FLUXES(n,8) = pars(13)*FLUXES(n,50)*FLUXES(n,51)*FLUXES(n,54)*FLUXES(n,16) 
-
-           ! Convert into fractional daily draws equivalents
-           FLUXES(n,4) = FLUXES(n,4) / available_labile
-           FLUXES(n,6) = FLUXES(n,6) / available_labile
-           FLUXES(n,7) = FLUXES(n,7) / available_labile
-           FLUXES(n,8) = FLUXES(n,8) / available_labile
-
-           ! Check their combined daily fractionsl draw is not greater than available stocks
-           if (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8) > 1d0) then
-               ! Rescale to be within the limits of available labile
-               tmp = 1d0 / (FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8)) 
-               FLUXES(n,4) = FLUXES(n,4)*tmp
-               FLUXES(n,6) = FLUXES(n,6)*tmp
-               FLUXES(n,7) = FLUXES(n,7)*tmp
-               FLUXES(n,8) = FLUXES(n,8)*tmp
-           end if 
-           ! Determine compound interest temporal integral
-           FLUXES(n,4) = available_labile * (1d0-(1d0-FLUXES(n,4))**deltat(n))/deltat(n)
-           FLUXES(n,6) = available_labile * (1d0-(1d0-FLUXES(n,6))**deltat(n))/deltat(n)
-           FLUXES(n,7) = available_labile * (1d0-(1d0-FLUXES(n,7))**deltat(n))/deltat(n)
-           FLUXES(n,8) = available_labile * (1d0-(1d0-FLUXES(n,8))**deltat(n))/deltat(n)
-
-       end if ! available_labile > 0
+       ! Do plant phenology
+       call plant_allocation(nopools,deltat(n), &
+                             pars(3),pars(4),pars(13),pars(38),     & ! potential growth rates 
+                             pars(34),pars(35),pars(36),pars(37),   & ! temperature limitations
+                             pars(39),pars(40),pars(41),pars(42),   & ! water limitations
+                             pars(33),                              & ! labile:biomass limitations
+                             available_labile,sum(POOLS(n,2:4)),    & ! C pools
+                             FLUXES(n,16),                          & ! CDEA
+                             FLUXES(n,4),FLUXES(n,6),FLUXES(n,7),   & ! tissue specific allocated C 
+                             FLUXES(n,8),                           & ! 
+                             FLUXES(n,50),FLUXES(n,51),FLUXES(n,52),& ! lab:bio, temperature and water limters
+                             FLUXES(n,53),FLUXES(n,54),FLUXES(n,56))
 
        !
        ! Biomass turnovers (gC/m2/day)
@@ -1137,12 +1073,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Dead organic matter decomposition and mineralisation (gC/m2/day)
        !
 
+       ! Simple linear model of soil moisture impact of decomposition processes
+       ! Ask Bloom for reference. Shared as a diagnostic test
+       tmp = 0.25d0 + 0.75d0 * soil_waterfrac(1)
        ! respiration heterotrophic litter
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*tmp)**deltat(n))/deltat(n)
        ! respiration heterotrophic som
-       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*tmp)**deltat(n))/deltat(n)
        ! litter to som
-       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
+       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(1)*tmp)**deltat(n))/deltat(n)
 
        ! calculate the NEE
        NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
@@ -3752,6 +3691,144 @@ if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy
 !    endif
 
   end subroutine z0_displacement
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine plant_allocation(nopools,time, &
+                              pot_fol,pot_root,pot_fol_cdea,pot_wood,    &  ! potential growth rates 
+                              leafT_coef,woodT_coef,leafT_min,woodT_min, &  ! temperature limitations
+                              woodW_min,woodW_max,leafW_min,leafW_max,   &  ! water limitations
+                              LabBio_coef,                               &  ! labile:biomass limitation
+                              available_labile,biomass,cdea,             &  ! C pools, cdea
+                              alloc_leaf,alloc_root,alloc_wood,          &  ! tissue specific allocated C 
+                              alloc_cdea_leaf,                           &  
+                              LabBio_limit,leafT_limit,rootT_limit,      & ! lab:bio, temperature and water limters
+                              woodT_limit,leafW_limit,woodW_limit)
+
+       ! Subroutine deals with the determining of allocated carbon to plant tissues from 
+       ! the labile / non-structural carbohydrates pool. Applies a modified Arrhenius curve
+       ! to estimate temperature limitation on growth potential. As these curves are calibrated
+       ! mostly on plants > 10oC we impose a second Michaelis Menten based curve for (i) foliage + fine root
+       ! and (ii) wood. Water stress is imposed based on linear functions of the wSWP. 
+       ! C supply limitation is imposed based on a Michaelis Menten curve a function 
+       ! of labile:biomass ratio.
+
+       implicit none
+
+       ! Arguments
+       integer, intent(in) :: nopools
+       double precision, intent(in) :: time, & ! number of days in current time step
+                                    pot_fol, & ! potential foliar growth rate for direct route (gC/m2/day)
+                                   pot_root, & ! potential fine root growth rate (gC/m2/day)
+                               pot_fol_cdea, & ! potential foliar growth rate for CDEA route (gC/m2/day)
+                                   pot_wood, & ! potential wood / structural growth rate (gC/m2/day)
+                                 leafT_coef, & ! temperature above leafT_min at which temperature growth curve is 50 % suppressed (oC)
+                                 woodT_coef, & ! temperature above woodT_min at which temperature growth curve is 50 % suppressed (oC)
+                                  leafT_min, & ! temperature at which leaf and root growth fully suppressed (oC)
+                                  woodT_min, & ! temperature at which wood growth fully suppressed (oC)
+                                  woodW_min, & ! wSWP at which wood growth fully suppressed (MPa)
+                                  woodW_max, & ! wSWP at which wood growth suppression begins (MPa)
+                                  leafW_min, & ! wSWP at which leaf growth fully suppressed (MPa)
+                                  leafW_max, & ! wSWP at which leaf growth suppression begins (MPa)
+                                LabBio_coef, & ! labile:biomass at which 50 % suppression applied (0-1)
+                           available_labile, & ! labile C available to spend this time step (gC/m2)
+                                    biomass, & ! foliage, fine root and wood pool (gC/m2)
+                                       cdea    ! CDEA coefficient for leaf on (0-1)
+       double precision, intent(out) :: &
+                                 alloc_leaf, & ! allocation to leaf via direct route (gC/m2/day)
+                                 alloc_root, & ! allocation to fine roots (gC/m2/day)
+                                 alloc_wood, & ! allocation to wood (gC/m2/day)
+                            alloc_cdea_leaf, & ! allocation to leave via CDEA control (gC/m2/day)
+                               LabBio_limit, & ! labile:biomass limitation (0-1)
+                                leafT_limit, & ! temperature limitation on foliage (0-1)
+                                rootT_limit, & ! temperature limitation on roots (0-1)
+                                woodT_limit, & ! temperature limitation on wood (0-1)
+                                leafW_limit, & ! water limitation on foliage (0-1)
+                                woodW_limit    ! water limitation on wood (0-1)
+
+       ! Local variables
+       double precision :: rescale, leafT_adj
+
+       ! We can only allocate if we have labile to spend
+       if (available_labile > 0d0) then
+           ! Estimate the labile:biomass ratio.
+           ! Limits / restricts labile use when supply is low
+           LabBio_limit = (available_labile / (available_labile + biomass)) 
+           LabBio_limit = LabBio_limit / (LabBio_limit + LabBio_coef)
+
+           ! Estimate the temperature limitation on foliage, fine root and wood growth
+           if (leafT > leafT_min .and. wSWP > leafW_min) then
+               ! Calculate the baseline temperature response function
+               ! NOTE: these are based on rice, maize, Arabidopsis (below) only. 
+               ! No more recent mechanistic estimates could be found
+               ! Modified Arrhenious function for temperature effect on tissue growth
+               ! Cabon et al., (2020), doi: 10.1111/nph.16456
+               ! NOTE: that the equation and parameters from Cabon et al., (2020) have been
+               ! modified to provide equivalent values for the existing modified_arrhenious()
+               ! but with an adjustable reference temperature
+               leafT_adj = modified_arrhenious(303.15d0,Ha_growth,Hd_growth,dS_growth,leafT+freeze)
+               ! Now calculate the minimum temperature threshold coefficient,
+               ! combine with the modified arrhenious function
+               leafT_limit = ((leafT-leafT_min) / ((leafT-leafT_min) + leafT_coef)) * leafT_adj
+               rootT_limit = leafT_limit
+               ! Specific limitation of hydraulic limitation on leaf growth,
+               ! wSWP as proxy.
+               leafW_limit = min(1d0,max(0d0,(wSWP - leafW_min) / (leafW_max-leafW_min)))
+               ! Specific limitation of temperature and wSWP on wood.
+               ! NOTE: p37 is assumed to be larger than p36
+               if (leafT > woodT_min .and. wSWP > woodW_min) then
+                   ! Estimate the minimum temperature threshold value (typically ~5oC)
+                   ! Faatchi et al., (2014), plus various referenes
+                   woodT_limit = (leafT-woodT_min) / ((leafT-woodT_min) + woodT_coef)
+                   ! Combine with the modified arrhenious function for temperature impacts
+                   woodT_limit = woodT_limit * leafT_adj
+                   ! Specific limitation of hydraulic limitation on wood growth,
+                   ! wSWP as proxy.
+                   woodW_limit = min(1d0,max(0d0,(wSWP - woodW_min) / (woodW_max-woodW_min)))
+               end if
+           end if
+
+           !
+           ! Labile allocation to plant tissues (gC/m2/day)
+           !
+
+           ! Aseasonal labile to foliage rate (gC.m-2.day-1)
+           alloc_leaf = pot_fol*LabBio_limit*leafT_limit*leafW_limit ! f(lab:bio,leafT,wSWP)
+           ! Labile to root rate (gC.m-2.day-1)
+           alloc_root = pot_root*LabBio_limit*rootT_limit  ! f(lab:bio,leafT)
+           ! Labile to wood rate
+           alloc_wood = pot_wood*LabBio_limit*woodT_limit*woodW_limit  ! f(lab:bio,leafT,wSWP)
+                       
+           ! Seasonal labile to foliage rate 
+           alloc_cdea_leaf = pot_fol_cdea*LabBio_limit*leafT_limit*leafW_limit*cdea  ! f(lab:bio,leafT,wSWP,CDEA)
+
+           ! Convert into fractional daily draws equivalents
+           alloc_leaf      = alloc_leaf / available_labile
+           alloc_root      = alloc_root / available_labile
+           alloc_wood      = alloc_wood / available_labile
+           alloc_cdea_leaf = alloc_cdea_leaf / available_labile
+
+           ! Check their combined daily fractionsl draw is not greater than available stocks
+           if (alloc_leaf + alloc_root + alloc_wood + alloc_cdea_leaf > 1d0) then
+               ! Rescale to be within the limits of available labile
+               rescale = 1d0 / (alloc_leaf + alloc_root + alloc_wood + alloc_cdea_leaf) 
+               alloc_leaf      = alloc_leaf*rescale
+               alloc_root      = alloc_root*rescale
+               alloc_wood      = alloc_wood*rescale
+               alloc_cdea_leaf = alloc_cdea_leaf*rescale
+           end if 
+           ! Determine compound interest temporal integral
+           alloc_leaf      = available_labile * (1d0-(1d0-alloc_leaf)**time)/time
+           alloc_root      = available_labile * (1d0-(1d0-alloc_root)**time)/time
+           alloc_wood      = available_labile * (1d0-(1d0-alloc_wood)**time)/time
+           alloc_cdea_leaf = available_labile * (1d0-(1d0-alloc_cdea_leaf)**time)/time
+
+       end if ! available_labile > 0
+
+       ! Return subroutine
+       return
+
+  end subroutine plant_allocation
   !
   !------------------------------------------------------------------
   !

@@ -41,7 +41,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
                              ,canopy_par_MJday_time, soil_par_MJday_time &
-                             ,root_depth_time, snow_storage_time
+                             ,root_depth_time, snow_storage_time, LWP_time
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -189,6 +189,8 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,61) = cica_time                   ! ratio of leaf internal to external CO2
      ! misc
      out_var1(i,1:nodays,62) = root_depth_time             ! rooting depth (m)
+     ! mean Leaf Water Potential
+     out_var1(i,1:nodays,63) = LWP_time                    ! mean LWP (MPa)
 
      !
      ! Calculate long-term mean of out_var1

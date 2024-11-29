@@ -660,8 +660,8 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
+    ! Combustion completeness for foliar + fine root litter should be greater than foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
@@ -707,9 +707,9 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi !, EQF, etol
+    double precision :: infi, tmp !, EQF, etol
     double precision, dimension(nodays) :: lab_ratio
-    double precision, dimension(nopools) :: mean_pools, Fin, Fout, Rm, Rs, &
+    double precision, dimension(nopools) :: mean_pools, Fin, Fout, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
     double precision :: fauto & ! Fractions of GPP to autotrophic respiration
@@ -727,7 +727,7 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                   C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.20d0       !
+                                H2O_etol = 0.10d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -820,23 +820,43 @@ module model_likelihood_module
     ! Begin EDCs here
     !
 
-    ! Mean foliage pool in 1st year should not differ from roots by more than 5 fold 
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)) > (5d0*mean_pools(3))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-    endif
-    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-    if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_pools(2))*5d0) < mean_pools(3)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-    endif
+!    ! Mean foliage pool in 1st year should not differ from roots by more than 5 fold 
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)) > (5d0*mean_pools(3))) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+!    endif
+!    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_pools(2))*5d0) < mean_pools(3)) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+!    endif
 
+     ! What are in effect the potential growth rates are modulated by the current 
+     ! fixed temperature sub-model used in the model. This means that the parameterised 
+     ! potential rates might never be achievable even if plausible. Thus the maximum 
+     ! parameter bound for the potential growth rates need to be increased. These EDCs 
+     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+     if ((EDC2 == 1 .or. DIAG == 1)) then
+         ! Foliage
+         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+         end if
+         ! Fine roots
+         if (maxval(M_FLUXES(:,6)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+         end if
+         ! Wood
+         if (maxval(M_FLUXES(:,7)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+         end if
+     end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     endif
 
     ! Iterate through C pools to determine whether they have their ratio of
@@ -865,6 +885,18 @@ module model_likelihood_module
 !           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           !end if
 !        end do
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 3
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+         end if
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
 !        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
@@ -952,6 +984,26 @@ module model_likelihood_module
         ! Assume the mean value can't be greater than largest observed value
         if (abs(linear_model_gradient(met(1,1:nodays),lab_ratio,nodays)) > 1.5d-5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
+
+    ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
+    ! leaf economic spectrum (LES).
+    ! LL (months) ~ LMA (gm2) R2 = 0.42 from 
+    ! Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
+    ! Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496 
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
+        ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
+        ! Estimating the MTT, converting from days to years using 1/365.25 = 0.002737851
+        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
+              / dble(nodays)) * 0.002737851d0
+        ! determine the lower bound of the LES 
+        if (tmp < 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
+        endif        
+        if (tmp > 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0)) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -1597,6 +1649,19 @@ module model_likelihood_module
         likelihood = likelihood-tot_exp
     endif
 
+    ! Estimate the combined leaf lifespan (years) and compare with prior estimate
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Estimate total daily foliar loss rates (gC/m2/day)
+        mid_state = DATAin%M_FLUXES(:,10) + DATAin%M_FLUXES(:,19) &
+                  + DATAin%M_FLUXES(:,25) + DATAin%M_FLUXES(:,32) &
+                  + DATAin%M_FLUXES(:,38)
+        ! Estimate mean pool losses per day and then convert to number of years (1/365.25 = 0.002737851)
+        tot_exp = (sum(DATAin%M_POOLS(:,2) / mid_state) / dble(DATAin%nodays)) * 0.002737851d0
+        ! Estimate log-likelihood score
+        tot_exp = DATAin%otherpriorweight(6) * ((tot_exp-DATAin%otherpriors(6))/DATAin%otherpriorunc(6))**2
+        likelihood = likelihood-tot_exp
+    endif
+
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
     !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
@@ -1980,6 +2045,19 @@ module model_likelihood_module
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp = DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        scale_likelihood = scale_likelihood-tot_exp
+    endif
+
+    ! Estimate the combined leaf lifespan (years) and compare with prior estimate
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Estimate total daily foliar loss rates (gC/m2/day)
+        mid_state = DATAin%M_FLUXES(:,10) + DATAin%M_FLUXES(:,19) &
+                  + DATAin%M_FLUXES(:,25) + DATAin%M_FLUXES(:,32) &
+                  + DATAin%M_FLUXES(:,38)
+        ! Estimate mean pool losses per day and then convert to number of years (1/365.25 = 0.002737851)
+        tot_exp = (sum(DATAin%M_POOLS(:,2) / mid_state) / dble(DATAin%nodays)) * 0.002737851d0
+        ! Estimate log-likelihood score
+        tot_exp = DATAin%otherpriorweight(6) * ((tot_exp-DATAin%otherpriors(6))/DATAin%otherpriorunc(6))**2
         scale_likelihood = scale_likelihood-tot_exp
     endif
 
@@ -2369,6 +2447,19 @@ module model_likelihood_module
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     endif
 
+    ! Estimate the combined leaf lifespan (years) and compare with prior estimate
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Estimate total daily foliar loss rates (gC/m2/day)
+        mid_state = DATAin%M_FLUXES(:,10) + DATAin%M_FLUXES(:,19) &
+                  + DATAin%M_FLUXES(:,25) + DATAin%M_FLUXES(:,32) &
+                  + DATAin%M_FLUXES(:,38)
+        ! Estimate mean pool losses per day and then convert to number of years (1/365.25 = 0.002737851)
+        tot_exp = (sum(DATAin%M_POOLS(:,2) / mid_state) / dble(DATAin%nodays)) * 0.002737851d0
+        ! Estimate log-likelihood score
+        tot_exp = DATAin%otherpriorweight(6) * ((tot_exp-DATAin%otherpriors(6))/DATAin%otherpriorunc(6))**2
+        sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
+    endif
+
     !! Constrain the average CiCa ratio, this is currently hardcoded and may be inappropriate assumption
     !tot_exp = sum(cica_time) / dble(DATAin%nodays)
     !tot_exp = ((tot_exp - 0.7d0) / 0.05d0)**2
@@ -2752,6 +2843,19 @@ module model_likelihood_module
         output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp = DATAin%otherpriorweight(5) * ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
+        log_scale_likelihood = log_scale_likelihood-tot_exp
+    endif
+
+    ! Estimate the combined leaf lifespan (years) and compare with prior estimate
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Estimate total daily foliar loss rates (gC/m2/day)
+        mid_state = DATAin%M_FLUXES(:,10) + DATAin%M_FLUXES(:,19) &
+                  + DATAin%M_FLUXES(:,25) + DATAin%M_FLUXES(:,32) &
+                  + DATAin%M_FLUXES(:,38)
+        ! Estimate mean pool losses per day and then convert to number of years (1/365.25 = 0.002737851)
+        tot_exp = (sum(DATAin%M_POOLS(:,2) / mid_state) / dble(DATAin%nodays)) * 0.002737851d0
+        ! Estimate log-likelihood score
+        tot_exp = DATAin%otherpriorweight(6) * ((tot_exp-DATAin%otherpriors(6))/DATAin%otherpriorunc(6))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     endif
 

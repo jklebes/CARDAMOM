@@ -53,7 +53,9 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           return(output)
       }
       # Otherwise we should assume these variables exist
-      parameters = output$parameters ; converged = output$converged ; rm(output)      
+      parameters = output$parameters ; converged = output$converged ; kept_chains = output$kept_chains 
+      # Then tidy
+      rm(output)      
 
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
@@ -118,9 +120,9 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
 
           # ...if this is a site run save the full ensemble and everything else...
-          save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
+          save(kept_chains,parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
           # store the parameters and driver information
-          save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
+          save(kept_chains,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
 #          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
 #               file=outfile_parameters, compress="gzip", compression_level = 6)

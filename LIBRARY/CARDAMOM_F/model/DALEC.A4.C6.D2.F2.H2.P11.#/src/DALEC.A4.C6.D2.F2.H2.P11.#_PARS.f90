@@ -64,8 +64,8 @@ module MODEL_PARAMETERS
     !
 
     ! Decomposition litter -> som (day-1)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
     ! Fraction of GPP respired as autotrophic
     PI%parmin(2) = 0.2d0
@@ -73,11 +73,11 @@ module MODEL_PARAMETERS
 
     ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
     PI%parmin(3) = 0.001d0
-    PI%parmax(3) = 10d0
+    PI%parmax(3) = 20d0
 
     ! Potential rate of direct labile to fine root (gC/m2/day)
     PI%parmin(4) = 0.01d0
-    PI%parmax(4) = 10d0
+    PI%parmax(4) = 20d0
 
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
@@ -117,7 +117,7 @@ module MODEL_PARAMETERS
 
     ! Potential rate of seasonal labile to foliage (gC/m2/day)
     PI%parmin(13) = 0.001d0
-    PI%parmax(13) = 10d0
+    PI%parmax(13) = 20d0
 
     ! Clab Release period
     PI%parmin(14) = 10d0
@@ -184,7 +184,7 @@ module MODEL_PARAMETERS
 
     ! Potential growth rate of wood (gC/m2/day)
     PI%parmin(38) = 0.01d0
-    PI%parmax(38) = 10d0
+    PI%parmax(38) = 20d0
 
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0

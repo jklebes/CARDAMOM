@@ -65,7 +65,7 @@ ecdf_execute<- function(command,cluster_address) {
     }
     # Make sure the user is there befor attempting to connect to avoid timing out issues
     here = "n"
-    while (here == "n") {
+    while (here != "y") {
        here = readline("...is there anybody out there...? (y/n)")
     }
     # Issue commands to the remote server

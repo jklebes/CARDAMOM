@@ -135,8 +135,8 @@ for (yr in seq(1,nos_years)) {
               ## Determine downscaling coefficient for GPP from daily to hourly based on radiation curve
               hold_gpp = swrad_out/rep(rollapply(swrad_out, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each = steps_per_day)
               ## Determine downscale respiration fluxes based on temperature curve and exponential response function
-              hold_resp=exp(grid_output$parameters[slot_i,slot_j,10,quantiles_locs[2]]*sat_out)
-              hold_resp=hold_resp/rep(rollapply(hold_resp, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each=steps_per_day)
+              hold_resp = exp(grid_output$parameters[slot_i,slot_j,10,quantiles_locs[2]]*sat_out)
+              hold_resp = hold_resp/rep(rollapply(hold_resp, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each=steps_per_day)
               # Determine hourly flux rate for variables which we assume constant emission over the day
               hold_const = 1/steps_per_day
 

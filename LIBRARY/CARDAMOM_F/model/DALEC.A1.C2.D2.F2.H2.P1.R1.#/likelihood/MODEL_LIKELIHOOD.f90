@@ -599,8 +599,8 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(33)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater than wood litter
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(34) < pars(35)) then
+    ! Combustion completeness for foliar + fine root litter should be greater than foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(34) < pars(31)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
     ! Combustion completeness for wood litter should be greater than non-photosynthetic tissue

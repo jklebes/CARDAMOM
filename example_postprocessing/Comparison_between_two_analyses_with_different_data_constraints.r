@@ -34,18 +34,20 @@ mid_quant = 4 ; low_quant = 2 ; high_quant = 6
 wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
 
 # Set output directory
+out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/LTSS/EcologicalDiagnosisOfGeoschem/figures/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa_one_vs_all/"
-out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_single_repeat/"
+#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures_single_repeat/"
 #out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
-outsuffix = "_singleTWB_vs_repeatTWB"
+#outsuffix = "_singleTWB_vs_repeatTWB"
 #outsuffix = "_LAI_vs_fAPAR"
 #outsuffix = "_noGPP_vs_withGPP"
-#outsuffix = "_noNBE_vs_withNBE"
+outsuffix = "_noNBE_vs_withNBE"
 
 # Assign the baseline analysis - the original
 # Original AGB assimilated (2003)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_one_agb/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
@@ -54,14 +56,15 @@ load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""
 orig_PROJECT = PROJECT ; orig_grid_output = grid_output
 #orig_name = "Baseline"
 #orig_name = "withLAI" # used in labelling figures
-orig_name = "Single" # used in labelling figures
+#orig_name = "Single" # used in labelling figures
 #orig_name = "-GPP" # used in labelling figures
-#orig_name = "-NBE" # used in labelling figures
+orig_name = "-NBE" # used in labelling figures
 # Assign the alternate analysis - the new data constraint
 # Repeat AGB assimilated (2003-2019)
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/ODA_extension_Africa_agb/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_GCP_AGB_fAPAR/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
+#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_OCO2v11_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_NBE/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM_R_OUTPUT/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
@@ -69,9 +72,9 @@ load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 alt_PROJECT = PROJECT ; alt_grid_output = grid_output 
 #alt_name = "withfPAR" # used in labelling figures
-alt_name = "Repeat" # used in labelling figures
+#alt_name = "Repeat" # used in labelling figures
 #alt_name = "+GPP" # used in labelling figures
-#alt_name = "+NBE" # used in labelling figures
+alt_name = "+NBE" # used in labelling figures
 
 # Tidy
 rm(PROJECT,grid_output)
@@ -709,7 +712,7 @@ c_colours = c("blue","green")
 nbins = 30 # desired number of catagories, you might not get this many
 
 png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_parameter_PDFs_by",outsuffix,".png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(6,6), mar = c(2,2,2,1))
+par(mfrow=c(7,7), mar = c(2,2,2,1))
 # Loop parameters
 for (p in seq(1, dim(orig_grid_output$parameters)[3]-1)) {
      # Set to local variables
@@ -729,32 +732,6 @@ for (p in seq(1, dim(orig_grid_output$parameters)[3]-1)) {
      # Now plot them together
      ymax = max(c(tmp1,tmp2))
      plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=paste("Parameter = ",p,sep=""), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with original
-     lines(tmp2~x_axis, col = c_colours[2], lwd=2) # Add next alternate
-     if (p == 1) {legend("topleft",legend = c(orig_name, alt_name), col = c(c_colours[1],c_colours[2]), lty=1, lwd=1.6, bty = "n", cex=0.8)}
-} # loop parameters
-dev.off()
-
-png(file = paste(out_dir,"/",gsub("%","_",orig_PROJECT$name),"_log_parameter_PDFs_by",outsuffix,".png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(6,6), mar = c(2,2,2,1))
-# Loop parameters
-for (p in seq(1, dim(orig_grid_output$parameters)[3]-1)) {
-     # Set to local variables
-     tmp1 = log(as.vector(orig_grid_output$parameters[,,p,mid_quant]))
-     tmp2 = log(as.vector(alt_grid_output$parameters[,,p,mid_quant]))
-     # Determine the x axis range and breakpoints
-     b <- min(c(tmp1,tmp2), na.rm=TRUE) # Set the minimum for the breakpoints
-     e <- max(c(tmp1,tmp2), na.rm=TRUE) # Set the maximum for the breakpoints
-     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
-     ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
-     # Plot the seperate histograms and store them in an object, do not save them yet
-     tmp1 <- hist(tmp1, breaks = ax, plot = FALSE)
-     tmp2 <- hist(tmp2, breaks = ax, plot = FALSE)
-     x_axis = tmp1$mids
-     tmp1 = tmp1$counts / sum(tmp1$counts) 
-     tmp2 = tmp2$counts / sum(tmp2$counts)
-     # Now plot them together
-     ymax = max(c(tmp1,tmp2))
-     plot(tmp1~x_axis, type="l", lwd=2, col = c_colours[1], main=paste("log(Parameter) = ",p,sep=""), xlab="", cex.main=1.3, cex.axis=1.2, ylab="", ylim=c(0,ymax)) # Start with original
      lines(tmp2~x_axis, col = c_colours[2], lwd=2) # Add next alternate
      if (p == 1) {legend("topleft",legend = c(orig_name, alt_name), col = c(c_colours[1],c_colours[2]), lty=1, lwd=1.6, bty = "n", cex=0.8)}
 } # loop parameters
@@ -8389,3 +8366,4 @@ dev.off()
 ## end print to specific file
 
 sink()
+

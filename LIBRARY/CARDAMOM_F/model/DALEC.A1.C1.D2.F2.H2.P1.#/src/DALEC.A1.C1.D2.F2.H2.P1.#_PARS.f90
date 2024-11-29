@@ -68,8 +68,8 @@ module MODEL_PARAMETERS
 
     ! Decomposition of litter to som (fraction / day-1)
     ! Note is modified by exponential temperature function (p10)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
     ! Fraction of GPP respired as autotrophic (Ra:GPP),
     ! i.e. 1-CUE

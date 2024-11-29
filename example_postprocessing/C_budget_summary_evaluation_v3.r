@@ -995,7 +995,7 @@ skip_clusters = FALSE
 if (skip_clusters == FALSE) {
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(6,6), mar = c(2,2,2,1))
+par(mfrow=c(7,7), mar = c(2,2,2,1))
 # Loop parameters
 for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Set to local variables
@@ -1003,7 +1003,7 @@ for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
-     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
      ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
      # Reset ymax for update across clusters
      ymax = 0

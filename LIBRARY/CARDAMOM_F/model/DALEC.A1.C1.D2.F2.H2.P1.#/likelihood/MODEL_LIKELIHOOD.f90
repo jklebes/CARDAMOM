@@ -612,11 +612,11 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
-    ! difference from GPP allocation to roots
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif
+    !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
+    !! difference from GPP allocation to roots
+    !if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
+    !    EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    !endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
@@ -629,8 +629,8 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater than non-photosynthetic tissue
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
+    ! Combustion completeness for foliar + fine root litter should be greater foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
@@ -676,7 +676,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi !, EQF, etol
+    double precision :: infi, tmp !, EQF, etol
     !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
@@ -696,8 +696,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                  C_etol = 0.05d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.20         !
+                                  C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.100        !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -705,84 +705,20 @@ module model_likelihood_module
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
-
     infi = 0d0
 
-    ! estimate GPP allocation fractions
-    fauto = pars(2)
-    ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-
-    ! derive mean pools
-    do n = 1, nopools-1
-       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+!    ! derive mean pools
+!    do n = 1, nopools
+!       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+!    end do
+    ! derive mean pools for first year
+    do n = 1, nopools
+       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
     end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
-    ! Determine the mean January pool sizes
-    jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
-    do n = 1, nopools-1
-      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
-      do y = 1, DATAin%nos_years
-         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
-         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
-      end do
-      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
-    end do
-
-    !
-    ! Begin EDCs here
-    !
-
-    ! EDC 6
-    ! ensure ratio between Cfoliar and Croot is less than 5
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    end if
-
-    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
-    ! the empirical phenology but mechanistic hydrology / photosynthesis
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
-    end if
-
-!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
-!    ! Assesses whether the mean LAI in the summer months (June, July, August)
-!    ! is greater than the mean outwith. This ensures the peak LAI in the season
-!    ! is summer time.
-!    if ((EDC2 == 1 .or. DIAG == 1)) then
-!        ! Set values for vectors used to select summer vs non-summer time points.
-!        tmp1 = 0d0 ; tmp2 = 1d0
-!        ! Where condition sets tmp1 == 1 for days of year for JJA
-!        where (met(6,:) > 150d0 .and. met(6,:) < 245d0) tmp1 = 1d0
-!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
-!        ! during summer but 1 elsewhere
-!        tmp2 = tmp2 - tmp1
-!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
-!        ! The sum of each of these variables is also conveniently the number of values to 
-!        ! be averaged over.
-!        if (sum(M_LAI * tmp1) / sum(tmp1) < sum(M_LAI * tmp2) / sum(tmp2)) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
-!        end if 
-!    end if
-
-    ! Equilibrium factor (in comparison with initial conditions)
-!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
-    ! Pool exponential decay tolerance
-!    etol = 0.3d0 !0.1d0
-
-    ! first calculate total flux for the whole simulation period
-!    do fl = 1, nofluxes
-!        FT(fl) = 0
-!        do nd = 1, nodays
-!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-!        end do
-!    end do
     ! First calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
@@ -854,6 +790,66 @@ module model_likelihood_module
 !    Fin_yr2(7)  = FT_yr2(47)
 !    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
 
+!    ! Determine the mean January pool sizes
+!    jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
+!    do n = 1, nopools-1
+!      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
+!      do y = 1, DATAin%nos_years
+!         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
+!         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
+!      end do
+!      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
+!    end do
+
+    !
+    ! Begin EDCs here
+    !
+
+!    ! ensure ratio between Cfoliar and Croot is less than 5
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+!        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+!    end if
+!
+!    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
+!    ! the empirical phenology but mechanistic hydrology / photosynthesis
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!    end if
+
+!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
+!    ! Assesses whether the mean LAI in the summer months (June, July, August)
+!    ! is greater than the mean outwith. This ensures the peak LAI in the season
+!    ! is summer time.
+!    if ((EDC2 == 1 .or. DIAG == 1)) then
+!        ! Set values for vectors used to select summer vs non-summer time points.
+!        tmp1 = 0d0 ; tmp2 = 1d0
+!        ! Where condition sets tmp1 == 1 for days of year for JJA
+!        where (met(6,:) > 150d0 .and. met(6,:) < 245d0) tmp1 = 1d0
+!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
+!        ! during summer but 1 elsewhere
+!        tmp2 = tmp2 - tmp1
+!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
+!        ! The sum of each of these variables is also conveniently the number of values to 
+!        ! be averaged over.
+!        if (sum(M_LAI * tmp1) / sum(tmp1) < sum(M_LAI * tmp2) / sum(tmp2)) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!        end if 
+!    end if
+
+    ! Equilibrium factor (in comparison with initial conditions)
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+    ! Pool exponential decay tolerance
+!    etol = 0.3d0 !0.1d0
+
+    ! first calculate total flux for the whole simulation period
+!    do fl = 1, nofluxes
+!        FT(fl) = 0
+!        do nd = 1, nodays
+!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
+!        end do
+!    end do
+
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
     ! See Bloom et al., 2016 PNAS for details
@@ -872,52 +868,91 @@ module model_likelihood_module
 !       end if
 !    end do
 
+     ! What are in effect the potential growth rates are modulated by the current 
+     ! fixed temperature sub-model used in the model. This means that the parameterised 
+     ! potential rates might never be achievable even if plausible. Thus the maximum 
+     ! parameter bound for the potential growth rates need to be increased. These EDCs 
+     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+     if ((EDC2 == 1 .or. DIAG == 1)) then
+         ! Foliage
+         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+         end if
+         ! Fine roots
+         if (maxval(M_FLUXES(:,6)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+         end if
+         ! Wood
+         if (maxval(M_FLUXES(:,7)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+         end if
+     end if
+
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+    endif
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+    endif
+
     if (EDC2 == 1 .or. DIAG == 1) then
 
-        ! Living pools
-        do n = 1, 3
-!        do n = 1, 3, 2 ! labile + fine root
-        !do n = 3, 3 ! fine root only
-           ! Restrict mean rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-           end if
-           ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!        ! Living pools
+!        do n = 1, 3
+!           ! Restrict mean rates of increase
+!           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
-           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-           ! Restrict exponential behaviour at initialisation
-           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-           !end if
-        end do ! pool lab, fol, fine root loop 
-        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-        end if
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!           ! Restrict rates from deviating unrealistically from the mean
+!!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!           end if
+!           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!           end if
+!           ! Restrict exponential behaviour at initialisation
+!           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           !end if
+!        end do
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 3
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
          if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                    abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
          end if
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 4
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+!!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!        end if
+!         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!         end if
+!!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!        end if
         ! Dead pools
-        do n = 5, 6  ! Litter + som
-!        do n = 6, 6   ! som only
+        do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
 !           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
@@ -926,18 +961,19 @@ module model_likelihood_module
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
 !           ! Restrict exponential behaviour at initialisation
 !           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
         end do
+
         ! Water pool(s)
         n = 7  ! surface water pool
         ! Restrict rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Restrict rates from deviating unrealistically from the mean
 !        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
@@ -946,23 +982,34 @@ module model_likelihood_module
 !        end if
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
         end if
 !        ! Restrict exponential behaviour at initialisation
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
+
     end if ! EDC2 == 1 .or. DIAG == 1
 
-    ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(35) = 0
-    end if
-
-!    ! Prevent NPP -> foliage (FLX4,8) > NPP (GPP-Ra, FLX1-FLX3)
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(36) = 0
-!   end if
+    ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
+    ! leaf economic spectrum (LES).
+    ! LL (months) ~ LMA (gm2) R2 = 0.42 from 
+    ! Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
+    ! Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496 
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
+        ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
+        ! Estimating the MTT, converting from days to years using 1/365.25 = 0.002737851
+        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
+              / dble(nodays)) * 0.002737851d0
+        ! determine the lower bound of the LES 
+        if (tmp < 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
+        endif        
+        if (tmp > 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0)) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -997,7 +1044,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_pools(pools,pool_number,averaging_period,nopools)
+  double precision function cal_mean_pools(pools,averaging_period)
 
     ! Function calculate the mean values of model pools / states across the
     ! entire simulation run
@@ -1005,20 +1052,15 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: nopools          & !
-                          ,pool_number      & !
-                          ,averaging_period   !
+    integer, intent(in) :: averaging_period   !
 
-    double precision,dimension(averaging_period,nopools), intent (in) :: pools
+    double precision,dimension(averaging_period), intent (in) :: pools
 
     ! declare local variables
     integer :: c
 
-    ! initial conditions
-    cal_mean_pools = 0d0
-
     ! loop through now
-    cal_mean_pools = sum(pools(1:averaging_period,pool_number))/dble(averaging_period)
+    cal_mean_pools = sum(pools(1:averaging_period))/dble(averaging_period)
 
     ! ensure return command issued
     return

@@ -651,7 +651,7 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(44) < pars(45)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif
-    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    ! Combustion completeness for foliage should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(44) < pars(46)) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif

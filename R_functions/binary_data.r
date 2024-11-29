@@ -652,25 +652,35 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       PARPRIORS[11] = 54.165                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Mean of reported PFT values from Oliver et al., (2022)
                                                                       # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                       # due to the different temperature response functions used in ACM2 vs ACM 1
-      PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
-      PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
-      PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
-      PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-      PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
-      PARPRIORS[23]=OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-      #PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
-      #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-      #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
+      PARPRIORS[17] = OBS$lca                ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
+      PARPRIORS[19] = OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19] = OBS$Cfol_initial_unc} # Cfoliar prior
+      PARPRIORS[20] = OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20] = OBS$Croots_initial_unc} # Croots prior
+      PARPRIORS[21] = OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21] = OBS$Cwood_initial_unc} # Cwood prior
+      PARPRIORS[22] = OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22] = OBS$Clit_initial_unc} # Clitter prior
+      PARPRIORS[23] = OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23] = OBS$Csom_initial_unc} # Csom prior
+      PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+      PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
+      PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
+      PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
       PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-      #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
+      PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
       PARPRIORS[33] = 0.05                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
-      PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which root growth totally suppressed (oC)
+      PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which foliage and root growth totally suppressed (oC)
       PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 1.0 # temperature at which wood growth totally suppressed (oC)
       PARPRIORS[43] = -2.0                ; PARPRIORUNC[43] = 0.5 # minimum leaf water potential (MPa)
       # Other priors
       OTHERPRIORS[1] = OBS$soilwater       ; OTHERPRIORUNC[1] = OBS$soilwater_unc # Initial soil water fraction (GLEAM v3.1a)
       OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+      #if (PARPRIORS[17] != -9999) { 
+      #    # LL (months) ~ LMA (gm2) R2 = 0.42 from 
+      #    # Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
+      #    # Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496
+      #    OTHERPRIORS[6]   = (0.0031*(PARPRIORS[17]/0.48)**c(1.71))/12  #  Mean estimate
+      #    tmp1 = (0.0031*(PARPRIORS[17]-PARPRIORUNC[17]/0.48)**c(1.62))/12 # Lower 95 % CI estimate
+      #    tmp2 = (0.0031*(PARPRIORS[17]+PARPRIORUNC[17]/0.48)**c(1.82))/12 # Upper 95 % CI estimate
+      #    OTHERPRIORUNC[6] = (tmp2-tmp1) * 0.5
+      #}
   } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#") {
       PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #      PARPRIORS[11]=1.89*14.77735          ; PARPRIORUNC[11]=1.89*0.4696238 # Derived from ACM2 recalibration.
