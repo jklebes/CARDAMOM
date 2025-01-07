@@ -36,10 +36,6 @@ extract_wood_productivity<- function(i1,j1,timestep_days,spatial_type,resolution
    # Update the user
    if (use_parallel == FALSE) {print(paste("Cwood productivity / increment extracted for current location ",Sys.time(),sep=""))}
 
-#   # find the nearest location
-#   output = closest2d_2(1,Cwood_inc_all$lat,Cwood_inc_all$long,latlon_in[1],latlon_in[2])
-#   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
-
    # Create time series output variables
    Cwood_inc = rep(-9999, length(timestep_days))
    Cwood_inc_unc = rep(-9999, length(timestep_days))
@@ -49,9 +45,9 @@ extract_wood_productivity<- function(i1,j1,timestep_days,spatial_type,resolution
    # its associated uncertainty and period of effect
    for (t in seq(1, length(Cwood_inc_all$place_obs_in_step))) {
         # Prodictivity estimate
-        Cwood_inc[Cwood_inc_all$place_obs_in_step[t]] = Cwood_inc_all$Cwood_increment_gCm2[i1,j1,t]
+        Cwood_inc[Cwood_inc_all$place_obs_in_step[t]] = Cwood_inc_all$Cwood_increment_gCm2day[i1,j1,t]
         # Its uncertainty
-        tmp = min(Cwood_inc[Cwood_inc_all$place_obs_in_step[t]], Cwood_inc_all$Cwood_increment_uncertainty_gCm2[i1,j1,t])
+        tmp = min(Cwood_inc[Cwood_inc_all$place_obs_in_step[t]], Cwood_inc_all$Cwood_increment_uncertainty_gCm2day[i1,j1,t])
         Cwood_inc_unc[Cwood_inc_all$place_obs_in_step[t]] = tmp
         # Its period of effect
         Cwood_inc_lag[Cwood_inc_all$place_obs_in_step[t]] = Cwood_inc_all$Cwood_increment_lag_step[i1,j1,t]

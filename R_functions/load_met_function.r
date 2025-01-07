@@ -33,9 +33,6 @@
 load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamom_ext,
                               path_to_met_source,met_source,wheat) {
 
-    # Create target grid for aggregation if needed
-    target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
-
     if (met_source == "ERA" | met_source == "isimip3a") {
 
         # Loop through each monthly file
@@ -56,8 +53,6 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              t_grid = t_grid + dim(var_in)[3]
              # read in the location information
              lat = ncvar_get(data1, "Latitude") ; long = ncvar_get(data1, "Longitude")
-#             # convert input data long to conform to what we need
-#             check1 = which(long > 180) ; if (length(check1) > 0) { long[check1] = long[check1]-360 }
 
              # expand the one directional values here into 2 directional
              lat_dim = length(lat) ; long_dim = length(long)
@@ -72,7 +67,18 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                   # This dependes on the lat / long / tmp1 spatially matching each other AND
                   # latitude ranging -90/90 and longitude ranging -180/180 degrees
                   var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var_in[,,t]))
-                  var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                  var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
+
+                  # Extract the epsg from the file
+                  epsg = crs(var1, describe = TRUE)$code
+                  # If we have an epsg then we want to know if it differs from the one desired by the analysis
+                  if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+                      # Ensure that the extent of the input object is consistent 
+                      # with the possible extent of the selected epsg
+                      var1 = crop(var1, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))
+                      # If it does not match we need to reproject it
+                      var1 = project(var1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+                  }
 
                   # Extend the extent of the overall grid to the analysis domain
                   var1 = extend(var1,cardamom_ext)
@@ -82,11 +88,11 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                   # Match resolutions
                   if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                       # Resample to correct grid
-                      var1 = resample(var1, target, method="bilinear") ; gc() 
+                      var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                   } # Aggrgeate to resolution
 
                   # break out from the rasters so can manipulate
-                  var1_out = append(var1_out, as.vector(unlist(var1))[wheat])
+                  var1_out = append(var1_out, values(var1)[wheat])
              } # step within month loop
 
         }  # month loop
@@ -114,8 +120,6 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
         var_in = ncvar_get(data1, infile_varid[1])
         # read in the location information
         lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
-#        # convert input data long to conform to what we need
-#        check1 = which(long > 180) ; if (length(check1) > 0) { long[check1] = long[check1]-360 }
 
         # expand the one directional values here into 2 directional
         lat_dim = length(lat) ; long_dim = length(long)
@@ -131,7 +135,18 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # This dependes on the lat / long / tmp1 spatially matching each other AND
              # latitude ranging -90/90 and longitude ranging -180/180 degrees
              var1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(var_in[,,t]))
-             var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+             var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
+
+             # Extract the epsg from the file
+             epsg = crs(var1, describe = TRUE)$code
+             # If we have an epsg then we want to know if it differs from the one desired by the analysis
+             if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+                 # Ensure that the extent of the input object is consistent 
+                 # with the possible extent of the selected epsg
+                 var1 = crop(var1, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))
+                 # If it does not match we need to reproject it
+                 var1 = project(var1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+             }
 
              # Extend the extent of the overall grid to the analysis domain
              var1 = extend(var1,cardamom_ext)
@@ -141,7 +156,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # Match resolutions of the datasets
              if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                  # Resample to correct grid
-                 var1 = resample(var1, target, method="bilinear") ; gc() 
+                 var1 = resample(var1, cardamom_ext, method="average") ; gc() 
              } # Aggrgeate to resolution
 
              # break out from the rasters so can manipulate

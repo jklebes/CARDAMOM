@@ -97,7 +97,7 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                  Cwood_mortality_uncertainty = rast(paste(path_to_Cwood_mortality,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(Cwood_mortality), resolution = res(Cwood_mortality))
+                 target = rast(crs = ("epsg:4326"), ext = ext(Cwood_mortality), resolution = res(Cwood_mortality))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(Cwood_mortality,target) == FALSE) {
                      # Resample to correct grid

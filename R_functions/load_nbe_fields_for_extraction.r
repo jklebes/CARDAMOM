@@ -91,12 +91,12 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
                   for (t in seq(1, dim(var1_in)[3])) {
                        # Convert to a raster, assuming standad WGS84 grid
                        var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
-                       var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                       var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                        var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2_in[,,t]))
-                       var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                       var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
 
                        # Create raster with the target crs (technically this bit is not required)
-                       target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+                       target = rast(crs = ("epsg:4326"), ext = ext(var1), resolution = res(var1))
                        # Check whether the target and actual analyses have the same CRS
                        if (compareGeom(var1,target) == FALSE) {
                            # Resample to correct grid
@@ -276,13 +276,11 @@ load_nbe_fields_for_extraction<-function(latlon_in,nbe_source,years_to_load,card
       var2 = var2 * 86400 * 1e3
 
       # Aggregate to target resolution and extent
-      output = regrid_func(var1, lat_in, long_in, cardamom_ext)
+      output = regrid_func(var1, epsg_in, lat_in, long_in, cardamom_ext)
       nbe_out = output$var ; lat = output$lat ; long = output$long ; rm(output,var1)
-      output = regrid_func(var2, lat_in, long_in, cardamom_ext)
+      output = regrid_func(var2, epsg_in, lat_in, long_in, cardamom_ext)
       nbe_unc_out = output$var ; rm(output,var2)
 
-# enforce a hack to reduce the uncertainty of nbe for liangs analysis to force consistentcy with geoschem
-nbe_unc_out = nbe_unc_out * 0.25
       # enforce minimum uncertainty value
       nbe_unc_out[nbe_unc_out < 0.01] = 0.01 # (gC/m2/day)
 
@@ -378,12 +376,12 @@ nbe_unc_out = nbe_unc_out * 0.25
 
                     # Convert to a raster, assuming standad WGS84 grid
                     var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                    var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                    var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                     var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
-                    var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                    var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
 
                     # Create raster with the target crs (technically this bit is not required)
-                    target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+                    target = rast(crs = ("epsg:4326"), ext = ext(var1), resolution = res(var1))
                     # Check whether the target and actual analyses have the same CRS
                     if (compareGeom(var1,target) == FALSE) {
                         # Resample to correct grid
@@ -564,12 +562,12 @@ nbe_unc_out = nbe_unc_out * 0.25
 
                     # Convert to a raster, assuming standad WGS84 grid
                     var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                    var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                    var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                     var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2))
-                    var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                    var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
 
                     # Create raster with the target crs (technically this bit is not required)
-                    target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+                    target = rast(crs = ("epsg:4326"), ext = ext(var1), resolution = res(var1))
                     # Check whether the target and actual analyses have the same CRS
                     if (compareGeom(var1,target) == FALSE) {
                         # Resample to correct grid

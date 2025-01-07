@@ -41,31 +41,13 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
   if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
   load(paste(infile))
-
-  # work out area matrix for the pixels in meters
-  # include adjustment for g-> Tg (*1e-12)
-  if (PROJECT$grid_type == "UK") {
-      output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))*1e-12
-      area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else if (PROJECT$grid_type == "wgs84") {
-      # generate the lat / long grid again
-      output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      # then generate the area estimates for each pixel
-      area_with_g_Tg = calc_pixel_area(grid_long,grid_lat)*1e-12
-      area = calc_pixel_area(grid_long,grid_lat)
-      # this output is in vector form and we need matching array shapes so...
-      area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else {
-      stop("valid spatial grid option not selected (UK, or wgs84)")
-  }
+   
+  # generate the lat / long grid again
+  output = generate_grid(cardamom_grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+  area = output$area ; grid_lat = output$lat ; grid_long = output$long
+  # include adjustment for g-> Tg (*1e-12)  
+  area_with_g_Tg = area*1e-12
+  rm(output)
 
   # determine the array value for the median,
   num_quantiles = dim(grid_output$mean_labile_gCm2)[3]

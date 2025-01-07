@@ -189,7 +189,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
                 ,paste("mkdir ",eresultspath,sep="")
                 ,paste("mkdir ",eoestreampath,sep="")
                 ,paste("mkdir ",eexepath,sep="")
-                ,paste("scp -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
+                #,paste("scp -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
+                ,paste("scp ",username,"@",home_computer,":",paths$cardamom,"/R_functions/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh ",eexepath,sep="")
                 ,paste("chmod +x ",eexepath,"/CARDAMOM_ECDF_SUBMIT_BUNDLES.sh",sep=""))
 
       # Have we been given this information already?
@@ -203,7 +204,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
           print("...then copying source code to eddie and compile")
           if (project_src == "C") {
               commands = append(commands,c(paste("mv ",ecdf_source,"CARDAMOM_C ",ecdf_source,"CARDAMOM_C_BKP",sep="")
-                               ,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
+                               #,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")
+                               ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_C ",ecdf_source,sep="")                               
                                ,paste("gcc ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/DALEC_CDEA_TEMPLATE.c -o ",ecdf_source,
                                       "CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out -lm",sep="")
                                ,paste("cp ",ecdf_source,"CARDAMOM_C/projects/DALEC_CDEA_TEMPLATE/a.out ",eexepath,"/",exe,sep="")))
@@ -214,7 +216,8 @@ cardamom_project_setup <- function (paths,PROJECT) {
               if (debug) {compiler_options=paste(compiler_options," -debug -backtrace",sep="")}
               commands=append(commands,c(paste("rm -r ",ecdf_source,"CARDAMOM_F_BKP",sep="")
                                         ,paste("mv ",ecdf_source,"CARDAMOM_F ",ecdf_source,"CARDAMOM_F_BKP",sep="")
-                                        ,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
+                                        #,paste("scp -r -i ",sshpass_key_home," ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")
+                                        ,paste("scp -r ",username,"@",home_computer,":",paths$cardamom,"LIBRARY/CARDAMOM_F ",ecdf_source,sep="")                                        
                                         ,paste("cd ",ecdf_source,"CARDAMOM_F/executable",sep="")
                                         ,paste("rm cardamom.exe") # depends on working directory "executable"
                                         ,paste("rm *.mod")        # depends on working directory "executable"
@@ -223,9 +226,9 @@ cardamom_project_setup <- function (paths,PROJECT) {
                                                " ../general/cardamom_structures.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_STRUCTURES.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC_StressTests.f90",
                                                " ../model/",modelname,"/src/",modelname,"_PARS.f90 ../general/cardamom_io.f90 ../method/MHMCMC/MCMC_FUN/MHMCMC.f90",
                                                " ../model/",modelname,"/likelihood/MODEL_LIKELIHOOD.f90 ../general/cardamom_main.f90 -o cardamom.exe",sep="")
-                                        ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))
+                                        ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/cardamom.exe ",eexepath,"/",exe,sep="")))    
               # If a crop model the copy the crop development files into place too
-              if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
+              if (modelname == "DALEC.A3.C3.H2.M1.015" | modelname == "DALEC.C3.M1.014") {
                   commands=append(commands,paste("cp ",ecdf_source,"CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",eexepath,"/",sep=""))
                   system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
               } #
@@ -289,7 +292,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
                        "../model/",modelname,"/src/",modelname,"_R_interface.f90 ","-o dalec.so -fPIC",sep=""))
           system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/executable/dalec.so ",exepath,"/dalec.so",sep=""))
           # Copy crop development file into position
-          if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.C3.M1.#") {
+          if (modelname == "DALEC.A3.C3.H2.M1.015" | modelname == "DALEC.C3.M1.014") {
                system(paste("cp ",paths$cardamom,"LIBRARY/CARDAMOM_F/model/",modelname,"/src/winter_wheat_development.csv ",exepath,"/",sep=""))
           } #
 

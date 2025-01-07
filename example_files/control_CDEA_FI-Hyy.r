@@ -15,7 +15,7 @@ source("./R_functions/load_all_cardamom_functions.r")
 ## projname
 # Give a runid
 #projname="FI-Hyy_example_noflx"
-projname="FI-Hyy_example"
+projname="FI-Hyy_example_rleaf"
 #projname="FI-Hyy_example_O3"
 #projname="FI-Hyy_example_Ofast"
 
@@ -36,7 +36,7 @@ sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote 
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method

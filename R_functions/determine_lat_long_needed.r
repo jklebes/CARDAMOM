@@ -30,24 +30,18 @@
 
 determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
 
-    # check input data
-    if (length(which(long > 180)) > 0) {stop("Long should be -180 to +180")}
-
-    # generate UK or WGS-84 lat long grid
-    if (grid_type == "UK") {
-        output = generate_uk_grid(lat,long,resolution)
-    } else if (grid_type=="wgs84") {
-        output = generate_wgs84_grid(lat,long,resolution)
-    } else {
-        stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
-    }
+    # Spatial grid
+    output = generate_grid(cardamom_grid_type,lat,long,resolution)
     # extract the latitude / longitude and extent/resolution information
     lat = output$lat ; long = output$long ; long_dim = output$long_dim ; lat_dim = output$lat_dim
     cardamom_ext = output$cardamom_ext
+    rm(output)
 
     # Create a grid specifically to be used for extracting the correct location from the gridded datasets
-    obs_long_grid = array(long, dim=c(long_dim,lat_dim))
-    obs_lat_grid = array(rev(lat), dim=c(long_dim,lat_dim)) # rev() accounts for the flipping of orientation conducted in the generate_*_grid()
+    # i.e. these will be upside down from the human eye.
+    # This reverses what was done in generate_grid()
+    obs_long_grid = long[,lat_dim:1]
+    obs_lat_grid = lat[,lat_dim:1] 
 
     # remove the values we don't want
     if (length(remove) > 0) {lat = lat[-remove] ; long = long[-remove]}

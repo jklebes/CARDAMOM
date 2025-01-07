@@ -97,7 +97,7 @@ load_wood_productivity_maps_for_extraction<-function(Cwood_inc_source,cardamom_e
                  Cwood_increment_uncertainty = rast(paste(path_to_Cwood_inc,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(Cwood_increment), resolution = res(Cwood_increment))
+                 target = rast(crs = ("epsg:4326"), ext = ext(Cwood_increment), resolution = res(Cwood_increment))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(Cwood_increment,target) == FALSE) {
                      # Resample to correct grid

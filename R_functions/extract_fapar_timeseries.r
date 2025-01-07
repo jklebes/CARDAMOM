@@ -37,8 +37,8 @@ extract_fapar_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
    if (use_parallel == FALSE) {print(paste("fAPAR data extracted for current location ",Sys.time(),sep=""))}
 
    # Extract current location to local variable
-   fapar = fapar_all$fapar_all[i1,j1,]
-   fapar_unc = fapar_all$fapar_unc_all[i1,j1,]
+   fapar = fapar_all$fapar[i1,j1,]
+   fapar_unc = fapar_all$fapar_unc[i1,j1,]
 
    # Just incase there is no missing data we best make sure there is a value which can be assessed
    if (length(fapar_all$missing_years) == 0) { fapar_all$missing_years=1066 }

@@ -96,7 +96,7 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                doy_in = ncvar_get(data1, "doy") ; doy_out = append(doy_out,doy_in)
                # Extract spatial information
                lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
-               # read the LAI observations
+               # read the LAI estimate
                lai_est_in = ncvar_get(data1, "LAI") # leaf area index (m2/m2)
                # read error variable
                lai_std_in = ncvar_get(data1, "LAI_SD") # standard deviation (m2/m2)
@@ -106,11 +106,21 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
                # Loop through the file to aggregate each time step in turn
                for (t in seq(1, length(doy_in))) {
 
-                     # Convert to a raster, assuming standad WGS84 grid
+                     # Convert to a raster, assuming standard WGS84 grid
                      var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(lai_est_in[,,t]))
-                     var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                     var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                      var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(lai_std_in[,,t]))
-                     var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                     var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
+
+                     # Extract the epsg from the file
+                     epsg = crs(var1, describe = TRUE)$code
+                     if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
+                     # If we have an epsg then we want to know if it differs from the one desired by the analysis
+                     if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+                         # If it does not match we need to reproject it
+                         var1 = project(var1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+                         var2 = project(var2, cardamom_grid_type, method="near", align = FALSE) ; gc()
+                     }
 
                      # Extend the extent of the overall grid to the analysis domain
                      var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
@@ -119,12 +129,10 @@ load_lai_fields_for_extraction<-function(latlon_in,lai_source,years_to_load,card
 
                      # Adjust spatial resolution of the datasets, this occurs in all cases
                      if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
-                         # Create raster with the target resolution
-                         target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
                          # Resample to correct grid.
                          # Probably should be done via aggregate function to allow for correct error propogation
-                         var1 = resample(var1, target, method="bilinear") ; gc() 
-                         var2 = resample(var2, target, method="bilinear") ; gc()
+                         var1 = resample(var1, cardamom_ext, method="average") ; gc() 
+                         var2 = resample(var2, cardamom_ext, method="average") ; gc()
                      } # Aggrgeate to resolution
 
                      # Combine estimate and uncertainty variables into a stacked raster

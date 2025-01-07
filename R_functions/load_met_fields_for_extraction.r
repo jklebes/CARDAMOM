@@ -32,7 +32,7 @@
 load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyear,endyear,spatial_type,cardamom_ext) {
 
     # let the user know this might take some time
-    print("Loading global met fields for subsequent sub-setting ...")
+    print("Loading global met fields for subsequent sub-setting...")
     # declare timing variables
     t_grid = 0
 
@@ -64,7 +64,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # expand the one directional values here into 2 directional
             lat_dim = length(lat) ; long_dim = length(long)
             long = array(long,dim=c(long_dim,lat_dim))
-            lat = array(lat,dim=c(lat_dim,long_dim)) ; lat=t(lat)
+            lat = array(lat,dim=c(lat_dim,long_dim)) ; lat = t(lat)
 
             # Read in an example of the first variable - this should be Shortwave radiation
             tmp1 = ncvar_get(data1,infile_varid[1])
@@ -136,50 +136,53 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # This dependes on the lat / long / tmp1 spatially matching each other AND
         # latitude ranging -90/90 and longitude ranging -180/180 degrees
         tmp1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(tmp1))
-        tmp1 = rast(tmp1, crs = ("+init=epsg:4326"), type="xyz")
+        tmp1 = rast(tmp1, crs = ("epsg:4326"), type="xyz")
 
+        # Extract the epsg from the file
+        epsg = crs(tmp1, describe = TRUE)$code
+        # If we have an epsg then we want to know if it differs from the one desired by the analysis
+        if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+            # Ensure that the extent of the input object is consistent 
+            # with the possible extent of the selected epsg
+            tmp1 = crop(tmp1, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))
+            # If it does not match we need to reproject it
+            tmp1 = project(tmp1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+        }
         # Extend the extent of the overall grid to the analysis domain
         tmp1 = extend(tmp1,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         tmp1 = crop(tmp1,cardamom_ext)
+        # Set error flags to NA
         tmp1[which(as.vector(tmp1) == -9999)] = NA
-        # Match resolutions
-        if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) {
-            # Create raster with the target resolution
-            target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
-            # Resample to correct grid
-            tmp1 = resample(tmp1, target, method="bilinear") ; gc() 
-        } # Aggrgeate to resolution
-
-        # Extract dimension information for the aggregated grid
-        # NOTE the axis switching between raster and actual array
-        long_dim = dim(tmp1)[2] ; lat_dim = dim(tmp1)[1]
-        # extract the lat / long information needed
-        long = crds(tmp1,df=TRUE, na.rm=FALSE)
-        lat  = long$y ; long = long$x
-        # restructure into correct orientation
-        long = array(long, dim=c(long_dim,lat_dim))
-        lat = array(lat, dim=c(long_dim,lat_dim))
-        # break out from the rasters into arrays which we can manipulate
-        tmp1 = array(as.vector(unlist(tmp1)), dim=c(long_dim,lat_dim))
         # We assume where that the first variable is shortwave radiation or
         # other positive definite variable. Thus, locations which are < 0
         # Are assumed to be non-valid locations
         tmp1[tmp1 < 0] = NA
-        # Save only the locations which have a realistic value.
-        # NOTE: the wheat_from_chaff approach is due to memory constraints on
-        # holding large arrays covering all potential locations and all time steps
-        wheat_from_chaff = which(is.na(tmp1) == FALSE)
+        
+        # Match resolutions
+        if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) {
+            # Resample to correct grid
+            tmp1 = resample(tmp1, cardamom_ext, method="average") ; gc() 
+        } # Aggrgeate to resolution
 
         # Filter through the reduced dataset for the specific locations
-        # NOTE: this selection by met_in$wheat vectorises the lat and long variables
-        # therefore we need to use closest2 option 1 (I think...)
-        output = lapply(1:dim(latlon_in)[1], FUN = closest2d_1,
-                        lat = lat[wheat_from_chaff], long = long[wheat_from_chaff],
-                        lat_in = latlon_in[,1], long_in = latlon_in[,2])
-        tmp1 = unlist(output, use.names=FALSE) ; rm(output)
-        # select the correct location values for the original vector form the wheat_from_chaff
-        wheat_from_chaff = wheat_from_chaff[tmp1] ; rm(tmp1)
+        # NOTE: cell number (or pixel number in the grid), this variable is not flipped to human viewing
+        # whereas the i_loc and j_loc have been
+        output = closest2d_tif(tmp1,latlon_in[,1],latlon_in[,2])
+        output_n = output$n_loc
+
+        # Extract dimension information for the aggregated grid
+        # NOTE the axis switching between raster and actual array
+        long_dim = dim(tmp1)[2] ; lat_dim = dim(tmp1)[1]
+
+        # Extract from raster for easier manipulation
+        tmp1 = values(tmp1)
+        # Filter for those points which match out desired land locations
+        tmp1 = tmp1[output_n]
+        # Of these location we now want to track the locations which contain valid
+        # meteorology
+        wheat_from_chaff = output_n[which(is.finite(tmp1))]
+        rm(output_n,tmp1)
 
         # define timing variables
         years_to_load = as.numeric(startyear):as.numeric(endyear)

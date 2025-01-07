@@ -44,7 +44,7 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
         bot_clay = rast(paste(path_to_sand_clay,"clay_percent_mean_30to100cm.tif", sep=""))
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(top_sand), resolution = res(top_sand))
+        target = rast(crs = ("epsg:4326"), ext = ext(top_sand), resolution = res(top_sand))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(top_sand,target) == FALSE) {
             # Resample to correct grid
@@ -112,16 +112,16 @@ load_sand_clay_fields_for_extraction<-function(latlon_in,sand_clay_source,cardam
 
         # Convert to a raster, assuming standad WGS84 grid
         top_sand = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(top_sand))
-        top_sand = rast(top_sand, crs = ("+init=epsg:4326"), type="xyz")
+        top_sand = rast(top_sand, crs = ("epsg:4326"), type="xyz")
         bot_sand = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(bot_sand))
-        bot_sand = rast(bot_sand, crs = ("+init=epsg:4326"), type="xyz")
+        bot_sand = rast(bot_sand, crs = ("epsg:4326"), type="xyz")
         top_clay = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(top_clay))
-        top_clay = rast(top_clay, crs = ("+init=epsg:4326"), type="xyz")
+        top_clay = rast(top_clay, crs = ("epsg:4326"), type="xyz")
         bot_clay = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(bot_clay))
-        bot_clay = rast(bot_clay, crs = ("+init=epsg:4326"), type="xyz")
+        bot_clay = rast(bot_clay, crs = ("epsg:4326"), type="xyz")
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(top_sand), resolution = res(top_sand))
+        target = rast(crs = ("epsg:4326"), ext = ext(top_sand), resolution = res(top_sand))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(top_sand,target) == FALSE) {
             # Resample to correct grid

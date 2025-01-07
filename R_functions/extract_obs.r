@@ -63,21 +63,14 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some NBE information (gC/m2/day); negative is sink
     ###
 
-    if (nbe_source == "GEOSCHEM_GCP" | nbe_source == "GEOSCHEM" | 
-        nbe_source == "Global_Combined" | nbe_source == "OCO2MIP") {
+    if (nbe_source == "Gridded_nc" | nbe_source == "Gridded_tif") {
 
-        # Check valid nbe_all object
-        if (nbe_all$retrieval_valid) {
-            # Extract NBE and uncertainty information
-            # NOTE: assume default uncertainty (+/- scale)
-            output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
-                                 spatial_type,resolution,grid_type,latlon_wanted,
-                                 nbe_all,years_to_load,doy_obs)
-            nbe = output$nbe ; nbe_unc = output$nbe_unc
-        } else {
-            nbe = -9999
-            nbe_unc = -9999
-        }
+        # Extract NBE and uncertainty information
+        # NOTE: assume default uncertainty (+/- scale)
+        output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
+                             spatial_type,resolution,grid_type,latlon_wanted,
+                             nbe_all,years_to_load,doy_obs)
+        nbe = output$nbe ; nbe_unc = output$nbe_unc
         
     } else if (nbe_source == "site_specific") {
 
@@ -104,7 +97,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some LAI information (m2/m2)
     ###
 
-    if (lai_source == "MODIS" | lai_source == "COPERNICUS" | lai_source == "Gridded") {
+    if (lai_source == "Gridded_tif" | lai_source == "Gridded_nc") {
 
         # Extract lai and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
@@ -144,7 +137,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some fAPAR information (0-1)
     ###
 
-    if (fapar_source == "MODIS") {
+    if (fapar_source == "Gridded_nc" | fapar_source == "Gridded_tif") {
 
         # Extract fAPAR and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
@@ -199,7 +192,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some initial Csom (gC/m2) information
     ###
 
-    if (Csom_source == "HWSD" | Csom_source == "SoilGrids"  | Csom_source == "SoilGrids_v2" | Csom_source == "NCSCD" | Csom_source == "NCSCD3m") {
+    if (Csom_source == "Gridded_nc" | Csom_source == "Gridded_tif") {
         Csom_info = extract_Csom_prior(grid_long_loc,grid_lat_loc,spatial_type,
                                        resolution,grid_type,latlon_wanted,Csom_all)
         Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
@@ -228,13 +221,13 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some sand / clay information (%)
     ###
 
-    if (sand_clay_source == "HWSD" | sand_clay_source == "SoilGrids" | sand_clay_source == "SoilGrids_v2") {
-        sand_clay=extract_sand_clay(grid_long_loc,grid_lat_loc,spatial_type,
+    if (sand_clay_source == "Gridded_nc" | sand_clay_source == "Gridded_tif") {
+        sand_clay = extract_sand_clay(grid_long_loc,grid_lat_loc,spatial_type,
                                     resolution,grid_type,latlon_wanted,sand_clay_all)
         top_sand = sand_clay$top_sand ; bot_sand = sand_clay$bot_sand
         top_clay = sand_clay$top_clay ; bot_clay = sand_clay$bot_clay
     } else if (sand_clay_source == "site_specific") {
-        infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         top_sand = read_site_specific_obs("top_sand_initial_percent",infile)
         bot_sand = read_site_specific_obs("bot_sand_initial_percent",infile)
         top_clay = read_site_specific_obs("top_clay_initial_percent",infile)
@@ -249,32 +242,22 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some crop management information (day)
     ###
 
-    if (crop_management_source == "sacks_crop_calendar") {
-        # could add other variables such as SOM (gC.m-2)
-        crop_dates=extract_sacks_crop_info(spatial_type,resolution,grid_type,latlon_wanted,crop_man_all)
-        planting_doy = crop_dates$plant ; planting_doy_unc = crop_dates$plant_range
-        harvest_doy = crop_dates$harvest ; harvest_doy_unc = crop_dates$harvest_range
-        # Prior parameter ranges span 365.25-> but rescale to 1-365.25 by taking the modulus.
-        # This means that we must put these priors into the parameter prior range space
-        harvest_doy = harvest_doy + 365.25
-        planting_doy = planting_doy + 365.25
-    } else if (crop_management_source == "site_specific") {
-        infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+    if (crop_management_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         planting_doy = read_site_specific_obs("planting_doy_initial",infile)
         planting_doy_unc = read_site_specific_obs("planting_doy_unc_initial",infile)
-        harvest_doy = read_site_specific_obs("harvest_doy_initial",infile)
-        harvest_doy_unc = read_site_specific_obs("harvest_doy_unc_initial",infile)
-        # Prior parameter ranges span 365.25-> but rescale to 1-365.25 by taking the modulus.
-        # This means that we must put these priors into the parameter prior range space
-        harvest_doy = harvest_doy + 365.25
+        growing_season_doy = read_site_specific_obs("growing_season_doy_initial",infile)
+        growing_season_doy_unc = read_site_specific_obs("growing_season_doy_unc_initial",infile)
+        # Prior parameter range for sowing date span 365.25-> but rescale to 1-365.25 by taking the modulus.
+        # This means that we must put this prior into the parameter prior range space
         planting_doy = planting_doy + 365.25
     } else {
         # assume no data available
-        #planting_doy = 304 ; planting_doy_unc = 15 # days
-        #harvest_doy = 208 ; harvest_doy_unc = 15 # days
+        #planting_doy = 304 + 365.25 ; planting_doy_unc = 15 # days
+        #growing_season_doy = 208 ; growing_season_doy_unc = 15 # days
         planting_doy = -9999 ; planting_doy_unc = -9999 # days
-        harvest_doy = -9999  ; harvest_doy_unc = -9999 # days # note +365.25 to account for the parameter range
-        #harvest_doy = 244+365.25  ; harvest_doy_unc = 14 # days # note +365.25 to account for the parameter range
+        growing_season_doy = -9999  ; growing_season_doy_unc = -9999 # days # note +365.25 to account for the parameter range
+        #growing_season_doy = 244   ; growing_season_doy_unc = 14 # days # note +365.25 to account for the parameter range
     }
 
     ###
@@ -332,7 +315,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_inc_lag = rep(-9999,times = length(Cwood_inc))
             Cwood_inc_lag[which(Cwood_inc > 0)] = 1 # assume applies to current time step only
         }
-    } else if (Cwood_inc_source == "Rainfor") {
+    } else if (Cwood_inc_source == "Gridded_nc" | Cwood_inc_source == "Gridded_tif") {
         # If there are any values in the analysis window
         if (max(Cwood_inc_all$place_obs_in_step) > 0) {
             # Extract the current location
@@ -375,7 +358,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_mortality_lag = rep(-9999,times = length(Cwood_mortality))
             Cwood_mortality_lag[which(Cwood_mortality > 0)] = 1 # assume applies to current time step only
         }
-    } else if (Cwood_mortality_source == "Rainfor") {
+    } else if (Cwood_mortality_source == "Gridded_nc" | Cwood_mortality_source == "Gridded_tif") {
         # If there are any values in the analysis window
         if (max(Cwood_mortality_all$place_obs_in_step) > 0) {
             # Extract the current location
@@ -397,7 +380,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + (0.1*mean(Cwood_mortality[Cwood_mortality_unc >= 0]))**2))
+    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + 
+                                                                  (0.1*mean(Cwood_mortality[Cwood_mortality_unc >= 0]))**2))
 
     ###
     ## Get some foliage to litter flux information (gC/m2/day; time series)
@@ -407,7 +391,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         foliage_to_litter=read_site_specific_obs("foliage_to_litter_gCm2day",infile)
         foliage_to_litter_unc=read_site_specific_obs("foliage_to_litter_unc_gCm2day",infile)
-        foliage_to_litter_lag=read_site_specific_obs("foliage_to_litter_lag_tstep",infile) # in model time steps
+        foliage_to_litter_lag=read_site_specific_obs("foliage_to_litter_lag_step",infile) # in model time steps
         # Has uncertainty information been provided?
         if (length(foliage_to_litter_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
@@ -433,13 +417,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ## Get some GPP information (time series; gC/m2/day)
     ###
 
-    if (GPP_source == "site_specific") {
+    if (gpp_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
-        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-#        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")}
-        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")}
         GPP = read_site_specific_obs("GPP_gCm2day",infile)
         GPP_unc = read_site_specific_obs("GPP_unc_gCm2day",infile)
         if (length(GPP_unc) == 1) {
@@ -447,9 +426,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # Composed of NEE 0.58 gC/m2/day (Hill et al., 2012) plus mass balance mismatch of
             # 0.16 gC/m2/day, therefore 0.74 gC/m2/day
             GPP_unc[which(GPP > 0)] = 0.74
-            if (modelname == "ACM") {GPP_unc = rep(mean(GPP)*0.40,times=length(GPP))}
         }
-    } else if (GPP_source == "Global_Combined") {
+    } else if (gpp_source == "Gridded_nc" | gpp_source == "Gridded_tif") {
 
         # Extract GPP and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
@@ -484,7 +462,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # Ill defined assumption
             Fire_unc[which(Fire > 0)] = 0.1
         }
-    } else if (fire_source == "Global_Combined") {
+    } else if (fire_source == "Gridded_nc" | fire_source == "Gridded_tif") {
 
         # Extract Fire and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
@@ -516,25 +494,11 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (Evap_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
-        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")}
-        #if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")}
-#        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")}
-        if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")}
         Evap = read_site_specific_obs("Evap_kgH2Om2day",infile)
         Evap_unc = read_site_specific_obs("Evap_unc_kgH2Om2day",infile)
         if (length(Evap_unc) == 1) {
             Evap_unc = rep(-9999,times = length(Evap))
             Evap_unc[which(Evap > -9999)] = 0.77 # Assuming Hollinger & Richardson (2005) Tree Physiology, 25, 873-885
-        }
-        if (modelname == "ACM") {
-            # borrow woody increment for soil evaporation in ACM_ET recalibration
-            Cwood_inc = read_site_specific_obs("soilevap_kgH2Om2day",infile)
-            # borrow Cfol_stock for wet canopy evaporation in ACM_ET recalibration
-            Cfol_stock = read_site_specific_obs("wetevap_kgH2Om2day",infile)
-            # actually lets make uncertainty half mean of total ET
-            Evap_unc = rep(abs(mean(Evap))*0.40, length.out = length(Evap))
-            Cwood_inc_unc = rep(abs(mean(Cwood_inc))*0.40, length.out = length(Evap))
-            Cfol_stock_unc = rep(abs(mean(Cfol_stock))*0.40, length.out = length(Evap))
         }
     } else {
         # assume no data available
@@ -621,9 +585,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_initial_unc = 0.25 * Cwood_initial
         }
 
-    } else if (Cwood_initial_source == "Avitabile" | Cwood_initial_source == "mpi_biomass" |
-               Cwood_initial_source == "UoL_stable_forest" |Cwood_initial_source == "Rainfor" |
-               Cwood_initial_source == "UoL_stable_savannah") {
+    } else if (Cwood_initial_source == "Gridded_nc" | Cwood_initial_source == "Gridded_tif") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
         output = extract_Cwood_initial(grid_long_loc,grid_lat_loc,spatial_type,
@@ -681,14 +643,10 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
             Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
         }
-    } else if (Cwood_stock_source == "mpi_biomass" |
-               Cwood_stock_source == "INPE_Avitabile" | Cwood_stock_source == "Avitabile" |
-               Cwood_stock_source == "Rainfor" | Cwood_stock_source == "Rainfor_annual" |
-               Cwood_stock_source == "McNicol" | Cwood_stock_source == "Biomass_maps_Africa_UoL" |
-               Cwood_stock_source == "ESA_CCI_Biomass" | Cwood_stock_source == "Saatchi_2021") {
+    } else if (Cwood_stock_source == "Gridded_nc" | Cwood_stock_source == "Gridded_tif") {
 
         # All maps converted into common format, therefore a common extraction subroutine can be used
-        if (max(Cwood_stock_all$place_obs_in_step) > 0) {
+        if (max(Cwood_stock_all$doy_obs) > 0) {
             output = extract_Cwood_stocks(grid_long_loc,grid_lat_loc,timestep_days,
                                           spatial_type,resolution,grid_type,latlon_wanted,
                                           Cwood_stock_all)
@@ -701,19 +659,6 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_stock = rep(-9999, length(timestep_days))
             Cwood_stock_unc = rep(-9999, length(timestep_days))
         }
-
-        # INPE Map is a merge of two separate ones, therefore it is a bad idea to have two time steps,
-        # one from each map as these data are inconsistent.
-        # Therefore, check whether we have two data points and take an average + average location
-        if (Cwood_stock_source == "INPE_Avitabile") {
-            tmp = which(Cwood_stock > 0)
-            if (length(tmp) == 2) {
-                tmp2 = Cwood_stock[tmp] ; tmp3 = Cwood_stock_unc[tmp]
-                Cwood_stock[tmp] = -9999 ; Cwood_stock_unc[tmp] = -9999
-                Cwood_stock[floor(mean(tmp))] = mean(tmp2) ; Cwood_stock_unc[floor(mean(tmp))] = mean(tmp3)
-                rm(tmp,tmp2,tmp3)
-            }
-        } # INPE_Avitabile map adjustment
     } else {
         # assume no data available
         Cwood_stock = -9999 ; Cwood_stock_unc = -9999
@@ -766,7 +711,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ###
     ## Get some Clitter information (stock)
     ###
-    #    print("checking Clitter")
+
     if (Clit_stock_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Clit_stock=read_site_specific_obs("Clit_stock_gCm2",infile)
@@ -856,7 +801,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         yield_class = -9999 #read_site_specific_obs("yield_class",infile)
         age = read_site_specific_obs("age",infile)
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
-    } else if (deforestation_source == "GFW") {
+    } else if (deforestation_source == "Gridded_nc" | deforestation_source == "Gridded_tif") {
         output = extract_forestry_information(grid_long_loc,grid_lat_loc,timestep_days,
                                               spatial_type,resolution,grid_type,latlon_wanted,
                                               forest_all,start_year,end_year,ctessel_pft,
@@ -879,7 +824,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ###
 
     if (burnt_area_source == "site_specific") {
-        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        infile = paste(path_to_site_obs,site_name,"_timeseries_met.csv",sep="")
         burnt_area = read_site_specific_obs("burnt_area_fraction",infile)
     } else if (burnt_area_source == " "){
         # assume no data available
@@ -892,13 +837,13 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
-    ## Get some snow water equivalent (mm/day)
+    ## Get some snow water equivalent (kgH2O/m2 or mm)
     ###
 
     if (snow_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        SWE=read_site_specific_obs("snow_water_mmday",infile)
-        SWE_unc=read_site_specific_obs("snow_water_unc_mmday",infile)
+        SWE=read_site_specific_obs("snow_water_kgH2Om2",infile)
+        SWE_unc=read_site_specific_obs("snow_water_unc_kgH2Om2",infile)
         if (length(which(SWE_unc != -9999)) == 0) {
             # on the other hand if not then we have no uncertainty info, so use default
            SWE_unc=rep(sd(SWE[which(SWE != -9999)],na.rm=TRUE),length.out=length(SWE))
@@ -914,15 +859,15 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
 
     if (soilwater_initial_source == "site_specific") {
         infile=paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-        soilwater=read_site_specific_obs("soil_water",infile)
-        soilwater_unc=read_site_specific_obs("soil_water_unc",infile)
+        soilwater=read_site_specific_obs("soil_water_fraction",infile)
+        soilwater_unc=read_site_specific_obs("soil_water_unc_fraction",infile)
         if (soilwater_unc == -9999 & soilwater > 0) {
           # on the other hand if not then we have no uncertainty info, so use default
           soilwater_unc = 0.10 * soilwater
         }
-    } else if (soilwater_initial_source == "GLEAM") {
-        output = extract_soilwater_initial(spatial_type,resolution,grid_type,latlon_wanted,soilwater_all)
-        soilwater = output$soil_water ; soilwater_unc = output$soil_water_unc
+#    } else if (soilwater_initial_source == "GLEAM") {
+#        output = extract_soilwater_initial(spatial_type,resolution,grid_type,latlon_wanted,soilwater_all)
+#        soilwater = output$soil_water ; soilwater_unc = output$soil_water_unc
     } else {
         # assume no data available
         soilwater = -9999 ; soilwater_unc = -9999
@@ -936,7 +881,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         Cwood_potential=read_site_specific_obs("Cwood_potential_gCm2",infile)
         Cwood_potential_unc=read_site_specific_obs("Cwood_potential_unc_gCm2",infile)
-    } else if (Cwood_potential_source == "UoE_potAGB") {
+    } else if (Cwood_potential_source == "Gridded_nc" | Cwood_potential_source == "Gridded_tif") {
         # get Cwood
         output = extract_Cwood_potential(grid_long_loc,grid_lat_loc,timestep_days,
                                          spatial_type,resolution,grid_type,latlon_wanted,
@@ -956,7 +901,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         lca=read_site_specific_obs("LCA_gCm2",infile)
         lca_unc=read_site_specific_obs("LCA_unc_gCm2",infile)
-    } else if (lca_source == "Butler") {
+    } else if (lca_source == "Gridded_nc" | lca_source == "Gridded_tif") {
         # get Cwood
         output = extract_lca_prior(grid_long_loc,grid_lat_loc,spatial_type,resolution,
                                    grid_type,latlon_wanted,lca_all)
@@ -981,6 +926,14 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else {
         # assume no data available
         frac_Cwood_coarse_root_prior = -9999 ; frac_Cwood_coarse_root_prior_unc = -9999
+        # If we have some wood stock information we can do better with a prior value
+        if (max(Cwood_stock) > 0) {
+            # Based on the creation of a log~log fit to the below ground stock estimates 
+            # using allometry from # Saatchi et al., (2011), PNAS, 108, 9899-9904, https://www.pnas.org/content/108/24/9899
+            # BGB/AGB = exp(log(TWB) * -9.356e-2 + -6.536e-1 ), R2 = 0.9997, +0.02 is the max error between fits
+            frac_Cwood_coarse_root_prior = exp(log(max(Cwood_stock)) * -9.356e-2 - 6.536e-1)
+            frac_Cwood_coarse_root_prior_unc = exp(log(max(Cwood_stock_unc)) * -9.356e-2 - 6.536e-1) + 0.02 
+        }       
     }
 
     ###
@@ -1010,8 +963,9 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                ,Croots_initial_unc = Croots_initial_unc, Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc
                ,deforestation = deforestation, burnt_area = burnt_area, ctessel_pft = ctessel_pft, yield_class = yield_class
                ,age = age, forest_management = forest_management, top_sand = top_sand, bot_sand = bot_sand, top_clay = top_clay
-               ,bot_clay = bot_clay, planting_doy = planting_doy, planting_doy_unc = planting_doy, harvest_doy = harvest_doy, harvest_doy_unc = harvest_doy_unc
-               ,SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc, nbe = nbe, nbe_unc = nbe_unc
+               ,bot_clay = bot_clay, planting_doy = planting_doy, planting_doy_unc = planting_doy, growing_season_doy = growing_season_doy
+               ,growing_season_doy_unc = growing_season_doy_unc, SWE = SWE, SWE_unc = SWE_unc, soilwater = soilwater, soilwater_unc = soilwater_unc
+               ,nbe = nbe, nbe_unc = nbe_unc
                ,Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, lca = lca, lca_unc = lca_unc
                ,Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag
                ,Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag

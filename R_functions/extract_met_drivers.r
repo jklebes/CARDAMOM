@@ -66,9 +66,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           }
       } else {
           # currently assumed defaults
-          steps_in_day = 24   # steps per day
-          input_step_size = 1 # hours
-          print("No day of year (doy) variable provided in the *_timeseries_met.csv files. The default assumptions used are 24 steps per day, steps lasting 1 hour.")
+          stop("No day of year (doy) variable provided in the *_timeseries_met.csv files.")
       } # doy[1] != -9999
 
       # Max, min and average timestep air temperatures (oC)
@@ -137,48 +135,10 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       maxt_out = 0 ; mint_out = 0 ; swrad_out = 0 ; co2_out = 0 ; precip_out = 0 ; vpd_out = 0 ; avgTemp_out = 0 ; wind_spd_out = 0
       vpd_lagged_out = 0 ; photoperiod_out = 0 ; avgTmax_out = 0
 
-      if (steps_in_day > 1) {
-          # loop through days to generate daily mean values first
-          # lagged variables for GSI calculated afterwards
-          for (daily in seq(1,length(swrad),steps_in_day)) {
-               if (maxt[1] != -9999 & mint[1] != -9999) {
-                   maxt_out = append(maxt_out,max(maxt[daily:(daily+steps_in_day-1)]))
-                   mint_out = append(mint_out,min(mint[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out = append(avgTemp_out,(mint[daily:(daily+steps_in_day-1)]+maxt[daily:(daily+steps_in_day-1)])*0.5)
-                   avgTmax_out = append(avgTmax_out,max(maxt[daily:(daily+steps_in_day-1)]))
-               } else {
-                   maxt_out = append(maxt_out,max(airt[daily:(daily+steps_in_day-1)]))
-                   mint_out = append(mint_out,min(airt[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out = append(avgTemp_out,mean(airt[daily:(daily+steps_in_day-1)]))
-                   avgTmax_out = append(avgTmax_out,max(airt[daily:(daily+steps_in_day-1)]))
-               }
-               # Short wave radiation (W.m-2)
-               swrad_out = append(swrad_out,sum(swrad[daily:(daily+steps_in_day-1)]))
-               # precipitation mean over time period (kgH2O.m-2.s-1)
-               precip_out = append(precip_out,mean(precip[daily:(daily+steps_in_day-1)]))
-               # wind speed mean over time period (m/s)
-               wind_spd_out = append(wind_spd_out,mean(wind_spd[daily:(daily+steps_in_day-1)]))
-               # cumulative precip lagged over a given number of days, in this case 42
-               co2_out = append(co2_out,mean(co2[daily:(daily+steps_in_day-1)]))
-               vpd_out = append(vpd_out,mean(vpd[daily:(daily+steps_in_day-1)]))
-         } # looping within days
-
-         # remove initial values from datasets
-         swrad_out = swrad_out[-1] ; maxt_out = maxt_out[-1]
-         mint_out = mint_out[-1]   ; co2_out = co2_out[-1]
-         precip_out = precip_out[-1]
-         avgTemp_out = avgTemp_out[-1]
-         avgTmax_out = avgTmax_out[-1]
-         vpd_out = vpd_out[-1] ; wind_spd_out = wind_spd_out[-1]
-
-      } else {
-
-         # currently provided drivers cover greater than a day, so just pass drivers directly
-         maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmax_out = maxt
-         swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
-         co2_out = co2 ; vpd_out = vpd
-
-      } # if there are more than 1 time step per day...
+      # currently provided drivers cover greater than a day, so just pass drivers directly
+      maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmax_out = maxt
+      swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
+      co2_out = co2 ; vpd_out = vpd
 
       # determine the actual daily positions
       run_day_selector = cumsum(timestep_days)
@@ -211,10 +171,6 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       #
       # Extraction from global databases
       #
-
-      # calculate approximate offset for time zone
-      #offset = round(latlon_wanted[2] * 24 / 360, digits=0)
-      ## should I be applying the offset here?
 
       # sub-select for sites
       swrad_out = met_in$swrad[n,] ; maxt_out = met_in$maxt[n,] ; precip_out = met_in$precip[n,]

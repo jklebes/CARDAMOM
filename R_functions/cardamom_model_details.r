@@ -41,7 +41,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(20,dim=c(length(ctessel_pft)))
     nofluxes=array(4,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="ACM",nopools=nopools,nofluxes=nofluxes,nomet=19+4,nopars=nopars)
-  } else if (modelname == "DALEC.C3.M1.#" | modelname == "DALEC.14.") {
+  } else if (modelname == "DALEC.C3.M1.014" | modelname == "DALEC.14.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -49,8 +49,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(9,dim=c(length(ctessel_pft)))
     nopars=array(37,dim=c(length(ctessel_pft)))
     nofluxes=array(42,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.C3.M1.#",shortname="DALEC.14.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A3.C3.H2.M1.#" | modelname == "DALEC.15.") {
+    cardamom_model_details=list(name="DALEC.C3.M1.014",shortname="DALEC.14.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A3.C3.H2.M1.015" | modelname == "DALEC.15.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -58,8 +58,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(10,dim=c(length(ctessel_pft)))
     nopars=array(38,dim=c(length(ctessel_pft)))
     nofluxes=array(46,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A3.C3.H2.M1.#",shortname="DALEC.15.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.M2.#" | modelname == "DALEC.16.") {
+    cardamom_model_details=list(name="DALEC.A3.C3.H2.M1.015",shortname="DALEC.15.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.M2.016" | modelname == "DALEC.16.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -67,8 +67,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(5,dim=c(length(ctessel_pft)))
     nopars=array(34,dim=c(length(ctessel_pft)))
     nofluxes=array(45,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.M2.#",shortname="DALEC.16.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A3.H2.M2.#" | modelname == "DALEC.17.") {
+    cardamom_model_details=list(name="DALEC.M2.016",shortname="DALEC.16.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A3.H2.M2.017" | modelname == "DALEC.17.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -76,8 +76,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(6,dim=c(length(ctessel_pft)))
     nopars=array(37,dim=c(length(ctessel_pft)))
     nofluxes=array(55,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A3.H2.M2.#",shortname="DALEC.17.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.C1.D1.F2.P1.#" | modelname == "DALEC.2.") {
+    cardamom_model_details=list(name="DALEC.A3.H2.M2.017",shortname="DALEC.17.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.C1.D1.F2.P1.002" | modelname == "DALEC.2.") {
     # Information contains is
     # The model name
     # Number of met parameters
@@ -85,8 +85,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(6,dim=c(length(ctessel_pft)))
     nopars=array(28,dim=c(length(ctessel_pft)))
     nofluxes=array(39,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.C1.D1.F2.P1.#",shortname="DALEC.2.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1.#" | modelname == "DALEC.3.") {
+    cardamom_model_details=list(name="DALEC.C1.D1.F2.P1.002",shortname="DALEC.2.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1.003" | modelname == "DALEC.3.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -94,8 +94,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(6,dim=c(length(ctessel_pft)))
     nopars=array(28,dim=c(length(ctessel_pft)))
     nofluxes=array(39,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H1.P1.#", shortname="DALEC.3.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.#" | modelname == "DALEC.4.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H1.P1.003", shortname="DALEC.3.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.004" | modelname == "DALEC.4.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -103,8 +103,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P1.#",shortname="DALEC.4.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1.#" | modelname == "DALEC.20.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P1.004",shortname="DALEC.4.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1.020" | modelname == "DALEC.20.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -112,8 +112,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A2.C1.D2.F2.H2.P1.#",shortname="DALEC.20.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A4.C6.D2.F2.H2.P11.#" | modelname == "DALEC.31.") {
+    cardamom_model_details=list(name="DALEC.A2.C1.D2.F2.H2.P1.020",shortname="DALEC.20.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A4.C6.D2.F2.H2.P11.031" | modelname == "DALEC.31.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -121,8 +121,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(42+1,dim=c(length(ctessel_pft)))
     nofluxes=array(56,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A4.C6.D2.F2.H2.P11.#",shortname="DALEC.31.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2.#" | modelname == "DALEC.18.") {
+    cardamom_model_details=list(name="DALEC.A4.C6.D2.F2.H2.P11.031",shortname="DALEC.31.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2.018" | modelname == "DALEC.18.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -130,8 +130,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(33,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P2.#",shortname="DALEC.18.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.#" | modelname == "DALEC.21.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P2.018",shortname="DALEC.18.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.021" | modelname == "DALEC.21.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -139,8 +139,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(33,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P5.#",shortname="DALEC.21.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P6.#" | modelname == "DALEC.22.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P5.021",shortname="DALEC.21.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P6.022" | modelname == "DALEC.22.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -148,8 +148,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(34,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P6.#",shortname="DALEC.22.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.#" | modelname == "DALEC.5.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P6.022",shortname="DALEC.22.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.005" | modelname == "DALEC.5.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -157,8 +157,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(32,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P1.R1.#",shortname="DALEC.5.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.#" | modelname == "DALEC.6.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H2.P1.R1.005",shortname="DALEC.5.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.006" | modelname == "DALEC.6.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -166,8 +166,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(35,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P1.R1.#",shortname="DALEC.6.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.#" | modelname == "DALEC.7.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P1.R1.06",shortname="DALEC.6.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.007" | modelname == "DALEC.7.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -175,8 +175,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(36,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R1.#",shortname="DALEC.7.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" | modelname == "DALEC.19.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R1.007",shortname="DALEC.7.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.019" | modelname == "DALEC.19.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -184,8 +184,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(38,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R3.#", shortname="DALEC.19.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.C5.D1.F2.P1.#" | modelname == "DALEC.13.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R3.019", shortname="DALEC.19.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.C5.D1.F2.P1.013" | modelname == "DALEC.13.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -193,8 +193,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(4,dim=c(length(ctessel_pft)))
     nopars=array(21,dim=c(length(ctessel_pft)))
     nofluxes=array(32,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.C5.D1.F2.P1.#",shortname="DALEC.13.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.D1.F2.#" | modelname == "DALEC.1.") {
+    cardamom_model_details=list(name="DALEC.C5.D1.F2.P1.013",shortname="DALEC.13.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.D1.F2.001" | modelname == "DALEC.1.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -202,8 +202,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(5,dim=c(length(ctessel_pft)))
     nopars=array(22,dim=c(length(ctessel_pft)))
     nofluxes=array(35,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.D1.F2.#",shortname = "DALEC.1.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.C4.D1.F2.#" | modelname == "DALEC.12.") {
+    cardamom_model_details=list(name="DALEC.D1.F2.001",shortname = "DALEC.1.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.C4.D1.F2.012" | modelname == "DALEC.12.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -211,8 +211,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(3,dim=c(length(ctessel_pft)))
     nopars=array(15,dim=c(length(ctessel_pft)))
     nofluxes=array(28,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.C4.D1.F2.#",shortname = "DALEC.12.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" | modelname == "DALEC.10.") {
+    cardamom_model_details=list(name="DALEC.C4.D1.F2.012",shortname = "DALEC.12.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.010" | modelname == "DALEC.10.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -220,8 +220,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(48,dim=c(length(ctessel_pft)))
     nofluxes=array(25,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P4.R2.#",shortname = "DALEC.10.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | modelname == "DALEC.11.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P4.R2.010",shortname = "DALEC.10.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.011" | modelname == "DALEC.11.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -229,8 +229,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(49,dim=c(length(ctessel_pft)))
     nofluxes=array(34,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P4.R2.#", shortname="DALEC.11.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" | modelname == "DALEC.23.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P4.R2.011", shortname="DALEC.11.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.023" | modelname == "DALEC.23.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -238,8 +238,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(48,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P7.R2.#",shortname="DALEC.23.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" | modelname == "DALEC.24.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P7.R2.023",shortname="DALEC.23.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P8.R2.024" | modelname == "DALEC.24.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -247,8 +247,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(51,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P8.R2.#",shortname="DALEC.24.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P9.R2.#" | modelname == "DALEC.25.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P8.R2.024",shortname="DALEC.24.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P9.R2.025" | modelname == "DALEC.25.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -256,8 +256,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(49,dim=c(length(ctessel_pft)))
     nofluxes=array(54,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P9.R2.#",shortname="DALEC.25.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P10.R2.#" | modelname == "DALEC.26.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P9.R2.025",shortname="DALEC.25.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P10.R2.026" | modelname == "DALEC.26.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -265,8 +265,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(48,dim=c(length(ctessel_pft)))
     nofluxes=array(34,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P10.R2.#",shortname="DALEC.26.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.#" | modelname == "DALEC.9.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P10.R2.026",shortname="DALEC.26.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.009" | modelname == "DALEC.9.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -274,9 +274,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(46,dim=c(length(ctessel_pft)))
     nofluxes=array(34,dim=c(length(ctessel_pft)))
-    if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=38 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=9}
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P3.R1.#",shortname = "DALEC9.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.#" | modelname == "DALEC.8.") {
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P3.R1.009",shortname = "DALEC9.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.008" | modelname == "DALEC.8.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -284,8 +283,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(43,dim=c(length(ctessel_pft)))
     nofluxes=array(25,dim=c(length(ctessel_pft)))
-    if (specific_pft == "pft_specific") {nopars[which(ctessel_pft == 1)]=35 ; nofluxes[which(ctessel_pft == 1)]=21 ; nopools[which(ctessel_pft == 1)]=8}
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P3.R1.#",shortname = "DALEC.8.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P3.R1.008",shortname = "DALEC.8.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else if (modelname == "DALEC_1005" | modelname == "DALEC.27.") {
     # information contains is
     # The model name
@@ -304,7 +302,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(38,dim=c(length(ctessel_pft)))
     nofluxes=array(43,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC_1005a",shortname="DALEC.28.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A1.C1.D2.F2.H3.P1.#" | modelname == "DALEC.29.") {
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H3.P1.029" | modelname == "DALEC.29.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -312,8 +310,8 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(33,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H3.P1.#",shortname="DALEC.29.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
-  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.#" | modelname == "DALEC.30.") {
+    cardamom_model_details=list(name="DALEC.A1.C1.D2.F2.H3.P1.029",shortname="DALEC.29.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+  } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.030" | modelname == "DALEC.30.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -321,7 +319,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(7,dim=c(length(ctessel_pft)))
     nopars=array(32+6,dim=c(length(ctessel_pft)))
     nofluxes=array(49,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A3.C1.D2.F2.H2.P1.#",shortname="DALEC.30.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
+    cardamom_model_details=list(name="DALEC.A3.C1.D2.F2.H2.P1.030",shortname="DALEC.30.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars)
   } else {
     # No model name was matched
     stop(paste("the inputed model name ('",modelname,"') could not be matched in the available library"))

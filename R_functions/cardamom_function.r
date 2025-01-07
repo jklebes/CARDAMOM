@@ -36,7 +36,10 @@ cardamom <-function (projname,model,method,stage) {
   paths = load_paths()
 
   # Check that the control file has minimum default values and variables created 
-  check_control_file_defaults()
+  check_control_file_defaults(paths)
+
+  # Help avoid build up of raster tmp files, memmax = GB, should be set relative to the amount of memory requested in an interactive job
+  terraOptions(overwrite = TRUE, tempdir = cardamom_temporary_directory, memmax = 40)
 
   # Use this function to ensure that if the short model name has been provided that we translate
   # this into the full internal code version
@@ -68,6 +71,9 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 1 processes
       dummy = cardamom_stage_minus_1(PROJECTfile,PROJECTtype,paths,model,method,projname)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
+
       # report to the user
       return(dummy)
 
@@ -101,6 +107,8 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 1 processes
       dummy = cardamom_stage_1(PROJECT)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
       # report to the user
       return(dummy)
 
@@ -113,6 +121,8 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 2 processes
       dummy = cardamom_stage_2(PROJECT)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
       # report to the user
       return(dummy)
 
@@ -125,6 +135,8 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 3 processes
       dummy = cardamom_stage_3(PROJECT,PROJECTfile)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
       # report to the user
       return(dummy)
 
@@ -137,6 +149,8 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 4 processes
       dummy = cardamom_stage_4(PROJECT)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
       # report to the user
       return(dummy)
 
@@ -150,6 +164,8 @@ cardamom <-function (projname,model,method,stage) {
 
       # Carry out stage 5 processes
       dummy = cardamom_stage_5(PROJECT)
+      # Tidy away gis temporary files
+      tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE)
       # report to the user
       return(dummy)
 

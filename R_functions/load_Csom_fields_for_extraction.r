@@ -41,7 +41,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc = rast(paste(path_to_Csom,"Csom_gCm2_sd_0to1m.tif", sep=""))
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
+        target = rast(crs = ("epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
@@ -91,7 +91,7 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
         Csom_unc = rast(paste(path_to_Csom,"Csom_gCm2_uncertainty_0to100cm.tif", sep=""))
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
+        target = rast(crs = ("epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
@@ -147,10 +147,10 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
+        Csom = rast(Csom, crs = ("epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
+        target = rast(crs = ("epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
@@ -214,10 +214,10 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
+        Csom = rast(Csom, crs = ("epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
+        target = rast(crs = ("epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid
@@ -281,10 +281,10 @@ load_Csom_fields_for_extraction<-function(latlon_in,Csom_source,cardamom_ext,spa
 
         # Convert to a raster, assuming standad WGS84 grid
         Csom = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(Csom))
-        Csom = rast(Csom, crs = ("+init=epsg:4326"), type="xyz")
+        Csom = rast(Csom, crs = ("epsg:4326"), type="xyz")
 
         # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(Csom), resolution = res(Csom))
+        target = rast(crs = ("epsg:4326"), ext = ext(Csom), resolution = res(Csom))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(Csom,target) == FALSE) {
             # Resample to correct grid

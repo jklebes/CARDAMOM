@@ -899,17 +899,16 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
 
           # generate the lat / long grid again
-          output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-          grid_output$lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-
-          # Determine grid area (m2)
-          grid_output$area_m2 = calc_pixel_area(grid_output$long,grid_output$lat)
+          output = generate_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+          grid_output$lat = output$lat
+          grid_output$long = output$long
+          # Structure area (in m) as a grid
+          grid_output$area_m2 = output$area
 
           # Load the land mask...
-          grid_output$landmask=array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$landmask = array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           # ...and land fraction
-          grid_output$land_fraction=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$land_fraction = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
       } else {
 
@@ -981,7 +980,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
   } # repair !=1
 
   # now request the creation of the plots
-  if (use_parallel & length(nos_plots) > 1 & request_use_local_slurm) {
+  if (length(nos_plots) > 1 & request_use_local_slurm) {
 
       # use parallel in interactive mode
 
@@ -1007,7 +1006,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
 
       print("...finished parallel operations using slurm mode")
 
-  } else if (use_parallel & length(nos_plots) > 1 & request_use_local_slurm == FALSE) {
+  } else if (use_parallel & length(nos_plots) > 1) {
 
       # use parallel in interactive mode
 

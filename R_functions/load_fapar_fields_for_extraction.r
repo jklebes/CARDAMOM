@@ -109,9 +109,9 @@ load_fapar_fields_for_extraction<-function(latlon_in,fapar_source,years_to_load,
 
                      # Convert to a raster, assuming standad WGS84 grid
                      var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(fapar_est_in[,,t]))
-                     var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                     var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                      var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(fapar_std_in[,,t]))
-                     var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                     var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
 
                      # Extend the extent of the overall grid to the analysis domain
                      var1 = extend(var1,cardamom_ext) ; var2 = extend(var2,cardamom_ext)
@@ -185,7 +185,7 @@ load_fapar_fields_for_extraction<-function(latlon_in,fapar_source,years_to_load,
       fapar_out[filter] = NA ; fapar_unc_out[filter] = NA
 
       # output variables
-      fapar_all = list(fapar_all = fapar_out, fapar_unc_all = fapar_unc_out,
+      fapar_all = list(fapar = fapar_out, fapar_unc = fapar_unc_out,
                      doy_obs = doy_out, lat = lat, long = long, missing_years=missing_years)
       # clean up variables
       rm(doy_in,fapar_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)

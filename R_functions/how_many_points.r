@@ -159,122 +159,142 @@ corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
 #lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
 how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitename) {
 
-    # check input data
-    if (length(which(long > 180)) > 0) {stop("Long should be -180 to +180")}
-
-    # generate UK or WGS-84 lat long grid
-    if (grid_type == "UK") {
-        output = generate_uk_grid(lat,long,resolution)
-        area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-    } else if (grid_type=="wgs84") {
-        output = generate_wgs84_grid(lat,long,resolution)
-        grid_lat = array(output$lat, dim=c(output$long_dim,output$lat_dim))
-        grid_long = array(output$long,dim=c(output$long_dim,output$lat_dim))
-        # then generate the area estimates for each pixel
-        area = calc_pixel_area(grid_long,grid_lat)
-    } else {
-        stop('have selected invalid grid type, the valid options are "UK" and "wgs84"')
-    }
-    # Extract useful information (output re-used later)
+    # Spatial grid
+    output = generate_grid(cardamom_grid_type,lat,long,resolution)
+    # Structure area (in m) as a grid
+    area = output$area
+    # x ~ y coordinate information as a grid
     lat = output$lat ; long = output$long
+    # x ~ y dimensions
     lat_dim = output$lat_dim ; long_dim = output$long_dim
+    # Empty raster template of the cardamom domain
     cardamom_ext = output$cardamom_ext
+    # Tidy
+    rm(output)
 
     # now work out how many of these are land points
-    # determine whether using LCM 2007 or default ECMWF land cover map
-    if (use_lcm == "LCM2007") {
-#        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/LCM2007/LCM2007_with_lat_long.nc")
-#        lcm=ncvar_get(data2,"LCM2007")
-        lcm = rast("/home/lsmallma/WORK/GREENHOUSE/LCM2007/Download_lcm2007_143707/lcm-2007-1km_397874/dominant_target_class/LCM2007_GB_1K_Dominant_TargetClass.tif")
-        # Reproject the crs from British National Grid to WGS-84
-        lcm = project(lcm, ("+init=epsg:4326"), method="near", align = FALSE) ; gc()
-        # Create target grid in the correct resolution for the analysis
-        target = rast(crs = ("+init=epsg:4326"), res = res(cardamom_ext), ext=ext(lcm))
+    # Determine the land cover map used
+    if (use_lcm == "ECMWF") {
+
+        # load global surfclim file and info file for surfclim
+        data2 = nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
+        # extract high vegetation cover fraction
+        hi_veg_frac = ncvar_get(data2, "cvh")
+        # extract low vegetation cover fraction
+        low_veg_frac = ncvar_get(data2, "cvl")
+        # extract high vegetation type
+        hi_veg_type = ncvar_get(data2, "tvh")
+        # extract low vegetation type
+        low_veg_type = ncvar_get(data2, "tvl")
+        hi_veg_frac = as.vector(hi_veg_frac) ; low_veg_frac = as.vector(low_veg_frac)
+        hi_veg_type = as.vector(hi_veg_type) ; low_veg_type = as.vector(low_veg_type)
+        # Assign dominant cover type
+        lcm = hi_veg_type ; lcm[which(low_veg_frac > hi_veg_frac)] = low_veg_type[which(low_veg_frac > hi_veg_frac)]
+        # Read in the location information
+        lat_lcm = ncvar_get(data2, "latitude") ; long_lcm = ncvar_get(data2, "longitude")
+        # Extract dimensional information
+        ydim = length(lat_lcm) ; xdim = length(long_lcm)
+        # Create 2-D array of the latitude and longitude 1-D
+        lat_lcm = array(rep(lat_lcm, each = xdim), dim=c(xdim,ydim))
+        long_lcm = array(long_lcm, dim=c(xdim,ydim))
+        # Change longitude from 0-360 to -180->180
+        long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
+        # Create 2-d array of the land cover map itself
+        lcm = array(lcm, dim=c(dim(lat_lcm)[1],dim(lat_lcm)[2]))
+
+        # We now must create a raster which we can adjust the projection grid 
+        # to match that requested by the current analysis
+        lcm = data.frame(x = as.vector(long_lcm), y = as.vector(lat_lcm), z = as.vector(lcm))
+        lcm = rast(lcm, crs = ("epsg:4326"), type="xyz")
+
+        # If we have an epsg then we want to know if it differs from the one desired by the analysis
+        epsg = crs(lcm, describe = TRUE)$code
+        if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+            # Ensure that the extent of the input object is consistent 
+            # with the possible extent of the selected epsg
+            lcm = crop(lcm, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))        
+            # If it does not match we need to reproject it
+            lcm = project(lcm, cardamom_grid_type, method="near", align = FALSE) ; gc()
+        }
+
+        # extract dimension information for the grid, 
+        # note the axis switching between raster and actual array
+        xdim = dim(lcm)[2] ; ydim = dim(lcm)[1]
+        # extract the lat / long information needed
+        long_lcm = crds(lcm, df=TRUE, na.rm=FALSE)
+        lat_lcm  = long_lcm$y ; long_lcm = long_lcm$x
+        # restructure into correct orientation
+        long_lcm = array(long_lcm, dim=c(xdim,ydim))
+        lat_lcm = array(lat_lcm, dim=c(xdim,ydim))
+        # Flip for human viewing in R
+        long_lcm = long_lcm[,ydim:1] ; lat_lcm = lat_lcm[,ydim:1]
+
+        # Extract the fractional cover, 
+        # assumed to be unchanged for any given year.
+        lcm = array(values(lcm), dim=c(xdim,ydim))
+        # Flip the north-south axis to invert for human eyes
+        lcm = lcm[,ydim:1]
+
+    } else if (use_lcm != "ECMWF" & use_lcm != "") {
+        
+        # In which case we assume that we have been directed towards a geotif with 0 or NA indicating
+        # areas not to include in the analysis and 1 to indicate areas to include
+        lcm = rast(use_lcm)
+
+        # Extract the epsg from the file
+        epsg = crs(lcm, describe = TRUE)$code
+        if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
+        # If we have an epsg then we want to know if it differs from the one desired by the analysis
+        if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+            # Ensure that the extent of the input object is consistent 
+            # with the possible extent of the selected epsg
+            lcm = crop(lcm, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))                
+            # If it does not match we need to reproject it
+            lcm = project(lcm, cardamom_grid_type, method="near", align = FALSE) ; gc()
+        }
         # Extend the extent of the overall grid to the analysis domain
         lcm = extend(lcm,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         lcm = crop(lcm,cardamom_ext) 
-        # Aggregate to approximately the right resolution
-#        if (grid_type == "UK") {
-#            target_ratio = max(0.1666667,(0.001*(resolution/111))) / res(lcm)
-#        } else {
-            target_ratio = res(cardamom_ext) / res(lcm)
-#        }
-#        # We need to aggregate assuming domiant or modal value
-#        # Define function for aggregation
-#        agg_fun = function(pixels, na.rm) {
-#           if ((length(which(pixels > 0))/length(pixels)) > 0.2) {
-#               return(modal(pixels[pixels > 0], na.rm=na.rm))
-#           } else {
-#               return(0)
-#           }
-#        }
-        lcm = terra::aggregate(lcm, fact = target_ratio, fun = "modal")
-        # Extract lat / long
-        lat_lcm = crds(lcm,df=TRUE, na.rm=FALSE)
-        # Convert into arrays
-        long_lcm = array(lat_lcm[,1], dim=c(dim(lcm)[2],dim(lcm)[1])) ; lat_lcm = array(lat_lcm[,2], dim=c(dim(lcm)[2],dim(lcm)[1]))
-        lcm = array(lcm, dim=c(dim(lcm)[2],dim(lcm)[1]))
-        # Now flip the lat dimension to get it the right way
-        lat_lcm = lat_lcm[,dim(lat_lcm)[2]:1] ; long_lcm = long_lcm[,dim(long_lcm)[2]:1] ; lcm = lcm[,dim(lcm)[2]:1]
-    } else if (use_lcm == "CORINE2006") {
-        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/Corine_lcm/Corine2006_at250m_with_lat_long.nc")
-        lcm=ncvar_get(data2,"Corine2006")
-    } else if (use_lcm == "CORINE2006_1km") {
-        data2=nc_open("/home/lsmallma/WORK/GREENHOUSE/Corine_lcm/Corine2006_at1km_with_lat_long.nc")
-        lcm=ncvar_get(data2,"Corine2006")
-    } else if (use_lcm == "ECMWF") {
-        # load global surfclim file and info file for surfclim
-        data2=nc_open("./R_functions/global_map/ECMWF/surfclim_all.nc")
-        # extract high vegetation cover fraction
-        hi_veg_frac=ncvar_get(data2, "cvh")
-        # extract low vegetation cover fraction
-        low_veg_frac=ncvar_get(data2, "cvl")
-        # extract high vegetation type
-        hi_veg_type=ncvar_get(data2, "tvh")
-        # extract low vegetation type
-        low_veg_type=ncvar_get(data2, "tvl")
-        hi_veg_frac=as.vector(hi_veg_frac) ; low_veg_frac=as.vector(low_veg_frac)
-        hi_veg_type=as.vector(hi_veg_type) ; low_veg_type=as.vector(low_veg_type)
-        lcm=hi_veg_type ; lcm[which(low_veg_frac > hi_veg_frac)]=low_veg_type[which(low_veg_frac > hi_veg_frac)]
-        lat_lcm=ncvar_get(data2, "latitude")
-        long_lcm=ncvar_get(data2, "longitude")
-        # restructure to 2-D array which matches the actual data structure...
-        lat_tmp = length(lat_lcm) ; long_tmp = length(long_lcm)
-        lat_lcm = array(rep(lat_lcm, each = long_tmp), dim=c(long_tmp,lat_tmp))
-        long_lcm = array(long_lcm, dim=c(long_tmp,lat_tmp))
-        long_lcm[which(long_lcm > 180)] = long_lcm[which(long_lcm > 180)]-360
-        lcm = array(lcm, dim=c(dim(lat_lcm)[1],dim(lat_lcm)[2]))
+        # Aggregate based on area average
+        lcm = resample(lcm, cardamom_ext, method="average") ; gc() 
+
+        # extract dimension information for the grid, 
+        # note the axis switching between raster and actual array
+        xdim = dim(lcm)[2] ; ydim = dim(lcm)[1]
+        # extract the lat / long information needed
+        long_lcm = crds(lcm, df=TRUE, na.rm=FALSE)
+        lat_lcm  = long_lcm$y ; long_lcm = long_lcm$x
+        # restructure into correct orientation
+        long_lcm = array(long_lcm, dim=c(xdim,ydim))
+        lat_lcm = array(lat_lcm, dim=c(xdim,ydim))
+        long_lcm = long_lcm[,ydim:1] ; lat_lcm = lat_lcm[,ydim:1]
+
+        # Extract the fractional cover, 
+        # assumed to be unchanged for any given year.
+        lcm = array(values(lcm), dim=c(xdim,ydim))
+        # Flip the north-south axis to invert for human eyes
+        lcm = lcm[,ydim:1]
+
     } else {
         stop("no land cover option found / set")
     }
-    # download location data
-    if (use_lcm != "ECMWF" & use_lcm != "LCM2007") {
-        lat_lcm=ncvar_get(data2,"lat")
-        long_lcm=ncvar_get(data2,"long")
-    }
-    # house keeping
-    if (exists("data2")) {nc_close(data2)}
+
+    # Clear memory and the contents of the temporary files at this time
+    gc() ; tmpFiles(current=TRUE, orphan=TRUE, old=FALSE, remove=TRUE) 
 
     # raw total pixels
     print(paste("Raw pixel total is ",length(lat)," next filter for water bodies"))
 
-    # find locations
-    if (use_parallel) {
-        cl <- makeCluster(numWorkers, type = "PSOCK")
-        # load R libraries in cluster
-        clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-        output=parLapply(cl,1:length(lat),fun=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
-        stopCluster(cl)
-        # extract the i,j values seperately
-        output_i=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-        output_j=unlist(output,use.names=FALSE)[which((1:length(unlist(output, use.names = FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-     } else {
-        output=lapply(1:length(lat),FUN=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
-        # extract the i,j values seperately
-        output_i=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) != floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-        output_j=unlist(output, use.names=FALSE)[which((1:length(unlist(output, use.names=FALSE))*0.5) == floor(1:length(unlist(output, use.names=FALSE))*0.5))]
-    } # parallel or not
+    # In either case we will now make use of terra library functions to determine
+    # where in the land cover map (lcm) is the locations in the CARDAMOM domain pixels
+    tiff_in = data.frame(x = as.vector(long_lcm), y = as.vector(lat_lcm), z = as.vector(lcm))
+    tiff_in = rast(tiff_in, crs = cardamom_grid_type, type="xyz")
+
+    # Find locations
+    output = closest2d_tif(tiff_in,lat,long)
+    output_i = output$i_loc ; output_j = output$j_loc
+    rm(tiff_in,output)
 
     # Inform the user
     print("Generating land sea mask")
@@ -283,8 +303,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 
         # load global shape file for land sea mask
         landmask = vect("./R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx")
-        # just to be sure enforce the projection to WGS-84
-        landmask = project(landmask,"EPSG:4326")
+        # Check the EPSG code
+        epsg = crs(landmask, describe = TRUE)$code
+        if (is.null(epsg) | epsg == "") { stop(paste("the default landmask leads to a geotif which does not contain epsg information."))}
+        # If we have an epsg then we want to know if it differs from the one desired by the analysis
+        if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+            # Ensure that the extent of the input object is consistent 
+            # with the possible extent of the selected epsg
+            landmask = crop(landmask, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))                
+            # If it does not match we need to reproject it
+            landmask = project(landmask, cardamom_grid_type) ; gc()
+        }
+
         # Clip to the extent of the CARDAMOM analysis
         landmask = crop(landmask, cardamom_ext)
 
@@ -327,7 +357,8 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 
     } else {
 
-        # Assume that we have been given a geotiff file where the presence of a value > 0  should be included in the masked area
+        # Assume that we have been given a geotiff file where 
+        # the presence of a value > 0  should be included in the masked area
         landsea = rast(path_to_landsea)
         # Check that all values rage between zero and 1
         tmp = max(values(landsea), na.rm=TRUE)
@@ -336,6 +367,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
             print("The file will instead be treated as a binary presence map, i.e. > 0 is present and set to 1.")
             landsea[landsea > 0] = 1 ; rm(tmp)
         }
+        # Extract the epsg from the file
+        epsg = crs(landsea, describe = TRUE)$code
+        if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
+        # If we have an epsg then we want to know if it differs from the one desired by the analysis
+        if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+            # Ensure that the extent of the input object is consistent 
+            # with the possible extent of the selected epsg
+            landsea = crop(landsea, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))              
+            # If it does not match we need to reproject it
+            landsea = project(landsea, cardamom_grid_type, method="near", align = FALSE) ; gc()
+        }
+
         # Ensure the extents of the landsea mask matches the CARDAMOM analysis
         landsea = crop(landsea, cardamom_ext)
         landsea = extend(landsea, cardamom_ext)
@@ -350,8 +393,8 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
             # can use nearest neighbour
             landsea = resample(landsea, target, method="near")
         } else { 
-            # If the resolution is finer than the CARDAMOM anaysis we will have to use bilinear
-            landsea = resample(landsea, target, method="bilinear") ; gc() 
+            # If the resolution is finer than the CARDAMOM anaysis we will have to use average
+            landsea = resample(landsea, target, method="average") ; gc() 
         } # Aggrgeate to resolution
 
         # Set the threshold below which we assume that the pixel will be excluded
@@ -359,32 +402,18 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 
     } # default landsea mask
 
-    # trim to the actual data area
-    #landsea = trim(landsea, padding = 3)
-    # extract lat/long information for the raster version
-    # extract the lat / long information needed
-    landsea_long = crds(landsea,df=TRUE, na.rm=FALSE)
-    landsea_lat  = landsea_long$y ; landsea_long = landsea_long$x
-    # arrange them into the correct lat / long orientations
-    landsea_dim = dim(landsea) ; landsea = as.vector(landsea)
+    # Find locations
+    output = closest2d_tif(landsea,lat,long)
+    output_x = output$i_loc ; output_y = output$j_loc
+    rm(output)
 
-    # find locations from the landsea mask which correspond with overall grid defined in the control file
-    if (use_parallel) {
-        cl <- makeCluster(numWorkers, type = "PSOCK")
-        # load R libraries in cluster
-        clusterExport(cl,"load_r_libraries") ; clusterEvalQ(cl, load_r_libraries())
-        output = parLapply(cl,1:length(lat),fun=closest2d_1,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long)
-        stopCluster(cl)
-        # extract the i,j values seperately
-        output_k = unlist(output, use.names=FALSE)
-     } else {
-        output = lapply(1:length(lat),FUN=closest2d_1,lat=landsea_lat,long=landsea_long,lat_in=lat,long_in=long)
-        # extract the i,j values seperately
-        output_k = unlist(output, use.names=FALSE)
-    }
-
-    # selecting only these areas of the landsea mask
-#    landsea = as.vector(landsea)[output_k]
+    # extract dimension information for the grid, 
+    # note the axis switching between raster and actual array
+    xdim = dim(landsea)[2] ; ydim = dim(landsea)[1]
+    # Turn into array consistent with the rest of the analysis
+    landsea = array(values(landsea), dim=c(xdim,ydim))
+    # Flip the north-south axis to invert for human eyes
+    landsea = landsea[,ydim:1]
 
     # Check against our plant functional type / land cover maps
     # and determine which location want to keep based on land cover etc.
@@ -392,22 +421,19 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # now iterate through the sites
     for (pft in seq(1, length(lat))) {
          # update the user, but only sometimes
-         if (pft%%2000 == 0 | pft < 500) {print(paste("Ocean filter ",round((pft/length(lat))*100,0),"% complete",sep=""))}
+         if (pft%%10000 == 0 | pft < 10) {print(paste("Ocean filter ",round((pft/length(lat))*100,0),"% complete",sep=""))}
          # convert incoming pft to common values (in this case CTESSEL)
-         if (use_lcm == "LCM2007") {
-             new_pft = lcm2007_to_ctessel(lcm[output_i[pft],output_j[pft]])
-         } else if (use_lcm == "CORINE2006") {
-             new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-         } else if (use_lcm == "CORINE2006_1km") {
-             new_pft = corine2006_to_ctessel(lcm[output_i[pft],output_j[pft]])
-         } else if (use_lcm == "forestry_commission" | use_lcm == "forestry_commission_LCM2007" | use_lcm == "forestry_commission_public_private") {
+         if (use_lcm == "ECMWF") {
              new_pft = lcm[output_i[pft],output_j[pft]]
-             if (new_pft < 0 | length(new_pft) == 0) {new_pft = 0}
-         } else if (use_lcm == "ECMWF") {
+         } else {
+             # All other cases assume we should have 0-1
              new_pft = lcm[output_i[pft],output_j[pft]]
+             if (new_pft > 0.01) {new_pft = 1} else {new_pft = 0}
          }
-         # now exclude if not a land site
-         if (new_pft == 0 | new_pft == 14 | new_pft == 15 | landsea[output_k[pft]] < cover_threshold) {
+         # now exclude if not a land site, i.e. water, rock, ice, urban
+         if (new_pft == 0 | new_pft == 8 | new_pft == 12 | 
+             new_pft == 14 | new_pft == 15 | 
+             landsea[output_x[pft],output_y[pft]] < cover_threshold) {
              remove = append(remove,pft)
          } else {
              pft_keep = append(pft_keep,new_pft)
@@ -420,7 +446,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     # generate the site names prior to removing undesired locations to ensure consistent naming
     b = 1 ; sites = rep("NA",times=(length(lat)))
     for (n in seq(1, length(lat))) {
-         if (n%%2000 == 0 | n < 500) {print(paste("Have generated ",round((b/(length(lat)+length(remove)))*100,0),"% of site IDs" ,sep=""))}
+         if (n%%10000 == 0 | n < 10) {print(paste("Have generated ",round((b/(length(lat)+length(remove)))*100,0),"% of site IDs" ,sep=""))}
          # we want the numbers to match their location within the domain not of the land pixels.
          # this is needed for easy reconstruction later
          sites[b] = sprintf('%05i',n) ; b = b+1
@@ -429,9 +455,6 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
     if (length(remove) > 0) {lat = lat[-remove] ; long = long[-remove] ; sites = sites[-remove]}
     # Inform the user of the number of pixels
     print(paste("In total there are ",length(sites)," land pixels to run",sep=""))
-
-    # re-arrange landsea mask so that it matches with the actual grid
-    landsea = as.vector(array(landsea, dim=c(long_dim,lat_dim))[,lat_dim:1])
 
     # Combine outputs
     output = list(nosites=length(lat),waterpixels=remove,landsea=landsea,ctessel_pft=pft_keep,lat_dim=lat_dim,long_dim=long_dim,sites=sites)

@@ -81,12 +81,12 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
             # Convert to a raster, assuming standad WGS84 grid
             biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-            biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+            biomass_gCm2 = rast(biomass_gCm2, crs = ("epsg:4326"), type="xyz")
             biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("epsg:4326"), type="xyz")
 
             # Create raster with the target crs (technically this bit is not required)
-            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
+            target = rast(crs = ("epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
             # Check whether the target and actual analyses have the same CRS
             if (compareGeom(biomass_gCm2,target) == FALSE) {
                 # Resample to correct grid
@@ -186,12 +186,12 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
 
             # Convert to a raster, assuming standad WGS84 grid
             biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-            biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+            biomass_gCm2 = rast(biomass_gCm2, crs = ("epsg:4326"), type="xyz")
             biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+            biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("epsg:4326"), type="xyz")
 
             # Create raster with the target crs (technically this bit is not required)
-            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
+            target = rast(crs = ("epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
             # Check whether the target and actual analyses have the same CRS
             if (compareGeom(biomass_gCm2,target) == FALSE) {
                 # Resample to correct grid
@@ -292,7 +292,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass_uncertainty = rast(input_file_uncertainty[t])
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+                 target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
@@ -423,7 +423,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass_uncertainty = rast(paste(path_to_Cwood,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+                 target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
@@ -552,7 +552,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass_unc = rast(paste(path_to_Cwood,input_unc_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+                 target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
@@ -659,7 +659,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
         biomass_uncertainty_gCm2 = rast(paste(path_to_Cwood,"unc_wood_biomass_gCm2_2010.tif", sep=""))
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
+        target = rast(crs = ("epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(biomass_gCm2,target) == FALSE) {
           # Resample to correct grid
@@ -764,7 +764,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
             biomass = rast(paste(path_to_Cwood,input_file[t],sep=""))
             biomass_uncertainty = raster(paste(path_to_Cwood,unc_input_file[t],sep=""))
             # Create raster with the target crs
-            target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+            target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
             # Check whether the target and actual analyses have the same CRS
             if (compareGeom(biomass,target) == FALSE) {
                 # Resample to correct grid
@@ -876,7 +876,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass_uncertainty = rast(paste(path_to_Cwood,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+                 target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid
@@ -1002,7 +1002,7 @@ load_biomass_stocks_maps_for_extraction<-function(latlon_in,Cwood_stock_source,s
                  biomass = rast(input_file[t])
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass), resolution = res(biomass))
+                 target = rast(crs = ("epsg:4326"), ext = ext(biomass), resolution = res(biomass))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(biomass,target) == FALSE) {
                      # Resample to correct grid

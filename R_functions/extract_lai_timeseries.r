@@ -37,8 +37,8 @@ extract_lai_timeseries<- function(i1,j1,timestep_days,spatial_type,resolution,
    if (use_parallel == FALSE) {print(paste("LAI data extracted for current location ",Sys.time(),sep=""))}
 
    # Extract current location to local variable
-   lai = lai_all$lai_all[i1,j1,]
-   lai_unc = lai_all$lai_unc_all[i1,j1,]
+   lai = lai_all$lai_m2m2[i1,j1,]
+   lai_unc = lai_all$lai_unc_m2m2[i1,j1,]
 
    # Just incase there is no missing data we best make sure there is a value which can be assessed
    if (length(lai_all$missing_years) == 0) { lai_all$missing_years=1066 }

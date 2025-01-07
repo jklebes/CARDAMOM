@@ -88,7 +88,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
                   # Convert to a raster, assuming standad WGS84 grid
                   var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                  var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                  var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                   # Remove the input lat / long information
                   rm(lat_in,long_in)
 
@@ -222,7 +222,7 @@ load_burnt_area_fields_for_extraction<-function(latlon_in,burnt_area_source,path
 
                       # Convert to a raster, assuming standad WGS84 grid
                       var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1))
-                      var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                      var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                       # Remove the input lat / long information
                       rm(lat_in,long_in)
 

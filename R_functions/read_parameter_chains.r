@@ -274,16 +274,16 @@ read_parameter_chains<- function(PROJECT_in,n) {
   # Potentially dangerous hack, take modulus of parameters which are nominally 1-365, 
   # but retrieved using broader parameter ranges to aid searching.
   if (PROJECT_in$model$name == "DALEC_1005" || PROJECT_in$model$name == "DALEC_1005a" ||
-      PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H3.P1" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#" ||
-      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.#") {
+      PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.002" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.019" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.003" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.004" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H3.P1.029" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.005" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.006" ||
+      PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.007" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.020" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.018" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.021" ||
+      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.031") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
-  if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.#") {
+  if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.013") {
       param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
   }
 

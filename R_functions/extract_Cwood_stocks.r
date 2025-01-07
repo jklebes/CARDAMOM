@@ -35,20 +35,16 @@ extract_Cwood_stocks<- function(i1,j1,timestep_days,spatial_type,resolution,grid
    # Update the user
    if (use_parallel == FALSE) {print(paste("Cwood stocks extracted for current location ",Sys.time(),sep=""))}
 
-#   # find the nearest location
-#   output = closest2d_2(1,Cwood_stock_all$lat,Cwood_stock_all$long,latlon_in[1],latlon_in[2])
-#   i1 = unlist(output, use.names=FALSE)[1] ; j1 = unlist(output, use.names=FALSE)[2]
-
    # Create time series output variables
    Cwood_stock = rep(-9999, length(timestep_days))
    Cwood_stock_unc = rep(-9999, length(timestep_days))
 
    # Loop through each time step of the Cwood time series obs and
    # estimate average value
-   for (t in seq(1, length(Cwood_stock_all$place_obs_in_step))) {
-        Cwood_stock[Cwood_stock_all$place_obs_in_step[t]] = Cwood_stock_all$biomass_gCm2[i1,j1,t]
-        tmp = min(Cwood_stock[Cwood_stock_all$place_obs_in_step[t]], Cwood_stock_all$biomass_uncertainty_gCm2[i1,j1,t])
-        Cwood_stock_unc[Cwood_stock_all$place_obs_in_step[t]] = tmp
+   for (t in seq(1, length(Cwood_stock_all$doy_obs))) {
+        Cwood_stock[Cwood_stock_all$doy_obs[t]] = Cwood_stock_all$biomass_gCm2[i1,j1,t]
+        tmp = min(Cwood_stock[Cwood_stock_all$doy_obs[t]], Cwood_stock_all$biomass_uncertainty_gCm2[i1,j1,t])
+        Cwood_stock_unc[Cwood_stock_all$doy_obs[t]] = tmp
    }
 
    # Set any time series values with NaN to missing data flag (-9999)

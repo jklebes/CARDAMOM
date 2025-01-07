@@ -34,10 +34,6 @@ extract_forestry_information<-function(i1,j1,timestep_days,spatial_type,resoluti
                                        latlon_in,forest_all,start_year,end_year,ctessel_pft_in,
                                        years_to_load,doy_obs) {
 
-#   # find the nearest location
-#   output=closest2d_2(1,forest_all$lat,forest_all$long,latlon_in[1],latlon_in[2])
-#   i1=unlist(output, use.names=FALSE)[1] ; j1=unlist(output, use.names=FALSE)[2]
-
    # Assume this location does not have forest commission information
    # The age, yield class and pft override will be removed at a later date
    # TLS: 11/01/2022
@@ -51,8 +47,8 @@ extract_forestry_information<-function(i1,j1,timestep_days,spatial_type,resoluti
    start_of_years = which(doy_obs == 1)
    # which year is the one in which deforestation occurs?
    # then find the appropriate beginning of a year and make deforestation
-   for (aa in seq(1,length(forest_all$year_of_loss))) {
-        start_point = start_of_years[which(as.numeric(years_to_load) == forest_all$year_of_loss[aa])]
+   for (aa in seq(1,length(forest_all$years))) {
+        start_point = start_of_years[which(as.numeric(years_to_load) == forest_all$years[aa])]
         end_point = start_point + 364
         deforestation[start_point:end_point] = (forest_all$loss_fraction[i1,j1,aa]) / 365
    }

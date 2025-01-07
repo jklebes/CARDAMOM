@@ -46,7 +46,7 @@ griddify <-function (xyz, nlon, nlat) {
 }
 
 # Define local function
-regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext) {
+regrid_func<-function(var1_in, epsg_in, lat_in, long_in, cardamom_ext) {
 
    # Set flags
    lat_done = FALSE
@@ -63,11 +63,11 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext) {
         if (length(unique(diff(long_in[,1]))) > 1 | length(unique(diff(lat_in[1,]))) > 1) {
             var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
         } else {
-            var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+            var1 = rast(var1, crs = (epsg_in), type="xyz")
         }
 
         # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+        target = rast(crs = cardamom_grid_type, ext = ext(var1), resolution = res(var1))
 
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(var1,target) == FALSE) {
@@ -96,7 +96,7 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext) {
             # Create raster with the target resolution
             target = rast(crs = crs(cardamom_ext), ext = ext(cardamom_ext), resolution = res(cardamom_ext))
             # Resample to correct grid
-            var1 = resample(var1, target, method="bilinear") ; gc()
+            var1 = resample(var1, target, method="average") ; gc()
 
         } # Aggregate to resolution
 
@@ -137,7 +137,7 @@ regrid_func<-function(var1_in, lat_in, long_in, cardamom_ext) {
 } # end function regrid_func
 
 # Function to use gdal libraries to aggregate to target spatial resolution
-regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, landmask) {
+regrid_gdal_func<-function(tmp_dir, var1_in, epsg_in, lat_in, long_in, cardamom_ext, landmask) {
 
    # Load libraries needed
    require(gdalUtils)
@@ -168,11 +168,11 @@ regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, land
         if (length(unique(diff(input_long[,1]))) > 1 | length(unique(diff(input_lat[1,]))) > 1) {
             var1 = griddify(var1, dim(var1_in)[1], dim(var1_in)[2])
         } else {
-            var1 = rasterFromXYZ(var1, crs = ("+init=epsg:4326"))
+            var1 = rasterFromXYZ(var1, crs = epsg_in)
         }
 
         # Create raster with the target crs (technically this bit is not required)
-        target = raster(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+        target = raster(crs = cardamom_grid_type, ext = ext(var1), resolution = res(var1))
         # Check whether the target and actual analyses have the same CRS
         if (compareCRS(var1,target) == FALSE) {
             # Resample to correct grid
@@ -189,7 +189,7 @@ regrid_gdal_func<-function(tmp_dir, var1_in, lat_in, long_in, cardamom_ext, land
             writeRaster(var1, outfile_tmp, format = "GTiff", overwrite=TRUE)
             # Carry out aggregation using gdal libraries
             gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg,
-                           a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),
+                           a_srs = gsub("epsg","EPSG",cardamom_grid_type), of = "GTiff", tr = res(cardamom_ext),
                            r = "average")
 #            gdalwarp(srcfile = outfile_tmp, dstfile = outfile_agg,
 #                     a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),

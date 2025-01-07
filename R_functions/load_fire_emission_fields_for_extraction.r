@@ -94,12 +94,12 @@ load_fire_emission_fields_for_extraction<-function(latlon_in,fire_source,start_y
                   for (t in seq(1, dim(var1_in)[3])) {
                        # Convert to a raster, assuming standad WGS84 grid
                        var1 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var1_in[,,t]))
-                       var1 = rast(var1, crs = ("+init=epsg:4326"), type="xyz")
+                       var1 = rast(var1, crs = ("epsg:4326"), type="xyz")
                        var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(var2_in[,,t]))
-                       var2 = rast(var2, crs = ("+init=epsg:4326"), type="xyz")
+                       var2 = rast(var2, crs = ("epsg:4326"), type="xyz")
 
                        # Create raster with the target crs (technically this bit is not required)
-                       target = rast(crs = ("+init=epsg:4326"), ext = ext(var1), resolution = res(var1))
+                       target = rast(crs = ("epsg:4326"), ext = ext(var1), resolution = res(var1))
                        # Check whether the target and actual analyses have the same CRS
                        if (compareGeom(var1,target) == FALSE) {
                            # Resample to correct grid

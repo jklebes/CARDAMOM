@@ -56,7 +56,7 @@ load_lca_maps_for_extraction<-function(latlon_in,lca_source,cardamom_ext,spatial
         lca_uncertainty_gCm2 = rast(paste(path_to_lca,unc_input_file,sep=""))
 
         # Create raster with the target crs
-        target = rast(crs = ("+init=epsg:4326"), ext = ext(lca_gCm2), resolution = res(lca_gCm2))
+        target = rast(crs = ("epsg:4326"), ext = ext(lca_gCm2), resolution = res(lca_gCm2))
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(lca_gCm2,target) == FALSE) {
             # Resample to correct grid
