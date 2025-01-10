@@ -314,7 +314,8 @@ cardamom_stage_1<-function(PROJECT) {
                    # Assuming we have not already created the file or we wish to force recreation
                    if (file.exists(filename) == FALSE | repair == 1){
                        # Extract meteorology
-                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],
+                                                 met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
 #                       # Load met drivers for ACM or other models
 #                       if (PROJECT$model$name != "ACM") {
 #                           met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
@@ -377,7 +378,8 @@ cardamom_stage_1<-function(PROJECT) {
                    # Assuming we have not already created the file or we wish to force recreation
                    if (file.exists(filename) == FALSE | repair == 1){
                        # Extract meteorology
-                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,
+                                                 latlon[n,],met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
 #                       # Load met drivers for ACM or other models
 #                       if (PROJECT$model$name != "ACM") {
 #                           met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
