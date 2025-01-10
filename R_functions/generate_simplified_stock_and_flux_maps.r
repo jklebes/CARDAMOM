@@ -43,7 +43,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   load(paste(infile))
    
   # generate the lat / long grid again
-  output = generate_grid(cardamom_grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+  output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
   area = output$area ; grid_lat = output$lat ; grid_long = output$long
   # include adjustment for g-> Tg (*1e-12)  
   area_with_g_Tg = area*1e-12

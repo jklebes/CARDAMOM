@@ -899,7 +899,7 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
 
           # generate the lat / long grid again
-          output = generate_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+          output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
           grid_output$lat = output$lat
           grid_output$long = output$long
           # Structure area (in m) as a grid

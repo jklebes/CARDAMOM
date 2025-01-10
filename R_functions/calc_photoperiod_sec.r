@@ -42,7 +42,7 @@ calc_photoperiod_sec<-function(lat,days){
    aob       = pmax(-1.0,pmin(1.0,sinld / cosld))
    daylength = 12.0 * ( 1. + 2. * asin ( aob ) / pi )
    # convert hours to seconds
-   daylength=daylength*3600
+   daylength = daylength*3600
    # clean up
    rm(declin,sinld,cosld,aob) ; gc()
    # now return

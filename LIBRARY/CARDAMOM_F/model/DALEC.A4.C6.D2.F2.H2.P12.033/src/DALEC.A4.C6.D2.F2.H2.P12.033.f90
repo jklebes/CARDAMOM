@@ -3469,8 +3469,8 @@ if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy
   subroutine update_soil_initial_conditions(input_soilwater_frac)
 
     !
-    ! Subroutine calculate the initial soil water potential and 
-    ! soil conductance as a function of the input initial soil water volumetric ratio
+    ! Subroutine calculate the soil layers field capacities and sets the initial
+    ! soil water potential set to field capacity
     !
 
     implicit none
@@ -3481,8 +3481,10 @@ if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy
     ! local variables
     integer :: i
 
-    ! calculate initial soil water fraction
-    soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac 
+    ! Load initial soil water fraction to the dynamic layers
+    soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    ! Assume that the 'core' soil layer is field capacity
+    soil_waterfrac(nos_soil_layers+1) = field_capacity
     ! calculate initial soil water potential
     call soil_water_potential
 

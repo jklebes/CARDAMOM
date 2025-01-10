@@ -3500,12 +3500,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     integer :: i
 
-    ! calculate initial soil water fraction
+    ! Load initial soil water fraction to the dynamic layers
     soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    ! Assume that the 'core' soil layer is field capacity
+    soil_waterfrac(nos_soil_layers+1) = field_capacity(nos_soil_layers)
     ! calculate initial soil water potential
     call soil_water_potential
- 
-    ! seperately calculate the soil conductivity as this applies to each layer
+
+    ! Seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers
        call calculate_soil_conductivity(i,soil_waterfrac(i),soil_conductivity(i))
     end do ! soil layers

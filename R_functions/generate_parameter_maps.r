@@ -31,11 +31,6 @@
 
 generate_parameter_maps<-function(PROJECT) {
 
-   # Determine the lat / long for the grid
-   output = generate_grid(cardamom_grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-   grid_lat = output$lat ; grid_long = output$long
-   rm(output)
-
    # Move working directory
    old_wd = getwd() ; setwd(PROJECT$figpath)
 
@@ -46,6 +41,10 @@ generate_parameter_maps<-function(PROJECT) {
    # Loaded the grid aggregated dataset into memory
    infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
    load(infile)
+
+   # Extract the lat / long information
+   grid_lat = grid_output$lat ; grid_long = grid_output$long
+
    # Ensure that any Inf values are removed to NA
    # This is a hack implemented during a development phase and should be removed
    # or commented out under general operation

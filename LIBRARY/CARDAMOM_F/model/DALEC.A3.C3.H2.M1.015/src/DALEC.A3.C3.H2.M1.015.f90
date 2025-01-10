@@ -870,6 +870,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     else
 
+        ! Reset hydraulic properties
         water_flux_mmolH2Om2s = 0d0
         field_capacity = field_capacity_initial
         porosity = porosity_initial
@@ -3161,8 +3162,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     integer :: i
 
-    ! calculate initial soil water fraction
+    ! Load initial soil water fraction to the dynamic layers
     soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    ! Assume that the 'core' soil layer is field capacity
+    soil_waterfrac(nos_soil_layers+1) = field_capacity(nos_soil_layers)
     ! calculate initial soil water potential
     call soil_water_potential
 
