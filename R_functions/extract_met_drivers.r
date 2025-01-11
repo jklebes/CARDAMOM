@@ -38,11 +38,12 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # do the required conversions
       local_lat = vect(cbind(latlon_wanted[2], latlon_wanted[1]), crs=grid_type) 
       local_lat = project(local_lat, "epsg:4326")
-      local_lat = crds(local_lat,df=TRUE)[2] # extract latitude, i.e. y-dimension only
+      local_lat = crds(local_lat,df=TRUE) # extract latitude, i.e. y-dimension only
+      local_lat = as.vector(local_lat$y)
   } else {
       # The required grid is a match for that provided here, assign to local variable and move on
       local_lat = latlon_wanted[1]
-  }
+  } # lat in degrees or not?
 
   if (met_source == "site_specific") {
 
@@ -200,7 +201,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       avg_days = 30 # assume that the first 30 days are just the actual values
       # create photoperiod information; add 30 days to the output
       photoperiod_out = calc_photoperiod_sec(local_lat,c(seq((365-(avg_days-2)),365,1),met_in$doy))
-
+      
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out, avg_days, mean, na.rm=FALSE)
       avgTmax_out = rollapply(avgTmax_out, avg_days, mean, na.rm=FALSE)
