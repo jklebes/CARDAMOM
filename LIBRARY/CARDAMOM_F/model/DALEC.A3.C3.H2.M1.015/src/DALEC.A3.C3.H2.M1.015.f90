@@ -895,6 +895,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3  ! Vapour pressure deficit (Pa)
 
+    ! Calculate solar declination for the current time step
+    declination = calculate_declination(doy)
+    ! calculate daylength in hours and seconds
+    call calculate_daylength
+    ! extract timing related values
+    dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+    dayl_seconds_1 = dayl_seconds**(-1d0)
+    seconds_per_step = seconds_per_day * deltat(1)
+    days_per_step = deltat(1) ; days_per_step_1 = deltat_1(1)
+
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(leafT,leafT+freeze,vpd_kPa)
 
@@ -944,6 +954,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       lai_out(n) = POOLS(n,2)/LCA
       lai = lai_out(n) ! leaf area index (m2/m2)
 
+      ! Calculate solar declination for the current time step
+      declination = calculate_declination(doy)
+      ! calculate daylength in hours and seconds
+      call calculate_daylength
+      ! extract timing related values
+      dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
+      dayl_seconds_1 = dayl_seconds**(-1d0)
+      seconds_per_step = seconds_per_day * deltat(n)
+      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+
       ! DS < 0.15 corresponds to the growth stage at beginning of the UK recommended period of      
       ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
       if (DS < 0.469d0) then                          
@@ -961,16 +981,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       end if
       ! Update to canopy efficiency (gC/m2leaf/day)
       ceff = avN * NUE
-
-      ! Calculate solar declination for the current time step
-      declination = calculate_declination(doy)
-      ! calculate daylength in hours and seconds
-      call calculate_daylength
-      ! extract timing related values
-      dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
-      dayl_seconds_1 = dayl_seconds**(-1d0)
-      seconds_per_step = seconds_per_day * deltat(n)
-      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
 
       !!!!!!!!!!
       ! Adjust snow balance balance based on temperture
