@@ -111,7 +111,7 @@ obs_array_names <<- c("GPP (gC/m2/day)",
                       "Extracted C due to harvest varince",
                       "Lag period over which to average (steps)")
 
-binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter_type,nopars,noyears) {
+binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
   # Inform the user
   if (use_parallel == FALSE) {print(paste("writing out binary...",Sys.time(),sep=""))}
@@ -203,6 +203,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
   if (min(met$mint) < -200) {pass = FALSE ; print(summary(met$mint)) ; print('mint error in binary_data')} # Celcius
   if (min(met$maxt) < -200) {pass = FALSE ; print(summary(met$maxt)) ; print('maxt error in binary_data')} # Celcius
   if (min(met$swrad) < 0 | max(met$swrad) > 36) { pass = FALSE ; print(summary(met$swrad)) ; print('RAD error in binary_data')} # MJ/m2/day
+  if (lat_degrees < -90 | lat_degrees > 90) { pass = FALSE ; print(lat_degrees) ; stop('Latitude passed to binary_data is not -90/90 degrees')} # degrees only
 
   # Assuming forcings and observations pass criterior we will generate the files
   if (pass) {
@@ -334,7 +335,7 @@ binary_data<-function(met,OBS,file,EDC,latlon_in,ctessel_pft,modelname,parameter
       force_random_search = -9999 #; OBS$age = -9999
       # pass static information
       static_data = rep(-9999.0,length.out=50)
-      tmp = c(modelid,latlon_in[1],dim(MET)[1],dim(MET)[2],dim(OBSMAT)[2],
+      tmp = c(modelid,lat_degrees,dim(MET)[1],dim(MET)[2],dim(OBSMAT)[2],
               EDC,ctessel_pft,OBS$yield_class,OBS$age,nopars,force_random_search,
               OBS$top_sand[1],OBS$bot_sand[1],OBS$top_clay[1],OBS$bot_clay[1])
       static_data[1:length(tmp)] = tmp

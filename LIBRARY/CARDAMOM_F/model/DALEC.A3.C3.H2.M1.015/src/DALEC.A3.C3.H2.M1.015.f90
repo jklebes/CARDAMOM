@@ -410,7 +410,7 @@ module CARBON_MODEL_MOD
                               cos2theta, & ! Analytical correction for leaf angle (radians) on light scattering within the canopy
                                  Vc, Vg, & ! Define the vegetated and covered soil (i.e. by litter) fractions
                                 mu_obar, & ! The average inverse diffuse optical depth per unit leaf area.
-                                 O1,O2    ! Empirical coefficients related to the leaf angle distribution
+                                  O1,O2    ! Empirical coefficients related to the leaf angle distribution
   double precision, dimension(no_wavelength) :: &
                      canopy_reflectance = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
                    canopy_transmittance = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
@@ -643,7 +643,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,stock_seed_labile             & ! seed carbon to get things going
                          ,deltat(nodays)                & ! time step in decimal days
                          ,pars(nopars)                  & ! number of parameters
-                         ,lat                 ! site latitude (degrees)
+                         ,lat                             ! site latitude (degrees)
 
     double precision, dimension(:), intent(inout) ::          DS_shoot, & !
                                                                DS_root, & !
@@ -882,7 +882,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     endif
 
     ! load some needed module level values
-    lai = POOLS(1,2)/pars(17)
+    lai = POOLS(1,2)/LCA
     mint = met(2,1)  ! minimum temperature (oC)
     maxt = met(3,1)  ! maximum temperature (oC)
     leafT = (maxt*0.75d0) + (mint*0.25d0) ! initial canopy temperature (oC)

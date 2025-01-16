@@ -370,6 +370,19 @@ cardamom_stage_1<-function(PROJECT) {
                grid_n = output$n_loc
                rm(output)
 
+               # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
+               if (grid_type != "epsg:4326") {
+                   # The required grid for calculations in this function does not match, 
+                   # do the required conversions
+                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=grid_type) 
+                   lat_degrees = project(lat_degrees, "epsg:4326")
+                   lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
+                   lat_degrees = as.vector(lat_degrees$y)
+               } else {
+                   # The required grid is a match for that provided here, assign to local variable and move on
+                   lat_degrees = latlon[n,1]
+               } # lat in degrees or not?
+
                # Determine whether we have a valid meteorology variable, 
                # and the correct wheat_from_chaff number for the location.
                wheat_n = which(met_all$wheat == grid_n)
@@ -379,7 +392,7 @@ cardamom_stage_1<-function(PROJECT) {
                    if (file.exists(filename) == FALSE | repair == 1){
                        # Extract meteorology
                        met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,
-                                                 latlon[n,],met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
+                                                 lat_degrees,met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
 #                       # Load met drivers for ACM or other models
 #                       if (PROJECT$model$name != "ACM") {
 #                           met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
@@ -401,7 +414,7 @@ cardamom_stage_1<-function(PROJECT) {
                        # Load additional model information
                        PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
                        # write out the relevant binary files
-                       binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
+                       binary_data(met,obs,filename,PROJECT$edc,lat_degrees,PROJECT$ctessel_pft[n],
                                    PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
                    } # if (file.exists(filename) == FALSE | repair == 1)
     

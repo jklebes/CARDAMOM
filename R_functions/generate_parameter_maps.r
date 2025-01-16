@@ -67,7 +67,7 @@ generate_parameter_maps<-function(PROJECT) {
   # Determine correct height and widths
   hist_height = 4000*0.65 ; hist_width = 7200*0.65
   fig_height = 3000*0.65 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
-  if (PROJECT$grid_type == "UK") { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
+  if (grepl("27700",PROJECT$grid_type)) { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
   # load colour palette
   colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
 
@@ -454,6 +454,41 @@ generate_parameter_maps<-function(PROJECT) {
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
        }
+
+       # Generate generic maps of spatial aggregates of drivers$parpriors
+       if (p <= max(PROJECT$model$nopars)) {
+           if (length(which(is.na(grid_output$parameter_priors_array[,,p]) != TRUE)) > 0) {
+               zrange = c(min(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE),max(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE))
+               zrange = sort(zrange + (c(-0.01,0.01) * zrange))
+               fig_name = paste("mean_parameter_priors_array_maps_",gsub(" ","_",par_names[p]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+               fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+               fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+               jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+               par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+               image.plot(x = grid_long, y = grid_lat, z = grid_output$parameter_priors_array[,,p], col=rev(colour_choices)
+                         ,main=paste(par_names[p],sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0
+                         ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                         ,zlim=zrange)
+               map(add=TRUE, lwd = 2)
+               #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+               dev.off()
+               zrange = c(min(as.vector(grid_output$parameter_priors_uncertainty_array[,,p]),na.rm=TRUE),max(as.vector(grid_output$parameter_priors_uncertainty_array[,,p]),na.rm=TRUE))
+               zrange = sort(zrange + (c(-0.01,0.01) * zrange))
+               fig_name = paste("mean_parameter_priors_uncertainty_array_maps_",gsub(" ","_",par_names[p]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+               fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+               fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+               jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+               par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+               image.plot(x = grid_long, y = grid_lat, z = grid_output$parameter_priors_uncertainty_array[,,p], col=rev(colour_choices)
+                         ,main=paste(par_names[p],sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0
+                         ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                         ,zlim=zrange)
+               map(add=TRUE, lwd = 2)
+               #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+               dev.off()
+           } # has a value worth reporting
+       } # Is a parameter not log-likelihood
+
   } # parameter loop
   
   # inform the user

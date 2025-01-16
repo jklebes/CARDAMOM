@@ -60,6 +60,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$parameters[slot_i,slot_j,,] = site_output$parameters
            # track which parameters have converged + likelihood
            grid_output$parameters_converged[slot_i,slot_j,] = site_output$parameters_converged
+           # Parameter priors
+           grid_output$parameter_priors_array[slot_i,slot_j,] = site_output$parameter_priors_array
+           grid_output$parameter_priors_uncertainty_array[slot_i,slot_j,] = site_output$parameter_priors_uncertainty_array
            # Generic dump of the whole driver$met and drivers$obs arrays
            # Long term average first...
            grid_output$met_array_averages[slot_i,slot_j,] = site_output$met_array_averages

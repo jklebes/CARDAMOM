@@ -638,6 +638,12 @@ module cardamom_io
     ! allocate case specific information
     DATAin%edc_random_search=int(statdat(11))
 
+    ! Do some sanity checks
+    if (DATAin%lat > 90 .or. DATAin%lat < -90) then
+        print*,"Latitude provided is not -90/90"
+        stop
+    end if
+
     ! clean up
     deallocate(statdat)
 

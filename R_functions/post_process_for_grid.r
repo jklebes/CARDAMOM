@@ -315,7 +315,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # track which parameters have converged + likelihood
   site_output$parameters_converged = rep(0, dim(parameters)[1])
   site_output$parameters_converged[which(converged == "PASS")] = 1
-
+  # Load any parameter priors
+  site_output$parameter_priors_array = drivers$parpriors[1:max(PROJECT$model$nopars)]
+  site_output$parameter_priors_uncertainty_array = drivers$parpriorunc[1:max(PROJECT$model$nopars)]
   # Generic dump of the whole driver$met and drivers$obs arrays
   # Long term averages
   site_output$met_array_averages = apply(drivers$met,2,mean,na.rm = na_flag) 
