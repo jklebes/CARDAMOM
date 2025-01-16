@@ -371,10 +371,10 @@ cardamom_stage_1<-function(PROJECT) {
                rm(output)
 
                # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
-               if (grid_type != "epsg:4326") {
+               if (PROJECT$grid_type != "epsg:4326") {
                    # The required grid for calculations in this function does not match, 
                    # do the required conversions
-                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=grid_type) 
+                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=PROJECT$grid_type) 
                    lat_degrees = project(lat_degrees, "epsg:4326")
                    lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
                    lat_degrees = as.vector(lat_degrees$y)
