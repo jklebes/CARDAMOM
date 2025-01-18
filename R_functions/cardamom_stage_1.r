@@ -306,6 +306,19 @@ cardamom_stage_1<-function(PROJECT) {
                grid_n = output$n_loc
                rm(output)
 
+               # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
+               if (PROJECT$grid_type != "epsg:4326") {
+                   # The required grid for calculations in this function does not match, 
+                   # do the required conversions
+                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=PROJECT$grid_type) 
+                   lat_degrees = project(lat_degrees, "epsg:4326")
+                   lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
+                   lat_degrees = as.vector(lat_degrees$y)
+               } else {
+                   # The required grid is a match for that provided here, assign to local variable and move on
+                   lat_degrees = latlon[n,1]
+               } # lat in degrees or not?
+               
                # Determine whether we have a valid meteorology variable, 
                # and the correct wheat_from_chaff number for the location.
                wheat_n = which(met_all$wheat == grid_n)

@@ -72,6 +72,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   # determine correct height and widths
   fig_height = 3000*0.65 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
+  if (grepl("27700",PROJECT$grid_type)) { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
 
   # If root depth information has been provided plot some of it up here.
   if (exists(x = "mean_RootDepth_m", where = grid_output)) {

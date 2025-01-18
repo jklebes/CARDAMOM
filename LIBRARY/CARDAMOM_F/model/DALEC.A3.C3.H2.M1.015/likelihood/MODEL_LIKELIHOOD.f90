@@ -212,11 +212,11 @@ module model_likelihood_module
                      ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
     ! assess post running EDCs
-    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                    ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                    ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                    ,PI%parmax,PARS,DATAin%MET &
                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
-
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
 !    tot_exp = 0d0
@@ -285,8 +285,9 @@ module model_likelihood_module
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
@@ -353,8 +354,9 @@ module model_likelihood_module
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
@@ -421,8 +423,9 @@ module model_likelihood_module
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
@@ -603,7 +606,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat,steps_per_year &
                         ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
                         ,meantemp,EDC2)
 
@@ -620,7 +623,8 @@ module model_likelihood_module
                           ,nomet    & ! number of met drivers
                           ,nofluxes & ! number of fluxes from model
                           ,nopools  & ! number of pools in model
-                          ,nodays     ! number of days in simulation
+                          ,nodays   & ! number of days in simulation
+                          ,steps_per_year
 
     double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
                                    ,pars(npars)                 & ! vector of current parameters
@@ -636,7 +640,7 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, &
+    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, &
                nd, fl, fs, io_start, io_finish
     integer, dimension(nodays) :: pool_hak
     double precision :: infi, mrt!, EQF, etol
@@ -656,7 +660,7 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                   C_etol = 0.10d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.20         !
+                                H2O_etol = 0.10         !
 
     ! Work out how many completed years there are in the system
     no_years = int(nint(sum(deltat)/365.25d0))
@@ -1002,10 +1006,11 @@ module model_likelihood_module
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)                        
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
