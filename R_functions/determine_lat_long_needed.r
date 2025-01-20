@@ -31,7 +31,7 @@
 determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
 
     # Spatial grid
-    output = generate_grid(cardamom_grid_type,lat,long,resolution)
+    output = generate_grid(grid_type,lat,long,resolution)
     # extract the latitude / longitude and extent/resolution information
     lat = output$lat ; long = output$long ; long_dim = output$long_dim ; lat_dim = output$lat_dim
     cardamom_ext = output$cardamom_ext
