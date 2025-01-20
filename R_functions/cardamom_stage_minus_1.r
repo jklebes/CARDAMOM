@@ -119,7 +119,7 @@ cardamom_stage_minus_1<-function(PROJECTfile,PROJECTtype,paths,model,method,proj
    } else if (cardamom_type == "site") {
        PROJECT$spatial_type = "site"
        PROJECT$resolution = " "
-       PROJECT$grid_type = " "
+       PROJECT$grid_type = "epsg:4326" # default assumption that the lat / long locations are given in the WGS-84 grid
    } else {
        stop("missing cardamom_type variable")
    } #

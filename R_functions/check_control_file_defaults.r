@@ -38,7 +38,8 @@ check_control_file_defaults<-function(paths) {
   if (exists("select_country") == FALSE)                {select_country <<- FALSE}
   if (exists("met_interp") == FALSE)                    {met_interp <<- FALSE}
   if (exists("pft_specific_parameters") == FALSE)       {pft_specific_parameters <<- FALSE}
-  if (exists("cardamom_grid_type") == FALSE)            {cardamom_grid_type <<- "espg:4326"}
+  if (exists("cardamom_grid_type") == FALSE)            {cardamom_grid_type <<- "epsg:4326"}
+  if (cardamom_grid_type == " " | cardamom_grid_type == "") {cardamom_grid_type <<- "epsg:4326"}
   # Site combined forcings and assimilated data path
   if (exists("path_to_site_obs") == FALSE)              {path_to_site_obs <<- " "}
   # Forcings data paths 

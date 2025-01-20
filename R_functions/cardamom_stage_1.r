@@ -29,7 +29,12 @@
 #########################################################################################
 
 # Create function needed to process the site specific creation
-write_bin_files<-function(n) {
+write_bin_files<-function(n,PROJECT,latlon,timestep_days,met_all
+                         ,lai_all,Csom_all,forest_all
+                         ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                         ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                         ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
+                         ,fapar_all) {
 
    # create the file name for the met/obs binary
    filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
@@ -54,6 +59,7 @@ write_bin_files<-function(n) {
        lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
        lat_degrees = as.vector(lat_degrees$y)
    } else {
+
        # The required grid is a match for that provided here, assign to local variable and move on
        lat_degrees = latlon[n,1]
    } # lat in degrees or not?
@@ -362,7 +368,16 @@ cardamom_stage_1<-function(PROJECT) {
           # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
           # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
           cl <- min(PROJECT$nosites,numWorkers)
-          dummy = mclapply(c(1:PROJECT$nosites), FUN = write_bin_files, mc.cores = cl)
+          dummy = mclapply(c(1:PROJECT$nosites), FUN = write_bin_files, mc.cores = cl,
+                           PROJECT = PROJECT,latlon = latlon,timestep_days = timestep_days,
+                           met_all = met_all, lai_all = lai_all, Csom_all = Csom_all,
+                           forest_all = forest_all, Cwood_initial_all = Cwood_initial_all,
+                           Cwood_stock_all = Cwood_stock_all, Cwood_potential_all = Cwood_potential_all,
+                           sand_clay_all = sand_clay_all, crop_man_all = crop_man_all,
+                           burnt_all = burnt_all, soilwater_all = soilwater_all, nbe_all = nbe_all, 
+                           lca_all = lca_all, gpp_all = gpp_all, Cwood_inc_all = Cwood_inc_all,
+                           Cwood_mortality_all = Cwood_mortality_all, fire_all = fire_all, 
+                           fapar_all = fapar_all)
 
       } else { # use parallel
 
@@ -371,7 +386,12 @@ cardamom_stage_1<-function(PROJECT) {
 
                # Inform user
                print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
-               write_bin_files(n)    
+               write_bin_files(n,PROJECT,latlon,timestep_days,met_all
+                              ,lai_all,Csom_all,forest_all
+                              ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                              ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
+                              ,fapar_all)    
 
           } # site loop
 

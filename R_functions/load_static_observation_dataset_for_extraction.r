@@ -284,7 +284,7 @@ load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,
     } else {
 
         # We have a problem as something unexpected has been specified
-        stop(paste("The data_source = ",data_source," is not a recognised value (Gridded, site_specific or blank)",sep=""))
+        stop(paste("The data_source = ",data_source," is not a recognised value (Gridded_nc, Gridded_tif, site_specific or blank)",sep=""))
 
     } # Gridded dataset or not
 
