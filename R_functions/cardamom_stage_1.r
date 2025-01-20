@@ -28,6 +28,75 @@
 #
 #########################################################################################
 
+# Create function needed to process the site specific creation
+write_bin_files<-function(n) {
+
+   # create the file name for the met/obs binary
+   filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+
+   # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
+   # This means that we can extract the location of the current site within any grid just the
+   # once and pass around the solution to all the extraction functions.
+   # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
+   # meteorology driving the model, so we assume a nearest neighbour approach of valid
+   # locations, rather than accepting data gaps as done in observations / disturbance drivers.
+   output = closest2d_tif(cardamom_ext,latlon[n,1],latlon[n,2]) 
+   grid_long_loc = output$i_loc ; grid_lat_loc = dim(cardamom_ext) [1] - output$j_loc + 1
+   grid_n = output$n_loc
+   rm(output)
+
+   # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
+   if (PROJECT$grid_type != "epsg:4326") {
+       # The required grid for calculations in this function does not match, 
+       # do the required conversions
+       lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=PROJECT$grid_type) 
+       lat_degrees = project(lat_degrees, "epsg:4326")
+       lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
+       lat_degrees = as.vector(lat_degrees$y)
+   } else {
+       # The required grid is a match for that provided here, assign to local variable and move on
+       lat_degrees = latlon[n,1]
+   } # lat in degrees or not?
+
+   # Determine whether we have a valid meteorology variable, 
+   # and the correct wheat_from_chaff number for the location.
+   wheat_n = which(met_all$wheat == grid_n)
+   if (length(wheat_n) == 1) {
+
+       # Assuming we have not already created the file or we wish to force recreation
+       if (file.exists(filename) == FALSE | repair == 1){
+            # Extract meteorology
+            met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,
+                                      lat_degrees,met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
+#            # Load met drivers for ACM or other models
+#            if (PROJECT$model$name != "ACM") {
+#                met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
+#            } else { # if (PROJECT$model$name != "ACM")
+#                # assume ACM special case
+#                met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
+#            }
+            # Load observations
+            obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
+                             ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
+                             ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
+                             ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
+                             ,fapar_all
+                             ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
+                             ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
+
+            # update ctessel pft in the project and potentially the model information
+            PROJECT$ctessel_pft[n] = obs$ctessel_pft
+            # Load additional model information
+            PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
+            # write out the relevant binary files
+            binary_data(met,obs,filename,PROJECT$edc,lat_degrees,PROJECT$ctessel_pft[n],
+                        PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
+       } # if (file.exists(filename) == FALSE | repair == 1)
+    
+   } # do we have a valid meteorological location
+
+} # end function
+
 cardamom_stage_1<-function(PROJECT) {
 
    # Check for existing binary input files
@@ -289,74 +358,6 @@ cardamom_stage_1<-function(PROJECT) {
        print("Loading completed, beginning writing out file write out")
 
        if (use_parallel) {
-           # Create function needed to process the site specific creation
-           write_bin_files<-function(n) {
-
-               # create the file name for the met/obs binary
-               filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
-
-               # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
-               # This means that we can extract the location of the current site within any grid just the
-               # once and pass around the solution to all the extraction functions.
-               # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
-               # meteorology driving the model, so we assume a nearest neighbour approach of valid
-               # locations, rather than accepting data gaps as done in observations / disturbance drivers.
-               output = closest2d_tif(cardamom_ext,latlon[n,1],latlon[n,2]) 
-               grid_long_loc = output$i_loc ; grid_lat_loc = dim(cardamom_ext) [1] - output$j_loc + 1
-               grid_n = output$n_loc
-               rm(output)
-
-               # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
-               if (PROJECT$grid_type != "epsg:4326") {
-                   # The required grid for calculations in this function does not match, 
-                   # do the required conversions
-                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=PROJECT$grid_type) 
-                   lat_degrees = project(lat_degrees, "epsg:4326")
-                   lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
-                   lat_degrees = as.vector(lat_degrees$y)
-               } else {
-                   # The required grid is a match for that provided here, assign to local variable and move on
-                   lat_degrees = latlon[n,1]
-               } # lat in degrees or not?
-               
-               # Determine whether we have a valid meteorology variable, 
-               # and the correct wheat_from_chaff number for the location.
-               wheat_n = which(met_all$wheat == grid_n)
-               if (length(wheat_n) == 1) {
-
-                   # Assuming we have not already created the file or we wish to force recreation
-                   if (file.exists(filename) == FALSE | repair == 1){
-                       # Extract meteorology
-                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],
-                                                 met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
-#                       # Load met drivers for ACM or other models
-#                       if (PROJECT$model$name != "ACM") {
-#                           met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
-#                       } else { # if (PROJECT$model$name != "ACM")
-#                           # assume ACM special case
-#                           met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
-#                       }
-                       # Load observations
-                       obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
-                                        ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                                        ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                                        ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
-                                        ,fapar_all
-                                        ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
-                                        ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
-
-                       # update ctessel pft in the project and potentially the model information
-                       PROJECT$ctessel_pft[n] = obs$ctessel_pft
-                       # Load additional model information
-                       PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
-                       # write out the relevant binary files
-                       binary_data(met,obs,filename,PROJECT$edc,latlon[n,],PROJECT$ctessel_pft[n],
-                                   PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
-                   } # if (file.exists(filename) == FALSE | repair == 1)
-    
-               } # do we have a valid meteorological location
-
-           } # end function
 
           # NOTE: that the use of mclapply() is due to reported improved efficiency over creating a virtual cluster.
           # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
@@ -368,71 +369,10 @@ cardamom_stage_1<-function(PROJECT) {
           # start looping through sites to create site specific files of obs and met
           for (n in seq(1, PROJECT$nosites)) {
 
+               # Inform user
                print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
-               # create the file name for the met/obs binary
-               filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
+               write_bin_files(n)    
 
-               # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
-               # This means that we can extract the location of the current site within any grid just the
-               # once and pass around the solution to all the extraction functions.
-               # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
-               # meteorology driving the model, so we assume a nearest neighbour approach of valid
-               # locations, rather than accepting data gaps as done in observations / disturbance drivers.
-               output = closest2d_tif(cardamom_ext,latlon[n,1],latlon[n,2]) 
-               grid_long_loc = output$i_loc ; grid_lat_loc = dim(cardamom_ext) [1] - output$j_loc + 1
-               grid_n = output$n_loc
-               rm(output)
-
-               # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
-               if (PROJECT$grid_type != "epsg:4326") {
-                   # The required grid for calculations in this function does not match, 
-                   # do the required conversions
-                   lat_degrees = vect(cbind(latlon[n,2], latlon[n,1]), crs=PROJECT$grid_type) 
-                   lat_degrees = project(lat_degrees, "epsg:4326")
-                   lat_degrees = crds(lat_degrees,df=TRUE) # extract latitude, i.e. y-dimension only
-                   lat_degrees = as.vector(lat_degrees$y)
-               } else {
-                   # The required grid is a match for that provided here, assign to local variable and move on
-                   lat_degrees = latlon[n,1]
-               } # lat in degrees or not?
-
-               # Determine whether we have a valid meteorology variable, 
-               # and the correct wheat_from_chaff number for the location.
-               wheat_n = which(met_all$wheat == grid_n)
-               if (length(wheat_n) == 1) {
-
-                   # Assuming we have not already created the file or we wish to force recreation
-                   if (file.exists(filename) == FALSE | repair == 1){
-                       # Extract meteorology
-                       met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,
-                                                 lat_degrees,met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
-#                       # Load met drivers for ACM or other models
-#                       if (PROJECT$model$name != "ACM") {
-#                           met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
-#                       } else { # if (PROJECT$model$name != "ACM")
-#                           # assume ACM special case
-#                           met = extract_acm_met_drivers(PROJECT,latlon[n,],PROJECT$sites[n])
-#                       }
-                       # Load observations
-                       obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
-                                        ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
-                                        ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                                        ,nbe_all, lca_all, gpp_all,Cwood_inc_all,Cwood_mortality_all, fire_all
-                                        ,fapar_all
-                                        ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
-                                        ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
-
-                       # update ctessel pft in the project and potentially the model information
-                       PROJECT$ctessel_pft[n] = obs$ctessel_pft
-                       # Load additional model information
-                       PROJECT$model = cardamom_model_details(PROJECT$model$name,pft_specific_parameters,PROJECT$ctessel_pft)
-                       # write out the relevant binary files
-                       binary_data(met,obs,filename,PROJECT$edc,lat_degrees,PROJECT$ctessel_pft[n],
-                                   PROJECT$model$name,PROJECT$parameter_type,PROJECT$model$nopars[n],noyears)
-                   } # if (file.exists(filename) == FALSE | repair == 1)
-    
-               } # do we have a valid meteorological location
-    
           } # site loop
 
       } # use_parallel
