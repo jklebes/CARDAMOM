@@ -521,11 +521,11 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[35] = 0.99         ; PARPRIORUNC[35] = 0.1          # autotrophic turnover rate (/day)
 #          PARPRIORS[36] = 50.0         ; PARPRIORUNC[36] = 25.0         # fine root biomass (g/m2) needed to reach 50 % of maximum depth
 #          PARPRIORS[37] = 1.5          ; PARPRIORUNC[37] = 0.25         # maximum rooting depth (m)
-#          # Other priors
-#          OTHERPRIORS[1] = 0.54        ; OTHERPRIORUNC[1] = 0.12 #; OTHERPRIORWEIGHT[1] = noyears  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-#          # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
-#          # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
-#          OTHERPRIORS[8] = 0.38        ; OTHERPRIORUNC[8] = 0.087 #; OTHERPRIORWEIGHT[8] = noyears
+          # Other priors
+          OTHERPRIORS[1] = 0.54        ; OTHERPRIORUNC[1] = 0.12 #; OTHERPRIORWEIGHT[1] = noyears  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
+          # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+          OTHERPRIORS[8] = 0.38        ; OTHERPRIORUNC[8] = 0.087 #; OTHERPRIORWEIGHT[8] = noyears
       } else if (modelname == "DALEC_1005") {
           PARPRIORS[2] =0.54                   ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[11]=16.9                   ; PARPRIORUNC[11]=7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)

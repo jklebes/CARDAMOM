@@ -39,7 +39,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
     if (met_source == "site_specific") {
 
         # contruct output
-        met_all = list(site_specific=TRUE)
+        met_all = list(site_specific=TRUE, wheat = c(1:dim(latlon_in)[1]))
 
     } else {
 

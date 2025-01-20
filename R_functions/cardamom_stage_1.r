@@ -39,17 +39,6 @@ write_bin_files<-function(n,PROJECT,latlon,timestep_days,met_all
    # create the file name for the met/obs binary
    filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
 
-   # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
-   # This means that we can extract the location of the current site within any grid just the
-   # once and pass around the solution to all the extraction functions.
-   # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
-   # meteorology driving the model, so we assume a nearest neighbour approach of valid
-   # locations, rather than accepting data gaps as done in observations / disturbance drivers.
-   output = closest2d_tif(cardamom_ext,latlon[n,1],latlon[n,2]) 
-   grid_long_loc = output$i_loc ; grid_lat_loc = dim(cardamom_ext) [1] - output$j_loc + 1
-   grid_n = output$n_loc
-   rm(output)
-
    # Determine local latitude value, ensure it is in wgs-84 -90/90 regardless of grid projection
    if (PROJECT$grid_type != "epsg:4326") {
        # The required grid for calculations in this function does not match, 
@@ -64,9 +53,27 @@ write_bin_files<-function(n,PROJECT,latlon,timestep_days,met_all
        lat_degrees = latlon[n,1]
    } # lat in degrees or not?
 
-   # Determine whether we have a valid meteorology variable, 
-   # and the correct wheat_from_chaff number for the location.
-   wheat_n = which(met_all$wheat == grid_n)
+   # All CARDAMOM read gridded datasets now map onto the same projection, extent and resolution.
+   # This means that we can extract the location of the current site within any grid just the
+   # once and pass around the solution to all the extraction functions.
+   # NOTE: that met_all is an exception to this as the for the analysis to work we must always have
+   # meteorology driving the model, so we assume a nearest neighbour approach of valid
+   # locations, rather than accepting data gaps as done in observations / disturbance drivers.
+   output = closest2d_tif(cardamom_ext,latlon[n,1],latlon[n,2]) 
+   grid_long_loc = output$i_loc ; grid_lat_loc = dim(cardamom_ext) [1] - output$j_loc + 1
+   grid_n = output$n_loc
+   rm(output)
+
+   # For selecting the right meteorological information
+   if (PROJECT$spatial_type == "grid") {
+       # Determine whether we have a valid meteorology variable, 
+       # and the correct wheat_from_chaff number for the location.
+       wheat_n = which(met_all$wheat == grid_n)
+   } else {     
+       # Assume site analysis, therefore wheat_n == n
+       wheat_n = n
+   } # grid or site?
+
    if (length(wheat_n) == 1) {
 
        # Assuming we have not already created the file or we wish to force recreation
