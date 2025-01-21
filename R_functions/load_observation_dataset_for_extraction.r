@@ -91,7 +91,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
              ## Begin reading the files in now for real
 
              # Update the user as to our progress
-             print(paste("... ",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
+             print(paste("...",round((yr/length(years_to_load))*100,0),"% completed ",Sys.time(),sep=""))
 
              # Determine the unique file name pattern
              input_file_1 = paste(prefix,years_to_load[yr],sep="")
@@ -108,18 +108,17 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
 
                  twodim = FALSE
                  # Get timing variable...
-                 if (length(which(names(data1$var) == "doy")) > 0) {
+                 if (length(which(names(data1$var) == "doy")) > 0 | length(which(names(data1$dim) == "doy"))) {
                      doy_in = ncvar_get(data1, "doy") 
                  } else {
                      # We don't have the desired time variable
-                     paste("Loading ",est_var_name_in," for subsequent sub-setting ...",sep="")
-                     print(paste("doy variable missing from ",est_var_name_in," Gridded_nc variable",sep=""))
+                     print(paste("......doy variable missing from ",est_var_name_in," Gridded_nc variable",sep=""))
                      if (data1$ndim == 2) {
-                         print("the code will assume that doy is the middle of the year, assuming only 2 dimensions are found in the file")
+                         print("......the code will assume that doy is the middle of the year, assuming only 2 dimensions are found in the file")
                          doy_in = 187 # middle day of the year
                          twodim = TRUE # flag to allow for correction to the dimension in the read variable
                      } else {
-                         stop("doy missing and there appears to be >2 dimension, i.e. more than x~y")
+                         stop("......doy missing and there appears to be >2 dimension, i.e. more than x~y")
                      }
                  } # checking for doy variable
                  #...and accumulate for the overall vector
@@ -130,7 +129,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  } else if (length(which(names(data1$var) == "latitude")) > 0 | length(which(names(data1$dim) == "latitude"))) {
                      lat_in = ncvar_get(data1, "latitude") 
                  } else {
-                     stop("no variable or dimension called lat or latitude could be found")
+                     stop("......no variable or dimension called lat or latitude could be found")
                  } # finding lat
                  # Extract spatial information - longitude
                  if (length(which(names(data1$var) == "lon")) > 0 | length(which(names(data1$dim) == "lon"))) {
@@ -138,7 +137,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  } else if (length(which(names(data1$var) == "longitude")) > 0 | length(which(names(data1$dim) == "longitude"))) {
                      long_in = ncvar_get(data1, "longitude") 
                  } else {
-                     stop("no variable or dimension called lat or latitude could be found")
+                     stop("......no variable or dimension called lat or latitude could be found")
                  } # finding lat
                  # Extract the current global attributes
                  global_attributes = ncatt_get(data1,0)
@@ -193,7 +192,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
 
                       # Extract the epsg from the file
                       epsg = crs(var1, describe = TRUE)$code
-                      if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
+                      if (is.null(epsg) | epsg == "") { stop(paste("......the use_lcm specification leads to a geotif which does not contain epsg information."))}
                       # If we have an epsg then we want to know if it differs from the one desired by the analysis
                       if (epsg != gsub("epsg:","",cardamom_grid_type)) {
                           # Ensure that the extent of the input object is consistent 

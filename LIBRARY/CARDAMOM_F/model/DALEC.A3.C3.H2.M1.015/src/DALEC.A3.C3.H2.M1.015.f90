@@ -3840,44 +3840,49 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Total biomass not including the storage organ
     Ctotal = stock_foliage + stock_stem + stock_roots
 
-    ! determine harvest index..
-    HI = stock_storage_organ / Cshoot
+    ! Can only work if there is biomass in existance
+    if (Ctotal > 0d0) then
 
-    ! the stuff we actually want from the harvest...
-    yield = stock_storage_organ * days_per_step_1
+        ! determine harvest index..
+        HI = stock_storage_organ / Cshoot
 
-    ! How much of each pool is extracted during harvest
-    HARVESTextracted_foliage      = stock_foliage * ( 1d0 - lv_res ) * days_per_step_1
-    HARVESTextracted_stem         = stock_stem * ( 1d0 - st_res ) * days_per_step_1
-    HARVESTextracted_dead_foliage = stock_dead_foliage * ( 1d0 - lv_res ) * days_per_step_1
-    ! How much of each pool remains as litter after harvest
-    HARVESTlitter_foliage      = stock_foliage * lv_res * days_per_step_1
-    HARVESTlitter_stem         = stock_stem * st_res * days_per_step_1
-    HARVESTlitter_dead_foliage = stock_dead_foliage * lv_res * days_per_step_1
-    HARVESTlitter_resp_auto    = stock_resp_auto * days_per_step_1
+        ! the stuff we actually want from the harvest...
+        yield = stock_storage_organ * days_per_step_1
 
-    ! Labile is a special case due to being distributed within various tissues.
-    ! NOTE that extracted is calculated then the litter component is estimates as residual.
-    ! The time scale adjustment is applied last, rather than inline (as above)
-    HARVESTextracted_labile = (stock_labile * (stock_foliage / Ctotal) *  (1d0 - lv_res )) & 
-                            + (stock_labile * (stock_stem / Ctotal) *  (1d0 - st_res )) 
-    HARVESTlitter_labile    =  stock_labile - HARVESTextracted_labile
-    HARVESTextracted_labile = HARVESTextracted_labile * days_per_step_1
-    HARVESTlitter_labile    = HARVESTlitter_labile * days_per_step_1
+        ! How much of each pool is extracted during harvest
+        HARVESTextracted_foliage      = stock_foliage * ( 1d0 - lv_res ) * days_per_step_1
+        HARVESTextracted_stem         = stock_stem * ( 1d0 - st_res ) * days_per_step_1
+        HARVESTextracted_dead_foliage = stock_dead_foliage * ( 1d0 - lv_res ) * days_per_step_1
+        ! How much of each pool remains as litter after harvest
+        HARVESTlitter_foliage      = stock_foliage * lv_res * days_per_step_1
+        HARVESTlitter_stem         = stock_stem * st_res * days_per_step_1
+        HARVESTlitter_dead_foliage = stock_dead_foliage * lv_res * days_per_step_1
+        HARVESTlitter_resp_auto    = stock_resp_auto * days_per_step_1
 
-    ! the biomass that is harvested in addition to the storage-organ..
-    BM_EX  = HARVESTextracted_foliage      &
-           + HARVESTextracted_stem         &
-           + HARVESTextracted_dead_foliage &
-           + HARVESTextracted_labile
+        ! Labile is a special case due to being distributed within various tissues.
+        ! NOTE that extracted is calculated then the litter component is estimates as residual.
+        ! The time scale adjustment is applied last, rather than inline (as above)
+        HARVESTextracted_labile = (stock_labile * (stock_foliage / Ctotal) *  (1d0 - lv_res )) & 
+                                + (stock_labile * (stock_stem / Ctotal) *  (1d0 - st_res )) 
+        HARVESTlitter_labile    =  stock_labile - HARVESTextracted_labile
+        HARVESTextracted_labile = HARVESTextracted_labile * days_per_step_1
+        HARVESTlitter_labile    = HARVESTlitter_labile * days_per_step_1
 
-    ! what's left (will fall to the ground)..
-    stock_litter  = stock_litter               &
-                  + HARVESTlitter_foliage      &
-                  + HARVESTlitter_stem         &
-                  + HARVESTlitter_dead_foliage &
-                  + HARVESTlitter_resp_auto    & 
-                  + HARVESTlitter_labile
+        ! the biomass that is harvested in addition to the storage-organ..
+        BM_EX  = HARVESTextracted_foliage      &
+               + HARVESTextracted_stem         &
+               + HARVESTextracted_dead_foliage &
+               + HARVESTextracted_labile
+
+        ! what's left (will fall to the ground)..
+        stock_litter  = stock_litter               &
+                      + HARVESTlitter_foliage      &
+                      + HARVESTlitter_stem         &
+                      + HARVESTlitter_dead_foliage &
+                      + HARVESTlitter_resp_auto    & 
+                      + HARVESTlitter_labile
+
+    end if ! Ctotal > 0
 
     ! empty the plant stocks..
     stock_storage_organ = 0d0
