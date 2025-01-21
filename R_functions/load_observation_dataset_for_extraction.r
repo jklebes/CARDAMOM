@@ -134,7 +134,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  if (length(which(names(data1$var) == "lon")) > 0 | length(which(names(data1$dim) == "lon"))) {
                      long_in = ncvar_get(data1, "lon") 
                  } else if (length(which(names(data1$var) == "longitude")) > 0 | length(which(names(data1$dim) == "longitude"))) {
-                     long_in = ncvar_get(data1, == "longitude") 
+                     long_in = ncvar_get(data1, "longitude") 
                  } else {
                      stop("no variable or dimension called lat or latitude could be found")
                  } # finding lat
