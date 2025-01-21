@@ -106,6 +106,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  # open the file
                  data1 = nc_open(this_year)
 
+                 twodim = FALSE
                  # Get timing variable...
                  if (length(which(names(data1$var) == "doy")) > 0) {
                      doy_in = ncvar_get(data1, "doy") 
@@ -116,6 +117,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                      if (data1$ndim == 2) {
                          print("the code will assume that doy is the middle of the year, assuming only 2 dimensions are found in the file")
                          doy_in = 187 # middle day of the year
+                         twodim = TRUE # flag to allow for correction to the dimension in the read variable
                      } else {
                          stop("doy missing and there appears to be >2 dimension, i.e. more than x~y")
                      }
@@ -145,7 +147,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  # Default assumption for netcdf files is for the epsg: 4326 i.e. the WGS-84 lat/long grid
                  # But here we will search for any specific information
                  epsg = 4326 ; aa = 1
-                 if (length(global_attributes) >= 1) {
+                 if (length(global_attributes) > 0) {
                      while (aa > 0) {
                         # Check whether the epsg is provided somewhere
                         if (grepl("epsg", global_attributes[aa], ignore.case = FALSE)) {
@@ -165,10 +167,12 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
 
                  # read the observation estimate 
                  est_in = ncvar_get(data1, est_var_name_in) # Variable estimate
+                 if (twodim) {est_in = array(est_in, dim=c(dim(est_in),1))}
                  # read error variable, if present
-                 if (length(which(grepl(unc_var_name_in,names(data1$var)) == TRUE)) > 0) {
+                 if (length(which(names(data1$var) == unc_var_name_in)) > 0) {
                      std_in = ncvar_get(data1, unc_var_name_in) # Variable standard deviation 
                      std_present = TRUE
+                     if (twodim) {std_in = array(std_in, dim=c(dim(std_in),1))}
                  } else {
                      std_in = -9999 ; std_present = FALSE
                  }                 
