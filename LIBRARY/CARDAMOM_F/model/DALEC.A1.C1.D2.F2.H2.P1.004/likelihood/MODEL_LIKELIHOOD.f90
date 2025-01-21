@@ -2280,26 +2280,28 @@ module model_likelihood_module
     ! LAI log-likelihood
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
-       ! Create vector of (LAI_t0 + LAI_t1) * 0.5,ays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
-                 * 0.5d0 ) / pars(17)
-       ! Split loop to allow vectorisation
-       tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       ! loop split to allow vectorisation
-       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-       !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (mid_state(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nlai)))
-    endif
+        ! Create vector of (LAI_t0 + LAI_t1) * 0.5,ays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+        mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+                    * 0.5d0 ) / pars(17)
+
+        ! Split loop to allow vectorisation
+        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+        ! loop split to allow vectorisation
+        !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+        do n = 1, DATAin%nlai
+          dn = DATAin%laipts(n)
+          ! if zero or greater allow calculation with min condition to prevent
+          ! errors of zero LAI which occur in managed systems
+          if (mid_state(dn) < 0d0) then
+              ! if not then we have unrealistic negative values or NaN so indue
+              ! error
+              tot_exp = tot_exp+(-log(infini))
+          endif
+        end do
+        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nlai)))
+     endif
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then

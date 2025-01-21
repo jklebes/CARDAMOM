@@ -106,10 +106,38 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                  # open the file
                  data1 = nc_open(this_year)
 
-                 # Get timing variable ; and accumulate for the overall vector
-                 doy_in = ncvar_get(data1, "doy") ; doy_out = append(doy_out,doy_in)
-                 # Extract spatial information
-                 lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
+                 # Get timing variable...
+                 if (length(which(names(data1$var) == "doy")) > 0) {
+                     doy_in = ncvar_get(data1, "doy") 
+                 } else {
+                     # We don't have the desired time variable
+                     paste("Loading ",est_var_name_in," for subsequent sub-setting ...",sep="")
+                     print(paste("doy variable missing from ",est_var_name_in," Gridded_nc variable",sep=""))
+                     if (data1$ndim == 2) {
+                         print("the code will assume that doy is the middle of the year, assuming only 2 dimensions are found in the file")
+                         doy_in = 187 # middle day of the year
+                     } else {
+                         stop("doy missing and there appears to be >2 dimension, i.e. more than x~y")
+                     }
+                 } # checking for doy variable
+                 #...and accumulate for the overall vector
+                 doy_out = append(doy_out,doy_in)
+                 # Extract spatial information - latitude
+                 if (length(which(names(data1$var) == "lat")) > 0 | length(which(names(data1$dim) == "lat"))) {
+                     lat_in = ncvar_get(data1, "lat") 
+                 } else if (length(which(names(data1$var) "latitude")) > 0 | length(which(names(data1$dim) "latitude"))) {
+                     lat_in = ncvar_get(data1, "latitude") 
+                 } else {
+                     stop("no variable or dimension called lat or latitude could be found")
+                 } # finding lat
+                 # Extract spatial information - longitude
+                 if (length(which(names(data1$var) == "lon")) > 0 | length(which(names(data1$dim) == "lon"))) {
+                     long_in = ncvar_get(data1, "lon") 
+                 } else if (length(which(names(data1$var) == "longitude")) > 0 | length(which(names(data1$dim) == "longitude"))) {
+                     long_in = ncvar_get(data1, "latitude") 
+                 } else {
+                     stop("no variable or dimension called lat or latitude could be found")
+                 } # finding lat
                  # Extract the current global attributes
                  global_attributes = ncatt_get(data1,0)
                  # Check whether there is any information regarding the EPSG
