@@ -362,16 +362,16 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
              if (years_with_obs[t] >= as.numeric(years_to_load[1]) & years_with_obs[t] <= as.numeric(years_to_load[length(years_to_load)])) {
 
                  # Subset to the files found in the current year
-                 est_files = est_input_files[grepl(years_with_obs,est_input_files)]
+                 est_files = est_input_files[grepl(years_with_obs[t],est_input_files)]
                  if (std_present) {
-                     std_files = unc_input_files[grepl(years_with_obs,unc_input_files)]
+                     std_files = unc_input_files[grepl(years_with_obs[t],unc_input_files)]
                  }
 
                  # Loop through all available steps in the current year
                  for (tt in seq(1, length(est_files))) {
 
                       # Read in the estimate and uncertainty rasters
-                      var1 = rast(est_file[tt])
+                      var1 = rast(est_files[tt])
                       if (std_present) { var2 = rast(std_files[tt]) }
 
                       # Extract the epsg from the file
