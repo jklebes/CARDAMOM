@@ -29,7 +29,8 @@
 #########################################################################################
 
 # Create function needed to process the site specific creation
-write_bin_files<-function(n,PROJECT,latlon,timestep_days,met_all
+write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
+                         ,met_all
                          ,lai_all,Csom_all,forest_all
                          ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                          ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
@@ -376,8 +377,9 @@ cardamom_stage_1<-function(PROJECT) {
           # However, mclapply does not (at the time of typing) work on Windows, i.e. Linux and Mac only
           cl <- min(PROJECT$nosites,numWorkers)
           dummy = mclapply(c(1:PROJECT$nosites), FUN = write_bin_files, mc.cores = cl,
-                           PROJECT = PROJECT,latlon = latlon,timestep_days = timestep_days,
-                           met_all = met_all, lai_all = lai_all, Csom_all = Csom_all,
+                           PROJECT = PROJECT, cardamom_ext = cardamom_ext, latlon = latlon,
+                           timestep_days = timestep_days, noyears = noyears, met_all = met_all, 
+                           lai_all = lai_all, Csom_all = Csom_all,
                            forest_all = forest_all, Cwood_initial_all = Cwood_initial_all,
                            Cwood_stock_all = Cwood_stock_all, Cwood_potential_all = Cwood_potential_all,
                            sand_clay_all = sand_clay_all, crop_man_all = crop_man_all,
@@ -393,7 +395,8 @@ cardamom_stage_1<-function(PROJECT) {
 
                # Inform user
                print(paste("Site ",n," of ",PROJECT$nosites," ",Sys.time(),sep=""))
-               write_bin_files(n,PROJECT,latlon,timestep_days,met_all
+               write_bin_files(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
+                              ,met_all
                               ,lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
