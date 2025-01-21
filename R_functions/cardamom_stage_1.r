@@ -256,7 +256,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              lag_var_name_in = "",
                                                              est_var_name_out = "biomass_gCm2",
                                                              unc_var_name_out = "biomass_uncertainty_gCm2",
-                                                             lag_var_name_out = "")           
+                                                             lag_var_name_out = "")                                                                         
            # Wood stock production (gC/m2/day)
            Cwood_inc_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
                                                              Cwood_inc_source,path_to_Cwood_inc,prefix = "wood_stock_production_gCm2day_",

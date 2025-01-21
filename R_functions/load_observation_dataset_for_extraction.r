@@ -334,11 +334,13 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         }
             
         # Begin extraction of the year information found in the file name
-        years_with_obs = gsub(paste(prefix,sep=""),"",est_input_files)
-        years_with_obs = as.numeric(gsub("\\.tif$","",years_with_obs))
+        years_with_obs = gsub(data_path,"",est_input_files)
+        years_with_obs = gsub(prefix,"",years_with_obs)
+        years_with_obs = gsub("/","",years_with_obs)
+        years_with_obs = gsub("\\.tif$","",years_with_obs)
         # Remove any further underscores, 
         # this should leave us with the time information alone
-        years_with_obs = as.numeric(gsub("_","",years_with_obs))
+        years_with_obs = gsub("_","",years_with_obs)
         # Extract the first 4 characters as these should be YYYY
         # Check whether the file includes the option day of year (doy) 
         # information

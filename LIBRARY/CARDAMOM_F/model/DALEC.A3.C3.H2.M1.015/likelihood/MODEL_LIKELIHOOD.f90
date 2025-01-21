@@ -817,7 +817,7 @@ module model_likelihood_module
 
       do n = 1, nofluxes
          if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
-            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
+             minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
              EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
          endif
       end do
