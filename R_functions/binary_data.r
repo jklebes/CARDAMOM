@@ -409,47 +409,47 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # Crop model specific adjustment - disallow observational constraints during the first 12 months
           OBSMAT[1:steps_per_year,1:dim(OBSMAT)[2]] = -9999
 
-          # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
-          # derived from the ATEC experiment field (but not assimilated) or Sus et al., (2010)
-          PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
-          PARPRIORS[3] = 0.04           ; PARPRIORUNC[3]  = 0.02         # Development rate coefficient DS 0-1
-          PARPRIORS[4] = 0.035          ; PARPRIORUNC[4]  = 0.02         # Development rate coefficient DS 1-2
-          PARPRIORS[7] = 0.03           ; PARPRIORUNC[7]  = 0.03         # Potential turnover rate of foliage due to self-shading (fraction/day)
-          PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
-          PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # Ceff: derived from multiple trait values from Kattge et al., (2011)
-          PARPRIORS[13] = 125.0         ; PARPRIORUNC[13] = 10.0         # Phenological heat units for seed emergence (aka growing degree days)
-          #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
-          #PARPRIORS[14]=OBS$growing_season_doy ; PARPRIORUNC[14]=OBS$growing_season_doy_unc  # Growing season length sowing->harvest days
-          if (max(OBS$LAI) > 0) {
-              # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
-              PARPRIORS[15] = min(7.0,max(OBS$LAI) * 0.488 + 2.5131)
-              PARPRIORUNC[15] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
-              #PARPRIORWEIGHT[15] = noyears
-          } else {
-              PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
-          }
-          PARPRIORS[16] = -0.0252      ; PARPRIORUNC[16] = 0.00092      # Coefficient relating foliar C to N dilution
-          PARPRIORS[17] = 20.40        ; PARPRIORUNC[17] = 5            # Leaf carbon per unit area (gC/m2)
-                                                                        # Prior values from Penning de Vries (1982), Simulation of Ecophysiological Processes of Growth in Several Annual Crops
-                                                                        # Barley = 15.60, Maize = 21.60, Potato = 14.40, Rice = 21.12, Sorghum = 19.20, Soybean = 19.20, SugarBeet = 24.00, 
-                                                                        # Sugarcane = 33.60, Sunflower = 25.92, WinterWheat = 20.40 , SprintWheat = 24.00
-          #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
-          #PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
-          #PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
-          #PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
-          #PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
-          PARPRIORS[23] = OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
-          PARPRIORS[26] = 273.15       ; PARPRIORUNC[26] = 5.0          # min temperature for development (K)
-          PARPRIORS[27] = 308.15       ; PARPRIORUNC[27] = 5.0          # max temperature for development (K)
-          PARPRIORS[28] = 298.15       ; PARPRIORUNC[28] = 5.0          # optimum temperature for development (K)
-          PARPRIORS[29] = 271.85       ; PARPRIORUNC[29] = 5.0          # min temperature for vernalisation (K)
-          PARPRIORS[30] = 288.85       ; PARPRIORUNC[30] = 5.0          # max temperature for vernalisation (K)
-          PARPRIORS[31] = 278.05       ; PARPRIORUNC[31] = 5.0          # optimum temperature for vernalisation (K)
-          PARPRIORS[32] = 8.25         ; PARPRIORUNC[32] = 2.0          # critical photoperiod for development to begin (days)
-          PARPRIORS[33] = 0.25         ; PARPRIORUNC[33] = 0.2          # sensitivity to photoperiod above critical threshold
-          PARPRIORS[35] = 0.99         ; PARPRIORUNC[35] = 0.1          # autotrophic turnover rate (/day)
-          PARPRIORS[36] = 50.0         ; PARPRIORUNC[36] = 25.0         # fine root biomass (g/m2) needed to reach 50 % of maximum depth
-          PARPRIORS[37] = 1.5          ; PARPRIORUNC[37] = 0.25         # maximum rooting depth (m)
+#          # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
+#          # derived from the ATEC experiment field (but not assimilated) or Sus et al., (2010)
+#          PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
+#          PARPRIORS[3] = 0.04           ; PARPRIORUNC[3]  = 0.02         # Development rate coefficient DS 0-1
+#          PARPRIORS[4] = 0.035          ; PARPRIORUNC[4]  = 0.02         # Development rate coefficient DS 1-2
+#          PARPRIORS[7] = 0.03           ; PARPRIORUNC[7]  = 0.03         # Potential turnover rate of foliage due to self-shading (fraction/day)
+#          PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
+#          PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # Ceff: derived from multiple trait values from Kattge et al., (2011)
+#          PARPRIORS[13] = 125.0         ; PARPRIORUNC[13] = 10.0         # Phenological heat units for seed emergence (aka growing degree days)
+#          #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
+#          #PARPRIORS[14]=OBS$growing_season_doy ; PARPRIORUNC[14]=OBS$growing_season_doy_unc  # Growing season length sowing->harvest days
+#          if (max(OBS$LAI) > 0) {
+#              # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
+#              PARPRIORS[15] = min(7.0,max(OBS$LAI) * 0.488 + 2.5131)
+#              PARPRIORUNC[15] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
+#              #PARPRIORWEIGHT[15] = noyears
+#          } else {
+#              PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
+#          }
+#          PARPRIORS[16] = -0.0252      ; PARPRIORUNC[16] = 0.00092      # Coefficient relating foliar C to N dilution
+#          PARPRIORS[17] = 20.40        ; PARPRIORUNC[17] = 5            # Leaf carbon per unit area (gC/m2)
+#                                                                        # Prior values from Penning de Vries (1982), Simulation of Ecophysiological Processes of Growth in Several Annual Crops
+#                                                                        # Barley = 15.60, Maize = 21.60, Potato = 14.40, Rice = 21.12, Sorghum = 19.20, Soybean = 19.20, SugarBeet = 24.00, 
+#                                                                        # Sugarcane = 33.60, Sunflower = 25.92, WinterWheat = 20.40 , SprintWheat = 24.00
+#          #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
+#          #PARPRIORS[19]=OBS$Cfol_initial       ; if (OBS$Cfol_initial != -9999) {PARPRIORUNC[19]=OBS$Cfol_initial_unc} # Cfoliar prior
+#          #PARPRIORS[20]=OBS$Croots_initial     ; if (OBS$Croots_initial != -9999) {PARPRIORUNC[20]=OBS$Croots_initial_unc} # Croots prior
+#          #PARPRIORS[21]=OBS$Cwood_initial      ; if (OBS$Cwood_initial != -9999) {PARPRIORUNC[21]=OBS$Cwood_initial_unc} # Cwood prior
+#          #PARPRIORS[22]=OBS$Clit_initial       ; if (OBS$Clit_initial != -9999) {PARPRIORUNC[22]=OBS$Clit_initial_unc} # Clitter prior
+#          PARPRIORS[23] = OBS$Csom_initial       ; if (OBS$Csom_initial != -9999) {PARPRIORUNC[23]=OBS$Csom_initial_unc} # Csom prior
+#          PARPRIORS[26] = 273.15       ; PARPRIORUNC[26] = 5.0          # min temperature for development (K)
+#          PARPRIORS[27] = 308.15       ; PARPRIORUNC[27] = 5.0          # max temperature for development (K)
+#          PARPRIORS[28] = 298.15       ; PARPRIORUNC[28] = 5.0          # optimum temperature for development (K)
+#          PARPRIORS[29] = 271.85       ; PARPRIORUNC[29] = 5.0          # min temperature for vernalisation (K)
+#          PARPRIORS[30] = 288.85       ; PARPRIORUNC[30] = 5.0          # max temperature for vernalisation (K)
+#          PARPRIORS[31] = 278.05       ; PARPRIORUNC[31] = 5.0          # optimum temperature for vernalisation (K)
+#          PARPRIORS[32] = 8.25         ; PARPRIORUNC[32] = 2.0          # critical photoperiod for development to begin (days)
+#          PARPRIORS[33] = 0.25         ; PARPRIORUNC[33] = 0.2          # sensitivity to photoperiod above critical threshold
+#          PARPRIORS[35] = 0.99         ; PARPRIORUNC[35] = 0.1          # autotrophic turnover rate (/day)
+#          PARPRIORS[36] = 50.0         ; PARPRIORUNC[36] = 25.0         # fine root biomass (g/m2) needed to reach 50 % of maximum depth
+#          PARPRIORS[37] = 1.5          ; PARPRIORUNC[37] = 0.25         # maximum rooting depth (m)
 
           # ATEC LAI and N fertiliser addition is a highly uncertain saturating function.
           # i.e. maxLAI = N addition (kgN/ha) * 0.011840 + 2.216000
