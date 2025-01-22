@@ -113,7 +113,7 @@ module MODEL_PARAMETERS
 
     ! sow day
     PI%parmin(12) = 365.25d0 !100d0 
-    PI%parmax(12) = 2d0*365.25d0
+    PI%parmax(12) = 4d0*365.25d0
 
     ! phenological heat units required for emergence
     PI%parmin(13) = 100d0 
@@ -124,7 +124,7 @@ module MODEL_PARAMETERS
     PI%parmax(14) = 365d0
 
     ! Intercept value for canopy N (gN/m2) dilution model
-    PI%parmin(15) = 2.5d0
+    PI%parmin(15) = 1.5d0
     PI%parmax(15) = 7.0d0 ! 5.5d0
     ! Coefficient relating crop development stage to N dilution
     PI%parmin(16) = -0.04d0
@@ -170,7 +170,7 @@ module MODEL_PARAMETERS
     PI%parmax(34) = 0.1d0
     ! turnover rate of autotrophic pool
     PI%parmin(35) = 0.65d0 !    1.5 days 
-    PI%parmax(35) = 0.99d0  ! ~ 1.0 day
+    PI%parmax(35) = 0.99d0 !  ~ 1.0 day
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
     PI%parmin(36) = 10d0

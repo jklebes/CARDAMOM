@@ -84,7 +84,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         }
 
         # Flag to ensure we create output variables once
-        done_first_time = FALSE ; years_loaded = 0
+        lat_done = FALSE ; done_first_time = FALSE ; years_loaded = 0
         # Loop for year here
         for (yr in seq(1, length(years_to_load))) {
 
@@ -353,9 +353,31 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
              doy_out[y] = as.numeric(substr(years_with_obs[y],6,8))
         } 
         years_with_obs = tmp1 ; rm(tmp1)
+        # Therefore we can determine the years without data, 
+        # i.e. the missing years
+        missing_years = 0
+        for (y in seq(1, length(years_to_load))) {
+             if (length(which(years_with_obs == years_to_load[y])) > 0) {
+                 # Do nothing
+             } else {
+                 missing_years = append(missing_years, as.numeric(years_to_load[y]))
+             }
+        }
+        missing_years = missing_years[-1]
+
+        # Warn the user if there are no data found
+        if (length(missing_years) == length(years_to_do)) {
+            print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
+            # Create output object
+            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years) 
+            # Update with the correct variable names
+            names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
+            # Return to function
+            return(output_all)
+        }
 
         # Loop through each year and extract if appropriate
-        done_lat = FALSE ; done_first_time = FALSE 
+        lat_done = FALSE ; done_first_time = FALSE 
         for (t in seq(1, length(years_with_obs))) {
 
              # determine whether the first year is within the analysis period
@@ -471,7 +493,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
 
         # clean up variables
-        rm(doy_in,est_out,std_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
+        rm(est_out,std_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
         return(output_all)
 
     } else if (data_source == " " | data_source == "site_specific") {

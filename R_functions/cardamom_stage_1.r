@@ -322,28 +322,28 @@ cardamom_stage_1<-function(PROJECT) {
 
            # Soil C stocks (gC/m2)
            Csom_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
-                                                             Csom_source,path_to_Csom,prefix = "soil_stock_gCm2_",
+                                                             Csom_source,path_to_Csom,prefix = "soil_stock_gCm2",
                                                              est_var_name_in = "soil_stock",
                                                              unc_var_name_in = "soil_stock_SD",
                                                              est_var_name_out = "Csom",
                                                              unc_var_name_out = "Csom_unc")
            # Initial wood stocks (gC/m2)
            Cwood_initial_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
-                                                             Cwood_initial_source,path_to_Cwood_initial,prefix = "wood_stock_gCm2_",
+                                                             Cwood_initial_source,path_to_Cwood_initial,prefix = "wood_stock_gCm2",
                                                              est_var_name_in = "wood_stock",
                                                              unc_var_name_in = "wood_stock_SD",
                                                              est_var_name_out = "biomass_gCm2",
                                                              unc_var_name_out = "biomass_uncertainty_gCm2")           
            # Potential wood stocks (gC/m2)
            Cwood_potential_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
-                                                             Cwood_potential_source,path_to_Cwood_potential,prefix = "wood_stock_potential_gCm2_",
+                                                             Cwood_potential_source,path_to_Cwood_potential,prefix = "wood_stock_potential_gCm2",
                                                              est_var_name_in = "wood_stock_potential",
                                                              unc_var_name_in = "wood_stock_potential_SD",
                                                              est_var_name_out = "biomass_gCm2",
                                                              unc_var_name_out = "biomass_uncertainty_gCm2")                
            # Leaf Carbon per unit leaf Area (LCA, gC/m2)
            lca_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
-                                                             lca_source,path_to_lca,prefix = "leaf_carbon_area_gCm2_",
+                                                             lca_source,path_to_lca,prefix = "leaf_carbon_area_gCm2",
                                                              est_var_name_in = "leaf_carbon_area",
                                                              unc_var_name_in = "leaf_carbon_area_SD",
                                                              est_var_name_out = "lca_gCm2",
