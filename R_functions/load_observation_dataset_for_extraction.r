@@ -290,7 +290,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
       if (std_present == FALSE) {std_out = -9999} 
 
       # Create output object
-      output_all = list(est_out, std_out, doy_obs = doy_out, years = years_loaded, lat = lat, long = long, missing_years = missing_years) 
+      output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years) 
       # Update with the correct variable names
       names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
 
