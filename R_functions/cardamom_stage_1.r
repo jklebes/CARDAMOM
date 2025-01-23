@@ -176,15 +176,15 @@ cardamom_stage_1<-function(PROJECT) {
            # Meteorological forcings
            met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
            # Mechanical disturbance (e.g., deforestation, 0-1)
-           forestry_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
-                                                             deforestation_source,path_to_forestry,prefix = "forest_loss_",
-                                                             as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "forest_loss",
-                                                             unc_var_name_in = "",
-                                                             lag_var_name_in = "", 
-                                                             est_var_name_out = "loss_fraction",
-                                                             unc_var_name_out = "",
-                                                             lag_var_name_out = "")
+           forest_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+                                                               deforestation_source,path_to_forestry,prefix = "forest_loss_",
+                                                               as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+                                                               est_var_name_in = "forest_loss",
+                                                               unc_var_name_in = "",
+                                                               lag_var_name_in = "", 
+                                                               est_var_name_out = "loss_fraction",
+                                                               unc_var_name_out = "",
+                                                               lag_var_name_out = "")
            # Burned area (0-1)
            burnt_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
                                                              burnt_area_source,path_to_burnt_area,prefix = "BurnedFraction_",

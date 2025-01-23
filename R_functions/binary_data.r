@@ -454,9 +454,20 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # ATEC LAI and N fertiliser addition is a highly uncertain saturating function.
           # i.e. maxLAI = N addition (kgN/ha) * 0.011840 + 2.216000
 
+# Linear fit between allocation to Ra and LAI
+# R2 = 0.82      Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)    0.470444   0.007554  62.280 7.23e-11 ***
+#max_lai_yield -0.013124   0.002101  -6.247 0.000425 ***
+
           # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
           # derived from the ATEC experiment field, Sus et al., (2010), or updated based on daily CARDAMOM-DALEC.15 analysis
-          PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
+          if (max(OBS$LAI) > 0) {
+              # Fraction of GPP allocated to autotrophic pool
+              PARPRIORS[2] = min(8.0,max(OBS$LAI) * -0.013124 + 0.470444)
+              PARPRIORUNC[2] = 0.08 # mean confidence interval of linear regression for LAI ranges 1-6              
+          } else {
+              PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
+          }
           PARPRIORS[3] = 0.04           ; PARPRIORUNC[3]  = 0.02         # Development rate coefficient DS 0-1
           PARPRIORS[4] = 0.023          ; PARPRIORUNC[4]  = 0.02         # Development rate coefficient DS 1-2
           PARPRIORS[5] = 0.008          ; PARPRIORUNC[5]  = 0.03         # turnover rate foliage (frac/day)
