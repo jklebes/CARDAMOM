@@ -53,7 +53,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         month_days[2] = 28 ; month_days[c(4,6,9,11)] = 30 
 
         # Set default starting positions
-        lat_done = FALSE ; missing_years = 0 ; keepers = 0 ; yrs = 1 ; doy_out = 0
+        lat_done = FALSE ; missing_years = 0 ; years_with_obs = 0 ; keepers = 0 ; yrs = 1 ; doy_out = 0
 
         # Loop through all the analyses years and check whether files exist for it
         for (yr in seq(1, length(years_to_load))) {
@@ -66,11 +66,13 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
              if (length(this_year) == 1) {
                  # Track the number of years we have information for
                  keepers = keepers+1
+                 years_with_obs = append(years_with_obs,years_to_load[yr])
              } else {
                  missing_years = append(missing_years,years_to_load[yr])
              }
         } # loop through possible years
         missing_years = missing_years[-1]
+        years_with_obs = years_with_obs[-1]
 
         # Warn the user if there are no data found
         if (length(missing_years) == length(years_to_do)) {
