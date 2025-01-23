@@ -29,7 +29,7 @@
 #
 #########################################################################################
 
-load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial_type,
+load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_type,
                                                   data_source,data_path,prefix,
                                                   years_to_load,
                                                   est_var_name_in,unc_var_name_in,
@@ -45,6 +45,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         # check which file prefix we are using today
         # list all available files which we will then search
         input_files = list.files(data_path,full.names=TRUE,pattern="\\.nc$")
+        input_files = input_files[grepl(paste("/",prefix,sep=""),input_files)]
         #prefix = "MCD15A2H_LAI_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_*
         #prefix = "net_biome_exchange_"
 
@@ -196,17 +197,17 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                       epsg = crs(var1, describe = TRUE)$code
                       if (is.null(epsg) | epsg == "") { stop(paste("......the use_lcm specification leads to a geotif which does not contain epsg information."))}
                       # If we have an epsg then we want to know if it differs from the one desired by the analysis
-                      if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+                      if (epsg != gsub("epsg:","",grid_type)) {
                           # Ensure that the extent of the input object is consistent 
                           # with the possible extent of the selected epsg
-                          var1 = crop(var1, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))                      
+                          var1 = crop(var1, ext(unlist(crs(grid_type, describe=TRUE)$extent)))                      
                           # If it does not match we need to reproject it
-                          var1 = project(var1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+                          var1 = project(var1, grid_type, method="near", align = FALSE) ; gc()
                           if (std_present) { 
                               # Ensure that the extent of the input object is consistent 
                               # with the possible extent of the selected epsg
-                              var2 = crop(var2, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))
-                              var2 = project(var2, cardamom_grid_type, method="near", align = FALSE) ; gc() 
+                              var2 = crop(var2, ext(unlist(crs(grid_type, describe=TRUE)$extent)))
+                              var2 = project(var2, grid_type, method="near", align = FALSE) ; gc() 
                           }
                       }
  
@@ -311,6 +312,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
         # extract only .tif files, $ symbol asks for strings that end in the given pattern
         # The \\ also specifies that the . is not to be considered a wildcard
         input_files = list.files(data_path, full.names=TRUE, recursive = TRUE, pattern="\\.tif$")
+        input_files = input_files[grepl(paste("/",prefix,sep=""),input_files)]
         #prefix = "MCD15A2H_LAI_(.)*" # (.)* wildcard characters for unix standard MCD15A2H_LAI_*
         #prefix = "net_biome_exchange_"
    
@@ -402,17 +404,17 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial
                       epsg = crs(var1, describe = TRUE)$code
                       if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
                       # If we have an epsg then we want to know if it differs from the one desired by the analysis
-                      if (epsg != gsub("epsg:","",cardamom_grid_type)) {
+                      if (epsg != gsub("epsg:","",grid_type)) {
                           # Ensure that the extent of the input object is consistent 
                           # with the possible extent of the selected epsg
-                          var1 = crop(var1, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))                                            
+                          var1 = crop(var1, ext(unlist(crs(grid_type, describe=TRUE)$extent)))                                            
                           # If it does not match we need to reproject it
-                          var1 = project(var1, cardamom_grid_type, method="near", align = FALSE) ; gc()
+                          var1 = project(var1, grid_type, method="near", align = FALSE) ; gc()
                           if (std_present) { 
                               # Ensure that the extent of the input object is consistent 
                               # with the possible extent of the selected epsg
-                              var2 = crop(var2, ext(unlist(crs(cardamom_grid_type, describe=TRUE)$extent)))                                                
-                              var2 = project(var2, cardamom_grid_type, method="near", align = FALSE) ; gc() 
+                              var2 = crop(var2, ext(unlist(crs(grid_type, describe=TRUE)$extent)))                                                
+                              var2 = project(var2, grid_type, method="near", align = FALSE) ; gc() 
                           }
                       }
 

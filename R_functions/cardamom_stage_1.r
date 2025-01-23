@@ -176,7 +176,7 @@ cardamom_stage_1<-function(PROJECT) {
            # Meteorological forcings
            met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
            # Mechanical disturbance (e.g., deforestation, 0-1)
-           forest_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           forest_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                                deforestation_source,path_to_forestry,prefix = "forest_loss_",
                                                                as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                                est_var_name_in = "forest_loss",
@@ -186,7 +186,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                                unc_var_name_out = "",
                                                                lag_var_name_out = "")
            # Burned area (0-1)
-           burnt_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           burnt_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              burnt_area_source,path_to_burnt_area,prefix = "BurnedFraction_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "BurnedFraction",
@@ -198,7 +198,7 @@ cardamom_stage_1<-function(PROJECT) {
 
            ## Load all time varying spatial observations
            # Leaf area index (m2/m2)
-           lai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           lai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              lai_source,path_to_lai,prefix = "leaf_area_index_m2m2_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "LAI",
@@ -208,7 +208,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "lai_unc_m2m2",
                                                              lag_var_name_out = "")      
            # fraction of Absorbed Photosynthetically Active Radation (0-1)
-           fapar_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           fapar_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              fapar_source,path_to_fapar,prefix = "fraction_absorbed_par_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "fAPAR",
@@ -218,7 +218,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "fapar_unc",
                                                              lag_var_name_out = "")                   
            # Net Biome Exchange (gC/m2/day)
-           nbe_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           nbe_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              nbe_source,path_to_nbe,prefix = "net_biome_exchange_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "NBE",
@@ -228,7 +228,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "nbe_unc_gCm2day",
                                                              lag_var_name_out = "")
            # Gross Primary Production (gC/m2/day)
-           gpp_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           gpp_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              gpp_source,path_to_gpp,prefix = "gross_primary_production_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "GPP",
@@ -238,7 +238,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "gpp_unc_gCm2day",
                                                              lag_var_name_out = "")           
            # Fire carbon emissions (gC/m2/day)
-           fire_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           fire_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              fire_source,path_to_fire,prefix = "fire_carbon_emissions_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "Fire",
@@ -248,7 +248,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "fire_unc_gCm2day",
                                                              lag_var_name_out = "")           
            # Wood stock (gC/m2)
-           Cwood_stock_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Cwood_stock_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Cwood_stock_source,path_to_Cwood,prefix = "wood_stock_gCm2_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "wood_stock",
@@ -258,7 +258,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "biomass_uncertainty_gCm2",
                                                              lag_var_name_out = "")                                                                         
            # Wood stock production (gC/m2/day)
-           Cwood_inc_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Cwood_inc_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Cwood_inc_source,path_to_Cwood_inc,prefix = "wood_stock_production_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "wood_production",
@@ -268,7 +268,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "Cwood_increment_uncertainty_gCm2day",
                                                              lag_var_name_out = "Cwood_increment_lag")                      
            # Wood stock mortality (gC/m2/day)
-           Cwood_mortality_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Cwood_mortality_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Cwood_mortality_source,path_to_Cwood_mortality,prefix = "wood_stock_mortality_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
                                                              est_var_name_in = "wood_mortality",
@@ -278,7 +278,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "Cwood_mortality_uncertainty_gCm2day",
                                                              lag_var_name_out = "Cwood_mortality_lag")                      
            # Surface soil water content (m3/m3)
-#           soilwater_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+#           soilwater_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
 #                                                             soilwater_initial_source,path_to_soil_water,prefix = "soil_water_m3m3_",
 #                                                             as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
 #                                                             est_var_name_in = "soil_moisture",
@@ -290,27 +290,27 @@ cardamom_stage_1<-function(PROJECT) {
 
            ## Load all static spatial forcings
            # Sand / Clay (%)
-           sand_clay_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           sand_clay_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              sand_clay_source,path_to_sand_clay,prefix = "sand_percent_mean_0to30cm",
                                                              est_var_name_in = "sand_content",
                                                              unc_var_name_in = "sand_content_unc",
                                                              est_var_name_out = "top_sand",
                                                              unc_var_name_out = "")
-           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              sand_clay_source,path_to_sand_clay,prefix = "sand_percent_mean_30to100cm",
                                                              est_var_name_in = "sand_content",
                                                              unc_var_name_in = "sand_content_unc",
                                                              est_var_name_out = "bot_sand",
                                                              unc_var_name_out = "")
            sand_clay_all$bot_sand = tmp$bot_sand ; rm(tmp) # update the list object with the next variable
-           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              sand_clay_source,path_to_sand_clay,prefix = "clay_percent_mean_0to30cm",
                                                              est_var_name_in = "clay_content",
                                                              unc_var_name_in = "clay_content_unc",
                                                              est_var_name_out = "top_clay",
                                                              unc_var_name_out = "")
            sand_clay_all$top_clay = tmp$top_clay ; rm(tmp) # update the list object with the next variable
-           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           tmp = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              sand_clay_source,path_to_sand_clay,prefix = "clay_percent_mean_30to100cm",
                                                              est_var_name_in = "clay_content",
                                                              unc_var_name_in = "clay_content_unc",
@@ -321,28 +321,28 @@ cardamom_stage_1<-function(PROJECT) {
            ## Load all static spatial observations
 
            # Soil C stocks (gC/m2)
-           Csom_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Csom_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Csom_source,path_to_Csom,prefix = "soil_stock_gCm2",
                                                              est_var_name_in = "soil_stock",
                                                              unc_var_name_in = "soil_stock_SD",
                                                              est_var_name_out = "Csom",
                                                              unc_var_name_out = "Csom_unc")
            # Initial wood stocks (gC/m2)
-           Cwood_initial_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Cwood_initial_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Cwood_initial_source,path_to_Cwood_initial,prefix = "wood_stock_gCm2",
                                                              est_var_name_in = "wood_stock",
                                                              unc_var_name_in = "wood_stock_SD",
                                                              est_var_name_out = "biomass_gCm2",
                                                              unc_var_name_out = "biomass_uncertainty_gCm2")           
            # Potential wood stocks (gC/m2)
-           Cwood_potential_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           Cwood_potential_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              Cwood_potential_source,path_to_Cwood_potential,prefix = "wood_stock_potential_gCm2",
                                                              est_var_name_in = "wood_stock_potential",
                                                              unc_var_name_in = "wood_stock_potential_SD",
                                                              est_var_name_out = "biomass_gCm2",
                                                              unc_var_name_out = "biomass_uncertainty_gCm2")                
            # Leaf Carbon per unit leaf Area (LCA, gC/m2)
-           lca_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$spatial_type,
+           lca_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              lca_source,path_to_lca,prefix = "leaf_carbon_area_gCm2",
                                                              est_var_name_in = "leaf_carbon_area",
                                                              unc_var_name_in = "leaf_carbon_area_SD",
