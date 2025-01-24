@@ -76,7 +76,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         years_with_obs = years_with_obs[-1]
 
         # Warn the user if there are no data found
-        if (length(missing_years) == length(years_to_do)) {
+        if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
             output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years) 
@@ -370,7 +370,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         missing_years = missing_years[-1]
 
         # Warn the user if there are no data found
-        if (length(missing_years) == length(years_to_do)) {
+        if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
             output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years) 
