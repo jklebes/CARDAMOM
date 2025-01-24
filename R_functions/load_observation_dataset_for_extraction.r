@@ -291,6 +291,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
  
       # Set dummy value for the output uncertainty if required
       if (std_present == FALSE) {std_out = -9999} 
+      if (length(missing_years) == 0) {missing_years = -9999}
 
       # Create output object
       output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years) 
@@ -490,7 +491,8 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
  
         # Set dummy value for the output uncertainty if required
         if (std_present == FALSE) {std_out = -9999} 
-
+        if (length(missing_years) == 0) {missing_years = -9999}
+        
         # Create output object
         output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years) 
         # Update with the correct variable names

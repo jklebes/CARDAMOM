@@ -101,10 +101,22 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
 
         # Extract lai and uncertainty information
         # NOTE: assume default uncertainty (+/- scale)
-        output = extract_lai_timeseries(grid_long_loc,grid_lat_loc,timestep_days,
-                                        spatial_type,resolution,grid_type,
-                                        latlon_wanted,lai_all,years_to_load,doy_obs)
-        lai = output$lai ; lai_unc = output$lai_unc
+        # Extract the current location from the gridded dataset
+        output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                  lai_all,agg_func = "mean",
+                                                                  est_var_name_in = "lai_m2m2",
+                                                                  unc_var_name_in = "lai_unc_m2m2",
+                                                                  lag_var_name_in = "",
+                                                                  est_var_name_out = "lai",
+                                                                  unc_var_name_out = "lai_unc",
+                                                                  lag_var_name_out = "")
+        # Assign to local variables                                                             
+        lai = output$lai ; lai_unc = output$lai_unc                                                            
+
+        #output = extract_lai_timeseries(grid_long_loc,grid_lat_loc,timestep_days,
+        #                                spatial_type,resolution,grid_type,
+        #                                latlon_wanted,lai_all,years_to_load,doy_obs)
+        #lai = output$lai ; lai_unc = output$lai_unc
 
     } else if (lai_source == "site_specific") {
 
@@ -644,21 +656,31 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             Cwood_stock_unc[which(Cwood_stock != -9999)] = abs(0.25 * Cwood_stock[which(Cwood_stock != -9999)])
         }
     } else if (Cwood_stock_source == "Gridded_nc" | Cwood_stock_source == "Gridded_tif") {
-
+        # Extract the current location from the gridded dataset
+        output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                  Cwood_stock_all,agg_func = "mean",
+                                                                  est_var_name_in = "biomass_gCm2",
+                                                                  unc_var_name_in = "biomass_uncertainty_gCm2",
+                                                                  lag_var_name_in = "",
+                                                                  est_var_name_out = "Cwood_stock",
+                                                                  unc_var_name_out = "Cwood_stock_unc",
+                                                                  lag_var_name_out = "")
+        # Assign to local variables                                                             
+        Cwood_stock = output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc                                                            
         # All maps converted into common format, therefore a common extraction subroutine can be used
-        if (max(Cwood_stock_all$doy_obs) > 0) {
-            output = extract_Cwood_stocks(grid_long_loc,grid_lat_loc,timestep_days,
-                                          spatial_type,resolution,grid_type,latlon_wanted,
-                                          Cwood_stock_all)
-            Cwood_stock = output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
+#        if (max(Cwood_stock_all$doy_obs) > 0) {
+#            output = extract_Cwood_stocks(grid_long_loc,grid_lat_loc,timestep_days,
+#                                          spatial_type,resolution,grid_type,latlon_wanted,
+#                                          Cwood_stock_all)
+#            Cwood_stock = output$Cwood_stock ; Cwood_stock_unc = output$Cwood_stock_unc
 #            tmp = which(Cwood_stock > 0) # first AGB only
 #            if (length(tmp) > 1) {
 #                Cwood_stock[tmp[-1]] = -9999 ; Cwood_stock_unc[tmp[-1]] = -9999
 #            }
-        } else {
-            Cwood_stock = rep(-9999, length(timestep_days))
-            Cwood_stock_unc = rep(-9999, length(timestep_days))
-        }
+#        } else {
+#            Cwood_stock = rep(-9999, length(timestep_days))
+#            Cwood_stock_unc = rep(-9999, length(timestep_days))
+#        }
     } else {
         # assume no data available
         Cwood_stock = -9999 ; Cwood_stock_unc = -9999
@@ -830,10 +852,19 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         # assume no data available
         burnt_area = 0
     } else {
-        # Assume all burnt area product follow the same structure
-        burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
-                                                    timestep_days,spatial_type,grid_type,resolution,
-                                                    start_year,end_year,burnt_all,years_to_load,doy_obs)
+        # Extract from the gridded array
+        output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                     burnt_all,agg_func = "sum",
+                                                                     est_var_name_in="burnt_area",lag_var_name_in="",
+                                                                     est_var_name_out="burnt_area",lag_var_name_out="")
+        # Extract out of the output object
+        burnt_area = output$burnt_area 
+
+
+#        # Assume all burnt area product follow the same structure
+#        burnt_area = extract_burnt_area_information(grid_long_loc,grid_lat_loc,latlon_wanted,
+#                                                    timestep_days,spatial_type,grid_type,resolution,
+#                                                    start_year,end_year,burnt_all,years_to_load,doy_obs)
     }
 
     ###

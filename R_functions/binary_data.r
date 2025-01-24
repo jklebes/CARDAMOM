@@ -463,8 +463,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # derived from the ATEC experiment field, Sus et al., (2010), or updated based on daily CARDAMOM-DALEC.15 analysis
           if (max(OBS$LAI) > 0) {
               # Fraction of GPP allocated to autotrophic pool
-              PARPRIORS[2] = min(8.0,max(OBS$LAI) * -0.013124 + 0.470444)
-              PARPRIORUNC[2] = 0.08 # mean confidence interval of linear regression for LAI ranges 1-6              
+              PARPRIORS[2] = max(OBS$LAI) * -0.013124 + 0.470444
+              PARPRIORUNC[2] = 0.04 # mean confidence interval of linear regression for LAI ranges 1-6              
           } else {
               PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
           }
@@ -476,7 +476,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
           if (max(OBS$LAI) > 0) {
               PARPRIORS[11] = max(OBS$LAI) * 2.4922 + 9.4850
-              PARPRIORUNC[11] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
+              PARPRIORUNC[11] = 1.5 # mean confidence interval of linear regression for LAI ranges 1-6
           } else {
               PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
           }
@@ -486,7 +486,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           if (max(OBS$LAI) > 0) {
               # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
               PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.81809 + 1.36892)
-              PARPRIORUNC[15] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
+              PARPRIORUNC[15] = 0.6052851  # mean confidence interval of linear regression for LAI ranges 1-6
               #PARPRIORWEIGHT[15] = noyears
               # If we have a initial foliar N prior then we also want to update the NUE parameter
               #PARPRIORS[11] = PARPRIORS[15] *  3.1111 + 5.0456      
