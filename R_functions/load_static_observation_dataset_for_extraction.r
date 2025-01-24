@@ -29,7 +29,7 @@
 #
 #########################################################################################
 
-load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,spatial_type,
+load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_type,
                                                          data_source,data_path,prefix,
                                                          est_var_name_in,unc_var_name_in,
                                                          est_var_name_out,unc_var_name_out) {

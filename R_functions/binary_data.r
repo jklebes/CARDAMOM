@@ -474,7 +474,12 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[6] = 0.010          ; PARPRIORUNC[6]  = 0.03         # TOR stem* - 1% loss per year value (day-1)
           PARPRIORS[7] = 0.03           ; PARPRIORUNC[7]  = 0.03         # Potential turnover rate of foliage due to self-shading (fraction/day)
           PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
-          PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
+          if (max(OBS$LAI) > 0) {
+              PARPRIORS[11] = max(OBS$LAI) * 2.4922 + 9.4850
+              PARPRIORUNC[11] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
+          } else {
+              PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
+          }
           PARPRIORS[13] = 125.0         ; PARPRIORUNC[13] = 10.0         # Phenological heat units for seed emergence (aka growing degree days)
           #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
           #PARPRIORS[14]=OBS$growing_season_doy ; PARPRIORUNC[14]=OBS$growing_season_doy_unc  # Growing season length sowing->harvest days
@@ -484,8 +489,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
               PARPRIORUNC[15] = 1.2 # mean confidence interval of linear regression for LAI ranges 1-6
               #PARPRIORWEIGHT[15] = noyears
               # If we have a initial foliar N prior then we also want to update the NUE parameter
-              PARPRIORS[11] = PARPRIORS[15] *  3.1111 + 5.0456      
-              PARPRIORUNC[11] = 8.534234 # NUE: derived from CARDAMOM calibration at the ATEC sites
+              #PARPRIORS[11] = PARPRIORS[15] *  3.1111 + 5.0456      
+              #PARPRIORUNC[11] = 8.534234 # NUE: derived from CARDAMOM calibration at the ATEC sites
           } else {
               PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
           }
