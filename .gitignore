@@ -4,6 +4,7 @@
 #*.bin
 **/*.so
 **/*.o
+build/
 
 ## Scorep
 *.scorep_init.c
@@ -20,10 +21,12 @@ LIBRARY/Makefile
 .vscode/
 CARDAMOM_F/executable/make_dep
 LIBRARY/zbrent-testcompile/
+**/*gprof*.txt
 
 ## potential copyright issue
 CARDAMOM_F/misc/brent_zero/cardamom_zbrent.*
 
-**/*gprof*.txt
 
-build/
+
+# doc
+ford_doc/

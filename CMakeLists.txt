@@ -5,6 +5,8 @@ project(CARDAMOM VERSION 1.0 #TODO
   LANGUAGES Fortran)
 enable_language(Fortran)
 
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+
 add_subdirectory(LIBRARY/CARDAMOM_F)
 
 #install(TARGETS cardamom DESTINATION "bin")

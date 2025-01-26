@@ -9,15 +9,15 @@ subroutine oksofar(message)
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+  ! See function/subroutine specific comments for exceptions and contributors
   ! NOTE: this function is not currently used and could be removed.
   !!!!!!!!!!!
 
   implicit none
   ! local declaration
-  character(200), intent(in) :: message
+  character(200), intent(in):: message
 
-  ! print the message to screen / output files
+  ! print the message to screen/output files
   print*, message
 
 end subroutine oksofar

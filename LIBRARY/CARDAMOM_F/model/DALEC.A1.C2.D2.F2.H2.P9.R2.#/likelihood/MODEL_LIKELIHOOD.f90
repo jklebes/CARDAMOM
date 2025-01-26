@@ -1473,8 +1473,8 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PI
+  subroutine model_likelihood(PARS, npars, ML_obs_out,ML_prior_out)
+    ! use MCMCOPT, only:  PI ! not where the data parinfo, npars is kept anymore
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -1486,7 +1486,7 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    double precision, dimension(npars), intent(inout) :: PARS ! current parameter vector
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
