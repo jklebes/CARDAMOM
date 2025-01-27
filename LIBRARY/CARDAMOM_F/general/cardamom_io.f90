@@ -32,7 +32,7 @@ module cardamom_io
            ,open_output_files               &
            ,close_output_files              &
            ,cardamom_model_library          &
-           ,read_pari_data                  &
+           ,initialize                      &
            ,read_options                    &
            ,read_binary_data
 
@@ -561,7 +561,7 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    character(350) :: infile
+    character(450) :: infile
 
     ! declare local variables
     integer :: nopars_dummy,subsample
@@ -1044,10 +1044,21 @@ module cardamom_io
     write(*,*) "Binary input file has been successfully read by CARDAMOM"
 
   end subroutine read_binary_data
+
+  subroutine initialize(infile) ! formerly read_pari_data
+    ! 3 steps must be called in this order 
+    implicit none
+    character(450), intent(in) :: infile
+
+    call initialize_parinfo()
+    call read_check_binary_data(infile)
+    call initialize_model()
+  end subroutine
+
   !
   !------------------------------------------------------------------
-  !
-  subroutine read_pari_data(infile)
+  ! split from read_pari_data
+  subroutine read_check_binary_data(infile)
     use MCMCOPT, only: PI
     use MODEL_PARAMETERS, only: pars_info
     use cardamom_structures, only: DATAin
@@ -1058,16 +1069,48 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    character(350), intent(in) :: infile
+    character(450), intent(in) :: infile
 
     ! declare local variables
     integer :: i
 
     ! remind us what file we're about to access
     write(*,*) "Input file = ",trim(infile)
-
     ! initialise data structure and read the binary
     call read_binary_data(infile)
+    ! check:
+    ! PI%npars = DATAin%nopars don't set from DATAin, instead check
+    if (PI%npars /= DATAin%nopars) then
+        write (*,*) "ERROR nopars from infile (", DATAin%nopars ,") does not &
+        & match npars from model _PARS file (", PI%npars ,")"
+        stop
+    endif 
+    ! also check initial state: 
+    ! ensure any loaded parameter values (from the input file) 
+    ! are within the uniform parameter bounds set in the source code
+    do i = 1, PI%npars
+        if (DATAin%parpriors(i) /= -9999) then
+            if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
+                write(*,*) PI%parmin(i)
+                write(*,*) DATAin%parpriors(i)
+                write(*,*) PI%parmax(i)
+                write(*,*)"Supplied parameter prior = ",i," is outside hardcoded uniform parameter bounds"
+                stop
+            end if
+        end if
+     end do
+
+
+
+  end subroutine read_check_binary_data
+
+  ! split from read_pari_data
+  ! TODO not io, belongs in a differnt file
+  ! depends on having called read_binary_data or read_check_binary_data first
+  ! for DATAin%nodays and nopools 
+  subroutine initialize_model()
+    use cardamom_structures, only: DATAin
+    implicit none 
 
     ! need to allocate memory to the model output variables
     allocate(DATAin%M_LAI(DATAin%nodays),DATAin%M_GPP(DATAin%nodays) &
@@ -1080,31 +1123,40 @@ module cardamom_io
 
     ! alert the user
     write(*,*)"Created fields for model output"
+  end subroutine
 
-    ! Begin allocating parameter info
-    PI%npars = DATAin%nopars
-    allocate(PI%parmin(PI%npars),PI%parmax(PI%npars),PI%parini(PI%npars) &
+  ! split from read_pari_data
+  ! TODO not io, belongs in a differnt file
+  subroutine initialize_parinfo()
+    use MCMCOPT, only: PI
+    use MODEL_PARAMETERS, only: pars_info
+    implicit none 
+    integer :: i
+
+   ! load parameter max/min information, npars 
+    call pars_info()
+
+! Begin allocating parameter info
+    if (.not. allocated(PI%parmin)) then 
+         allocate(PI%parmin(PI%npars))
+         PI%parmin = 0d0
+    endif 
+    if (.not. allocated(PI%parmax)) then 
+        allocate(PI%parmax(PI%npars))
+        PI%parmax = 0d0 
+    endif
+    allocate(PI%parini(PI%npars) &
             ,PI%parfix(PI%npars),PI%parvar(PI%npars),PI%paradj(PI%npars) &
             ,PI%covariance(PI%npars,PI%npars),PI%mean_par(PI%npars) &
             ,PI%iC(PI%npars,PI%npars))
 
     ! force zero
-    PI%parmin = 0d0 ; PI%parmax = 0d0 ; PI%parini = 0d0
+    PI%parini = 0d0
     PI%parfix = 0d0 ; PI%parvar = 0d0 ; PI%paradj = 0d0
     PI%covariance = 0d0 ; PI%iC = 0d0
 
-    ! load parameter max/min information
-    call pars_info
-    ! ensure any loaded parameter values (from the input file) 
-    ! are within the uniform parameter bounds set in the source code
-    do i = 1, PI%npars
-       if (DATAin%parpriors(i) /= -9999) then
-           if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
-               write(*,*)"Supplied parameter prior = ",i," is outside hardcoded uniform parameter bounds"
-               stop
-           end if
-       end if
-    end do
+ 
+    
     ! For log-normalisation procedure, no parameter can be <=0.
     ! To facilitate easy of setting parameter ranges to real values
     ! we here instead calculate the adjustment need to ensure positive only values
@@ -1120,8 +1172,7 @@ module cardamom_io
     end do
     ! report back to user
     write(*,*) "Created field for parameter and covariances"
-
-  end subroutine read_pari_data
+  end subroutine
   !
   !------------------------------------------------------------------
   !
@@ -1134,7 +1185,7 @@ module cardamom_io
     implicit none
 
     ! declare input variables
-    character(350), intent(in) :: outfile
+    character(450), intent(in) :: outfile
     integer, intent(in) :: solutions_wanted, freq_print, freq_write
 
     ! defining hardcoded MCMC options

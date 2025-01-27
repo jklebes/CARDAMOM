@@ -38,6 +38,10 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
+    PI%npars = 38
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
+
     ! Decomposition litter -> som (day-1 at mean temperature)
     PI%parmin(1) = 0.00001d0
     PI%parmax(1) = 0.01d0

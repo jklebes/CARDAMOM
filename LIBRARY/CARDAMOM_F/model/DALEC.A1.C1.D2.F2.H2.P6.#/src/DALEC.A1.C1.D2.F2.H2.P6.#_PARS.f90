@@ -41,6 +41,10 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
+    PI%npars = 34
+
+    ! parmin, parmax need to be allocated somewhere else first !
+
     ! Decomposition litter -> som (day-1)
     PI%parmin(1) = 0.00001d0
     PI%parmax(1) = 0.01d0
