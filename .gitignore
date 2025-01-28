@@ -22,7 +22,7 @@ LIBRARY/Makefile
 CARDAMOM_F/executable/make_dep
 LIBRARY/zbrent-testcompile/
 **/*gprof*.txt
-
+examine/
 ## potential copyright issue
 CARDAMOM_F/misc/brent_zero/cardamom_zbrent.*
 

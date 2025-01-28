@@ -16,5 +16,5 @@ set(FILES misc/math_functions.f90
                 )
 #try shared for R
 add_library(cardamom-lib SHARED ${FILES})
-#add_executable(cardamom general/cardamom_main.f90)
-#target_link_libraries(cardamom cardamom-lib)
+add_executable(cardamom general/cardamom_main.f90)
+target_link_libraries(cardamom cardamom-lib)

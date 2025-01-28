@@ -15,46 +15,81 @@ implicit none
 
 contains
 
-function model_likelihood_fct(params) result(loglikelihood)
-  double precision, intent(inout), dimension(:):: params  ! TODO should be intent out, reform model_likelihood
-  double precision:: loglikelihood
 
-  double precision:: ML_obs_out, ML_prior_out
-
-  ! call the function to write to ML_obs_out and ML_prior_out
-  call model_likelihood(params, ML_obs_out, ML_prior_out)
-
-  ! for the purpose of running samplers we are only interested in the sum
-  loglikelihood = ML_obs_out+ML_prior_out
-end function
-
-! For R : subroutine -> C void function, npars is given additionally
-subroutine model_likelihood_fct2(params, npars, loglikelihood) bind(c, name="C_modellikelihood")
+! model_likelihood, wrapped to be 
+! shaped like the generic function to hand to both cardamom_samplers and (via C binding) R
+! For R : has to be subroutine ( -> C void function), have to give npars 
+! 
+subroutine model_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_modellikelihood")
   use iso_c_binding
   implicit none
   integer(c_int), intent(in)  :: npars
-  real(c_double), intent(in), dimension(npars):: params
-  real(c_double), dimension(npars):: params2
+  real(c_double), intent(inout), dimension(npars):: params
   real(c_double), intent(out):: loglikelihood
 
-  double precision:: ML_obs_out, ML_prior_out
-  params2 = params !TODO fix intent at model
+  real(c_double):: ML_obs_out, ML_prior_out
   !TODO can we use an expected_npars from model files?
   !if (npars .neq. expected_npars) then
     !write(*,*) "Error : Passed ", npars, "from R (as indicated by second argument to modellikelihood), but this model takes a vector
     !of " , expected_npars, "values."
     ! TODO force exit ?
 !else:
+
   ! call the function to write to ML_obs_out and ML_prior_out
-  call model_likelihood(params2, ML_obs_out, ML_prior_out)
+  call model_likelihood(params, ML_obs_out, ML_prior_out)
 
   ! for the purpose of running samplers we are only interested in the sum
   loglikelihood = ML_obs_out+ML_prior_out
+
 !endif 
 end subroutine
 
-! TODO helpers for use from R-can we get a function to return/print 
-! model name/code, expected_npars ?
+! variants
+subroutine log_model_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_logmodellikelihood")
+  use iso_c_binding
+  implicit none
+  integer(c_int), intent(in)  :: npars
+  real(c_double), intent(inout), dimension(npars):: params
+  real(c_double), intent(out):: loglikelihood
+
+  real(c_double):: ML_obs_out, ML_prior_out
+
+  call log_model_likelihood(params, ML_obs_out, ML_prior_out)
+
+  loglikelihood = ML_obs_out+ML_prior_out
+end subroutine
+
+subroutine sub_model_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_submodellikelihood")
+  use iso_c_binding
+  implicit none
+  integer(c_int), intent(in)  :: npars
+  real(c_double), intent(inout), dimension(npars):: params
+  real(c_double), intent(out):: loglikelihood
+
+  real(c_double):: ML_obs_out, ML_prior_out
+
+  call sub_model_likelihood(params, ML_obs_out, ML_prior_out)
+
+  loglikelihood = ML_obs_out+ML_prior_out
+end subroutine
+
+subroutine sqrt_model_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_sqrtmodellikelihood")
+  use iso_c_binding
+  implicit none
+  integer(c_int), intent(in)  :: npars
+  real(c_double), intent(inout), dimension(npars):: params
+  real(c_double), intent(out):: loglikelihood
+
+  real(c_double):: ML_obs_out, ML_prior_out
+
+  call sqrt_model_likelihood(params, ML_obs_out, ML_prior_out)
+
+  loglikelihood = ML_obs_out+ML_prior_out
+end subroutine
+
+
+! helpers for use from R-
+! TODO different module and file
 
 ! return the compiled model's expected unmber of parameters
 subroutine get_npars(npars) bind(c, name="C_getmodelnpars")
@@ -96,7 +131,29 @@ subroutine inintialize_example_FI_Hyy() bind(c, name = "C_TMP_initialize")
   ! later do this better
   use cardamom_io, only: initialize
   implicit none
-  call initialize("/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin")
+  character(len=350)  :: filename
+  filename = "/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin"
+  call initialize(filename)
 end subroutine
+
+!trigger find_edc_initial_values
+subroutine set_parini() bind(c, name = "C_setparini")
+  ! trigger read_binary_data(hard coded filename) for testing, 
+  ! later do this better
+  use cardamom_io, only: initialize
+  implicit none
+  call find_edc_initial_values
+end subroutine
+
+! get the compiled model's parini (after initialization) list for R
+subroutine get_parini(npars, parini) bind(c, name="C_getexampleparini")
+  use iso_c_binding
+  use MCMCOPT, only: PI
+  implicit none
+  integer(c_int) , intent(in) :: npars
+  real(c_double), dimension(npars), intent(out)  :: parini
+  parini =  PI%parini
+end subroutine
+
 
 end module

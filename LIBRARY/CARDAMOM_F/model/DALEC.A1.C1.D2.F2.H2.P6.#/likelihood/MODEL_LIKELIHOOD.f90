@@ -1030,6 +1030,7 @@ module model_likelihood_module
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
     double precision :: EDC1, EDC2
+    write(*,*) "calling..."
 
     ! initial values
     ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
@@ -1072,6 +1073,7 @@ module model_likelihood_module
     ! Calculate log-likelihood associated with priors
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
+    write (*,*) ML_prior_out, PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS
     ! calculate final model likelihood when compared to obs
     ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 

@@ -11,6 +11,9 @@ program cardamom_framework
                         close_output_files, write_covariance_info
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
+ use model_likelihood_module, only: model_likelihood, find_edc_initial_values, &
+    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!to replace soon with wrappers
+use model_likelihood_wrapper !TODO next step
 
  !!!!!!!!!!!
  ! Authorship contributions

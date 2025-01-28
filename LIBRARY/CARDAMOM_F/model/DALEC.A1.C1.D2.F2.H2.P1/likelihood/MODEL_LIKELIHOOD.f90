@@ -18,7 +18,7 @@ module model_likelihood_module
 
   ! which to make open
   public :: model_likelihood, find_edc_initial_values, &
-            sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood
+            sqrt_model_likelihood, sub_model_likelihood, log_model_likelihood
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -579,7 +579,6 @@ module model_likelihood_module
     ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     ! difference from GPP allocation to roots
     if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
@@ -597,7 +596,6 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
-
     ! could always add more / remove some
 
   end subroutine assess_EDC1
@@ -1150,11 +1148,10 @@ module model_likelihood_module
 
         ! call EDCs which can be evaluated prior to running the model
         call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
-
+        
     endif !
 
     ! run the dalec model
@@ -1188,6 +1185,7 @@ module model_likelihood_module
 !print*,"model_likelihood: update likelihood score done"
 !    ! Debugging print statements
 !    print*,"model_likelihood: done"
+
 
   end subroutine model_likelihood
   !
