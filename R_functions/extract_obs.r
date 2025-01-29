@@ -852,8 +852,6 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         # assume no data available
         burnt_area = 0
     } else {
-    print(doy_obs)
-    print(burnt_all$doy_obs)
         # Extract from the gridded array
         output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
                                                                      burnt_all,agg_func = "sum",

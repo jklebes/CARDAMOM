@@ -243,7 +243,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
    # Create output object
    output = list(obs_out)
    # Update with the correct variable names
-   names(output)[1:2]<-c(est_var_name_out)
+   names(output)[1]<-c(est_var_name_out)
    # Return function
    return(output)
 
@@ -291,7 +291,7 @@ extract_static_observations_without_uncertainty<- function(i1,j1,data_all,
    # Create output object
    output = list(obs)
    # Update with the correct variable names
-   names(output)[1:2]<-c(est_var_name_out)
+   names(output)[1]<-c(est_var_name_out)
    # Return function
    return(output)
 
