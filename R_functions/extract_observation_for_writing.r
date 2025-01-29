@@ -174,7 +174,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
           if (doy_obs[i] == data_all$doy_obs[b]) {
-              obs_out[i] = obs[b] 
+              obs_out[i] = obs[b] ; b = b + 1
           } # end if doy matches
       } # end if missing year
 
