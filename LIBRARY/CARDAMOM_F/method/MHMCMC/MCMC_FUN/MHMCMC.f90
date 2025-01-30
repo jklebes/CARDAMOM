@@ -276,6 +276,11 @@ contains
 
        end if ! in bound
 
+       ! Only update the parameter history for accepted parameter sets. 
+       ! This means that the written out value remains unchanged, consistent with MCMC theory, 
+       ! but is also means that the covariance matrix does not get updated either. This avoid the 
+       ! covariance matrix rapidly reducing the very small variances which cause the analysis to get 
+       ! stuck in a local minima. Not updating the covariance matrix is a bespoke modification.
        if (AM_likelihood > crit1) then
 
            ! Store accepted parameter proposals

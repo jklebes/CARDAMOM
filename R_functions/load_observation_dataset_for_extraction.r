@@ -79,7 +79,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
-            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years) 
+            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years, data_available = FALSE) 
             # Update with the correct variable names
             names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
             # Return to function
@@ -294,7 +294,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
       if (length(missing_years) == 0) {missing_years = -9999}
 
       # Create output object
-      output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years) 
+      output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
       # Update with the correct variable names
       names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
 
@@ -374,7 +374,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
-            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years) 
+            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years, data_available = FALSE) 
             # Update with the correct variable names
             names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
             # Return to function
@@ -492,9 +492,9 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         # Set dummy value for the output uncertainty if required
         if (std_present == FALSE) {std_out = -9999} 
         if (length(missing_years) == 0) {missing_years = -9999}
-        
+
         # Create output object
-        output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years) 
+        output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
         # Update with the correct variable names
         names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
 
