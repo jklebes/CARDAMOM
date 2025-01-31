@@ -65,12 +65,24 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
 
     if (nbe_source == "Gridded_nc" | nbe_source == "Gridded_tif") {
 
-        # Extract NBE and uncertainty information
-        # NOTE: assume default uncertainty (+/- scale)
-        output = extract_nbe(grid_long_loc,grid_lat_loc,timestep_days,
-                             spatial_type,resolution,grid_type,latlon_wanted,
-                             nbe_all,years_to_load,doy_obs)
-        nbe = output$nbe ; nbe_unc = output$nbe_unc
+        if (nbe_all$data_available) {
+            # Extract NBE and uncertainty information
+            # NOTE: assume default uncertainty (+/- scale)
+            # Extract the current location from the gridded dataset
+            output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                      nbe_all,agg_func = "mean",
+                                                                      est_var_name_in = "nbe_gCm2day",
+                                                                      unc_var_name_in = "nbe_unc_gCm2day",
+                                                                      lag_var_name_in = "",
+                                                                      est_var_name_out = "nbe",
+                                                                      unc_var_name_out = "nbe_unc",
+                                                                      lag_var_name_out = "")
+            # Assign to local variables                           
+            nbe = output$nbe ; be_unc = output$nbe_unc
+        } else {
+            # Set missing data value
+            nbe = -9999 ; nbe_unc = -9999
+        }
         
     } else if (nbe_source == "site_specific") {
 
@@ -111,8 +123,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                                                                       est_var_name_out = "lai",
                                                                       unc_var_name_out = "lai_unc",
                                                                       lag_var_name_out = "")
-            # Assign to local variables                                                             
-            lai = output$lai ; lai_unc = output$lai_unc                                                            
+            # Assign to local variables                           
+            lai = output$lai ; lai_unc = output$lai_unc
         } else {
             # Set missing data value
             lai = -9999 ; lai_unc = -9999
@@ -150,12 +162,24 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
 
     if (fapar_source == "Gridded_nc" | fapar_source == "Gridded_tif") {
 
-        # Extract fAPAR and uncertainty information
-        # NOTE: assume default uncertainty (+/- scale)
-        output = extract_fapar_timeseries(grid_long_loc,grid_lat_loc,timestep_days,
-                                          spatial_type,resolution,grid_type,
-                                          latlon_wanted,fapar_all,years_to_load,doy_obs)
-        fapar = output$fapar ; fapar_unc = output$fapar_unc
+        if (fapar_all$data_available) {
+            # Extract fapar and uncertainty information
+            # NOTE: assume default uncertainty (+/- scale)
+            # Extract the current location from the gridded dataset
+            output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                      fapar_all,agg_func = "mean",
+                                                                      est_var_name_in = "fapar",
+                                                                      unc_var_name_in = "fapar_unc",
+                                                                      lag_var_name_in = "",
+                                                                      est_var_name_out = "fapar",
+                                                                      unc_var_name_out = "fapar_unc",
+                                                                      lag_var_name_out = "")
+            # Assign to local variables                           
+            fapar = output$fapar ; fapar_unc = output$fapar_unc
+        } else {
+            # Set missing data value
+            fapar = -9999 ; fapar_unc = -9999
+        }
 
     } else if (fapar_source == "site_specific") {
 
@@ -440,11 +464,24 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
     } else if (gpp_source == "Gridded_nc" | gpp_source == "Gridded_tif") {
 
-        # Extract GPP and uncertainty information
-        # NOTE: assume default uncertainty (+/- scale)
-        output = extract_gpp(grid_long_loc,grid_lat_loc,timestep_days,spatial_type,
-                             resolution,grid_type,latlon_wanted,gpp_all,years_to_load,doy_obs)
-        GPP = output$GPP ; GPP_unc = output$GPP_unc
+        if (gpp_all$data_available) {
+            # Extract GPP and uncertainty information
+            # NOTE: assume default uncertainty (+/- scale)
+            # Extract the current location from the gridded dataset
+            output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                      gpp_all,agg_func = "mean",
+                                                                      est_var_name_in = "gpp_gCm2day",
+                                                                      unc_var_name_in = "gpp_unc_gCm2day",
+                                                                      lag_var_name_in = "",
+                                                                      est_var_name_out = "GPP",
+                                                                      unc_var_name_out = "GPP_unc",
+                                                                      lag_var_name_out = "")
+            # Assign to local variables                           
+            GPP = output$GPP ; GPP_unc = output$GPP_unc
+        } else {
+            # Set missing data value
+            GPP = -9999 ; GPP_unc = -9999
+        }
 
     } else {
         # assume no data available
@@ -475,11 +512,24 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
     } else if (fire_source == "Gridded_nc" | fire_source == "Gridded_tif") {
 
-        # Extract Fire and uncertainty information
-        # NOTE: assume default uncertainty (+/- scale)
-        output = extract_fire(grid_long_loc,grid_lat_loc,timestep_days,spatial_type,
-                              resolution,grid_type,latlon_wanted,fire_all,years_to_load,doy_obs)
-        Fire = output$Fire ; Fire_unc = output$Fire_unc
+        if (fire_all$data_available) {
+            # Extract fire and uncertainty information
+            # NOTE: assume default uncertainty (+/- scale)
+            # Extract the current location from the gridded dataset
+            output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                                                      fire_all,agg_func = "mean",
+                                                                      est_var_name_in = "fire_gCm2day",
+                                                                      unc_var_name_in = "fire_unc_gCm2day",
+                                                                      lag_var_name_in = "",
+                                                                      est_var_name_out = "Fire",
+                                                                      unc_var_name_out = "Fire_unc",
+                                                                      lag_var_name_out = "")
+            # Assign to local variables                           
+            Fire = output$Fire ; Fire_unc = output$Fire_unc
+        } else {
+            # Set missing data value
+            Fire = -9999 ; Fire_unc = -9999
+        }
 
     } else {
         # assume no data available

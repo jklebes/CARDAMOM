@@ -282,7 +282,10 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
           }
       } else {
           est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
-          if (std_present) { std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))}
+          if (std_present) {                 
+              std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+              std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))
+          }
       }
 
 
@@ -488,7 +491,10 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
             }
         } else {
             est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
-            if (std_present) { std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))}
+            if (std_present) { 
+                std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+                std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))
+            }
         }
 
         # If the standard deviation exists, then we should ensure that 

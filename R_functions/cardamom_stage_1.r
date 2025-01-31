@@ -137,8 +137,6 @@ cardamom_stage_1<-function(PROJECT) {
        # Update the user
        print("Beginning creation of binary input files")
 
-       # flag for met drivers load
-       met_all = 0 ; lai_all = 0 ; Csom_all = 0 ; forest_all = 0 ; Cwood_all = 0
        # load from PROJECT time step information
        timestep_days = PROJECT$model$timestep_days
        noyears = length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
