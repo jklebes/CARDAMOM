@@ -269,16 +269,22 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
 
       # Extract from the raster structure into arrays
       est_out = array(NA, dim=c(xdim,ydim,length(doy_out)))
-      for (d in seq(1, length(doy_out))) {
-           est_out[,,d] = array(values(subset(est_out_tif, d)), dim=c(xdim,ydim))
-      }
-      if (std_present) { 
-          # Extract from the raster structure into arrays
-          std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+      if (dim(est_out_tif)[3] > 1) {
           for (d in seq(1, length(doy_out))) {
-               std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
+               est_out[,,d] = array(values(subset(est_out_tif, d)), dim=c(xdim,ydim))
           }
+          if (std_present) { 
+              # Extract from the raster structure into arrays
+              std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+              for (d in seq(1, length(doy_out))) {
+                   std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
+              }
+          }
+      } else {
+          est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
+          if (std_present) { std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))}
       }
+
 
       # If the standard deviation exists, then we should ensure that 
       # both the estimate and uncertainty have common occurance of NaN
@@ -469,15 +475,20 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
 
         # Extract from the raster structure into arrays
         est_out = array(NA, dim=c(xdim,ydim,length(doy_out)))
-        for (d in seq(1, length(doy_out))) {
-             est_out[,,d] = array(values(subset(est_out_tif, d)), dim=c(xdim,ydim))
-        }
-        if (std_present) { 
-            # Extract from the raster structure into arrays
-            std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+        if (dim(est_out_tif)[3] > 1) {
             for (d in seq(1, length(doy_out))) {
-                 std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
+                 est_out[,,d] = array(values(subset(est_out_tif, d)), dim=c(xdim,ydim))
             }
+            if (std_present) { 
+                # Extract from the raster structure into arrays
+                std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+                for (d in seq(1, length(doy_out))) {
+                     std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
+                }
+            }
+        } else {
+            est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
+            if (std_present) { std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))}
         }
 
         # If the standard deviation exists, then we should ensure that 
