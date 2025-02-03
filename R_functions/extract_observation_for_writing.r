@@ -80,10 +80,6 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
       i = i + 1
 
       # each time we come back to doy_obs[i]==1 we need to count on the year
-      print("===")
-      print(i) ; print(b)
-      print(doy_obs[i])
-      print(length(data_all$doy_obs))
       if (length(data_all$doy_obs) < 10) {print(data_all$doy_obs)}
 
       if (doy_obs[i] == 1 & b <= length(data_all$doy_obs)) {

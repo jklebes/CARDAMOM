@@ -51,7 +51,6 @@ module MODEL_PARAMETERS
   !
   subroutine pars_info
     use MCMCOPT, only: PI
-    use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
