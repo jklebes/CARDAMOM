@@ -362,11 +362,22 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         doy_out = rep(NA, length(years_with_obs))
         for (y in seq(1, length(years_with_obs))) {
              # Extract the year information
-             tmp1[y] = as.numeric(substr(years_with_obs[y],1,4))
-             # Extract the day of year information
-             doy_out[y] = as.numeric(substr(years_with_obs[y],6,8))
+             tmp = as.numeric(substr(years_with_obs[y],1,4))
+             # If this year is within the analysis period, 
+             # keep both the year information and the doy of year information
+             if (any(years_to_load == tmp)) {
+                 # Assign the year to the intermediate output variable
+                 tmp1[y] = as.numeric(substr(years_with_obs[y],1,4))
+                 # Extract the day of year information
+                 doy_out[y] = as.numeric(substr(years_with_obs[y],6,8))
+             }
         } 
-        years_with_obs = tmp1 ; rm(tmp1)
+        # Remove any NA values
+        tmp1 = tmp1[which(is.finite(tmp1))]
+        doy_out = doy_out[which(is.finite(doy_out))]
+        # We want only the unique number of years, 
+        # this corrects for having multiple observations per year
+        years_with_obs = unique(tmp1) ; rm(tmp1)
         # Therefore we can determine the years without data, 
         # i.e. the missing years
         missing_years = 0
