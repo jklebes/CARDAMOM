@@ -165,7 +165,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                                       ,C_POOLS    !
       ! static data
       integer :: nodays   & ! number of days in simulation
-                ,ID       & ! model ID, currently 1=DALEC_CDEA, 2=DALEC_BUCKET
+                ,ID       & ! model ID
                 ,noobs    & ! number of obs fields
                 ,nomet    & ! number met drivers
                 ,nofluxes & ! number of fluxes
