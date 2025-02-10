@@ -82,6 +82,7 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
             # Extract meteorology
             met = extract_met_drivers(wheat_n,timestep_days,PROJECT$start_year,PROJECT$end_year,
                                       lat_degrees,met_all,met_source,PROJECT$sites[n],PROJECT$grid_type)
+                         
 #            # Load met drivers for ACM or other models
 #            if (PROJECT$model$name != "ACM") {
 #                met = extract_met_drivers(n,timestep_days,PROJECT$start_year,PROJECT$end_year,latlon[n,],met_all,met_source,PROJECT$sites[n])
@@ -97,7 +98,6 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                              ,fapar_all
                              ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                              ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
-
             # update ctessel pft in the project and potentially the model information
             PROJECT$ctessel_pft[n] = obs$ctessel_pft
             # Load additional model information
@@ -141,7 +141,7 @@ cardamom_stage_1<-function(PROJECT) {
        timestep_days = PROJECT$model$timestep_days
        noyears = length(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
        # Determine location information
-       if (cardamom_type == "grid") {
+       if (PROJECT$spatial_type == "grid") {
            print("Determining number / locations of grid points for this run ...")
            output = determine_lat_long_needed(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution,PROJECT$grid_type,PROJECT$waterpixels)
            print("Have now determined grid point locations")
@@ -151,7 +151,7 @@ cardamom_stage_1<-function(PROJECT) {
            obs_long_grid = output$obs_long_grid ; obs_lat_grid = output$obs_lat_grid
            # Tidy up
            rm(output) ; gc(reset=TRUE,verbose=FALSE)
-       } else if (cardamom_type != "grid") {
+       } else if (PROJECT$spatial_type != "grid") {
            print("Determining number / locations of grid points for this run ...")
            # Combine the latitude / longitude from the site list
            latlon = cbind(PROJECT$latitude,PROJECT$longitude)

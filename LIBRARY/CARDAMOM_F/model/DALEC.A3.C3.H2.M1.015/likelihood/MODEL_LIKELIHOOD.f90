@@ -1140,7 +1140,7 @@ module model_likelihood_module
     if (DATAin%nlai > 0) then
         ! loop split to allow vectorisation
         tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)                
         if (minval(DATAin%M_LAI) < 0d0) tot_exp = tot_exp + (-log(infini))
         likelihood = likelihood-tot_exp
     endif

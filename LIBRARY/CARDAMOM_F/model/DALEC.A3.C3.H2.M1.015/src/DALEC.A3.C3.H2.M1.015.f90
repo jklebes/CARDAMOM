@@ -783,7 +783,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mineralisation_rate_soilOrgMatter = pars(10) ! mineralisation rate som (day)
     sow_day                           = nint(mod(pars(12),365.25d0)) ! sow day (doy)
     PHUem                             = pars(13) ! phenological heat units required for emergence
-    harvest_day                       = nint(mod(sow_day + pars(14),365.25d0)) !nint(mod(pars(14),365.25d0)) ! nint(mod(pars(14),365.25)) ! harvest day (doy)
+    harvest_day                       = nint(mod(sow_day + pars(14),365.25d0)) ! harvest day (doy)
     plough_day                        = nint(mod(pars(12)-2d0,365.25d0)) ! plough day (doy)
     LCA                               = pars(17) ! leaf mass area (gC.m-2)
     tmin                              = pars(26)-273.15d0 ! min temperature for development
@@ -974,9 +974,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! NOTE: Modified to only allow the dilution equation to dilute not enrich N content.
           !       This is to attempt to get around the N-dilultion model increasing N content 
           !       during senescence which is unrealistic. 
-          avN = max(0.1d0,min(avN,(pars(16)*(POOLS(n,2)+POOLS(n,10))) + pars(15)))
+          ! NOTE: Dead foliage removed as only the remaining live foliage is photosynthetically active.
+          !avN = max(0.1d0,min(avN,(pars(16)*(POOLS(n,2)+POOLS(n,10))) + pars(15)))
+          avN = max(0.1d0,min(avN,(pars(16)*POOLS(n,2)) + pars(15)))          
 !      else
 !          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
+!          Non-applicable as we are explicitly tracking the continued live leaf area and the dead
 !          avN = 0.1d0                              
       end if
       ! Update to canopy efficiency (gC/m2leaf/day)

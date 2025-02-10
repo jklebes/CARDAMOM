@@ -597,8 +597,8 @@ module cardamom_io
               ,totread      ! total number of records already read
     double precision :: mz, subsample_fraction = 0.20 ! startd at 0.25
     double precision, dimension(:), allocatable :: statdat & ! static data input
-                                        ,mettemp & ! met data input
-                                        ,obstemp   ! obs data input
+                                                  ,mettemp & ! met data input
+                                                  ,obstemp   ! obs data input
 
     write(*,*)"Input file to be read = ", trim(infile)
 
@@ -801,6 +801,10 @@ module cardamom_io
        ! of these are actually contain data
        DATAin%met(1:DATAin%nomet,day) = mettemp
 
+! Hack not to be left in place!!!! Removes first 3 and final 4 months of each year
+!print*,"TLS: THERE IS ARE REALLY IMPORTANT LINES L805, CARDAMOM_IO.F90 THAT NEED REMOVING!!!!"
+!if (DATAin%met(6,day) < 95d0 .or. DATAin%met(6,day) > 244d0) obstemp(3:4) = -9999d0
+!if (obstemp(3) > 0d0) obstemp(4) = 0.5
        ! Gross Primary Productivity (GPP, gC/m2/day)
        DATAin%GPP(day) = obstemp(1)
        if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1

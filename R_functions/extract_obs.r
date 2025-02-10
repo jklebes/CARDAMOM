@@ -716,7 +716,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                                                               unc_var_name_in="Csom_unc",
                                                               est_var_name_out="Csom_initial",
                                                               unc_var_name_out="Csom_initial_unc") 
-        Csom_initial = Csom_info$Csom_initial ; Csom_initial_unc = Csom_info$Csom_initial_unc
+        Csom_initial = output$Csom_initial ; Csom_initial_unc = output$Csom_initial_unc
     } else if (Csom_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
         Csom_initial = read_site_specific_obs("Csom_initial_gCm2",infile)
@@ -747,11 +747,11 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         planting_doy = planting_doy + 365.25
     } else {
         # assume no data available
-        #planting_doy = 304 + 365.25 ; planting_doy_unc = 15 # days
-        #growing_season_doy = 208 ; growing_season_doy_unc = 15 # days
         planting_doy = -9999 ; planting_doy_unc = -9999 # days
         growing_season_doy = -9999  ; growing_season_doy_unc = -9999 # days # note +365.25 to account for the parameter range
-        #growing_season_doy = 244   ; growing_season_doy_unc = 14 # days # note +365.25 to account for the parameter range
+        #planting_doy = 273 + 365.25 ; planting_doy_unc = 15 # days
+        #growing_season_doy = 330 ; growing_season_doy_unc = 15 # days
+
     }
 
     ###

@@ -454,17 +454,16 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # ATEC LAI and N fertiliser addition is a highly uncertain saturating function.
           # i.e. maxLAI = N addition (kgN/ha) * 0.011840 + 2.216000
 
-# Linear fit between allocation to Ra and LAI
-# R2 = 0.82      Estimate Std. Error t value Pr(>|t|)    
-#(Intercept)    0.470444   0.007554  62.280 7.23e-11 ***
-#max_lai_yield -0.013124   0.002101  -6.247 0.000425 ***
-
           # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
           # derived from the ATEC experiment field, Sus et al., (2010), or updated based on daily CARDAMOM-DALEC.15 analysis
           if (max(OBS$LAI) > 0) {
+              # Linear fit between allocation to Ra and LAI
+              # R2 = 0.82      Estimate Std. Error t value Pr(>|t|)    
+              #(Intercept)    0.470444   0.007554  62.280 7.23e-11 ***
+              #max_lai_yield -0.013124   0.002101  -6.247 0.000425 ***
               # Fraction of GPP allocated to autotrophic pool
               PARPRIORS[2] = max(OBS$LAI) * -0.013124 + 0.470444
-              PARPRIORUNC[2] = 0.04 # mean confidence interval of linear regression for LAI ranges 1-6              
+              PARPRIORUNC[2] = 0.02 # mean confidence interval of linear regression for LAI ranges 1-6              
           } else {
               PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
           }
@@ -475,8 +474,12 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[7] = 0.03           ; PARPRIORUNC[7]  = 0.03         # Potential turnover rate of foliage due to self-shading (fraction/day)
           PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
           if (max(OBS$LAI) > 0) {
+              # Linear fit between initial fol N ~ max LAI
+              # R2 = 0.96     Estimate Std. Error t value Pr(>|t|)    
+              #(Intercept)    1.36892    0.19844   6.898 0.000232 ***
+              #max_lai_yield  0.81809    0.05519  14.823 1.52e-06 ***          
               PARPRIORS[11] = max(OBS$LAI) * 2.4922 + 9.4850
-              PARPRIORUNC[11] = 1.5 # mean confidence interval of linear regression for LAI ranges 1-6
+              PARPRIORUNC[11] = 0.8 # mean confidence interval of linear regression for LAI ranges 1-6
           } else {
               PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
           }
@@ -484,13 +487,14 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
           #PARPRIORS[14]=OBS$growing_season_doy ; PARPRIORUNC[14]=OBS$growing_season_doy_unc  # Growing season length sowing->harvest days
           if (max(OBS$LAI) > 0) {
+              # Linear fit between NUE ~ initial fol N
+              # R2 = 0.88                                      Estimate Std. Error t value
+              #(Intercept)                                     5.0456     1.6608   3.038
+              #apply(parameters_all_yield[15, , ], 2, median)  3.1111     0.3894   7.989
               # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
               PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.81809 + 1.36892)
               PARPRIORUNC[15] = 0.6052851  # mean confidence interval of linear regression for LAI ranges 1-6
               #PARPRIORWEIGHT[15] = noyears
-              # If we have a initial foliar N prior then we also want to update the NUE parameter
-              #PARPRIORS[11] = PARPRIORS[15] *  3.1111 + 5.0456      
-              #PARPRIORUNC[11] = 8.534234 # NUE: derived from CARDAMOM calibration at the ATEC sites
           } else {
               PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
           }

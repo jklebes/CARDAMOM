@@ -102,12 +102,12 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
        # Sanity check in case we have not been 
        # given a complete timeseries of step sizes
        if (length(timestep_days) == 1) {
-           run_day_selector=seq(1,length(obs_out),timestep_days)
-           timestep_days=rep(timestep_days, length.out=length(obs_out))
+           run_day_selector = seq(1,length(obs_out),timestep_days)
+           timestep_days = rep(timestep_days, length.out=length(obs_out))
        }
 
        # Determine the actual cumulative number of days to have passed
-       run_day_selector=cumsum(timestep_days)
+       run_day_selector = cumsum(timestep_days)
        # create needed variables
        obs_agg = array(NA,dim=length(run_day_selector))
        obs_unc_agg = array(NA,dim=length(run_day_selector))
@@ -204,12 +204,12 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
        # Sanity check in case we have not been 
        # given a complete timeseries of step sizes
        if (length(timestep_days) == 1) {
-           run_day_selector=seq(1,length(obs_out),timestep_days)
-           timestep_days=rep(timestep_days, length.out=length(obs_out))
+           run_day_selector = seq(1,length(obs_out),timestep_days)
+           timestep_days = rep(timestep_days, length.out=length(obs_out))
        }
 
        # Determine the actual cumulative number of days to have passed
-       run_day_selector=cumsum(timestep_days)
+       run_day_selector = cumsum(timestep_days)
        # create needed variables
        obs_agg = array(NA,dim=length(run_day_selector))
 
