@@ -109,15 +109,15 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     max_nbundle_size = 5000
 
     # number of tasks required
-    ntasks=PROJECT_in$nochains*PROJECT_in$nosites
+    ntasks = PROJECT_in$nochains*PROJECT_in$nosites
     # number of bundles needed for tasks 
-    nbundle=ceiling(ntasks/max_nbundle_size)
+    nbundle = ceiling(ntasks/(max_nbundle_size-1))
     # number of tasks per bundle
-    ntaskbundles=ceiling(ntasks/nbundle)
+    ntaskbundles = ceiling(ntasks/nbundle)
     # make the size bundle specific to adjust for hangers on
-    ntaskbundles=rep(ntaskbundles, times=nbundle)
+    ntaskbundles = rep(ntaskbundles, times=nbundle)
     # place any hangers on into the last bundle
-    ntaskbundles[nbundle]=ntaskbundles[nbundle]+(ntasks%%nbundle)
+    ntaskbundles[nbundle] = ntaskbundles[nbundle]+(ntasks%%nbundle)
 
     print(paste('Number of tasks to be submitted = ',ntasks,sep=""))
     print(paste('Maximum number of tasks allowed = ',max_nbundle_size,sep=""))
@@ -126,9 +126,11 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
 
     # Loop through each bundle and submit to the local slurm cluster
     for (b in seq(1, nbundle)) {
-         # Determine the start and end points of the bundles to be submitted
-         if (b == 1) { bundle_start = 1 } else { bundle_start = sum(ntaskbundles[1:(b-1)] + 1) }
-         bundle_end = sum(ntaskbundles[1:b])
+         # Locally extract the size of the current bundle
+         bundle_end = ntaskbundles[b]
+         # and determine the offset required to get to the right site number.
+         # This is done to avoid the SLURM max array counter size limit.
+         if (b == 1) { bundle_offset = 0 } else { bundle_offset = sum(ntaskbundles[1:(b-1)]) }
 
          # Create the shell script for submitting the job to slurm on the local cluster
          slurm_file = paste(PROJECT_in$exepath,"/slurm_submission.sh",sep="")
@@ -143,12 +145,12 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
          write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --time=",as.numeric(PROJECT_in$chain_runtime),":00:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("#SBATCH --array=",bundle_start,"-",bundle_end,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("#SBATCH --array=[1-",bundle_end,"]",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("# THIS SCRIPT MUST BE ACCOMPANIED BY CARDAMOM_ECDF_EXECUTABLES_LIST.txt IN THE SAME DIRECTORY"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("# arguments are start and end lines!"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $SLURM_ARRAY_TASK_ID\\!d )",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $(SLURM_ARRAY_TASK_ID+",bundle_offset,")\\!d )",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("command ${task}"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 
          # Record directory to change back in a moment
