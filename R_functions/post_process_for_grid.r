@@ -1502,6 +1502,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Store mean absolute parameter correlation information
   site_output$absolute_mean_parameter_correlation = states_all$absolute_mean_parameter_correlation
   # C-cycle flux correlation with parameters
+  site_output$lai_parameter_correlation = states_all$lai_parameter_correlation
+  site_output$nbp_parameter_correlation = states_all$nbp_parameter_correlation
   site_output$nee_parameter_correlation = states_all$nee_parameter_correlation
   site_output$gpp_parameter_correlation = states_all$gpp_parameter_correlation
   site_output$rauto_parameter_correlation = states_all$rauto_parameter_correlation
@@ -1523,6 +1525,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   if (any(check_list == "NPP_wood_gCm2day_parameter_correlation")) {
       site_output$NPP_wood_gCm2day_parameter_correlation = states_all$NPP_wood_gCm2day_parameter_correlation
   }
+  # Correlations between LAI and key gross and net fluxes
+  site_output$lai_m2m2_to_GPP_gCm2day_correlation = states_all$lai_m2m2_to_GPP_gCm2day_correlation
+  site_output$lai_m2m2_to_NEE_gCm2day_correlation = states_all$lai_m2m2_to_NEE_gCm2day_correlation
+  site_output$lai_m2m2_to_NBP_gCm2day_correlation = states_all$lai_m2m2_to_NBP_gCm2day_correlation           
+  site_output$lai_m2m2_to_Rauto_gCm2day_correlation = states_all$lai_m2m2_to_Rauto_gCm2day_correlation
+  site_output$lai_m2m2_to_Rhet_gCm2day_correlation = states_all$lai_m2m2_to_Rhet_gCm2day_correlation
+  site_output$lai_m2m2_to_wood_gCm2_correlation = states_all$lai_m2m2_to_wood_gCm2_correlation
+  site_output$lai_m2m2_to_som_gCm2_correlation = states_all$lai_m2m2_to_som_gCm2_correlation
+  site_output$lai_m2m2_to_dCwood_gCm2_correlation = states_all$lai_m2m2_to_dCwood_gCm2_correlation
+  site_output$lai_m2m2_to_dCsom_gCm2_correlation = states_all$lai_m2m2_to_dCsom_gCm2_correlation  
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      site_output$lai_m2m2_to_harvest_gCm2day_correlation = states_all$lai_m2m2_to_harvest_gCm2day_correlation
+  }
+
   # If the correlation between wood MTT and wood allocation have been determined
   if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
       site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation

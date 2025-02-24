@@ -819,11 +819,27 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
+          grid_output$lai_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$nbp_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$nee_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$gpp_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rauto_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rhet_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$fire_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          # Assess within pixel correlations with LAI
+          grid_output$lai_m2m2_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_NBP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          # If harvest 
+          if (any(check_list == "harvest_gCm2day")) {
+              grid_output$lai_m2m2_to_harvest_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }                                        
           # If CiCa
           if (any(check_list == "CiCa_parameter_correlation") == TRUE) {
               grid_output$CiCa_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))

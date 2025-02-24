@@ -129,6 +129,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   states_all$absolute_mean_parameter_correlation = mean(abs(states_all$absolute_mean_parameter_correlation[lower.tri(states_all$absolute_mean_parameter_correlation,diag=FALSE)]))
 
   # Determine correlations between parameter values and various state variables
+  states_all$lai_parameter_correlation = cor(tmp,rowMeans(states_all$lai_m2m2))
+  states_all$nbp_parameter_correlation = cor(tmp,rowMeans(states_all$nbp_gCm2day))
   states_all$nee_parameter_correlation = cor(tmp,rowMeans(states_all$nee_gCm2day))
   states_all$gpp_parameter_correlation = cor(tmp,rowMeans(states_all$gpp_gCm2day))
   states_all$rauto_parameter_correlation = cor(tmp,rowMeans(states_all$rauto_gCm2day))
@@ -148,6 +150,23 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   # Avoid error flag when no LWP
   if (any(check_list == "LWP_MPa")) {
       states_all$LWP_parameter_correlation = cor(tmp,rowMeans(states_all$LWP_MPa))
+  }
+
+  # Correlations between LAI and key gross and net fluxes
+  states_all$lai_m2m2_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$gpp_gCm2day))
+  states_all$lai_m2m2_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$nee_gCm2day))
+  states_all$lai_m2m2_to_NBP_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$nbp_gCm2day))
+  states_all$lai_m2m2_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$rauto_gCm2day))
+  states_all$lai_m2m2_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$rhet_gCm2day))
+  states_all$lai_m2m2_to_wood_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$wood_gCm2))
+  states_all$lai_m2m2_to_som_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$som_gCm2))
+  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
+  states_all$lai_m2m2_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(dCbio))
+  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
+  states_all$lai_m2m2_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(dCbio))
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$harvest_gCm2day))
   }
 
   # Determine whether have have both mean transit time and allocation to wood

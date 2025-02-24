@@ -793,11 +793,27 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            # Store mean absolute parameter correlation information
            grid_output$absolute_mean_parameter_correlation[slot_i,slot_j] = site_output$absolute_mean_parameter_correlation
            # Parameter vs C-cycle flux correlation across ensemble member
+           grid_output$lai_parameter_correlation[slot_i,slot_j,] = site_output$lai_parameter_correlation
+           grid_output$nbp_parameter_correlation[slot_i,slot_j,] = site_output$nbp_parameter_correlation           
            grid_output$nee_parameter_correlation[slot_i,slot_j,] = site_output$nee_parameter_correlation
            grid_output$gpp_parameter_correlation[slot_i,slot_j,] = site_output$gpp_parameter_correlation
            grid_output$rauto_parameter_correlation[slot_i,slot_j,] = site_output$rauto_parameter_correlation
            grid_output$rhet_parameter_correlation[slot_i,slot_j,] = site_output$rhet_parameter_correlation
            grid_output$fire_parameter_correlation[slot_i,slot_j,] = site_output$fire_parameter_correlation
+           # Correlations between LAI and key gross and net fluxes
+           grid_output$lai_m2m2_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_GPP_gCm2day_correlation
+           grid_output$lai_m2m2_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_NEE_gCm2day_correlation
+           grid_output$lai_m2m2_to_NBP_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_NBP_gCm2day_correlation           
+           grid_output$lai_m2m2_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rauto_gCm2day_correlation
+           grid_output$lai_m2m2_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rhet_gCm2day_correlation
+           grid_output$lai_m2m2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_wood_gCm2_correlation
+           grid_output$lai_m2m2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_som_gCm2_correlation
+           grid_output$lai_m2m2_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCwood_gCm2_correlation
+           grid_output$lai_m2m2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCsom_gCm2_correlation
+           # If harvest is estimated
+           if (any(check_list == "harvest_gCm2day")) {
+               grid_output$lai_m2m2_to_harvest_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_harvest_gCm2day_correlation
+           }           
            # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
            if (any(check_list == "CiCa_parameter_correlation")) {
                grid_output$CiCa_parameter_correlation[slot_i,slot_j,] = site_output$CiCa_parameter_correlation
