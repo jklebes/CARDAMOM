@@ -1,5 +1,5 @@
 module MODEL_PARAMETERS
-
+  use samplers_shared, only: PARINFO  ! figure out if this type belongs to samplers or main
   implicit none
 
   !!!!!!!!!!!
@@ -19,13 +19,14 @@ module MODEL_PARAMETERS
   ! specify explicitly the public
   public:: pars_info
 
+  type(PARINFO):: PI
+
   contains
 
   !
   !------------------------------------------------------------------
   !
   subroutine pars_info
-    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
