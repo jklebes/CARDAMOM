@@ -977,7 +977,7 @@ module math_functions
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Sun 26 Jan 2025 07:54:31 GMT
+    !  Last Modified: Wed 12 Mar 2025 15:36:04 GMT
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -1095,7 +1095,7 @@ module math_functions
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Sun 26 Jan 2025 07:54:31 GMT
+    !  Last Modified: Wed 12 Mar 2025 15:36:04 GMT
     !
     !    03/05/2019
     !

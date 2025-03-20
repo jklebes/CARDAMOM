@@ -10,27 +10,27 @@ module model_likelihood_module
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+  ! See function/subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
   ! make all private
   private
 
   ! which to make open
-  public :: model_likelihood, find_edc_initial_values, &
+  public:: model_likelihood, find_edc_initial_values, &
             sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood
 
   ! declare needed types
   type EDCDIAGNOSTICS
-    integer :: nedc = 100    ! number of edcs being assessed
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks, dim should equal nedc
-    integer :: EDC
-    integer :: DIAG
+    integer:: nedc = 100    ! number of edcs being assessed
+    integer:: PASSFAIL(100)  ! allow space for 100 possible checks, dim should equal nedc
+    integer:: EDC
+    integer:: DIAG
   end type
-  type (EDCDIAGNOSTICS), save :: EDCD
+  type (EDCDIAGNOSTICS), save:: EDCD
 
   ! Has the model sanity check been conducted yet?
-  logical :: sanity_check = .false.
+  logical:: sanity_check = .false.
 
   contains
   !
@@ -38,7 +38,7 @@ module model_likelihood_module
   !
   subroutine find_edc_initial_values
     use MCMCOPT, only: PI, MCOUT, MCO
-    use cardamom_structures, only: DATAin ! will need to change due to circular dependance
+    use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
 
@@ -48,9 +48,9 @@ module model_likelihood_module
     implicit none
 
     ! declare local variables
-    integer :: n, counter_local, EDC_iter
-    double precision :: PEDC, PEDC_prev, ML, ML_prior, P_target
-    double precision, dimension(PI%npars+1) :: EDC_pars
+    integer:: n, counter_local, EDC_iter
+    double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
+    double precision, dimension(PI%npars+1):: EDC_pars
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
@@ -60,7 +60,7 @@ module model_likelihood_module
     MCO%nPRINT = 0
     MCO%nWRITE = 0
     ! the next two lines ensure that parameter inputs are either given or
-    ! entered as -9999
+    ! entered as-9999
     MCO%randparini = .true.
     MCO%returnpars = .true.
     MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
@@ -76,16 +76,16 @@ module model_likelihood_module
     ! keep the value
 !    do n = 1, PI%npars
 !       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
-!    end do ! parameter loop
+!    end do  ! parameter loop
 
     ! set the parameter step size at the beginning
-    PI%parvar = 1d0 ; PI%Nparvar = 0d0
+    PI%parvar = 1d0; PI%Nparvar = 0d0
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
     do n = 1, PI%npars
-       PI%covariance(n,n) = 1d0
+       PI%covariance(n, n) = 1d0
     end do
 
     ! if this is not a restart run, i.e. we do not already have a starting
@@ -94,12 +94,12 @@ module model_likelihood_module
     if (.not. restart_flag) then
 
         ! set up edc log likelihood for MHMCMC initial run
-        PEDC_prev = -1000d0 ; PEDC = -1d0 ; counter_local = 0
+        PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
         do while (PEDC < 0d0)
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood
-           call MHMCMC(P_target,model_likelihood,edc_model_likelihood)
+           call MHMCMC(P_target, model_likelihood, edc_model_likelihood)
 
            ! store the best parameters from that loop
            PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
@@ -107,10 +107,10 @@ module model_likelihood_module
            MCO%randparini = .false.
 
            ! call edc likelihood function to get final edc probability
-           call edc_model_likelihood(PI%parini,PEDC,ML_prior)
+           call edc_model_likelihood(PI%parini, PEDC, ML_prior)
 
            ! keep track of attempts
-           counter_local = counter_local + 1
+           counter_local = counter_local+1
            ! periodically reset the initial conditions
            if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
                ! Reset the previous EDC likelihood score
@@ -120,21 +120,21 @@ module model_likelihood_module
                ! reset to select random starting point
                MCO%randparini = .true.
                ! reset the parameter step size at the beginning of each attempt
-               PI%parvar = 1d0 ; PI%Nparvar = 0d0
+               PI%parvar = 1d0; PI%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set initial value to a
                ! small positive value along to variance access
-               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
                PI%use_multivariate = .false.
                do n = 1, PI%npars
-                  PI%covariance(n,n) = 1d0
+                  PI%covariance(n, n) = 1d0
                end do
            else
                PEDC_prev = PEDC
            endif
 
-        end do ! for while condition
+        end do  ! for while condition
 
-    endif ! if for restart
+    endif  ! if for restart
 
     ! reset so that currently saved parameters will be used
     ! starting point in main MCMC
@@ -156,49 +156,49 @@ module model_likelihood_module
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS
+    double precision, dimension(PI%npars), intent(inout):: PARS
     ! output
-    double precision, intent(inout) :: ML_obs_out, ML_prior_out
+    double precision, intent(inout):: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
-    double precision :: tot_exp, ML, EDC1, EDC2, infini
+    double precision:: tot_exp, ML, EDC1, EDC2, infini
 
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0
+    ML_obs_out = 0d0; ML_prior_out = 0d0
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
     if (.not.sanity_check) call model_sanity_check(PI%parini)
 
     ! call EDCs which can be evaluated prior to running the model
-    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+    call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
 
     ! next need to run the model itself
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
     ! assess post running EDCs
-    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-             ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-             ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-             ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+    call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
+             ,DATAin%nodays, DATAin%deltat, PI%parmax, PARS, DATAin%MET &
+             ,DATAin%M_LAI, DATAin%M_NEE, DATAin%M_GPP, DATAin%M_POOLS &
+             ,DATAin%M_FLUXES, DATAin%meantemp, EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
 !    tot_exp = 0d0
 !    do n = 1, EDCD%nedc
-!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
+!       tot_exp = tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
-!    end do ! checking EDCs
+!    end do  ! checking EDCs
 !    ! for testing purposes, stop the model when start achieved
 !    if (sum(EDCD%PASSFAIL) == 100) then
 !        print*,"Found it!" ; stop
@@ -211,7 +211,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+  subroutine sub_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
@@ -219,27 +219,27 @@ module model_likelihood_module
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
-    ! present / selected
+    ! present/selected
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+    double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC1, EDC2
+    double precision:: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
 
     if (DATAin%EDC == 1) then
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
@@ -247,39 +247,39 @@ module model_likelihood_module
 
     ! then this is a crop run....
     ! run the dalec model
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+        call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
+                        ,DATAin%nodays, DATAin%deltat, PI%parmax, PARS, DATAin%MET &
+                        ,DATAin%M_LAI, DATAin%M_NEE, DATAin%M_GPP, DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
-        ML_obs_out = ML_obs_out + log(EDC2)
-    end if ! DATAin%EDC == 1
+        ML_obs_out = ML_obs_out+log(EDC2)
+    end if  ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ML_prior_out = likelihood_p(PI%npars, DATAin%parpriors, DATAin%parpriorunc, DATAin%parpriorweight, PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out+scale_likelihood(PI%npars, PARS)
 
   end subroutine sub_model_likelihood
   !
   !------------------------------------------------------------------
   !
-  subroutine sqrt_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+  subroutine sqrt_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
@@ -287,27 +287,27 @@ module model_likelihood_module
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
-    ! present / selected
+    ! present/selected
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+    double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC1, EDC2
+    double precision:: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
 
     if (DATAin%EDC == 1) then
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
@@ -315,39 +315,39 @@ module model_likelihood_module
 
     ! then this is a crop run....
     ! run the dalec model
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+        call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
+                        ,DATAin%nodays, DATAin%deltat, PI%parmax, PARS, DATAin%MET &
+                        ,DATAin%M_LAI, DATAin%M_NEE, DATAin%M_GPP, DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
-        ML_obs_out = ML_obs_out + log(EDC2)
-    end if ! DATAin%EDC == 1
+        ML_obs_out = ML_obs_out+log(EDC2)
+    end if  ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ML_prior_out = likelihood_p(PI%npars, DATAin%parpriors, DATAin%parpriorunc, DATAin%parpriorweight, PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + sqrt_scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out+sqrt_scale_likelihood(PI%npars, PARS)
 
   end subroutine sqrt_model_likelihood
   !
   !------------------------------------------------------------------
   !
-  subroutine log_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+  subroutine log_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
@@ -355,27 +355,27 @@ module model_likelihood_module
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
-    ! present / selected
+    ! present/selected
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+    double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC1, EDC2
+    double precision:: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
 
     if (DATAin%EDC == 1) then
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
@@ -383,33 +383,33 @@ module model_likelihood_module
 
     ! then this is a crop run....
     ! run the dalec model
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+        call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
+                        ,DATAin%nodays, DATAin%deltat, PI%parmax, PARS, DATAin%MET &
+                        ,DATAin%M_LAI, DATAin%M_NEE, DATAin%M_GPP, DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
-        ML_obs_out = ML_obs_out + log(EDC2)
-    end if ! DATAin%EDC == 1
+        ML_obs_out = ML_obs_out+log(EDC2)
+    end if  ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ML_prior_out = likelihood_p(PI%npars, DATAin%parpriors, DATAin%parpriorunc, DATAin%parpriorweight, PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + log_scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out+log_scale_likelihood(PI%npars, PARS)
 
   end subroutine log_model_likelihood
   !
@@ -428,45 +428,45 @@ module model_likelihood_module
     implicit none
 
     ! Arguments
-    double precision, dimension(PI%npars), intent(in) :: PARS
+    double precision, dimension(PI%npars), intent(in):: PARS
 
     ! Local arguments
-    integer :: i
-    double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
-    double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
-    double precision :: pool_error, flux_error
+    integer:: i
+    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: local_pools
+    double precision, dimension(DATAin%nodays, DATAin%nofluxes):: local_fluxes
+    double precision:: pool_error, flux_error
 
     ! Run model
 
     ! next need to run the model itself
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,local_fluxes,local_pools                    &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,local_fluxes, local_pools                    &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
     ! Compare outputs
-    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
-    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
+    flux_error = sum(abs(DATAin%M_FLUXES-local_fluxes))
+    pool_error = sum(abs(DATAin%M_POOLS-local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
-        do i = 1,DATAin%nofluxes
+        do i = 1, DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
            print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
@@ -494,15 +494,15 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: npars ! number of parameters
-    double precision, intent(out) :: EDC1    ! EDC1 flag
-    double precision, dimension(npars), intent(in) :: PARS ! current parameter set
-    double precision, intent(in) :: meantemp & ! mean temperature (k)
+    integer, intent(in):: npars  ! number of parameters
+    double precision, intent(out):: EDC1    ! EDC1 flag
+    double precision, dimension(npars), intent(in):: PARS  ! current parameter set
+    double precision, intent(in):: meantemp & ! mean temperature (k)
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
 
     ! declare local variables
-    integer :: n, DIAG
-    double precision :: torfol,tmp ! yearly leaf loss fraction
+    integer:: n, DIAG
+    double precision:: torfol, tmp  ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1d0
@@ -517,51 +517,51 @@ module model_likelihood_module
 
     ! Turnover of litter faster than turnover of som
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(9))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(1) = 0
     endif
 
     ! decomposition of litter to SOM greater than SOM to air
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(10) > pars(1))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(2) = 0
     endif
 
     ! pre_DR should be greater than post_DR, this is consistent across currently
     ! available SPA crop parameter files
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) > pars(3))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(3) = 0
     endif
 
     ! for development: Tmin should be < topt and topt should be < tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(26) > pars(28) &
                                      .or. pars(28) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! for development: the difference between each Tmin,Topt,Tmax > 1.
+    ! for development: the difference between each Tmin, Topt, Tmax > 1.
     if ((EDC1 == 1 .or. DIAG == 1) .and. (abs(pars(26)-pars(28)) < 1d0 &
                                      .or. abs(pars(28)-pars(27)) < 1d0  &
                                      .or. abs(pars(26)-pars(27)) < 1d0)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(5) = 0
     endif
 
     ! for vernalisation: Tmin < Topt < Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(31) &
                                      .or. pars(31) > pars(30))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(6) = 0
     endif
 
    ! for vernalisation: the difference between each Tmin, Topt, Tmax
     if ((EDC1 == 1 .or. DIAG == 1) .and. ( abs(pars(29)-pars(31)) < 1d0 &
                                       .or. abs(pars(31)-pars(30)) < 1d0 &
                                       .or. abs(pars(29)-pars(30)) < 1d0 ) ) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(7) = 0
     endif
 
    ! development temperature value should be larger corresponding vernalisation
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(29) > pars(26) &
                                      .or. pars(31) > pars(28) &
                                      .or. pars(30) > pars(27))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0; EDCD%PASSFAIL(8) = 0
     endif
 
 !    ! CN ratio of leaf should also be between 95CI of trait database values
@@ -569,7 +569,7 @@ module model_likelihood_module
 !    ! NOTE current formulation not valid due to canopy N now being dynamics with the N~dilution model
 !    tmp = (pars(17)/(10d0**pars(11)))
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. (tmp > 43.76895d0 .or. tmp < 10.82105d0)) then
-!       EDC1=0 ; EDCD%PASSFAIL(9) = 0
+!       EDC1 = 0; EDCD%PASSFAIL(9) = 0
 !    endif
 
     ! could and probably should add some more
@@ -578,12 +578,12 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,deltat &
-                        ,parmax,pars,met,M_LAI,M_NEE,M_GPP,M_POOLS,M_FLUXES &
-                        ,meantemp,EDC2)
+  subroutine assess_EDC2(npars, nomet, nofluxes, nopools, nodays, deltat &
+                        ,parmax, pars, met, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES &
+                        ,meantemp, EDC2)
 
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff,linear_model_gradient, DS_time
+    use CARBON_MODEL_MOD, only: resp_rate_temp_coeff, linear_model_gradient, DS_time
 
     ! the second of two subroutines for assessing current parameters for passing
     ! realism tests for crop ecosystems
@@ -591,46 +591,46 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: npars    & ! number of model parameters
+    integer, intent(in):: npars    & ! number of model parameters
                           ,nomet    & ! number of met drivers
                           ,nofluxes & ! number of fluxes from model
                           ,nopools  & ! number of pools in model
                           ,nodays     ! number of days in simulation
 
-    double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
+    double precision, intent(in):: deltat(nodays)              & ! decimal day model interval
                                    ,pars(npars)                 & ! vector of current parameters
                                    ,parmax(npars)               & ! vector of the maximum parameter values
-                                   ,met(nomet,nodays)           & ! array of met drivers
+                                   ,met(nomet, nodays)           & ! array of met drivers
                                    ,M_LAI(nodays)               & ! LAI output from current model simulation
                                    ,M_NEE(nodays)               & ! NEE output from current model simulation
                                    ,M_GPP(nodays)               & ! GPP output from current model simulation
-                                   ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
-                                   ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
+                                   ,M_POOLS((nodays+1), nopools) & ! time varying states of pools in current model simulation
+                                   ,M_FLUXES(nodays, nofluxes)   & ! time varying fluxes from current model simulation model
                                    ,meantemp                      ! site mean temperature (oC)
 
-    double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
+    double precision, intent(out):: EDC2  ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
+    integer:: n, nn, nnn, DIAG, no_years, y, PEDC, steps_per_year, steps_per_month, nd, fl, &
                io_start, io_finish
-    integer, dimension(nodays) :: pool_hak
-    double precision :: infi, mrt!, EQF, etol
-    double precision, dimension(nodays) :: ratio
-    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
+    integer, dimension(nodays):: pool_hak
+    double precision:: infi, mrt!, EQF, etol
+    double precision, dimension(nodays):: ratio
+    double precision, dimension(nopools):: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
-    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
+    double precision, dimension(nofluxes):: FT, FT_yr1, FT_yr2
     
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
-    logical, parameter :: old_edcs = .false.
-    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+    logical, parameter:: old_edcs = .false.
+    double precision, parameter:: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
                                    EQF2 = log(2d0),   & 
                                    EQF5 = log(5d0),   &
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.5d0 ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                    etol = 0.5d0  ! 0.20d0 lots of AGB  ! 0.10d0 global/site more data  ! 0.05d0 global 1 or 2 AGB estimates
 
     ! Work out how many completed years there are in the system
     no_years = int(nint(sum(deltat)/365.25d0))
@@ -645,18 +645,18 @@ module model_likelihood_module
     ! First calculate total flux for the simulation period
     ! NOTE: that this code differs from the majority of DALEC models
     ! as we treat the first year as a spin up to be ignored.
-    io_start = steps_per_year + 1 ; io_finish = nodays
+    io_start = steps_per_year+1; io_finish = nodays
     if (no_years < 3) then 
        do fl = 1, nofluxes
-          FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
-          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+          FT(fl) = sum(M_FLUXES(io_start:io_finish, fl)*deltat(io_start:io_finish))
+          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2), fl)*deltat((steps_per_year+1):(steps_per_year*2)))
           FT_yr2(fl) = FT_yr1(fl)
        end do    
     else 
        do fl = 1, nofluxes
-          FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
-          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl)*deltat((steps_per_year+1):(steps_per_year*2)))
-          FT_yr2(fl) = sum(M_FLUXES(((steps_per_year*2)+1):(steps_per_year*3),fl)*deltat(((steps_per_year*2)+1):(steps_per_year*3)))
+          FT(fl) = sum(M_FLUXES(io_start:io_finish, fl)*deltat(io_start:io_finish))
+          FT_yr1(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2), fl)*deltat((steps_per_year+1):(steps_per_year*2)))
+          FT_yr2(fl) = sum(M_FLUXES(((steps_per_year*2)+1):(steps_per_year*3), fl)*deltat(((steps_per_year*2)+1):(steps_per_year*3)))
        end do
     end if 
     ! get total in and out for each dead organic matter pool
@@ -678,84 +678,84 @@ module model_likelihood_module
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
-        ! Foliage + fine root litter
+        ! Foliage+fine root litter
         ! Estimate MRT (years)
-        pool_hak = 1 ; ratio = 0d0
-        where (M_POOLS(1:nodays,5) > 0d0) ! protection against NaN from division by zero
+        pool_hak = 1; ratio = 0d0
+        where (M_POOLS(1:nodays, 5) > 0d0)  ! protection against NaN from division by zero
                pool_hak = 0 
-               ratio = ((M_FLUXES(1:nodays,13) + M_FLUXES(1:nodays,15)) &
-                       / M_POOLS(1:nodays,5))
+               ratio = ((M_FLUXES(1:nodays, 13) + M_FLUXES(1:nodays, 15)) &
+                       / M_POOLS(1:nodays, 5))
         end where
         ! Estimate the mean fractional daily loss
         mrt = sum(ratio) / dble(nodays-sum(pool_hak))
         ! If daily turnover fraction is less than equivalent of MRT of 1 year, fail.
         if (mrt < 2.737850787d-3) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+            EDC2 = 0d0; EDCD%PASSFAIL(10) = 0
         end if 
 
-    end if ! EDC2 == 1 .or. DIAG == 1
+    end if  ! EDC2 == 1 .or. DIAG == 1
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
-        ! Dead pools - SOM only
+        ! Dead pools-SOM only
         do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF10) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(10+n-4) = 0
+               EDC2 = 0d0; EDCD%PASSFAIL(10+n-4) = 0
            end if
            ! Restrict exponential behaviour at initialisation
            if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(16+n-4) = 0
+               EDC2 = 0d0; EDCD%PASSFAIL(16+n-4) = 0
            end if
         end do
 
-    end if ! EDC2 == 1 .or. DIAG == 1
+    end if  ! EDC2 == 1 .or. DIAG == 1
 
-    ! we know that the crop model should produce some yield - therefore we
+    ! we know that the crop model should produce some yield-therefore we
     ! reject parameter sets which generate no yield ever!
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays,21)) < (1d0*dble(no_years)) ) then
-    !    EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(1:nodays, 21)) < (1d0*dble(no_years)) ) then
+    !    EDC2 = 0d0; EDCD%PASSFAIL(17) = 0
     !endif
     !! Total hack to enforce a massive yield and find out what the parameters do
-    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays,21)) < 300d0 ) then
-    !  EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+    !if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_FLUXES(1:nodays, 21)) < 300d0 ) then
+    !  EDC2 = 0d0; EDCD%PASSFAIL(18) = 0
     !endif
 
     ! We should assume all crops get somewhere close to maturity (2.0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(DS_time) < 1.9) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC2 = 0d0; EDCD%PASSFAIL(19) = 0
     endif
 
     !
     ! EDCs done, below are additional fault detection conditions
     !
 
-    ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
+    ! additional faults can be stored in locations 35-40 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0 and /= NaN
     if (EDC2 == 1 .or. DIAG == 1) then
 
       do n = 1, nopools
-         if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
-             minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
+         if (minval(M_POOLS(1:nodays, n)) < 0d0 .or. maxval(abs(M_POOLS(1:nodays, n))) == abs(log(infi)) .or. &
+             minval(M_POOLS(1:nodays, n)) /= minval(M_POOLS(1:nodays, n))) then
+             EDC2 = 0d0; EDCD%PASSFAIL(55+n) = 0
          endif
       end do
 
       do n = 1, nofluxes
-         if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
-            minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+         if (maxval(abs(M_FLUXES(1:nodays, n))) == abs(log(infi)) .or. &
+            minval(M_FLUXES(1:nodays, n)) /= minval(M_FLUXES(1:nodays, n))) then
+             EDC2 = 0d0; EDCD%PASSFAIL(55+nopools+n) = 0
          endif
       end do
 
-    end if ! min pool assessment
+    end if  ! min pool assessment
 
   end subroutine assess_EDC2
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_annual_pools(pools,year,interval,averaging_period)
+  double precision function cal_mean_annual_pools(pools, year, interval, averaging_period)
 
     ! Function calculates the mean model pools values for each individual year
     ! in the simulation
@@ -763,14 +763,14 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: year           & ! which year are we working on
-                          ,averaging_period ! number of days in analysis period
+    integer, intent(in):: year           & ! which year are we working on
+                          ,averaging_period  ! number of days in analysis period
 
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+    double precision, intent(in):: pools(averaging_period) & ! input pool state variables
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday
+    integer:: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
@@ -786,7 +786,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_max_annual_pools(pools,year,interval,averaging_period)
+  double precision function cal_max_annual_pools(pools, year, interval, averaging_period)
 
     ! Function calculates the max model pools values for each individual year
     ! in the simulation
@@ -794,14 +794,14 @@ module model_likelihood_module
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: year            & ! which year are we working on
+    integer, intent(in):: year            & ! which year are we working on
                           ,averaging_period  ! number of days in analysis period
 
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+    double precision, intent(in):: pools(averaging_period) & ! input pool state variables
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer :: startday, endday
+    integer:: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
@@ -817,23 +817,23 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function expdecay2(pools,interval,averaging_period)
+  double precision function expdecay2(pools, interval, averaging_period)
 
    ! Function to calculate the exponential decay coefficients used several EDCs.
-   ! We assumpe the equation Cexp= a + b*exp(c*t)
+   ! We assumpe the equation Cexp = a+b*exp(c*t)
 
    implicit none
 
    ! declare input variables
-   integer, intent(in) :: averaging_period ! i.e. nodays + 1
+   integer, intent(in):: averaging_period  ! i.e. nodays+1
 
-   double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+   double precision, intent(in):: pools(averaging_period) & ! input pool state variables
                                   ,interval((averaging_period-1))      ! model time step in decimal days
 
    ! declare local variables
-   integer :: n, aw_int
-   integer, parameter :: os = 1 ! offset days
-   double precision :: aw, aw_1 &
+   integer:: n, aw_int
+   integer, parameter:: os = 1  ! offset days
+   double precision:: aw, aw_1 &
                       ,MP0   & ! mean pool (year 1 to year end-2)
                       ,MP1   & ! mean pool (year 2 to year end-1)
                       ,MP0os & ! mean pool (year 1+os to year end-2+os)
@@ -841,10 +841,10 @@ module model_likelihood_module
                       ,dcdt1 & ! gradient of exponential over time in second year
                       ,dcdt0   ! gradient of exponential over time in first year
 
-   ! declare initial values / constants
-   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1))) ! averaging window
-   aw_1 = aw ** (-1d0) ; aw_int = int(aw)
-   MP0 = 0d0 ; MP1 = 0d0 ; MP0os = 0d0 ; MP1os = 0d0
+   ! declare initial values/constants
+   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1)))  ! averaging window
+   aw_1 = aw ** (-1d0); aw_int = int(aw)
+   MP0 = 0d0; MP1 = 0d0; MP0os = 0d0; MP1os = 0d0
 
    ! estimate mean stock for first year
    MP0 = sum(pools(1:aw_int))
@@ -884,7 +884,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
+  subroutine model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
@@ -892,27 +892,27 @@ module model_likelihood_module
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
-    ! present / selected
+    ! present/selected
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
     ! output
-    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+    double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision :: EDC1, EDC2
+    double precision:: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
 
     if (DATAin%EDC == 1) then
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -921,58 +921,58 @@ module model_likelihood_module
 
     ! then this is a crop run....
     ! run the dalec model
-    call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS              &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                     ,DATAin%nofluxes,DATAin%M_GPP                &
-                     ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
-                     ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
-                     ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
+    call CARBON_MODEL(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
+                     ,DATAin%nodays, DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE &
+                     ,DATAin%M_FLUXES, DATAin%M_POOLS              &
+                     ,DATAin%nopars, DATAin%nomet, DATAin%nopools   &
+                     ,DATAin%nofluxes, DATAin%M_GPP                &
+                     ,PI%stock_seed_labile, PI%DS_shoot, PI%DS_root &
+                     ,PI%fol_frac, PI%stem_frac, PI%root_frac, PI%DS_LRLV&
+                     ,PI%LRLV, PI%DS_LRRT, PI%LRRT)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
         ! check edc2
-        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
-                        ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+        call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
+                        ,DATAin%nodays, DATAin%deltat, PI%parmax, PARS, DATAin%MET &
+                        ,DATAin%M_LAI, DATAin%M_NEE, DATAin%M_GPP, DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
-        ML_obs_out = ML_obs_out + log(EDC2)
-    end if ! DATAin%EDC == 1
+        ML_obs_out = ML_obs_out+log(EDC2)
+    end if  ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ML_prior_out = likelihood_p(PI%npars, DATAin%parpriors, DATAin%parpriorunc, DATAin%parpriorweight, PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out+likelihood(PI%npars, PARS)
 
   end subroutine model_likelihood
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood_p(npars,parpriors,parpriorunc,parpriorweight,pars)
+  double precision function likelihood_p(npars, parpriors, parpriorunc, parpriorweight, pars)
     ! function calculates the parameter based log-likelihood for the current set
-    ! of parameters. This assumes that we have any actual priors / prior
+    ! of parameters. This assumes that we have any actual priors/prior
     ! uncertainties to be working with. This does include initial states, as we
     ! consider them to be parameters
 
     implicit none
 
     ! declare input variables
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars         & ! current parameter vector
+    integer, intent(in):: npars
+    double precision, dimension(npars), intent(in):: pars         & ! current parameter vector
                                                      ,parpriors    & ! prior values for parameters
                                                      ,parpriorunc  & ! prior uncertainties
-                                                     ,parpriorweight ! prior weighting
+                                                     ,parpriorweight  ! prior weighting
 
     ! declare local variables
-    integer :: n
-    double precision, dimension(npars) :: local_likelihood
+    integer:: n
+    double precision, dimension(npars):: local_likelihood
 
     ! set initial value
-    likelihood_p = 0d0 ; local_likelihood = 0d0
+    likelihood_p = 0d0; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
@@ -985,7 +985,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood(npars,pars)
+  double precision function likelihood(npars, pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, DS_time
 
@@ -995,22 +995,22 @@ module model_likelihood_module
     implicit none
 
     ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
+    integer, intent(in):: npars
+    double precision, dimension(npars), intent(in):: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
-    double precision :: tot_exp, tmp_var, infini, input, output
-    double precision, dimension(DATAin%nodays) :: mid_state
-    double precision, allocatable :: mean_annual_pools(:)
+    integer:: n, dn, no_years, y, s
+    double precision:: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays):: mid_state
+    double precision, allocatable:: mean_annual_pools(:)
 
     ! initial value
-    likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
+    likelihood = 0d0; infini = 0d0; mid_state = 0d0
 
 ! Currently no distinction between NBE and NEE due to lack of fire estimates
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe), 17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       likelihood = likelihood-tot_exp
@@ -1025,7 +1025,7 @@ module model_likelihood_module
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap), 19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1033,15 +1033,15 @@ module model_likelihood_module
 ! FIRE not currently coded into DALEC_CROP_BUCKET
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire), 17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       likelihood = likelihood-tot_exp
 !    endif
 
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
-       ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+       ! Create vector of (LAI_t0+LAI_t1) * 0.5, note/pars(17) to convert foliage C to LAI
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays, 2) + DATAin%M_POOLS(2:(DATAin%nodays+1), 2) ) &
                  * 0.5d0 ) / pars(17)
        ! Split loop to allow vectorisation
        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
@@ -1086,9 +1086,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
-         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1099,9 +1099,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_mortality
          dn = DATAin%Cwood_mortalitypts(n)
-         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1109,8 +1109,8 @@ module model_likelihood_module
 
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
-       ! Create vector of (FOL_t0 + FOL_t1) * 0.5
-       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+       ! Create vector of (FOL_t0+FOL_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 2) + DATAin%M_POOLS(2:(DATAin%nodays+1), 2) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
@@ -1129,8 +1129,8 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1), 2), y, DATAin%deltat, DATAin%nodays+1)
+       end do  ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
          ! load the observation position in stream
@@ -1147,8 +1147,8 @@ module model_likelihood_module
 
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
-       ! Create vector of (Wood_t0 + Wood_t1) * 0.5
-       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+       ! Create vector of (Wood_t0+Wood_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 4) + DATAin%M_POOLS(2:(DATAin%nodays+1), 4) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
@@ -1160,8 +1160,8 @@ module model_likelihood_module
 
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
-       ! Create vector of (root_t0 + root_t1) * 0.5
-       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
+       ! Create vector of (root_t0+root_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 3) + DATAin%M_POOLS(2:(DATAin%nodays+1), 3) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
@@ -1174,8 +1174,8 @@ module model_likelihood_module
 ! AGB calculation not currently possible in this version of DALEC_CROP_BUCKET
 !    ! Cagb log-likelihood
 !    if (DATAin%nCagb_stock > 0) then
-!       ! Create vector of (agb_t0 + agb_t1) * 0.5
-!       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+!       ! Create vector of (agb_t0+agb_t1) * 0.5
+!       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 4) + DATAin%M_POOLS(2:(DATAin%nodays+1), 4) ) &
 !                 * 0.5d0 * (1d0-pars(29))
 !       ! Vectorised version of loop to estimate cost function
 !       tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
@@ -1188,9 +1188,9 @@ module model_likelihood_module
 ! Coarse root calculation not currently possible in this version of DALEC_CROP_BUCKET
 !    ! Ccoarseroot log-likelihood
 !    if (DATAin%nCcoarseroot_stock > 0) then
-!       ! Create vector of (coarseroot_t0 + coarseroot_t1) * 0.5
-!       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
-!                 * 0.5d0 * pars(29)
+!       ! Create vector of (coarseroot_t0+coarseroot_t1) * 0.5
+!       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 4) + DATAin%M_POOLS(2:(DATAin%nodays+1), 4) ) &
+!                 * 0.5d0*pars(29)
 !       ! Vectorised version of loop to estimate cost function
 !       tot_exp = sum(( (mid_state(DATAin%Ccoarseroot_stockpts(1:DATAin%nCcoarseroot_stock)) &
 !                       -DATAin%Ccoarseroot_stock(DATAin%Ccoarseroot_stockpts(1:DATAin%nCcoarseroot_stock)))&
@@ -1203,8 +1203,8 @@ module model_likelihood_module
     ! WARNING WARNING WARNING hack in place to estimate fraction of litter pool
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
-       ! Create vector of (lit_t0 + lit_t1) * 0.5
-       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
+       ! Create vector of (lit_t0+lit_t1) * 0.5
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 4) + DATAin%M_POOLS(2:(DATAin%nodays+1), 4) ) &
        !          * 0.5d0
        mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
                  * DATAin%M_POOLS(:,5)
@@ -1219,8 +1219,8 @@ module model_likelihood_module
 
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
-       ! Create vector of (som_t0 + som_t1) * 0.5
-       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
+       ! Create vector of (som_t0+som_t1) * 0.5
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays, 6) + DATAin%M_POOLS(2:(DATAin%nodays+1), 6) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
@@ -1235,9 +1235,9 @@ module model_likelihood_module
       tot_exp = 0d0
       do n = 1, DATAin%nharvest
         dn = DATAin%harvestpts(n)
-        s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+        s = max(0, dn-nint(DATAin%harvest_lag(dn)))+1
         ! Estimate the mean allocation to wood over the lag period
-        tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+        tmp_var = sum(DATAin%M_FLUXES(s:dn, 21)) / DATAin%harvest_lag(dn)
         tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
       end do
       likelihood = likelihood-tot_exp
@@ -1254,10 +1254,10 @@ module model_likelihood_module
         likelihood = likelihood-tot_exp
     end if
 
-    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
+    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1, 8) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         likelihood = likelihood-tot_exp
     end if
@@ -1273,7 +1273,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7, :) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         likelihood = likelihood-tot_exp
     end if
@@ -1282,8 +1282,8 @@ module model_likelihood_module
     if (DATAin%otherpriors(8) > -9998) then
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
-        ! not after the management activities had reset DS to -1. If so this code will not work.
-        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        ! not after the management activities had reset DS to-1. If so this code will not work.
+        mid_state = 0d0; where (DS_time >= 0d0) mid_state = 1d0
         tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
         tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
         likelihood = likelihood-tot_exp
@@ -1293,7 +1293,7 @@ module model_likelihood_module
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
-    likelihood = likelihood * 0.5d0
+    likelihood = likelihood*0.5d0
 
     ! check that log-likelihood is an actual number
     if (likelihood /= likelihood) then
@@ -1306,7 +1306,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function scale_likelihood(npars,pars)
+  double precision function scale_likelihood(npars, pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, DS_time
 
@@ -1316,22 +1316,22 @@ module model_likelihood_module
     implicit none
 
     ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
+    integer, intent(in):: npars
+    double precision, dimension(npars), intent(in):: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
-    double precision :: tot_exp, tmp_var, infini, input, output
-    double precision, dimension(DATAin%nodays) :: mid_state
-    double precision, allocatable :: mean_annual_pools(:)
+    integer:: n, dn, no_years, y, s
+    double precision:: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays):: mid_state
+    double precision, allocatable:: mean_annual_pools(:)
 
     ! initial value
-    scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
+    scale_likelihood = 0d0; infini = 0d0; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe), 17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
@@ -1339,7 +1339,7 @@ module model_likelihood_module
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap), 19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
     endif
@@ -1347,7 +1347,7 @@ module model_likelihood_module
 ! FIRE not currently coded into DALEC_CROP_BUCKET
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire), 17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
 !    endif
@@ -1392,9 +1392,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
-         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_inc))
@@ -1405,9 +1405,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_mortality
          dn = DATAin%Cwood_mortalitypts(n)
-         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
@@ -1419,7 +1419,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCfol_stock))
     endif
@@ -1433,8 +1433,8 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1), 2), y, DATAin%deltat, DATAin%nodays+1)
+       end do  ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
          ! load the observation position in stream
@@ -1455,7 +1455,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_stock))
     endif
@@ -1467,7 +1467,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCagb_stock
 !         dn = DATAin%Cagb_stockpts(n)
 !         ! remove coarse root fraction from wood (pars29)
-!         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
+!         tmp_var = DATAin%M_POOLS(dn, 4)-(DATAin%M_POOLS(dn, 4)*pars(29))
 !         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
 !       end do
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCagb_stock))
@@ -1480,7 +1480,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCcoarseroot_stock
 !         dn = DATAin%Ccoarseroot_stockpts(n)
 !         ! extract coarse root component from wood only
-!         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
+!         tmp_var = DATAin%M_POOLS(dn, 4)*pars(29)
 !         tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
 !       end do
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCcoarseroot_stock))
@@ -1492,7 +1492,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCroots_stock))
     endif
@@ -1506,7 +1506,7 @@ module model_likelihood_module
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+                           *(DATAin%M_POOLS(dn, 5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nClit_stock))
     endif
@@ -1517,7 +1517,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCsom_stock))
     endif
@@ -1527,9 +1527,9 @@ module model_likelihood_module
         tot_exp = 0d0
         do n = 1, DATAin%nharvest
            dn = DATAin%harvestpts(n)
-           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           s = max(0, dn-nint(DATAin%harvest_lag(dn)))+1
            ! Estimate the mean allocation to wood over the lag period
-           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tmp_var = sum(DATAin%M_FLUXES(s:dn, 21)) / DATAin%harvest_lag(dn)
            tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
         end do
         scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nharvest))
@@ -1546,10 +1546,10 @@ module model_likelihood_module
         scale_likelihood = scale_likelihood-tot_exp
     end if
 
-    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
+    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1, 8) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -1565,7 +1565,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7, :) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -1574,8 +1574,8 @@ module model_likelihood_module
     if (DATAin%otherpriors(8) > -9998) then
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
-        ! not after the management activities had reset DS to -1. If so this code will not work.
-        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        ! not after the management activities had reset DS to-1. If so this code will not work.
+        mid_state = 0d0; where (DS_time >= 0d0) mid_state = 1d0
         tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
         tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
         scale_likelihood = scale_likelihood-tot_exp
@@ -1585,7 +1585,7 @@ module model_likelihood_module
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
-    scale_likelihood = scale_likelihood * 0.5d0
+    scale_likelihood = scale_likelihood*0.5d0
 
     ! check that log-likelihood is an actual number
     if (scale_likelihood /= scale_likelihood) then
@@ -1598,7 +1598,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function sqrt_scale_likelihood(npars,pars)
+  double precision function sqrt_scale_likelihood(npars, pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, DS_time
 
@@ -1608,22 +1608,22 @@ module model_likelihood_module
     implicit none
 
     ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
+    integer, intent(in):: npars
+    double precision, dimension(npars), intent(in):: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
-    double precision :: tot_exp, tmp_var, infini, input, output
-    double precision, dimension(DATAin%nodays) :: mid_state
-    double precision, allocatable :: mean_annual_pools(:)
+    integer:: n, dn, no_years, y, s
+    double precision:: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays):: mid_state
+    double precision, allocatable:: mean_annual_pools(:)
 
     ! initial value
-    sqrt_scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
+    sqrt_scale_likelihood = 0d0; infini = 0d0; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe), 17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nnbe)))
@@ -1631,7 +1631,7 @@ module model_likelihood_module
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap), 19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nEvap)))
     endif
@@ -1639,7 +1639,7 @@ module model_likelihood_module
 ! FIRE not currently coded into DALEC_CROP_BUCKET
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire), 17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nFire)))
 !    endif
@@ -1684,9 +1684,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
-         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_inc)))
@@ -1697,9 +1697,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_mortality
          dn = DATAin%Cwood_mortalitypts(n)
-         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_mortality)))
@@ -1711,7 +1711,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCfol_stock)))
     endif
@@ -1725,8 +1725,8 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1), 2), y, DATAin%deltat, DATAin%nodays+1)
+       end do  ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
          ! load the observation position in stream
@@ -1747,7 +1747,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_stock)))
     endif
@@ -1759,7 +1759,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCagb_stock
 !         dn = DATAin%Cagb_stockpts(n)
 !         ! remove coarse root fraction from wood (pars29)
-!         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
+!         tmp_var = DATAin%M_POOLS(dn, 4)-(DATAin%M_POOLS(dn, 4)*pars(29))
 !         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
 !       end do
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCagb_stock)))
@@ -1772,7 +1772,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCcoarseroot_stock
 !         dn = DATAin%Ccoarseroot_stockpts(n)
 !         ! extract coarse root component from wood only
-!         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
+!         tmp_var = DATAin%M_POOLS(dn, 4)*pars(29)
 !         tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
 !       end do
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCcoarseroot_stock)))
@@ -1784,7 +1784,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCroots_stock)))
     endif
@@ -1798,7 +1798,7 @@ module model_likelihood_module
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+                           *(DATAin%M_POOLS(dn, 5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nClit_stock)))
     endif
@@ -1809,7 +1809,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCsom_stock)))
     endif
@@ -1819,9 +1819,9 @@ module model_likelihood_module
         tot_exp = 0d0
         do n = 1, DATAin%nharvest
            dn = DATAin%harvestpts(n)
-           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           s = max(0, dn-nint(DATAin%harvest_lag(dn)))+1
            ! Estimate the mean allocation to wood over the lag period
-           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tmp_var = sum(DATAin%M_FLUXES(s:dn, 21)) / DATAin%harvest_lag(dn)
            tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
         end do
         sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nharvest))) 
@@ -1838,10 +1838,10 @@ module model_likelihood_module
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
 
-    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
+    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1, 8) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -1857,7 +1857,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7, :) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -1866,8 +1866,8 @@ module model_likelihood_module
     if (DATAin%otherpriors(8) > -9998) then
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
-        ! not after the management activities had reset DS to -1. If so this code will not work.
-        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        ! not after the management activities had reset DS to-1. If so this code will not work.
+        mid_state = 0d0; where (DS_time >= 0d0) mid_state = 1d0
         tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
         tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
@@ -1877,7 +1877,7 @@ module model_likelihood_module
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
-    sqrt_scale_likelihood = sqrt_scale_likelihood * 0.5d0
+    sqrt_scale_likelihood = sqrt_scale_likelihood*0.5d0
 
     ! check that log-likelihood is an actual number
     if (sqrt_scale_likelihood /= sqrt_scale_likelihood) then
@@ -1890,7 +1890,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  double precision function log_scale_likelihood(npars,pars)
+  double precision function log_scale_likelihood(npars, pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, DS_time
 
@@ -1900,22 +1900,22 @@ module model_likelihood_module
     implicit none
 
     ! declare arguments
-    integer, intent(in) :: npars
-    double precision, dimension(npars), intent(in) :: pars
+    integer, intent(in):: npars
+    double precision, dimension(npars), intent(in):: pars
 
     ! declare local variables
-    integer :: n, dn, no_years, y, s
-    double precision :: tot_exp, tmp_var, infini, input, output
-    double precision, dimension(DATAin%nodays) :: mid_state
-    double precision, allocatable :: mean_annual_pools(:)
+    integer:: n, dn, no_years, y, s
+    double precision:: tot_exp, tmp_var, infini, input, output
+    double precision, dimension(DATAin%nodays):: mid_state
+    double precision, allocatable:: mean_annual_pools(:)
 
     ! initial value
-    log_scale_likelihood = 0d0 ; infini = 0d0 ; mid_state = 0d0
+    log_scale_likelihood = 0d0; infini = 0d0; mid_state = 0d0
 
 ! Currently no distinction between NEE and NBE as fire is not simulated
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe), 17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nnbe))))
@@ -1923,7 +1923,7 @@ module model_likelihood_module
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap), 19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nEvap))))
     endif
@@ -1931,7 +1931,7 @@ module model_likelihood_module
 ! FIRE not currently coded into DALEC_CROP_BUCKET
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire), 17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nFire))))
 !    endif
@@ -1976,9 +1976,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_inc
          dn = DATAin%Cwood_incpts(n)
-         s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_inc))))
@@ -1989,9 +1989,9 @@ module model_likelihood_module
        tot_exp = 0d0
        do n = 1, DATAin%nCwood_mortality
          dn = DATAin%Cwood_mortalitypts(n)
-         s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
+         s = max(0, dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn, 11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_mortality))))
@@ -2003,7 +2003,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCfol_stock))))
     endif
@@ -2017,8 +2017,8 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
-       end do ! year loop
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1), 2), y, DATAin%deltat, DATAin%nodays+1)
+       end do  ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
          ! load the observation position in stream
@@ -2039,7 +2039,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_stock))))
     endif
@@ -2051,7 +2051,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCagb_stock
 !         dn = DATAin%Cagb_stockpts(n)
 !         ! remove coarse root fraction from wood (pars29)
-!         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
+!         tmp_var = DATAin%M_POOLS(dn, 4)-(DATAin%M_POOLS(dn, 4)*pars(29))
 !         tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
 !       end do
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCagb_stock))))
@@ -2064,7 +2064,7 @@ module model_likelihood_module
 !       do n = 1, DATAin%nCcoarseroot_stock
 !         dn = DATAin%Ccoarseroot_stockpts(n)
 !         ! extract coarse root component from wood only
-!         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
+!         tmp_var = DATAin%M_POOLS(dn, 4)*pars(29)
 !         tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
 !       end do
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCcoarseroot_stock))))
@@ -2076,7 +2076,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCroots_stock))))
     endif
@@ -2090,7 +2090,7 @@ module model_likelihood_module
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
          tot_exp = tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+                           *(DATAin%M_POOLS(dn, 5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nClit_stock))))
     endif
@@ -2101,7 +2101,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-         tot_exp = tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+         tot_exp = tot_exp+((DATAin%M_POOLS(dn, 6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCsom_stock))))
     endif
@@ -2111,9 +2111,9 @@ module model_likelihood_module
         tot_exp = 0d0
         do n = 1, DATAin%nharvest
            dn = DATAin%harvestpts(n)
-           s = max(0,dn-nint(DATAin%harvest_lag(dn)))+1
+           s = max(0, dn-nint(DATAin%harvest_lag(dn)))+1
            ! Estimate the mean allocation to wood over the lag period
-           tmp_var = sum(DATAin%M_FLUXES(s:dn,21)) / DATAin%harvest_lag(dn)
+           tmp_var = sum(DATAin%M_FLUXES(s:dn, 21)) / DATAin%harvest_lag(dn)
            tot_exp = tot_exp+((tmp_var-DATAin%harvest(dn)) / DATAin%harvest_unc(dn))**2
         end do
         log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nharvest)))) 
@@ -2130,10 +2130,10 @@ module model_likelihood_module
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
 
-    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
+    ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1, 8) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
@@ -2149,7 +2149,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7, :) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
@@ -2158,8 +2158,8 @@ module model_likelihood_module
     if (DATAin%otherpriors(8) > -9998) then
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
-        ! not after the management activities had reset DS to -1. If so this code will not work.
-        mid_state = 0d0 ; where (DS_time >= 0d0) mid_state = 1d0
+        ! not after the management activities had reset DS to-1. If so this code will not work.
+        mid_state = 0d0; where (DS_time >= 0d0) mid_state = 1d0
         tot_exp = sum(DATAin%M_FLUXES(:,21)*mid_state) / sum(DATAin%M_FLUXES(:,1)*mid_state)
         tot_exp =  DATAin%otherpriorweight(8) * ((tot_exp-DATAin%otherpriors(8))/DATAin%otherpriorunc(8))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
@@ -2169,7 +2169,7 @@ module model_likelihood_module
     ! by 0.5 in the algebraic formulation. To avoid repeated calculation across
     ! multiple datastreams we apply this multiplication to the bulk likelihood
     ! hear
-    log_scale_likelihood = log_scale_likelihood * 0.5d0
+    log_scale_likelihood = log_scale_likelihood*0.5d0
 
     ! check that log-likelihood is an actual number
     if (log_scale_likelihood /= log_scale_likelihood) then

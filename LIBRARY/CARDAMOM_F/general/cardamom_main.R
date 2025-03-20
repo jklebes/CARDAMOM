@@ -66,7 +66,7 @@ model_parmax <- .C("C_getmodelparmax", n=model_npars, out)[[2]]
 print("Fetched model parmax")
 print(model_parmax)
 
-out <- .C("C_setparini")
+
 data_parini <- .C("C_getexampleparini", n=model_npars, out)[[2]]
 print("Fetched parini from DATAin")
 print(data_parini)
@@ -75,8 +75,9 @@ initial <- data_parini
 #print("Generating npars random values TODO with bounds in parinfo")
 #initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
 get_initial <- function(){
-    # more specific initial conditions passing EDC1
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
+    # more specific initial conmodel_nparsditions passing EDC1
+    initial <- data_parini
+    initial[initial==-9999] <- (runif(model_npars)*(model_parmax-model_parmin) + model_parmin)[initial==-9999]
     #1 and 8 must be greater than 9
     initial[1] <- runif(1)*(model_parmax[1]-initial[9]) + initial[9]
     initial[8] <-  runif(1)*(model_parmax[8]-initial[9]) + initial[9]
@@ -84,41 +85,64 @@ get_initial <- function(){
     initial[29] <-  runif(1)*(model_parmax[29]-initial[30]) + initial[30]
     initial[32] <-  runif(1)*(model_parmax[32]-initial[30]) + initial[30]
     return(initial)
-}#
-parmax
+}
+
+get_initial <- function(){
+    initial <- runif(model_npars)#*(model_parmax-model_parmin) + model_parmin
+}
+
 # call modellikelihood once as a test
+print("random initial:")
+initial <- get_initial()
+print(initial)
 print("initial loglikelihood:")
 ll <- 0.0
-ll0 <- .C("C_modellikelihood", initial, model_npars,ll)[[3]]
-print(ll0)
+#ll0 <- .C("C_modellikelihood", initial, model_npars,ll)[[3]]
+#print(ll0)
 
 #wrap that .C function to a more usual R function
 cardamom_modellikelihood <- function(pars){
     npars <- length(pars)
     out <- 0.0
-    ll <- .C("C_modellikelihood", initial, npars, out)[[3]]
+    ll <- .C("C_modellikelihood", parse(), npars, out)[[3]]
+}
+
+cardamom_edcmodellikelihood <- function(pars){
+    npars <- length(pars)
+    out <- 0.0
+    ll <- .C("C_edcmodellikelihood", pars, npars, out)[[3]]
+}
+
+nor2pars <- function(nor){
+    pars <- nor*(model_parmax-model_parmin) + model_parmin
+}
+
+cardamom_edcmodellikelihoodnorm <- function(nor){
+    pars <- nor2pars(nor)
+    ll <- cardamom_edcmodellikelihood(pars)
 }
 
 #test 
-ll0 <- cardamom_modellikelihood(initial)
+par2s <- rep(0,10)
+lls <- rep(0,10)
+for (i in 1:10){
+print("random initial:")
+initial <- get_initial()
+par2s[i] = initial[2]
+ll0 <- cardamom_edcmodellikelihoodnorm(initial)
+lls[i] = 
 print(ll0)
-
-# generate initial values fulfilling assess_edc1 ...
-#while (is.infinite(ll0)) {
-#    initial <- get_initial()
-#    ll0 <- cardamom_modellikelihood(initial)
-#    print(ll0)
-#}
+}
 
 print("Running R MCMC")
 
-bayesianSetup = createBayesianSetup(modellikelihood_R, model_parmin, model_parmax)
+bayesianSetup = createBayesianSetup(
+    likelihood = cardamom_edcmodellikelihoodnorm, 
+    lower = rep(0,model_npars), 
+    upper = rep(1, model_npars))
 
 # ============= RUN MCMC ===========
 
-iter = 1000
-settings = list(iterations=iter)
-out <- runMCMC(bayesianSetup, sampler="Metropolis", settings=settings)
-
-
-
+iter = 1000000
+settings = list(iterations=iter, startValue=initial, adapt=TRUE)
+out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)

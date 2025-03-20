@@ -132,7 +132,7 @@ contains
     type ( counters ):: N
     double precision, dimension(PI%npars):: norPARS0      & ! normalised parameter values for current state
                                             ,norPARS       & ! normalised parameter values for current proposal
-                                            ,PARS0         & ! parameter values for current state
+                                            ,PARS0         & ! parameter model_likelihood_optionvalues for current state
                                             ,PARS          & ! parameter values for current proposal
                                             ,BESTPARS        ! best set of parameters so far
 

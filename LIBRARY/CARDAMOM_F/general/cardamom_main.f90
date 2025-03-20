@@ -12,8 +12,8 @@ program cardamom_framework
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, find_edc_initial_values, &
-    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!to replace soon with wrappers
-use model_likelihood_wrapper !TODO next step
+    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
+use model_likelihood_wrapper  ! TODO next step
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -125,7 +125,7 @@ use model_likelihood_wrapper !TODO next step
      ! call special functions to prepare for stress test
      call prepare_for_stress_test(infile, outfile)
  else
-    ! TODO must always be called in this order - so bundle to initialize()
+    ! TODO must always be called in this order-so bundle to initialize()
     ! call initialize_parinfo()
     ! call read_check_binary_data(infile)
     ! call initialize_model()
@@ -139,16 +139,17 @@ use model_likelihood_wrapper !TODO next step
  call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, MCO%sub_fraction, &
                                       MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
  ! Initialise MCMC output, possibly a bit of a redundent subroutine...
- call initialise_mcmc_output
- ! Open the relevant output files
+ call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
+ ! Open the relevant output files TODO now happens in run_mcmc
  call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
 
  ! Initialise counters used to track the output of parameter sets
+ !TODO now each chain has its own 
  io_space%io_buffer_count = 0
  io_space%io_buffer = min(1000, max(10, (MCO%nOUT/MCO%nWRITE) / 10))
 
  ! Allocate variables used in io buffering, 
- ! these could probably be moved to a more sensible place within cardamom_io.f90
+ ! these could probably be moved to a more sensible place within cardamom_io.f90 DONE
  allocate(io_space%variance_buffer(PI%npars, io_space%io_buffer), &
           io_space%mean_pars_buffer(PI%npars, io_space%io_buffer), &
           io_space%pars_buffer(PI%npars, io_space%io_buffer), &

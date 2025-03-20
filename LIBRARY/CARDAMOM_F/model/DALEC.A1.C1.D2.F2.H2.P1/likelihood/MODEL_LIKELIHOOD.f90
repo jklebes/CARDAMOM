@@ -17,7 +17,8 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public :: model_likelihood, find_edc_initial_values, &
+  ! TODO will have to expose edc_model_likelihood in all models ...
+  public :: edc_model_likelihood, model_likelihood, find_edc_initial_values, &
             sqrt_model_likelihood, sub_model_likelihood, log_model_likelihood
 
   ! declare needed types
@@ -176,7 +177,8 @@ module model_likelihood_module
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
-    if (.not.sanity_check) call model_sanity_check(PI%parini)
+    ! TODO not check on PI%parini . 
+    if (.not.sanity_check) call model_sanity_check(PARS)
 
     ! call EDCs which can be evaluated prior to running the model
     call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
@@ -469,6 +471,7 @@ module model_likelihood_module
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
                      ,DATAin%M_GPP)
+                     
 !print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &

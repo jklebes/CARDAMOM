@@ -8,7 +8,7 @@ module model_likelihood_wrapper
 ! that can be used as input to cardamom_samplers 
 
 use model_likelihood_module, only: model_likelihood, &
-                            find_edc_initial_values, &
+                            edc_model_likelihood, find_edc_initial_values, & 
           sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
 use iso_c_binding
 implicit none
@@ -87,6 +87,21 @@ subroutine sqrt_model_likelihood_fct(params, npars, loglikelihood) bind(c, name=
   loglikelihood = ML_obs_out+ML_prior_out
 end subroutine
 
+! the function for starting loops, which finds a set of parameters fulfilling otherwise
+! hard boundary conditions with a softer potential
+subroutine edc_model_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_edcmodellikelihood")
+  use iso_c_binding
+  implicit none
+  integer(c_int), intent(in)  :: npars
+  real(c_double), intent(inout), dimension(npars):: params
+  real(c_double), intent(out):: loglikelihood
+
+  real(c_double):: ML_obs_out, ML_prior_out
+
+  call edc_model_likelihood(params, ML_obs_out, ML_prior_out)
+
+  loglikelihood = ML_obs_out+ML_prior_out
+end subroutine
 
 ! helpers for use from R-
 ! TODO different module and file
@@ -133,6 +148,7 @@ subroutine inintialize_example_FI_Hyy() bind(c, name = "C_TMP_initialize")
   implicit none
   character(len=350)  :: filename
   filename = "/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin"
+  ! TODO add results
   call initialize(filename)
 end subroutine
 
@@ -149,10 +165,12 @@ end subroutine
 subroutine get_parini(npars, parini) bind(c, name="C_getexampleparini")
   use iso_c_binding
   use MCMCOPT, only: PI
+  use cardamom_structures, only: DATAin
   implicit none
   integer(c_int) , intent(in) :: npars
   real(c_double), dimension(npars), intent(out)  :: parini
-  parini =  PI%parini
+  PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+  parini = PI%parini
 end subroutine
 
 
