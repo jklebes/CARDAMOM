@@ -1,5 +1,5 @@
 
-module cardamom_io
+module samplers_io
 
   !!!!!!!!!!!
   !
@@ -404,4 +404,4 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-end module cardamom_io
+end module samplers_io

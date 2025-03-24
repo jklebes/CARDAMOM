@@ -24,9 +24,6 @@ module cardamom_io
   ! allow access to specific functions
   public:: update_for_restart_simulation   &
           ,find_edc_initial_values          &
-           ,check_for_existing_output_files &
-           ,open_output_files               &
-           ,close_output_files              &
            ,cardamom_model_library          &
            ,initialize                      &
            ,read_options                    &
@@ -249,6 +246,9 @@ module cardamom_io
     !! pre-loop, Run MCMC sampler with modified likelihood fct  
     use model_shared, only: PI
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc
+    use model_likelihood_module, only: model_likelihood, &
+    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
+    use model_likelihood_wrapper  ! TODO next refactoring step
     use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
 
 
@@ -257,7 +257,6 @@ module cardamom_io
     ! declare local variables
     type(MCMC_OUTPUT), intent(out):: MCOUT  ! TODO array
     type(MCMC_OPTIONS), intent(out):: MCO
-    type(MCSTATS), intent(out):: stats
     integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, append_save
     double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
@@ -315,7 +314,7 @@ module cardamom_io
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood
-           call run_mcmc(P_target, model_likelihood, edc_model_likelihood)
+           call run_mcmc(edc_model_likelihood_wrapper, PI, MC), MCOUT, model_likelihood_wrapper)
 
            ! store the best parameters from that loop
            parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
@@ -1332,8 +1331,8 @@ module cardamom_io
     do i = 1, PI%npars
        MCOUT%parvar(i) = MCOUT%covariance(i, i)
     end do
-    ! estimate status of the inverse covariance matrix
-    call inverse_matrix( PI%npars, MCOUT%covariance, PI%iC )
+    ! estimate status of the inverse covariance matrix-iC never used
+    ! call inverse_matrix( PI%npars, MCOUT%covariance, PI%iC )
 
     !
     ! Covariance information file
@@ -1367,8 +1366,8 @@ module cardamom_io
     end do  ! i for combinations
     ! Store the most recent step size, which corresponds with the saved
     ! parmeters (above) and covariance matrix (below)
-    PI%meanpar = tmp(num_lines, 1:DATAin%nopars)
-    PI%Nparvar = tmp(num_lines, DATAin%nopars+1)
+    MCOUT%meanpar = tmp(num_lines, 1:DATAin%nopars)
+    MCOUT%Nparvar = tmp(num_lines, DATAin%nopars+1)
 
     return
 

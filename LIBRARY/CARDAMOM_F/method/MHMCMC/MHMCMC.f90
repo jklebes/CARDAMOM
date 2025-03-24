@@ -40,7 +40,7 @@ module MHMCMC
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout) 
 
 use samplers_shared, only: PARINFO
-use cardamom_io, only: io_buffer_space, initialize_buffers, open_output_files
+use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
 use OMP_LIB
 
 implicit none
@@ -232,7 +232,7 @@ contains
   subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart_in, chainid)
     use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
     use samplers_shared, only : init_pars_random, bounds_check, is_infinity, metropolis_choice
-    use cardamom_io, only: write_parameters, write_variances, write_covariance_matrix &
+    use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
                           ,write_covariance_info, restart_flag, write_mcmc_output, open_output_files
     use random_uniform, ONLY: UNIF_VECTOR, initialize
     ! declare any local variables
@@ -593,7 +593,7 @@ end subroutine
   !------------------------------------------------------------------
   !
   subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, ACCLOC, N_before_mv_target)
-    use cardamom_io, only: write_covariance_matrix, write_covariance_info
+    use samplers_io, only: write_covariance_matrix, write_covariance_info
     use samplers_math, only: nor2par, par2nor, log_nor2par, log_par2nor, &
                               cholesky_factor, std, covariance_matrix, &
                               increment_covariance_matrix

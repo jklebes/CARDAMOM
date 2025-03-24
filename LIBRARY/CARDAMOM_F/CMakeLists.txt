@@ -18,7 +18,7 @@ set(FILES2  general/cardamom_structures.f90
 add_library(cardamom-samplers-lib SHARED
               method/math.f90
               method/random_uniform.f90
-              method/samplers_io/cardamom_io.f90
+              method/samplers_io/samplers_io.f90
               method/samplers_shared.f90
               method/DEMCz.f90
               method/MHMCMC/MHMCMC.f90
