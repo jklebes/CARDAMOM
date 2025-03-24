@@ -37,7 +37,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values
-    use MCMCOPT, only: PI, MCOUT, MCO
+    use model_shared, only: PI, MCOUT, MCO
     use cardamom_structures, only: DATAin ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
     use MHMCMC_MODULE, only: MHMCMC
@@ -151,7 +151,7 @@ module model_likelihood_module
   !
   subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Model likelihood function specifically intended for the determination of
@@ -216,7 +216,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -291,7 +291,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine sqrt_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -366,7 +366,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine log_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -442,7 +442,7 @@ module model_likelihood_module
   !
   subroutine model_sanity_check(PARS)
     use cardamom_structures, only: DATAin
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Carries out multiple carbon model iterations using the same parameter set
@@ -1036,7 +1036,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use MCMCOPT, only:  PI
+    use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 

@@ -110,7 +110,7 @@ end subroutine
 subroutine get_npars(npars) bind(c, name="C_getmodelnpars")
   use iso_c_binding
   use model_parameters, only: pars_info
-  use MCMCOPT, only: PI
+  use model_shared, only: PI
   implicit none
   integer(c_int), intent(out)  :: npars
   call pars_info()  ! ideally this would bt written in an object, not a function in model_parameters
@@ -122,7 +122,7 @@ end subroutine
 subroutine get_parmin(npars, parmin) bind(c, name="C_getmodelparmin")
   use iso_c_binding
   use model_parameters, only: pars_info
-  use MCMCOPT, only: PI
+  use model_shared, only: PI
   implicit none
   integer(c_int), intent(in):: npars
   real(c_double), dimension(npars), intent(out)  :: parmin
@@ -133,7 +133,7 @@ end subroutine
 subroutine get_parmax(npars, parmax) bind(c, name="C_getmodelparmax")
     use iso_c_binding
     use model_parameters, only: pars_info
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
     implicit none
     integer(c_int), intent(in):: npars
     real(c_double), dimension(npars), intent(out)  :: parmax
@@ -164,7 +164,7 @@ end subroutine
 ! get the compiled model's parini (after initialization) list for R
 subroutine get_parini(npars, parini) bind(c, name="C_getexampleparini")
   use iso_c_binding
-  use MCMCOPT, only: PI
+  use model_shared, only: PI
   use cardamom_structures, only: DATAin
   implicit none
   integer(c_int), intent(in):: npars

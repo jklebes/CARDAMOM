@@ -25,7 +25,7 @@ module MODEL_PARAMETERS
   !------------------------------------------------------------------
   !
   subroutine pars_info
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or

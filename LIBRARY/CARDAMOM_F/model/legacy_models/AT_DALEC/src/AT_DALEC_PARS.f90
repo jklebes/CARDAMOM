@@ -25,7 +25,7 @@ module MODEL_PARAMETERS
   !------------------------------------------------------------------
   !
   subroutine pars_info
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -98,7 +98,7 @@ module MODEL_PARAMETERS
     ! Subroutine reads specific parameter ranges for the
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
 
     implicit none
 
@@ -212,7 +212,7 @@ module MODEL_PARAMETERS
     ! Subroutine reads specific parameter ranges for the
     ! generic AT_DALEC model
 
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
 
     implicit none
 
@@ -328,7 +328,7 @@ module MODEL_PARAMETERS
   !
   subroutine crop_development_parameters
 
-    use MCMCOPT, only: PI
+    use model_shared, only: PI
 
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
