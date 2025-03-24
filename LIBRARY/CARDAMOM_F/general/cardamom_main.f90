@@ -257,11 +257,11 @@ use model_likelihood_wrapper  ! TODO next refactoring step
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
-     stats%Nparvar = 0d0; stats%parvar = 0d0
-     stats%covariance = 0d0; stats%meanpar = 0d0
-     stats%cov = .false. ; stats%use_multivariate = .false.
+     MCOUT%Nparvar = 0d0; MCOUT%parvar = 0d0
+     MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0
+     MCOUT%cov = .false. ; MCOUT%use_multivariate = .false.
      do n = 1, PI%npars
-        stats%covariance(n, n) = 1d0
+        MCOUT%covariance(n, n) = 1d0
      end do
 
      if (restart_flag) then

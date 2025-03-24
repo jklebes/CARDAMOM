@@ -89,12 +89,6 @@ end type MCMC_OPTIONS
 
 !> Collect ongoing statistics (means, covariance matrix, etc) for each chain
 type MCSTATS
-double precision:: Nparvar, Nparvar_local 
-double precision, allocatable, dimension(:):: parvar, meanpar
-double precision, allocatable, dimension(:,:):: covariance
-logical:: cov = .false. ! Does the covariance matrix exist yet?
-logical:: use_multivariate
-logical:: multivariate_proposal
 end type
 
 
@@ -106,7 +100,13 @@ double precision, allocatable, dimension(:):: bestpars, pars
 double precision:: acceptance_rate
 logical:: complete 
 integer:: nos_iterations
-type(mcstats):: stats
+!stats collection: 
+double precision:: Nparvar, Nparvar_local 
+double precision, allocatable, dimension(:):: parvar, meanpar
+double precision, allocatable, dimension(:,:):: covariance
+logical:: cov = .false. ! Does the covariance matrix exist yet?
+logical:: use_multivariate
+logical:: multivariate_proposal
 end type MCMC_OUTPUT
 
 contains
@@ -279,7 +279,6 @@ contains
     integer:: MAXITER, nchains, npars
     ! counters-local to this chain's run
     integer:: ITER, ACC, ACC_FIRST, ACCLOC
-    ! acceptance ratios derived from counters  !TODO possibly belong in stats struct
     double precision:: ACCRATE, ACCRATE_GLOBAL
 
 
@@ -294,7 +293,6 @@ contains
     !double precision:: Nparvar 
     !double precision, dimension(PI%npars):: parvar, meanpar
     !double precision, dimension(PI%npars, PI%npars):: convariance
-    type (MCSTATS):: stats
 
     interface
     subroutine model_likelihood(param_vector, n, ML)
@@ -327,15 +325,15 @@ contains
     nchains = MCO%N_chains
     MAXITER = MCO%MAXITER
     P_target = MCO%P_target
-    stats%use_multivariate = MCO%use_multivariate
+    MCOUT%use_multivariate = MCO%use_multivariate
     beta = MCO%beta
     par_minstepsize = MCO%par_minstepsize
 
     ! initialize output fields
-    stats%Nparvar = 0
-    allocate(stats%parvar(npars))
-    allocate(stats%meanpar(npars))
-    allocate(stats%covariance(npars, npars))
+    MCOUT%Nparvar = 0
+    allocate(MCOUT%parvar(npars))
+    allocate(MCOUT%meanpar(npars))
+    allocate(MCOUT%covariance(npars, npars))
 
     ! process file names 
     parfilename = MCO%parfilename
@@ -435,8 +433,8 @@ contains
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 
        ! should include reflectivenedd/redrawing 
-       multivariate = stats%use_multivariate .and. (stats%Nparvar > MCO%N_before_mv_target)
-       call step_pars_real(PARS_previous, PARS_proposed, PI, multivariate, stats%covariance, beta, opt_scaling, par_minstepsize, &
+       multivariate = MCOUT%use_multivariate .and. (MCOUT%Nparvar > MCO%N_before_mv_target)
+       call step_pars_real(PARS_previous, PARS_proposed, PI, multivariate, MCOUT%covariance, beta, opt_scaling, par_minstepsize, &
           uniform_random_vector) 
        ! if parameter proposal in bounds check the model
        ! TODO LATER if we get a reflective gaussian kernel, no need to check
@@ -466,7 +464,7 @@ contains
            ! Keep count of the number of accepted proposals in this local period
            ACCLOC = ACCLOC+1
            ! Accepted first proposal from multivariate
-           if (stats%multivariate_proposal) ACC_first = ACC_first+1 !!TODO what is this counter ?
+           if (MCOUT%multivariate_proposal) ACC_first = ACC_first+1 !!TODO what is this counter ?
            ! TODO may have to do with whether to calc covariance matrix
 
            PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save as previous pars
@@ -490,9 +488,9 @@ contains
                ! searching
                call model_likelihood_write(PARS_proposed, npars, output_loglikelihood)
                ! Now write out to files
-               call write_mcmc_output(stats%parvar, ACCRATE, &
-                                      stats%covariance, &
-                                      stats%meanpar, stats%Nparvar, &
+               call write_mcmc_output(MCOUT%parvar, ACCRATE, &
+                                      MCOUT%covariance, &
+                                      MCOUT%meanpar, MCOUT%Nparvar, &
                                       PARS_previous, output_loglikelihood, npars, ITER == MCO%nOUT, io_space)
            end if 
        end if  ! write or not to write
@@ -519,7 +517,7 @@ contains
                ! Once covariance matrix has been created just update based on a
                ! single parameter set from each period.
             ! TODO ??
-               if (stats%cov) then
+               if (MCOUT%cov) then
                    ACCLOC = 1
                    PARSALL(1:npars, ACCLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
                    ! leads to call to increment_covariance_matrix with the one new row
@@ -532,7 +530,7 @@ contains
 
                ! adapt the covariance matrix for multivariate proposal
                ! TODO rename "parsall" to replect it's really a small subsample of period's history
-               call update_statistics(PARSALL, npars, stats, stats%use_multivariate, ACCLOC, MCO%N_before_mv_target)
+               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, MCO%N_before_mv_target)
 
            end if !  have enough parameter been accepted
            ! TODO what if MCO%use_multivariate ???
@@ -564,7 +562,7 @@ contains
     !!!  Finalize 
 
     ! write out final covariance matrix for the analysis
-    if (MCO%nwrite > 0) call write_covariance_matrix(stats%covariance, npars, .false.)
+    if (MCO%nwrite > 0) call write_covariance_matrix(MCOUT%covariance, npars, .false.)
 
     ! record the best single set of parameters
     MCOUT%bestpars = BESTPARS
@@ -594,7 +592,7 @@ end subroutine
   !
   !------------------------------------------------------------------
   !
-  subroutine update_statistics(PARSALL, npars, stats, use_multivariate, ACCLOC, N_before_mv_target)
+  subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, ACCLOC, N_before_mv_target)
     use cardamom_io, only: write_covariance_matrix, write_covariance_info
     use samplers_math, only: nor2par, par2nor, log_nor2par, log_par2nor, &
                               cholesky_factor, std, covariance_matrix, &
@@ -607,7 +605,7 @@ end subroutine
     implicit none
 
     ! declare input types
-    type(MCSTATS), intent(inout):: stats  ! statistics collection
+    type(MCMC_OUTPUT), intent(inout):: MCOUT  ! incl statistics collection
     logical, intent (inout):: use_multivariate
     ! declare inputs variables
     integer, intent(in):: npars
@@ -624,12 +622,12 @@ end subroutine
     double precision:: N_before_mv_target
 
     ! if we have a covariance matrix then we want to update it, if not then we need to create one
-    if (stats%cov) then
+    if (MCOUT%cov) then
 
         ! Increment the variance-covariance matrix with new accepted parameter sets
         ! NOTE: that this also increments the total accepted counter (PI%Nparvar)
 
-        cov_backup = stats%covariance; meanpar_backup = stats%meanpar; Nparvar_backup = stats%Nparvar
+        cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
 !        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
 !                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
@@ -638,11 +636,11 @@ end subroutine
         ! this allows for the covariance matrix to be more responsive to its local environment.
         !! TODO discuss 
         Nparvar_local = min(N_before_mv_target, Nparvar_backup)
-        call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), stats%meanpar, npars &
-                                        ,Nparvar_local, ACCLOC, stats%covariance)
+        call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
+                                        ,Nparvar_local, ACCLOC, MCOUT%covariance)
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
-        call cholesky_factor( npars, stats%covariance, info )
+        call cholesky_factor( npars, MCOUT%covariance, info )
         ! If the updated covariance matrix is not positive definite we should
         ! reject the update in favour of the existing matrix
         ! TODO ??
@@ -656,9 +654,9 @@ end subroutine
             ! should keep it and accumulate the information
             if (use_multivariate) then
                 ! return original matrix to place
-                stats%covariance = cov_backup
-                stats%meanpar = meanpar_backup
-                stats%Nparvar = Nparvar_backup
+                MCOUT%covariance = cov_backup
+                MCOUT%meanpar = meanpar_backup
+                MCOUT%Nparvar = Nparvar_backup
             else
                 ! Keep accumulating use_multivariatethe information
                 use_multivariate = .false.
@@ -672,13 +670,13 @@ end subroutine
         if (ACCLOC > 2) then
 
             ! estimate covariance matrix
-            call covariance_matrix(PARSALL(1:npars, 1:ACCLOC), stats%meanpar, &
-            & npars, ACCLOC, stats%covariance)
-            stats%cov = .true. ; stats%Nparvar = ACCLOC
+            call covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, &
+            & npars, ACCLOC, MCOUT%covariance)
+            MCOUT%cov = .true. ; MCOUT%Nparvar = ACCLOC
 
             ! Calculate the cholesky factor as this includes a determination of
             ! whether the covariance matrix is positive definite.
-            call cholesky_factor ( npars, stats%covariance, info )
+            call cholesky_factor ( npars, MCOUT%covariance, info )
             ! If not positive definite then we should not use the multivariat
             
             ! step at this time.
@@ -695,8 +693,8 @@ end subroutine
 
             ! write out first covariance matrix, this will be compared with the final covariance matrix
             !if (MCO%nWRITE > 0) then
-                call write_covariance_matrix(stats%covariance, npars, .true.)
-                call write_covariance_info(stats%meanpar, stats%Nparvar, npars)
+                call write_covariance_matrix(MCOUT%covariance, npars, .true.)
+                call write_covariance_info(MCOUT%meanpar, MCOUT%Nparvar, npars)
             !endif
 
         end if  ! N%ACCLOC > 2
@@ -780,10 +778,10 @@ end subroutine
         call random_normal(random_uniform_vector, rn2(p))
     end do
 
-    if (multivariate) then !((stats%use_multivariate .and. stats%Nparvar > N_before_mv_target)) then
+    if (multivariate) then !((MCOUT%use_multivariate .and. MCOUT%Nparvar > N_before_mv_target)) then
 
         ! Is this step a multivariate proposal or not
-        ! stats%multivariate_proposal = .true. ! this only affects ACC_first counter  ! TODO move to where use_multivariate, Nparvar updates
+        ! MCOUT%multivariate_proposal = .true. ! this only affects ACC_first counter  ! TODO move to where use_multivariate, Nparvar updates
 
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
@@ -800,7 +798,7 @@ end subroutine
 
     else 
 
-      !stats%multivariate_proposal = .false.
+      !MCOUT%multivariate_proposal = .false.
       pars = pars0 + (par_minstepsize*rn2)
 
     end if

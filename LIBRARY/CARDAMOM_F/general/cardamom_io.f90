@@ -294,16 +294,15 @@ module cardamom_io
 !    end do  ! parameter loop
 
     ! set the parameter step size at the beginning
-    stats%parvar = 1d0; stats%Nparvar = 0d0
-    stats%use_multivariate = .false.
+    MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
+    MCOUT%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    stats%covariance = 0d0; stats%meanpar = 0d0; stats%cov = .false.
+    MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
     do n = 1, PI%npars
-       stats%covariance(n, n) = 1d0
+       MCOUT%covariance(n, n) = 1d0
     end do
 
-    MCOUT%stats = stats
     
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
@@ -338,15 +337,14 @@ module cardamom_io
                MCO%randparini = .true.
                ! reset the parameter step size at the beginning of each attempt
                ! TODO make fct initialize stats
-               stats%parvar = 1d0; stats%Nparvar = 0d0
+               MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set initial value to a
                ! small positive value along to variance access
-               stats%covariance = 0d0; stats%meanpar = 0d0; stats%cov = .false.
-               stats%use_multivariate = .false.
+               MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
+               MCOUT%use_multivariate = .false.
                do n = 1, PI%npars
-                  stats%covariance(n, n) = 1d0
+                  MCOUT%covariance(n, n) = 1d0
                end do
-               mcout%stats = stats
            else
                PEDC_prev = PEDC
            endif
@@ -1251,7 +1249,7 @@ module cardamom_io
     ! Extract the final parameter set and load into the initial parameter vector
     ! for the analysis. NOTE: This parameter set will be normalised on entry
     ! into the MHMCMC subroutine
-    parini(1:DATAin%nopars) = tmp(num_lines, 1:DATAin%nopars)
+    parini = tmp(num_lines, 1:DATAin%nopars)
 
     ! free up variable for new file
     deallocate(tmp)
