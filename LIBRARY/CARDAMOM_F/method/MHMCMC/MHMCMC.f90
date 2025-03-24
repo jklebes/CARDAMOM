@@ -51,11 +51,10 @@ public
 !> contains default values 
 type MCMC_OPTIONS
 integer:: MAXITER = 10000  ! overall steps, if convergence not reached
-integer:: n_steps  =1000  ! steps per "local" sampling period, between adaptation steps
+integer:: nadapt  =1000  ! steps per "local" sampling period, between adaptation steps
 integer:: N_chains = 1  ! consider setting OMP env to something compatible
 integer:: nwrite = 1000
 integer:: nprint = 1000
-integer:: nadapt = 1000
 real:: P_target  ! termination criteria 
 ! file names
 character(350):: parfilename = "parout.txt"
@@ -251,7 +250,7 @@ contains
                                             ,PARS_proposed          & ! parameter values for current proposal
                                             ,BESTPARS        ! best set of parameters so far
 
-    double precision, dimension(PI%npars, MCO%n_steps):: PARSALL  ! All accepted normalised parameters since previous step adaption
+    double precision, dimension(PI%npars, MCO%nadapt):: PARSALL  ! All accepted normalised parameters since previous step adaption
     double precision:: loglikelihood_previous, loglikelihood_proposed
         !! loglikelihood of a set of parameters 
     double precision:: output_loglikelihood
@@ -496,7 +495,7 @@ contains
        end if  ! write or not to write
 
        ! time to adapt?
-       if (mod(ITER, MCO%n_steps) == 0) then
+       if (mod(ITER, MCO%nadapt) == 0) then
             ! TODO fct
 !           ! Debugging print statements
 !           print*,"mcmc: time to adapt"
@@ -508,7 +507,7 @@ contains
            ACCRATE_GLOBAL = ACC/ITER
 
            ! Calculate local acceptance rate (i.e. since last adapt)
-           ACCRATE = ACCLOC/dble(MCO%n_steps)
+           ACCRATE = ACCLOC/dble(MCO%nadapt)
 
            ! Second, are we still in the adaption phase?
            ! TODO how does fortran integer division work

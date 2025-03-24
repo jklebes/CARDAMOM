@@ -36,7 +36,7 @@ module DEMCz_module
    !> contains default values 
    type DEMCzOPT
       integer:: MAXITER  ! overall steps, if convergence not reached
-      integer:: n_steps  ! steps per independent sampling period
+      integer:: nadapt  ! steps per independent sampling period
       integer:: N_chains  ! consider setting OMP env to something compatible
       double precision:: differential_weight = 0.8  ! differential weight gamma, [0, 2]
       double precision:: crossover_probability = 0.9  ! crossover probability CR, [0, 1]
@@ -124,7 +124,7 @@ contains
       npars = PI%npars
       nchains = MCO%N_chains
       MAXITER = MCO%MAXITER
-      Ksteps = MCO%n_steps
+      Ksteps = MCO%nadapt
 
       ! Allocate arrays
 
