@@ -18,7 +18,7 @@ module model_likelihood_module
 
   ! which to make open
   ! TODO will have to expose edc_model_likelihood in all models ...
-  public:: edc_model_likelihood, model_likelihood, find_edc_initial_values, &
+  public::  model_likelihood, find_edc_initial_values, &
             sqrt_model_likelihood, sub_model_likelihood, log_model_likelihood
 
   ! declare needed types
@@ -38,6 +38,7 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   subroutine find_edc_initial_values
+    ! Not used!  Replaced by cardamom_main find_edc_initial_values .
     use MCMCOPT, only: PI, MCOUT, MCO
     use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
     use cardamom_io, only: restart_flag
@@ -88,7 +89,7 @@ module model_likelihood_module
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
+    PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
     do n = 1, PI%npars
        PI%covariance(n, n) = 1d0
     end do
@@ -107,7 +108,7 @@ module model_likelihood_module
            call MHMCMC(P_target, model_likelihood, edc_model_likelihood)
 
            ! store the best parameters from that loop
-           PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+           PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
            ! turn off random selection for initial values
            MCO%randparini = .false.
            write(*,*)"...intermediate EDC search progress check"
@@ -128,7 +129,7 @@ module model_likelihood_module
                PI%parvar = 1d0; PI%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set initial value to a
                ! small positive value along to variance access
-               PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
+               PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
                PI%use_multivariate = .false.
                do n = 1, PI%npars
                   PI%covariance(n, n) = 1d0
@@ -144,7 +145,7 @@ module model_likelihood_module
     ! reset so that currently saved parameters will be used
     ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
-    MCOUT%best_pars = 0d0
+    MCOUT%bestpars = 0d0
 
   end subroutine find_edc_initial_values
   !

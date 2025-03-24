@@ -23,6 +23,7 @@ module cardamom_io
 
   ! allow access to specific functions
   public:: update_for_restart_simulation   &
+          ,find_edc_initial_values          &
            ,check_for_existing_output_files &
            ,open_output_files               &
            ,close_output_files              &
@@ -48,7 +49,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine cardamom_model_library
+  subroutine cardamom_model_library  ! TODO might be for model_shared
     use cardamom_structures, only: DATAin
     implicit none
 
@@ -239,6 +240,128 @@ module cardamom_io
     endif
 
   end subroutine cardamom_model_library
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine find_edc_initial_values(MCO, MCOUT)  ! TODO move this and others to main loop fcts collection
+    !! subroutine deals with the determination of initial parameter and initial
+    !! conditions which are consistent with EDCs
+    !! pre-loop, Run MCMC sampler with modified likelihood fct  
+    use model_shared, only: PI
+    use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc
+    use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
+
+
+    implicit none
+
+    ! declare local variables
+    type(MCMC_OUTPUT), intent(out):: MCOUT  ! TODO array
+    type(MCMC_OPTIONS), intent(out):: MCO
+    type(MCSTATS), intent(out):: stats
+    integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, append_save
+    double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
+    double precision, dimension(PI%npars+1):: EDC_pars
+    double precision, dimension(PI%npars):: parini  ! local variable, or array
+
+    ! Hold for later
+    nOUT_save = MCO%nOUT; nWRITE_save = MCO%nWRITE; nADAPT_save = MCO%nADAPT
+    append_save = MCO%append
+
+    ! set MCMC options needed for EDC run
+    MCO%APPEND = 0
+    MCO%nADAPT = 500
+    MCO%fADAPT = 1d0
+    MCO%nOUT = 100000
+    MCO%nPRINT = 0
+    MCO%nWRITE = 0
+    ! the next two lines ensure that parameter inputs are either given or
+    ! entered as-9999
+    MCO%randparini = .true.
+    MCO%returnpars = .true.
+    MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
+
+    ! Set initial priors to vector...
+    ! TODO array for multichain
+    parini = DATAin%parpriors(1:PI%npars)
+    ! ... and assume we need to find random parameters
+    ! Target likelihood allows for controlling when the MCMC will stop
+    P_target = 0d0
+
+    ! if the prior is not missing and we have not told the edc to be random
+    ! keep the value
+!    do n = 1, PI%npars
+!       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
+!    end do  ! parameter loop
+
+    ! set the parameter step size at the beginning
+    stats%parvar = 1d0; stats%Nparvar = 0d0
+    stats%use_multivariate = .false.
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    stats%covariance = 0d0; stats%meanpar = 0d0; stats%cov = .false.
+    do n = 1, PI%npars
+       stats%covariance(n, n) = 1d0
+    end do
+
+    MCOUT%stats = stats
+    
+    ! if this is not a restart run, i.e. we do not already have a starting
+    ! position we must being the EDC search procedure to find an ecologically
+    ! consistent initial parameter set
+    if (.not. restart_flag) then  ! TODO outside-only run this fct if not restart
+
+        ! set up edc log likelihood for MHMCMC initial run
+        PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
+        do while (PEDC < 0d0)
+
+           write(*,*)"Beginning EDC search attempt"
+           ! call the MHMCMC directing to the appropriate likelihood
+           call run_mcmc(P_target, model_likelihood, edc_model_likelihood)
+
+           ! store the best parameters from that loop
+           parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
+           ! turn off random selection for initial values
+           MCO%randparini = .false.
+           write(*,*)"...intermediate EDC search progress check"
+           ! call edc likelihood function to get final edc probability
+           call edc_model_likelihood(parini, PEDC, ML_prior)
+
+           ! keep track of attempts
+           counter_local = counter_local+1
+           ! periodically reset the initial conditions
+           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
+               ! Reset the previous EDC likelihood score
+               PEDC_prev = -1000d0
+               ! Reset parameters back to default
+               parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+               ! reset to select random starting point
+               MCO%randparini = .true.
+               ! reset the parameter step size at the beginning of each attempt
+               ! TODO make fct initialize stats
+               stats%parvar = 1d0; stats%Nparvar = 0d0
+               ! Covariance matrix cannot be set to zero therefore set initial value to a
+               ! small positive value along to variance access
+               stats%covariance = 0d0; stats%meanpar = 0d0; stats%cov = .false.
+               stats%use_multivariate = .false.
+               do n = 1, PI%npars
+                  stats%covariance(n, n) = 1d0
+               end do
+               mcout%stats = stats
+           else
+               PEDC_prev = PEDC
+           endif
+
+        end do  ! for while condition
+
+    endif  ! if for restart
+
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
+    ! PI%parfix(1:PI%npars) = 0  ! TODO
+    MCOUT%bestpars = 0d0
+
+  end subroutine find_edc_initial_values
+
   
   !
   !--------------------------------------------------------------------
@@ -1004,8 +1127,8 @@ module cardamom_io
   !
   !------------------------------------------------------------------
   !
-  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
-    use MHMCMC, only: MCMC_OPTIONS
+  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+    use MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
 
     ! loads required options about the MHMCMC either form hardcoded sources or
     ! from variables which were read form the command line
@@ -1016,6 +1139,7 @@ module cardamom_io
     character(350), intent(in):: outfile
     integer, intent(in):: solutions_wanted, freq_print, freq_write
     type(MCMC_OPTIONS), intent(out):: MCO
+    type(MCMC_OUTPUT), intent(inout):: MCOUT
 
     ! defining hardcoded MCMC options
     ! TODO should be MCO defaults?
@@ -1056,27 +1180,29 @@ module cardamom_io
     MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
     ! construct file names
-    write(MCO%outfile, fmt='(A)')trim(outfile)//"PARS"
-    write(MCO%stepfile, fmt='(A)')trim(outfile)//"STEP"
-    write(MCO%covfile, fmt='(A)')trim(outfile)//"COV"
-    write(MCO%covifile, fmt='(A)')trim(outfile)//"COVINFO"
+    write(MCO%parfilename, fmt='(A)')trim(outfile)//"PARS"
+    write(MCO%stepfilename, fmt='(A)')trim(outfile)//"STEP"
+    write(MCO%covfilename, fmt='(A)')trim(outfile)//"COV"
+    write(MCO%covinfofilename, fmt='(A)')trim(outfile)//"COVINFO"
 
   end subroutine read_options
   !
   !-------------------------------------------------------------------
   !
-  subroutine update_for_restart_simulation
+  subroutine update_for_restart_simulation(MCO, MCOUT)
+    !! subroutine is responsible for loading previous parameter and step size
+    !! information into the current
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
-    use MODEL_PARAMETERS, only: PI
+    use model_shared, only: PI
     use cardamom_structures, only: DATAin
     use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
 
-    ! subroutine is responsible for loading previous parameter and step size
-    ! information into the current
 
     implicit none
 
     ! local variables
+    type(MCMC_OPTIONS), intent(inout):: MCO
+    type(MCMC_OUTPUT), intent(inout):: MCOUT
     integer:: a, b, c, i, j, num_lines, status
     double precision:: dummy
     double precision, dimension(:,:), allocatable:: tmp
@@ -1125,7 +1251,7 @@ module cardamom_io
     ! Extract the final parameter set and load into the initial parameter vector
     ! for the analysis. NOTE: This parameter set will be normalised on entry
     ! into the MHMCMC subroutine
-    PI%parini(1:DATAin%nopars) = tmp(num_lines, 1:DATAin%nopars)
+    parini(1:DATAin%nopars) = tmp(num_lines, 1:DATAin%nopars)
 
     ! free up variable for new file
     deallocate(tmp)
@@ -1242,7 +1368,7 @@ module cardamom_io
     end do  ! i for combinations
     ! Store the most recent step size, which corresponds with the saved
     ! parmeters (above) and covariance matrix (below)
-    PI%mean_par = tmp(num_lines, 1:DATAin%nopars)
+    PI%meanpar = tmp(num_lines, 1:DATAin%nopars)
     PI%Nparvar = tmp(num_lines, DATAin%nopars+1)
 
     return

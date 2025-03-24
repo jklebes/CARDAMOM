@@ -82,7 +82,7 @@ module model_likelihood_module
     PI%use_multivariate = .false.
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    PI%covariance = 0d0 ; PI%meanpar = 0d0 ; PI%cov = .false.
     do n = 1, PI%npars
        PI%covariance(n,n) = 1d0
     end do
@@ -101,7 +101,7 @@ module model_likelihood_module
            call MHMCMC(P_target,EDC_MODEL_LIKELIHOOD)
 
            ! store the best parameters from that loop
-           PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+           PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
            ! turn off random selection for initial values
            MCO%randparini = .false.
 
@@ -122,7 +122,7 @@ module model_likelihood_module
                PI%parvar = 1d0 ; PI%Nparvar = 0d0
                ! Covariance matrix cannot be set to zero therefore set initial value to a
                ! small positive value along to variance access
-               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               PI%covariance = 0d0 ; PI%meanpar = 0d0 ; PI%cov = .false.
                PI%use_multivariate = .false.
                do n = 1, PI%npars
                   PI%covariance(n,n) = 1d0
@@ -136,7 +136,7 @@ module model_likelihood_module
     ! reset so that currently saved parameters will be used
     ! starting point in main MCMC
     PI%parfix(1:PI%npars) = 0
-    MCOUT%best_pars = 0d0
+    MCOUT%bestpars = 0d0
 
   end subroutine find_edc_initial_values
   !

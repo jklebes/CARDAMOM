@@ -81,19 +81,11 @@ real:: nout
 logical:: append
 logical:: use_multivariate
 logical:: restart
+logical:: randparini
 logical:: returnpars  ! a variable that is never used and has no effect, needs deleting in all model likelihood files
+logical, dimension(:), allocatable:: fixedpars 
 end type MCMC_OPTIONS
 
-
-!> Collection of info for output of the sampling run
-!> Note output is mainly via file writing
-type MCMC_OUTPUT
-double precision:: bestll, ll
-double precision, allocatable, dimension(:):: bestpars, pars
-double precision:: acceptance_rate
-logical:: complete 
-integer:: nos_iterations
-end type MCMC_OUTPUT
 
 !> Collect ongoing statistics (means, covariance matrix, etc) for each chain
 type MCSTATS
@@ -105,6 +97,17 @@ logical:: use_multivariate
 logical:: multivariate_proposal
 end type
 
+
+!> Collection of info for output of the sampling run
+!> Note output is mainly via file writing
+type MCMC_OUTPUT
+double precision:: bestll, ll
+double precision, allocatable, dimension(:):: bestpars, pars
+double precision:: acceptance_rate
+logical:: complete 
+integer:: nos_iterations
+type(mcstats):: stats
+end type MCMC_OUTPUT
 
 contains
   !
@@ -584,7 +587,7 @@ contains
     write(*,*)"Final local acceptance rate = ",ACCRATE
     ! TODO function to output these two 
     write(*,*)"Best log-likelihood = ",Pmax
-    !write(*,*)"Best parameters = ",MCOUT%best_pars
+    !write(*,*)"Best parameters = ",MCOUT%bestpars
 
 end subroutine
 
@@ -616,7 +619,7 @@ end subroutine
     ! declare local variables
     integer p, i, info  ! counters
     double precision, dimension(npars, npars):: cov_backup
-    double precision, dimension(npars):: mean_par_backup
+    double precision, dimension(npars):: meanpar_backup
     double precision:: Nparvar_backup, Nparvar_local
     double precision:: N_before_mv_target
 
@@ -626,9 +629,9 @@ end subroutine
         ! Increment the variance-covariance matrix with new accepted parameter sets
         ! NOTE: that this also increments the total accepted counter (PI%Nparvar)
 
-        cov_backup = stats%covariance; mean_par_backup = stats%meanpar; Nparvar_backup = stats%Nparvar
+        cov_backup = stats%covariance; meanpar_backup = stats%meanpar; Nparvar_backup = stats%Nparvar
 
-!        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%mean_par, PI%npars &
+!        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
 !                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
         ! Have started hardcoding a maximum number of observations to be 100.
         ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
@@ -654,7 +657,7 @@ end subroutine
             if (use_multivariate) then
                 ! return original matrix to place
                 stats%covariance = cov_backup
-                stats%meanpar = mean_par_backup
+                stats%meanpar = meanpar_backup
                 stats%Nparvar = Nparvar_backup
             else
                 ! Keep accumulating use_multivariatethe information

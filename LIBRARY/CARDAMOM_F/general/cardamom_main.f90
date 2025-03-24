@@ -11,7 +11,7 @@ program cardamom_framework
                         close_output_files, write_covariance_info
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
- use model_likelihood_module, only: model_likelihood, find_edc_initial_values, &
+ use model_likelihood_module, only: model_likelihood, &
     sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
 use model_likelihood_wrapper  ! TODO next refactoring step
 
@@ -204,7 +204,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
          call MHMCMC(1d0, StressTest_likelihood, StressTest_sublikelihood)
          ! Use the best parameter set as the starting point for the next stage
 ! REALLY NOT SURE I SHOULD BE DOING THIS-SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
-         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+         PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
@@ -215,7 +215,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
              PI%parvar = 1d0; PI%Nparvar = 0d0
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
-             PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
+             PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
              PI%use_multivariate = .false.
              do n = 1, PI%npars
                 PI%covariance(n, n) = 1d0
@@ -240,15 +240,15 @@ use model_likelihood_wrapper  ! TODO next refactoring step
      ! Call the AP-MCMC
      call MHMCMC(1d0, StressTest_likelihood, StressTest_likelihood)
      ! Tell the user the best parameter set
-     print*,"Best parameters = ",MCOUT%best_pars
+     print*,"Best parameters = ",MCOUT%bestpars
 
  else  ! We are not doing a stress test
 
      ! Begin search for initial conditions
      write(*,*) "Beginning search for initial parameter conditions"
      ! Determine initial values, this requires using the AP-MCMC
-     call find_edc_initial_values  ! tODO writes to where ?  PI%Parini and others
-     ! TODO includes call to MCMC !  TODO move to here!  uses edc_model_likelihood 
+     call find_edc_initial_values(MCO, MCOUT) 
+
      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
      MCOUT%nos_iterations = 0
 
@@ -256,11 +256,12 @@ use model_likelihood_wrapper  ! TODO next refactoring step
      call read_options(solution_wanted, freq_print, freq_write, outfile)
 
      ! Reset stepsize and covariance for main DRAM-MCMC
-     PI%Nparvar = 0d0; PI%parvar = 0d0
-     PI%covariance = 0d0; PI%mean_par = 0d0
-     PI%cov = .false. ; PI%use_multivariate = .false.
+     ! TODO same, make function init_stats
+     stats%Nparvar = 0d0; stats%parvar = 0d0
+     stats%covariance = 0d0; stats%meanpar = 0d0
+     stats%cov = .false. ; stats%use_multivariate = .false.
      do n = 1, PI%npars
-        PI%covariance(n, n) = 1d0
+        stats%covariance(n, n) = 1d0
      end do
 
      if (restart_flag) then
@@ -269,14 +270,14 @@ use model_likelihood_wrapper  ! TODO next refactoring step
          ! now begin update of model timing variables and parameter values if this is a
          ! restart. NOTE that this include information determining the number of
          ! iterations already completed...
-         call update_for_restart_simulation
+         call update_for_restart_simulation(MCO, MCOUT)
      else
          ! Brand new analysis
          print*,"writing initial covariance matrix"
          ! write out first covariance matrix, this will be compared with the final covariance matrix
          if (MCO%nWRITE > 0) then
-             call write_covariance_matrix(PI%covariance, PI%npars, .true.)
-             call write_covariance_info(PI%mean_par, PI%Nparvar, PI%npars)
+             call write_covariance_matrix(mco%covariance, mco%npars, .true.)
+             call write_covariance_info(mco%meanpar, mco%Nparvar, mco%npars)
          endif
          !...so the reset for nos_iterations must only occur when not a restart run
          MCOUT%nos_iterations = 0
@@ -309,7 +310,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
          call MHMCMC(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
-         PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+         PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          MCO%fixedpars  = .true.
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
@@ -321,7 +322,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
              PI%parvar = 1d0; PI%Nparvar = 0d0
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
-             PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false.
+             PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
              PI%use_multivariate = .false.
              do n = 1, PI%npars
                 PI%covariance(n, n) = 1d0

@@ -30,7 +30,7 @@ module model_shared
             PI%parfix(PI%npars), & ! never used
             !PI%parvar(PI%npars), 
             PI%paradj(PI%npars) &
-            !,PI%covariance(PI%npars, PI%npars), PI%mean_par(PI%npars) &
+            !,PI%covariance(PI%npars, PI%npars), PI%meanpar(PI%npars) &
             !,PI%iC(PI%npars, PI%npars)&
             )
 
@@ -51,7 +51,7 @@ module model_shared
     ! PI%parvar = 1d0; PI%Nparvar = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    ! PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false. ; PI%use_multivariate = .false.
+    ! PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false. ; PI%use_multivariate = .false.
     !do i = 1, PI%npars
     !    PI%covariance(i, i) = 1d0
     !end do

@@ -72,7 +72,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine calculate_variance(sample, mean_par, naccepted, variance)
+  subroutine calculate_variance(sample, meanpar, naccepted, variance)
 
     ! Subroutine to estimate the sample variance
     ! Var = Σ ( Xi-X )*2 / (N-1)
@@ -88,7 +88,7 @@ module samplers_math
     ! Arguments
     integer, intent(in):: naccepted
     double precision, intent(in):: sample(naccepted)
-    double precision, intent(out):: mean_par, variance
+    double precision, intent(out):: meanpar, variance
 
     ! local variables
     integer:: i
@@ -97,9 +97,9 @@ module samplers_math
     allocate(deviances(naccepted))
 
     ! calculate components needed for variance
-    mean_par = sum(sample) / dble(naccepted)
+    meanpar = sum(sample) / dble(naccepted)
     ! estimate deviance
-    deviances = sample-mean_par
+    deviances = sample-meanpar
     ! estimate the variance
     ! NOTE: that naccepted-1 makes this the sample variance
     variance = sum(deviances*deviances) * dble(naccepted-1)**(-1)
@@ -114,7 +114,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_variance(sample, mean_par, cur, new, variance)
+  subroutine increment_variance(sample, meanpar, cur, new, variance)
 
     ! Subroutine for incremental update of the variance
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
@@ -133,25 +133,25 @@ module samplers_math
     ! Arguments
     integer, intent(in):: new
     double precision, intent(in):: sample(new)
-    double precision, intent(inout):: cur, mean_par, variance
+    double precision, intent(inout):: cur, meanpar, variance
 
     ! local variables
     integer:: n, i, j
-    double precision:: new_mean_par, nnew
+    double precision:: new_meanpar, nnew
 
     nnew = 1d0
     ! loop through each accepted parameter set...
     do n = 1, new
        ! ...estimate the new mean value for each parameter...
-       new_mean_par = ((mean_par*cur) + (sample(n) * nnew)) &
+       new_meanpar = ((meanpar*cur) + (sample(n) * nnew)) &
                     / (cur+nnew)
        ! ...update the variance with each new parameter vector in turn
        variance = variance*(cur-1d0)/(cur-1d0+nnew) &
-                + (cur*mean_par*mean_par- &
-                  (cur+nnew)*new_mean_par*new_mean_par + &
+                + (cur*meanpar*meanpar- &
+                  (cur+nnew)*new_meanpar*new_meanpar + &
                    nnew*sample(n)*sample(n))/(cur-1d0+nnew)
        ! update running totals and mean for the next iteration
-       cur = cur+1; mean_par = new_mean_par
+       cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
 
     ! return to user
@@ -161,7 +161,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine covariance_matrix(PARSALL, mean_par, npars, naccepted, covariance)
+  subroutine covariance_matrix(PARSALL, meanpar, npars, naccepted, covariance)
 
     ! Subroutine to estimate the covariance matrix
     ! Cov(X, Y) = Σ ( Xi-X ) ( Yi-Y ) / (N-1)
@@ -180,7 +180,7 @@ module samplers_math
     ! Arguments
     integer, intent(in):: npars, naccepted
     double precision, intent(in):: PARSALL(npars, naccepted)
-    double precision, intent(out):: mean_par(npars), covariance(npars, npars)
+    double precision, intent(out):: meanpar(npars), covariance(npars, npars)
 
     ! local variables
     integer:: i
@@ -191,9 +191,9 @@ module samplers_math
 
     ! calculate components needed for covariance
     do i = 1, npars
-       mean_par(i) = sum(PARSALL(i, :)) / dble(naccepted)
+       meanpar(i) = sum(PARSALL(i, :)) / dble(naccepted)
        ! estimate deviance
-       deviances(i, :) = PARSALL(i, :) - mean_par(i)
+       deviances(i, :) = PARSALL(i, :) - meanpar(i)
     end do
 
     ! use matrix multiplication to estimate covariance
@@ -210,7 +210,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_covariance_matrix(PARSALL, mean_par, npars, cur, new, covariance)
+  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur, new, covariance)
 
     ! Subroutine for incremental update of a covariance matrix
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
@@ -227,29 +227,29 @@ module samplers_math
     ! Arguments
     integer, intent(in):: npars, new
     double precision, intent(in):: PARSALL(npars, new)
-    double precision, intent(inout):: cur, mean_par(npars), covariance(npars, npars)
+    double precision, intent(inout):: cur, meanpar(npars), covariance(npars, npars)
 
     ! local variables
     integer:: n, i, j
-    double precision:: new_mean_par(npars), nnew
+    double precision:: new_meanpar(npars), nnew
 
     nnew = 1d0
     ! loop through each accepted parameter set...
     do n = 1, new
        ! ...estimate the new mean value for each parameter...
-       new_mean_par = ((mean_par*cur) + (PARSALL(:,n) * nnew)) &
+       new_meanpar = ((meanpar*cur) + (PARSALL(:,n) * nnew)) &
                     / (cur+nnew)
        ! ...update the covariance matrix with each new parameter vector in turn
        do i = 1, npars
           do j = 1, npars
              covariance(i, j) = covariance(i, j)*(cur-1d0)/(cur-1d0+nnew) &
-                             + (cur*mean_par(i)*mean_par(j)- &
-                               (cur+nnew)*new_mean_par(i)*new_mean_par(j) + &
+                             + (cur*meanpar(i)*meanpar(j)- &
+                               (cur+nnew)*new_meanpar(i)*new_meanpar(j) + &
                                 nnew*PARSALL(i, n)*PARSALL(j, n))/(cur-1d0+nnew)
           end do  ! j = 1, npars
        end do  ! i = 1, npars
        ! update running totals and mean for the next iteration
-       cur = cur+1; mean_par = new_mean_par
+       cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
 
     ! return to user
