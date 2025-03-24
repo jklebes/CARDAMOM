@@ -2,7 +2,8 @@
 program cardamom_framework
 
  use math_functions, only: idum, rnstrt, inverse_matrix
- use MCMCOPT, only: MCO, MCOUT, PI, initialise_mcmc_output
+ use samplers_shared, only: MCO, MCOUT, ! initialise_mcmc_output
+ use model_shared: PI
  use cardamom_structures, only: DATAin, io_space
  use cardamom_io, only: initialize, &
                         read_options, open_output_files, &

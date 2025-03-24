@@ -18,7 +18,7 @@ module model_likelihood_module
 
   ! which to make open
   ! TODO will have to expose edc_model_likelihood in all models ...
-  public::  model_likelihood, &!find_edc_initial_values, &
+  public::  model_likelihood, edc_model_likelihood, &!find_edc_initial_values, &
             sqrt_model_likelihood, sub_model_likelihood, log_model_likelihood
 
   ! declare needed types

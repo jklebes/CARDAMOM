@@ -313,8 +313,8 @@ module cardamom_io
         do while (PEDC < 0d0)
 
            write(*,*)"Beginning EDC search attempt"
-           ! call the MHMCMC directing to the appropriate likelihood
-           call run_mcmc(edc_model_likelihood_wrapper, PI, MC), MCOUT, model_likelihood_wrapper)
+           ! call the MHMCMC directing to the appropriate likelihood function
+           call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
 
            ! store the best parameters from that loop
            parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)

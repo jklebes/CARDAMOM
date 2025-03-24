@@ -77,7 +77,7 @@ double precision:: N_before_mv_target, & !
 ! Is current proposal multivariate or not?
 logical:: multivariate_proposal = .false.
 real:: fadapt  ! TODO fraction adapt-move to outsied
-real:: nout 
+integer:: nout 
 logical:: append
 logical:: use_multivariate
 logical:: restart
@@ -165,7 +165,7 @@ contains
       interface
     subroutine model_likelihood(param_vector, n, ML)
          implicit none
-         double precision, dimension(:), intent(in):: param_vector
+         double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
          integer, intent(in):: n
          double precision, intent(out):: ML
     end subroutine model_likelihood
@@ -297,7 +297,7 @@ contains
     interface
     subroutine model_likelihood(param_vector, n, ML)
          implicit none
-         double precision, dimension(:), intent(in):: param_vector
+         double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
          integer, intent(in):: n
          double precision, intent(out):: ML
     end subroutine model_likelihood
