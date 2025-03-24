@@ -1190,6 +1190,7 @@ module cardamom_io
   subroutine update_for_restart_simulation(MCO, MCOUT)
     !! subroutine is responsible for loading previous parameter and step size
     !! information into the current
+    !! modifies: arg MCOUT%pars. To be used as starting point for next run.
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
     use model_shared, only: PI
     use cardamom_structures, only: DATAin
@@ -1249,7 +1250,7 @@ module cardamom_io
     ! Extract the final parameter set and load into the initial parameter vector
     ! for the analysis. NOTE: This parameter set will be normalised on entry
     ! into the MHMCMC subroutine
-    parini = tmp(num_lines, 1:DATAin%nopars)
+    MCOUT%pars = tmp(num_lines, 1:DATAin%nopars)
 
     ! free up variable for new file
     deallocate(tmp)
@@ -1321,7 +1322,7 @@ module cardamom_io
     do b = 1, a
        do i = 1, DATAin%nopars
           do j = 1, DATAin%nopars
-             read(cfile_unit, rec = c) PI%covariance(i, j)
+             read(cfile_unit, rec = c) MCOUT%covariance(i, j)
              c = c+1
           end do  ! j for parameter
        end do  ! i for combinations
@@ -1329,10 +1330,10 @@ module cardamom_io
 
     ! extract current variance information
     do i = 1, PI%npars
-       PI%parvar(i) = PI%covariance(i, i)
+       MCOUT%parvar(i) = MCOUT%covariance(i, i)
     end do
     ! estimate status of the inverse covariance matrix
-    call inverse_matrix( PI%npars, PI%covariance, PI%iC )
+    call inverse_matrix( PI%npars, MCOUT%covariance, PI%iC )
 
     !
     ! Covariance information file
