@@ -14,7 +14,7 @@ module DEMCz_module
    !  and DEMCzOPT - options, containing as many or few of the fields as needed, the rest default to the 
    !                 default values in type definiton here
    !  Create an object of type MCMC_OUTPUT to write reults to.
-   !  Create a double precision function loglikelihood taking a vector of n_pars (same as in PARINFO) parameters and 
+   !  Create a double precision function loglikelihood taking a vector of npars (same as in PARINFO) parameters and 
    !                 returning rel::loglikelihood.
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine DEMCz(fct, parinfo, demczopt, mcmcout) 
@@ -121,7 +121,7 @@ contains
       ! Extract from types ...
       differential_weight=MCO%differential_weight
 
-      npars = PI%n_pars
+      npars = PI%npars
       nchains = MCO%N_chains
       MAXITER = MCO%MAXITER
       Ksteps = MCO%n_steps

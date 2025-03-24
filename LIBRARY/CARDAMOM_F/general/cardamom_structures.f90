@@ -173,7 +173,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
     integer :: io_buffer, io_buffer_count
     double precision, allocatable, dimension(:,:) :: &
                                     variance_buffer, &
-                                   mean_pars_buffer, &
+                                   meanpars_buffer, &
                                         pars_buffer
 
     double precision, allocatable, dimension(:) :: &

@@ -1,5 +1,5 @@
 
-module math_functions
+module samplers_math
 
   !!!!!!!!!!!
   ! Module contains functions needed to mathematical calculations in CARDAMOM-samplers
@@ -889,7 +889,7 @@ end function log_nor2par
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Mon 10 Mar 2025 15:29:08 GMT
+    !  Last Modified: Fri 21 Mar 2025 14:47:19 GMT
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -998,7 +998,7 @@ end function log_nor2par
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Mon 10 Mar 2025 15:29:08 GMT
+    !  Last Modified: Fri 21 Mar 2025 14:47:19 GMT
     !
     !    03/05/2019
     !
@@ -1080,4 +1080,4 @@ end function log_nor2par
   !
   !--------------------------------------------------------------------
   !
-end module math_functions
+end module samplers_math

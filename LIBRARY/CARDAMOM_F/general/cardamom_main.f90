@@ -13,7 +13,7 @@ program cardamom_framework
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, find_edc_initial_values, &
     sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
-use model_likelihood_wrapper  ! TODO next step
+use model_likelihood_wrapper  ! TODO next refactoring step
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -112,7 +112,9 @@ use model_likelihood_wrapper  ! TODO next step
 
  ! user update
  write(*,*)"Command line options read, moving on now"
- 
+
+ ! TODO get n seeds, here or smoewhere else
+ ! TODO make sure seeds are saved 
  ! seed the random number generator
  ! determine unique (sort of) seed value; based on system time
  call system_clock(time1, time2, time3)
@@ -125,40 +127,38 @@ use model_likelihood_wrapper  ! TODO next step
      ! call special functions to prepare for stress test
      call prepare_for_stress_test(infile, outfile)
  else
-    ! TODO must always be called in this order-so bundle to initialize()
-    ! call initialize_parinfo()
-    ! call read_check_binary_data(infile)
-    ! call initialize_model()
-    call initialize(infile)
+    call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model
  end if
 
  ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
  call read_options(solution_wanted, freq_print, freq_write, outfile)
  ! check whether this is a restart?
+ ! PI lives in model_shared and its info can be read after call to initiialize_model
+ ! TODO not sure about MCO at this point
  call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, MCO%sub_fraction, &
                                       MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
  ! Initialise MCMC output, possibly a bit of a redundent subroutine...
- call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
+ !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
  ! Open the relevant output files TODO now happens in run_mcmc
- call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
+ !call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
 
  ! Initialise counters used to track the output of parameter sets
  !TODO now each chain has its own 
- io_space%io_buffer_count = 0
- io_space%io_buffer = min(1000, max(10, (MCO%nOUT/MCO%nWRITE) / 10))
+ !io_space%io_buffer_count = 0
+ ! io_space%io_buffer = min(1000, max(10, (MCO%nOUT/MCO%nWRITE) / 10))
 
  ! Allocate variables used in io buffering, 
  ! these could probably be moved to a more sensible place within cardamom_io.f90 DONE
- allocate(io_space%variance_buffer(PI%npars, io_space%io_buffer), &
-          io_space%mean_pars_buffer(PI%npars, io_space%io_buffer), &
-          io_space%pars_buffer(PI%npars, io_space%io_buffer), &
-          io_space%prob_buffer(io_space%io_buffer), &
-          io_space%nsample_buffer(io_space%io_buffer), &
-          io_space%accept_rate_buffer(io_space%io_buffer))
+ !allocate(io_space%variance_buffer(PI%npars, io_space%io_buffer), &
+ !         io_space%meanpars_buffer(PI%npars, io_space%io_buffer), &
+ !         io_space%pars_buffer(PI%npars, io_space%io_buffer), &
+ !         io_space%prob_buffer(io_space%io_buffer), &
+ !         io_space%nsample_buffer(io_space%io_buffer), &
+ !         io_space%accept_rate_buffer(io_space%io_buffer))
 
  ! Report which model ID we are using
- write(*,*) "Running model version ", DATAin%ID
+ write(*,*) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
 
  ! Check whether we are doing a stress test again
  if (DATAin%ID < 0) then
@@ -171,10 +171,9 @@ use model_likelihood_wrapper  ! TODO next step
      ! Reset interations counter
      MCOUT%nos_iterations = 0
      ! Ensure that we use a random starting point
-     MCO%randparini = .true.
-     MCO%returnpars = .true.
-     MCO%fixedpars  = .false.
-     restart_flag = .false.
+     ! MCO%randparini = .true.
+     ! MCO%fixedpars  = .false.
+     ! restart_flag = .false. ! default all random if no further arguments passed to run_mcmc
 
      ! Do we do the initial MCMC period where we normalise the likelihood by
      ! number of observations
@@ -232,7 +231,6 @@ use model_likelihood_wrapper  ! TODO next step
          MCO%nADAPT = 1000
          MCO%fADAPT = 0.5d0
          MCO%randparini = .false.
-         MCO%returnpars = .false.
          MCO%fixedpars  = .true.
 
      end if  ! restart flag
