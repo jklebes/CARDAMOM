@@ -27,7 +27,7 @@ module model_shared
     endif
     allocate(&
             !PI%parini(PI%npars) &
-            !PI%parfix(PI%npars), &
+            PI%parfix(PI%npars), & ! never used
             !PI%parvar(PI%npars), 
             PI%paradj(PI%npars) &
             !,PI%covariance(PI%npars, PI%npars), PI%mean_par(PI%npars) &

@@ -11,6 +11,7 @@ type PARINFO
 integer:: npars
 double precision, allocatable, dimension(:):: parmin, parmax, paradj
 logical, allocatable, dimension(:):: fix_pars
+logical, allocatable, dimension(:):: parfix 
 end type PARINFO
 
 
