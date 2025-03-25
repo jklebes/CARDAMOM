@@ -1,20 +1,22 @@
-
 program cardamom_framework
-
- use math_functions, only: idum, rnstrt, inverse_matrix
- use samplers_shared, only: MCO, MCOUT, ! initialise_mcmc_output
- use model_shared: PI
+ !use math_functions, only: idum, rnstrt, inverse_matrix
+ use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS !, initialise_mcmc_output
+ use model_shared, only: PI
  use cardamom_structures, only: DATAin, io_space
  use cardamom_io, only: initialize, &
-                        read_options, open_output_files, &
-                        check_for_existing_output_files, restart_flag,   &
-                        update_for_restart_simulation, write_covariance_matrix, &
+                        read_options, & 
+                        restart_flag,   &
+                        update_for_restart_simulation
+ use samplers_io, only:  open_output_files, &
+                        check_for_existing_output_files,  &
+                        write_covariance_matrix, &
                         close_output_files, write_covariance_info
- use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
- use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
- use model_likelihood_module, only: model_likelihood, &
-    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
-use model_likelihood_wrapper  ! TODO next refactoring step
+ !use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
+ !use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
+ !use model_likelihood_module, only: model_likelihood, &
+ !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
+ use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &
+     sub_model_likelihood_fct
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -63,6 +65,10 @@ use model_likelihood_wrapper  ! TODO next refactoring step
  integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, n, &
             nOUT_save, do_inflate_dble, cost_func_scaling_dble
  logical:: do_inflate = .false.
+ logical:: sub_sample_complete = .false.
+ double precision:: sub_fraction = 0.2d0
+ type(MCMC_OUTPUT):: MCOUT
+ type(MCMC_OPTIONS):: MCO
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -137,7 +143,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
  ! check whether this is a restart?
  ! PI lives in model_shared and its info can be read after call to initiialize_model
  ! TODO not sure about MCO at this point
- call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, MCO%sub_fraction, &
+ call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, sub_fraction, &
                                       MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
  ! Initialise MCMC output, possibly a bit of a redundent subroutine...
  !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
@@ -180,7 +186,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
      ! number of observations
      ! This process allows for very bad starting points to more easily move
      ! towards the general area of the observatons.
-     if (MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
+     if (MCOUT%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
 
          ! Having found an EDC compliant parameter vector, we want to do a MCMC
          ! search on inflated uncertainties. This inflation search allows us to
@@ -194,32 +200,34 @@ use model_likelihood_wrapper  ! TODO next refactoring step
 
          ! Set flag to indicate this phase has occurred and make a record of the
          ! total iterations to be attempted
-         MCO%sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
+         sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
 
          ! Report to the user
          write(*,*)"Beginning parameter search on sample size normalised likelihoods"
 
-         MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
+         MCO%nOUT = nint(dble(nOUT_save) * sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         call MHMCMC(1d0, StressTest_likelihood, StressTest_sublikelihood)
+         !call run_mcmc(1d0, StressTest_likelihood, StressTest_sublikelihood)
+         call run_mcmc(stresstest_sublikelihood_fct, PI, MCO, MCOUT, stresstest_likelihood_fct)
          ! Use the best parameter set as the starting point for the next stage
 ! REALLY NOT SURE I SHOULD BE DOING THIS-SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
-         PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
+         parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
-         if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
+         if (MCOUT%cov .and. MCOUT%use_multivariate) then
+             MCOUT%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
          else
+             ! TODO fct for this
              ! reset the parameter step size at the beginning of each attempt
-             PI%parvar = 1d0; PI%Nparvar = 0d0
+             MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
-             PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
-             PI%use_multivariate = .false.
+             MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
+             MCOUT%use_multivariate = .false.
              do n = 1, PI%npars
-                PI%covariance(n, n) = 1d0
+                MCOUT%covariance(n, n) = 1d0
              end do
          endif  ! do we need a new covariance matrix or can we use the existing one?
 
@@ -239,7 +247,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
      ! Let the user know how many more we will propose
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      ! Call the AP-MCMC
-     call MHMCMC(1d0, StressTest_likelihood, StressTest_likelihood)
+     call run_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT, stresstest_likelihood_fct)
      ! Tell the user the best parameter set
      print*,"Best parameters = ",MCOUT%bestpars
 
@@ -277,8 +285,8 @@ use model_likelihood_wrapper  ! TODO next refactoring step
          print*,"writing initial covariance matrix"
          ! write out first covariance matrix, this will be compared with the final covariance matrix
          if (MCO%nWRITE > 0) then
-             call write_covariance_matrix(mco%covariance, mco%npars, .true.)
-             call write_covariance_info(mco%meanpar, mco%Nparvar, mco%npars)
+             call write_covariance_matrix(mcout%covariance, PI%npars, .true.)
+             call write_covariance_info(mcout%meanpar, mcout%Nparvar, PI%npars)
          endif
          !...so the reset for nos_iterations must only occur when not a restart run
          MCOUT%nos_iterations = 0
@@ -286,7 +294,7 @@ use model_likelihood_wrapper  ! TODO next refactoring step
 
      ! Do we do the initial MCMC period where we normalise the likelihood by number of observations
      ! This process allows for very bad starting points to more easily move towards the general area of the observatons.
-     if (DATAin%total_obs > 0 .and. MCOUT%nos_iterations < (MCO%nOUT*MCO%sub_fraction) .and. do_inflate) then
+     if (DATAin%total_obs > 0 .and. MCOUT%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
 
          ! Having found an EDC compliant parameter vector, we want to do a MCMC
          ! search on inflated uncertainties. This inflation search allows us to
@@ -299,34 +307,36 @@ use model_likelihood_wrapper  ! TODO next refactoring step
 
          ! Set flag to indicate this phase has occurred and make a record of the
          ! total iterations to be attempted
-         MCO%sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
+         sub_sample_complete = .true. ; nOUT_save = MCO%nOUT
 
          ! Report to the user
          write(*,*)"Beginning parameter search on sample size normalised likelihoods"
 
-         MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
+         MCO%nOUT = nint(dble(nOUT_save) * sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          ! TODO model_likelihood function from model_likelihood_module (each model's) does not conform to specs, needs a wrapper 
-         call MHMCMC(1d0, model_likelihood, sub_model_likelihood)
+         call run_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+         !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
-         PI%parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
+         parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          MCO%fixedpars  = .true.
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
-         if (PI%cov .and. PI%use_multivariate) then
-             PI%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
+         if (MCOUT%cov .and. MCOUT%use_multivariate) then
+             MCOUT%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
          else
              ! reset the parameter step size at the beginning of each attempt
-             PI%parvar = 1d0; PI%Nparvar = 0d0
+             ! TODO fct for this
+             MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
-             PI%covariance = 0d0; PI%meanpar = 0d0; PI%cov = .false.
-             PI%use_multivariate = .false.
+             MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
+             MCOUT%use_multivariate = .false.
              do n = 1, PI%npars
-                PI%covariance(n, n) = 1d0
+                MCOUT%covariance(n, n) = 1d0
              end do
          endif  ! do we need a new covariance matrix or can we use the existing one?
 
@@ -350,13 +360,12 @@ use model_likelihood_wrapper  ! TODO next refactoring step
         ! Caution: order of loglikelihood function arguments is being switched so that the first 
         ! function in the (maybe scaled) one to do the sampling calculation with, second optional 
         ! function argument is the one for writing only
-         call MHMCMC(1d0, model_likelihood, model_likelihood)
      else if (cost_func_scaling_dble == 1) then
-         call MHMCMC(1d0, model_likelihood, sub_model_likelihood)
+         call run_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
      else if (cost_func_scaling_dble == 2) then
-         call MHMCMC(1d0, model_likelihood, sqrt_model_likelihood)
+         call run_mcmc(sqrt_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
      else if (cost_func_scaling_dble == 3) then
-         call MHMCMC(1d0, model_likelihood, log_model_likelihood)
+         call run_mcmc(log_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
      !else if (cost_func_scaling_dble == 4) then
      !    call MHMCMC(1d0, model_likelihood, log_model_likelihood_dtm)
      end if  ! cost_func_scaling_dble == 
