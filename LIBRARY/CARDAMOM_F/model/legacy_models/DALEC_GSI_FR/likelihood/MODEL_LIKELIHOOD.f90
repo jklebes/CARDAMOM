@@ -175,20 +175,20 @@ module model_likelihood_module
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                   ,DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE       &
-                   ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                   ,DATAin%LAT, vars%M_LAI, vars%M_NEE       &
+                   ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
                    ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                   ,DATAin%M_GPP)
+                   ,vars%M_GPP)
 
     ! assess post running EDCs
     call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                   ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                  ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                  ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                  ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
+                  ,vars%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! combine results
     if (DATAin%EDC == 1 .and. (EDC1 == 0 .or. EDC2 == 0 .or. &
-        sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP))) then
+        sum(vars%M_LAI) /= sum(vars%M_LAI) .or. sum(vars%M_GPP) /= sum(vars%M_GPP))) then
         EDC=0
     else
         EDC=1
@@ -248,21 +248,21 @@ module model_likelihood_module
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                     ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
+                     ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,DATAin%M_GPP)
+                     ,vars%M_GPP)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,DATAin%M_GPP)
+                     ,vars%M_GPP)
 
     ! Compare outputs
-    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
-    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
+    flux_error = sum(abs(vars%M_FLUXES - local_fluxes))
+    pool_error = sum(abs(vars%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
@@ -271,11 +271,11 @@ module model_likelihood_module
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(vars%M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(vars%M_POOLS(:,i) - local_pools(:,i)))
         end do
         stop
     end if
@@ -1382,16 +1382,16 @@ module model_likelihood_module
 
        ! run the dalec model
        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                      ,DATAin%LAT, DATAin%M_LAI, DATAin%M_NEE       &
-                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
+                      ,DATAin%LAT, vars%M_LAI, vars%M_NEE       &
+                      ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,DATAin%M_GPP)
+                      ,vars%M_GPP)
 
        ! check edc2
        call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
-                     ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
+                     ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
+                     ,vars%M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
@@ -1401,7 +1401,7 @@ module model_likelihood_module
        end if
 
        ! extra checks to ensure correct running of the model
-       if (sum(DATAin%M_LAI) /= sum(DATAin%M_LAI) .or. sum(DATAin%M_GPP) /= sum(DATAin%M_GPP)) then
+       if (sum(vars%M_LAI) /= sum(vars%M_LAI) .or. sum(vars%M_GPP) /= sum(vars%M_GPP)) then
            EDC=0
        end if
 
@@ -1485,7 +1485,7 @@ module model_likelihood_module
        do n = 1, DATAin%ngpp
          dn=DATAin%gpppts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+((DATAin%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2d0
+         tot_exp=tot_exp+((vars%M_GPP(dn)-DATAin%GPP(dn))/DATAin%GPP_unc(dn))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1497,9 +1497,9 @@ module model_likelihood_module
          dn=DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (DATAin%M_LAI(dn) >= 0.) then
+         if (vars%M_LAI(dn) >= 0.) then
              ! note that division is the uncertainty
-             tot_exp=tot_exp+(log(max(1e-6,DATAin%M_LAI(dn))/DATAin%LAI(dn))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp=tot_exp+(log(max(1e-6,vars%M_LAI(dn))/DATAin%LAI(dn))/log(DATAin%LAI_unc(dn)))**2d0
          else
              ! if not then we have unrealistic negative values or NaN so indue
              ! error
@@ -1515,7 +1515,7 @@ module model_likelihood_module
        do n = 1, DATAin%nnee
          dn=DATAin%neepts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+((DATAin%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2d0
+         tot_exp=tot_exp+((vars%M_NEE(dn)-DATAin%NEE(dn))/DATAin%NEE_unc(dn))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1525,7 +1525,7 @@ module model_likelihood_module
     if (DATAin%nreco > 0) then
        do n = 1, DATAin%nreco
          dn=DATAin%recopts(n)
-         tmp_var=DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
+         tmp_var=vars%M_NEE(dn)+vars%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp=tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2d0
        end do
@@ -1538,7 +1538,7 @@ module model_likelihood_module
        do n = 1, DATAin%nwoo
          dn=DATAin%woopts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+(log((DATAin%M_POOLS(dn,4)-DATAin%M_POOLS(dn-365,4)) &
+         tot_exp=tot_exp+(log((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4)) &
                           / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1550,8 +1550,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCfol_stock
          dn=DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((DATAin%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) &
+!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((vars%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) &
                           / (DATAin%Cfol_stock(dn)*DATAin%Cfol_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1566,7 +1566,7 @@ module model_likelihood_module
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-           mean_annual_pools(y)=cal_max_annual_pools(DATAin%M_POOLS,y,2,DATAin%nopools,DATAin%deltat,DATAin%nodays+1)
+           mean_annual_pools(y)=cal_max_annual_pools(vars%M_POOLS,y,2,DATAin%nopools,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -1589,9 +1589,9 @@ module model_likelihood_module
        do n = 1, DATAin%nCwood_stock
          dn=DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-!         tot_exp=tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
-         tot_exp=tot_exp+((DATAin%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*DATAin%Cwood_stock_unc(dn)))**2d0
+!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
+!         tot_exp=tot_exp+((vars%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
+         tot_exp=tot_exp+((vars%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*DATAin%Cwood_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1602,7 +1602,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCagb_stock
          dn=DATAin%Cagb_stockpts(n)
          ! remove coarse root fraction from wood (pars29)
-         tmp_var = DATAin%M_POOLS(dn,4)-(DATAin%M_POOLS(dn,4)*pars(29))
+         tmp_var = vars%M_POOLS(dn,4)-(vars%M_POOLS(dn,4)*pars(29))
          tot_exp=tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/(DATAin%Cagb_stock(dn)*DATAin%Cagb_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1614,7 +1614,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCstem_stock
          dn=DATAin%Cstem_stockpts(n)
          ! remove coarse root and branches from wood (pars29 and pars28)
-         tmp_var = DATAin%M_POOLS(dn,4)-( (DATAin%M_POOLS(dn,4)*pars(29))+((DATAin%M_POOLS(dn,4)*pars(28))) )
+         tmp_var = vars%M_POOLS(dn,4)-( (vars%M_POOLS(dn,4)*pars(29))+((vars%M_POOLS(dn,4)*pars(28))) )
          tot_exp=tot_exp+((tmp_var-DATAin%Cstem_stock(dn))/(DATAin%Cstem_stock(dn)*DATAin%Cstem_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1626,7 +1626,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCbranch_stock
          dn=DATAin%Cbranch_stockpts(n)
          ! extract branch component from only
-         tmp_var = DATAin%M_POOLS(dn,4)*pars(28)
+         tmp_var = vars%M_POOLS(dn,4)*pars(28)
          tot_exp=tot_exp+((tmp_var-DATAin%Cbranch_stock(dn))/(DATAin%Cbranch_stock(dn)*DATAin%Cbranch_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1638,7 +1638,7 @@ module model_likelihood_module
        do n = 1, DATAin%nCcoarseroot_stock
          dn=DATAin%Ccoarseroot_stockpts(n)
          ! extract coarse root component from wood only
-         tmp_var = DATAin%M_POOLS(dn,4)*pars(29)
+         tmp_var = vars%M_POOLS(dn,4)*pars(29)
          tot_exp=tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn))/(DATAin%Ccoarseroot_stock(dn)*DATAin%Ccoarseroot_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1650,8 +1650,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCroots_stock
          dn=DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((DATAin%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) &
+!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((vars%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) &
                          / (DATAin%Croots_stock(dn)*DATAin%Croots_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
@@ -1665,9 +1665,9 @@ module model_likelihood_module
        do n = 1, DATAin%nClit_stock
          dn=DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12)))*DATAin%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp=tot_exp+(((sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
-                           *(DATAin%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*DATAin%Clit_stock_unc(dn)))**2d0
+!         tot_exp=tot_exp+((log((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12)))*vars%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
+         tot_exp=tot_exp+(((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12))) &
+                           *(vars%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*DATAin%Clit_stock_unc(dn)))**2d0
       end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1678,8 +1678,8 @@ module model_likelihood_module
        do n = 1, DATAin%nCsom_stock
          dn=DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(DATAin%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((DATAin%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*DATAin%Csom_stock_unc(dn)))**2d0
+!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((vars%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*DATAin%Csom_stock_unc(dn)))**2d0
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1691,7 +1691,7 @@ module model_likelihood_module
     ! increments as done above for NEE,LAI and GPP
 !    if (DATAin%otherpriors(1) > -9999) then
 !       do n = 1, DATAin%nopools
-!          pool_dynamics=DATAin%M_POOLS(DATAin%nodays+1,n)/DATAin%M_POOLS(1,n)
+!          pool_dynamics=vars%M_POOLS(DATAin%nodays+1,n)/vars%M_POOLS(1,n)
 !          likelihood=likelihood-(0.5*(log(pool_dynamics/DATAin%otherpriors(1))/log(DATAin%otherpriors(1)))**2d0)
 !       end do
 !    end if

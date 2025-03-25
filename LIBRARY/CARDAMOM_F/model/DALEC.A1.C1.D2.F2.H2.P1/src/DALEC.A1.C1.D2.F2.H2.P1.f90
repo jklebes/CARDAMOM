@@ -347,13 +347,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,pars(nopars)      & ! number of parameters
                          ,lat                 ! site latitude (degrees)
 
-    double precision, dimension(nodays), intent(inout):: lai_out & ! leaf area index
+    double precision, dimension(nodays), intent(out):: lai_out & ! leaf area index
                                                              ,GPP & ! Gross primary productivity
                                                              ,NEE   ! net ecosystem exchange of CO2
 
-    double precision, dimension((nodays+1), nopools), intent(inout):: POOLS  ! vector of ecosystem pools
+    double precision, dimension((nodays+1), nopools), intent(out):: POOLS  ! vector of ecosystem pools
 
-    double precision, dimension(nodays, nofluxes), intent(inout):: FLUXES  ! vector of ecosystem fluxes
+    double precision, dimension(nodays, nofluxes), intent(out):: FLUXES  ! vector of ecosystem fluxes
 
     ! declare local variables
     double precision ::      infi &

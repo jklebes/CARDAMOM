@@ -1110,12 +1110,12 @@ module cardamom_io
     implicit none 
 
     ! need to allocate memory to the model output variables
-    allocate(DATAin%M_LAI(DATAin%nodays), DATAin%M_GPP(DATAin%nodays) &
+    allocate(vars%M_LAI(DATAin%nodays), DATAin%M_GPP(DATAin%nodays) &
             ,DATAin%M_NEE(DATAin%nodays), DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes)&
             ,DATAin%M_POOLS((DATAin%nodays+1), DATAin%nopools))
 
     ! force zero in states and fluxes
-    DATAin%M_LAI(:) = 0d0; DATAin%M_GPP(:) = 0d0; DATAin%M_NEE(:) = 0d0
+    vars%M_LAI(:) = 0d0; DATAin%M_GPP(:) = 0d0; DATAin%M_NEE(:) = 0d0
     DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0
 
     ! alert the user
