@@ -9,6 +9,7 @@ set(FILES2  general/cardamom_structures.f90
                   model/DALEC.A1.C1.D2.F2.H2.P1/src/DALEC.A1.C1.D2.F2.H2.P1_PARS.f90
                   general/cardamom_io.f90
                   general/model_likelihood_wrapper.f90
+                  general/MHMCMC_StressTests.f90
                   #general/model_likelihood_wrapper_for_R.f90
                   model/DALEC.A1.C1.D2.F2.H2.P1/likelihood/MODEL_LIKELIHOOD.f90
                   #model/DALEC_1005a/src/DALEC_1005a.f90

@@ -2,7 +2,6 @@ program cardamom_framework
  !use math_functions, only: idum, rnstrt, inverse_matrix
  use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS !, initialise_mcmc_output
  use model_shared, only: PI
- use cardamom_structures, only: DATAin, io_space
  use cardamom_io, only: initialize, &
                         read_options, & 
                         restart_flag,   &
@@ -12,7 +11,7 @@ program cardamom_framework
                         write_covariance_matrix, &
                         close_output_files, write_covariance_info
  !use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
- !use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
+ use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
  !use model_likelihood_module, only: model_likelihood, &
  !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
  use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &

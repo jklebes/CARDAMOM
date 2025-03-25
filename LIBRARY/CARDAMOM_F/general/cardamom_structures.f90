@@ -10,24 +10,23 @@ module cardamom_structures
  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
  ! J. F. Exbrayat (University of Edinburgh)
  ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)
- ! See function / subroutine specific comments for exceptions and contributors
+ ! See function/subroutine specific comments for exceptions and contributors
  !!!!!!!!!!!
 
 implicit none
 
 private
 
-public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
+public:: data_type, DATAin,  emulator_parameters, emulator_pars
 
-  !!!!! such as the data type !!!!!
   type DATA_type
 
       ! drivers
-      double precision, allocatable, dimension(:,:) :: MET ! contains our met fields
-      double precision :: meanco2, meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
+      double precision, allocatable, dimension(:,:):: MET  ! contains our met fields
+      double precision:: meanco2, meantemp, meanrad, meanprecip  ! mean conditions used in some EDCs
 
       ! OBS: more can obviously be added
-      double precision, allocatable, dimension(:) :: GPP     & ! GPP (gC.m-2.day-1)
+      double precision, allocatable, dimension(:):: GPP     & ! GPP (gC.m-2.day-1)
                                           ,NEE               & ! NEE (gC.m-2.day-1)
                                           ,Fire              & ! Fire (gC.m-2.day-1)
                                           ,LAI               & ! LAI (m2/m2)
@@ -51,7 +50,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
 
 
       ! OBS uncertainties: obv these must be paired with OBS above
-      double precision, allocatable, dimension(:) :: GPP_unc     & ! (gC/m2/day)
+      double precision, allocatable, dimension(:):: GPP_unc     & ! (gC/m2/day)
                                           ,NEE_unc               & ! (gC/m2/day)
                                           ,Fire_unc              & ! (gC/m2/day)
                                           ,LAI_unc               & ! (m2/m2)
@@ -74,11 +73,11 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                           ,harvest_unc             ! gC/m2/day
 
       ! OBS lagged period (model timestep): obs these must be paired with OBS and their uncertainties above
-      double precision, allocatable, dimension(:) :: Cwood_inc_lag, Cwood_mortality_lag, & 
+      double precision, allocatable, dimension(:):: Cwood_inc_lag, Cwood_mortality_lag, & 
                                                      harvest_lag, foliage_to_litter_lag
 
       ! location of observations in the data stream
-      integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
+      integer, allocatable, dimension(:):: gpppts                   & ! gpppts vector used in deriving ngpp
                                            ,neepts                   & ! same for nee
                                            ,Firepts                  & ! same for Fire
                                            ,Cwood_incpts             & ! same for wood increment
@@ -100,10 +99,10 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                            ,fAPARpts                 & ! same for fraction absorbed PAR
                                            ,harvestpts                 ! same for C extracted due to harvest
 
-      double precision :: nobs_scaler
+      double precision:: nobs_scaler
 
       ! counters for the number of observations per data stream
-      integer :: total_obs              & ! total number of obervations
+      integer:: total_obs              & ! total number of obervations
                 ,ngpp                   & ! number of GPP observations
                 ,nnee                   & ! number of NEE observations
                 ,nFire                  & ! number of Fire observations
@@ -127,19 +126,19 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nharvest                 ! number of harvest observations
 
       ! saving computational speed by allocating memory to model output
-      double precision, allocatable, dimension(:) :: M_GPP    & !
+      double precision, allocatable, dimension(:):: M_GPP    & !
                                                     ,M_NEE    & !
                                                     ,M_LAI      !
       ! timing variable
-      integer :: nos_years, steps_per_year
-      double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
+      integer:: nos_years, steps_per_year
+      double precision, allocatable, dimension(:):: deltat  ! time step (decimal day)
 
-      double precision, allocatable, dimension(:,:) :: M_FLUXES & !
+      double precision, allocatable, dimension(:,:):: M_FLUXES & !
                                                       ,M_POOLS  & !
                                                       ,C_POOLS    !
       ! static data
-      integer :: nodays   & ! number of days in simulation
-                ,ID       & ! model ID, currently 1=DALEC_CDEA, 2=DALEC_BUCKET
+      integer:: nodays   & ! number of days in simulation
+                ,ID       & ! model ID, currently 1 = DALEC_CDEA, 2 = DALEC_BUCKET
                 ,noobs    & ! number of obs fields
                 ,nomet    & ! number met drivers
                 ,nofluxes & ! number of fluxes
@@ -148,41 +147,28 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,EDC      & ! Ecological and dynamical contraints on (1) or off (0)
                 ,yield    & ! yield class for ecosystem (forest only)
                 ,age      & ! time in years since ecosystem established (forest only)
-                ,pft        ! plant functional type information used to select appropriate DALEC submodel / ACM
+                ,pft        ! plant functional type information used to select appropriate DALEC submodel/ACM
 
-      double precision :: LAT ! site latitude
+      double precision:: LAT  ! site latitude
 
       ! binary file mcmc options (need to add all options HERE except
       ! inout files)
-      integer :: edc_random_search !
+      integer:: edc_random_search !
 
       ! priors
-      double precision, dimension(100) :: parpriors       & ! prior values
+      double precision, dimension(100):: parpriors       & ! prior values
                                          ,parpriorunc     & ! prior uncertainties
                                          ,parpriorweight   ! prior weighting
       ! other priors
-      double precision, dimension(50) :: otherpriors      & ! other prior values
+      double precision, dimension(50):: otherpriors      & ! other prior values
                                         ,otherpriorunc    & ! other prior uncertainties
                                         ,otherpriorweight   ! other prior weighting
 
-  end type ! DATA_type
-  type (DATA_type), save :: DATAin
+  end type  ! DATA_type
+  type (DATA_type), protected, save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
+                                    ! shared object !  Protected (read-only), can only be set via set_datain
 
-  type io_buffer_space
-
-    integer :: io_buffer, io_buffer_count
-    double precision, allocatable, dimension(:,:) :: &
-                                    variance_buffer, &
-                                   meanpars_buffer, &
-                                        pars_buffer
-
-    double precision, allocatable, dimension(:) :: &
-                                   nsample_buffer, &
-                               accept_rate_buffer, &
-                                      prob_buffer
-
-  end type
-  type(io_buffer_space), save :: io_space
+  ! type io_buffer_space  ! moved, samplers_io, each thread to have its own local intance
 
   type emulator_parameters
 
@@ -198,7 +184,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                                              nodepred, & ! prediction value for each tree
                                                               bestvar    ! for randomForests
 
-  end type ! emulator parameters
-  type (emulator_parameters), save :: emulator_pars
+  end type  ! emulator parameters
+  type (emulator_parameters), protected, save:: emulator_pars  ! TODO make sure not shared, or read-only
 
 end module cardamom_structures

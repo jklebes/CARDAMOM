@@ -1,11 +1,21 @@
 module model_shared
   use samplers_shared, only: PARINFO  
+  use cardamom_structures, only: DATA_TYPE
   public:: PI 
 
   type(PARINFO), protected:: PI  ! should not be writted to except by pars_info() !  
                                 ! If we want parallel runs 
                                 ! now Contains read-only description of the model parameters only
+  type(DATA_TYPE), protected:: DATAin  ! new for parallel chains:  Datain is hosted here.  To make 
+                                      ! sure it's read-only (we can't have multiple chains using it 
+                                      ! to store calcuation progress at the same time), it's protected
+                                      ! and can only be set via the function set_datain() before start of
+                                      ! model calcuations.
+
   contains
+
+  subroutine set_datain()
+  end subroutine
 
   ! split from read_pari_data
   subroutine initialize_parinfo()
