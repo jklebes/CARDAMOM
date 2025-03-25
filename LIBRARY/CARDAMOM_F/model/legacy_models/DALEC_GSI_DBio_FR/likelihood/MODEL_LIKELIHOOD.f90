@@ -1559,9 +1559,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_out ! output variables for log-likelihood
 

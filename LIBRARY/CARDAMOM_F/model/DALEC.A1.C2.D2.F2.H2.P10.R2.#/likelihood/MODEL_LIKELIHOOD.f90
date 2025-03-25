@@ -233,9 +233,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -309,9 +306,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -382,9 +376,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
@@ -1592,9 +1583,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
