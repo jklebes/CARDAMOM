@@ -73,6 +73,7 @@ double precision:: N_before_mv_target, & !
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38/sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204**2 = 5.670132
+double precision:: N_before_mv = 10d0
 !! step
 ! Is current proposal multivariate or not?
 logical:: multivariate_proposal = .false.

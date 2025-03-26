@@ -1,12 +1,13 @@
 program cardamom_framework
- !use math_functions, only: idum, rnstrt, inverse_matrix
- use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS !, initialise_mcmc_output
+ use math_functions, only:  rnstrt, idum  ! TODO redo random seeds
+ use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc !, initialise_mcmc_output  ! TODO parallel
  use model_shared, only: PI
  use cardamom_structures, only: DATAin 
  use cardamom_io, only: initialize, &
                         read_options, & 
                         restart_flag,   &
-                        update_for_restart_simulation
+                        update_for_restart_simulation, &
+                        find_edc_initial_values
  use samplers_io, only:  open_output_files, &
                         check_for_existing_output_files,  &
                         write_covariance_matrix, &
@@ -67,7 +68,7 @@ program cardamom_framework
  logical:: do_inflate = .false.
  logical:: sub_sample_complete = .false.
  double precision:: sub_fraction = 0.2d0
- double precision:: idum  ! TODO redo seeds
+ !double precision:: idum  ! TODO redo seeds
  type(MCMC_OUTPUT):: MCOUT
  type(MCMC_OPTIONS):: MCO
 
@@ -140,7 +141,7 @@ program cardamom_framework
 
  ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
- call read_options(solution_wanted, freq_print, freq_write, outfile)
+ call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
  ! check whether this is a restart?
  ! PI lives in model_shared and its info can be read after call to initiialize_model
  ! TODO not sure about MCO at this point
@@ -218,7 +219,7 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT%cov .and. MCOUT%use_multivariate) then
-             MCOUT%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
+             MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
          else
              ! TODO fct for this
              ! reset the parameter step size at the beginning of each attempt
@@ -263,7 +264,7 @@ program cardamom_framework
      MCOUT%nos_iterations = 0
 
      ! Reset the MCMC parameters for the next stage
-     call read_options(solution_wanted, freq_print, freq_write, outfile)
+     call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
@@ -327,7 +328,7 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT%cov .and. MCOUT%use_multivariate) then
-             MCOUT%Nparvar = (N_before_mv*dble(PI%npars)) + 1d0
+             MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
          else
              ! reset the parameter step size at the beginning of each attempt
              ! TODO fct for this
@@ -346,7 +347,7 @@ program cardamom_framework
      ! Restore module variables needed for the run-these components could be split
      ! into two subroutines to avoid double calling of file name creation
      ! components.
-     call read_options(solution_wanted, freq_print, freq_write, outfile)
+     call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
 
      ! Update the user
      write(*,*)"Beginning parameter search in real likelihoods"
