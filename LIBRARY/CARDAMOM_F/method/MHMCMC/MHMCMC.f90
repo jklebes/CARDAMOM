@@ -57,10 +57,10 @@ integer:: nwrite = 1000
 integer:: nprint = 1000
 real:: P_target  ! termination criteria 
 ! file names
-character(350):: parfilename = "parout.txt"
-character(350):: stepfilename = "stepout.txt"
-character(350) ::  covfilename = "covout.txt"
-character(350):: covinfofilename = "covinfoout.txt"
+character(350):: outfile = "parout.txt"
+character(350):: stepfile = "stepout.txt"
+character(350) ::  covfile = "covout.txt"
+character(350):: covifile = "covinfoout.txt"
 ! Adaptive !!
 ! setting for adaptive AP-MCMC step size
 double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
@@ -248,7 +248,7 @@ contains
     logical:: restart
 
     type(io_buffer_space):: io_space  ! this chain has its own io buffers
-    character(350):: parfilename, stepfilename, covfilename, covinfofilename
+    character(350):: outfile, stepfile, covfile, covifile
     double precision, dimension(PI%npars):: PARS_previous         & ! parameter values for current state
                                             ,PARS_proposed          & ! parameter values for current proposal
                                             ,BESTPARS        ! best set of parameters so far
@@ -336,15 +336,15 @@ contains
     allocate(MCOUT%covariance(npars, npars))
 
     ! process file names 
-    parfilename = MCO%parfilename
-    stepfilename = MCO%stepfilename
-    covfilename = MCO%covfilename
-    covinfofilename = MCO%covinfofilename
+    outfile = MCO%outfile
+    stepfile = MCO%stepfile
+    covfile = MCO%covfile
+    covifile = MCO%covifile
     if (MCO%n_chains > 1 .and. present(chainid) ) then
-      write (parfilename, '(a, i3)') MCO%parfilename, chainid
-      write (stepfilename, '(a, i3)') MCO%stepfilename, chainid
-      write (covfilename, '(a, i3)') MCO%covfilename, chainid
-      write (covinfofilename, '(a, i3)') MCO%covinfofilename, chainid
+      write (outfile, '(a, i3)') MCO%outfile, chainid
+      write (stepfile, '(a, i3)') MCO%stepfile, chainid
+      write (covfile, '(a, i3)') MCO%covfile, chainid
+      write (covifile, '(a, i3)') MCO%covifile, chainid
     endif
 
 
@@ -397,7 +397,7 @@ contains
     !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
     !, parname, stepname, covname, covinfoname)
     !TODO open separate output file for each chain !
-    call open_output_files(MCO%parfilename, MCO%stepfilename, MCO%covfilename, MCO%covinfofilename)
+    call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
 
 
 

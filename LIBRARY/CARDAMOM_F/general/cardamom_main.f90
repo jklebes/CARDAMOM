@@ -2,6 +2,7 @@ program cardamom_framework
  !use math_functions, only: idum, rnstrt, inverse_matrix
  use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS !, initialise_mcmc_output
  use model_shared, only: PI
+ use cardamom_structures, only: DATAin 
  use cardamom_io, only: initialize, &
                         read_options, & 
                         restart_flag,   &
@@ -66,6 +67,7 @@ program cardamom_framework
  logical:: do_inflate = .false.
  logical:: sub_sample_complete = .false.
  double precision:: sub_fraction = 0.2d0
+ double precision:: idum  ! TODO redo seeds
  type(MCMC_OUTPUT):: MCOUT
  type(MCMC_OPTIONS):: MCO
 
@@ -211,7 +213,7 @@ program cardamom_framework
          call run_mcmc(stresstest_sublikelihood_fct, PI, MCO, MCOUT, stresstest_likelihood_fct)
          ! Use the best parameter set as the starting point for the next stage
 ! REALLY NOT SURE I SHOULD BE DOING THIS-SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
-         parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
+         MCOUT%pars = MCOUT%bestpars
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
@@ -319,7 +321,7 @@ program cardamom_framework
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
-         parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
+         MCOUT%pars(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          MCO%fixedpars  = .true.
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update

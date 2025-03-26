@@ -1177,10 +1177,10 @@ module cardamom_io
     MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
     ! construct file names
-    write(MCO%parfilename, fmt='(A)')trim(outfile)//"PARS"
-    write(MCO%stepfilename, fmt='(A)')trim(outfile)//"STEP"
-    write(MCO%covfilename, fmt='(A)')trim(outfile)//"COV"
-    write(MCO%covinfofilename, fmt='(A)')trim(outfile)//"COVINFO"
+    write(MCO%outfile, fmt='(A)')trim(outfile)//"PARS"
+    write(MCO%stepfile, fmt='(A)')trim(outfile)//"STEP"
+    write(MCO%covfile, fmt='(A)')trim(outfile)//"COV"
+    write(MCO%covifile, fmt='(A)')trim(outfile)//"COVINFO"
 
   end subroutine read_options
   !
