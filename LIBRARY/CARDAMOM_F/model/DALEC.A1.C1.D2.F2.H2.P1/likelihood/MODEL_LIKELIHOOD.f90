@@ -1515,7 +1515,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function scale_likelihood(npars, pars)
+  double precision function scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness
 
@@ -1912,7 +1912,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function sqrt_scale_likelihood(npars, pars)
+  double precision function sqrt_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness
 
@@ -2309,7 +2309,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function log_scale_likelihood(npars, pars)
+  double precision function log_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness
 

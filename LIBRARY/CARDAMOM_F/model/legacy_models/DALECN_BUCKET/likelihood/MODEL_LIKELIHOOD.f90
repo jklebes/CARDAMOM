@@ -2063,7 +2063,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function scale_likelihood(npars,pars)
+  double precision function scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
 
     ! calculates the scale_likelihood of of the model output compared to the available

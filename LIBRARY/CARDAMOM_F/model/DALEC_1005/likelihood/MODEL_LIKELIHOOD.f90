@@ -1187,6 +1187,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -1521,7 +1524,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function scale_likelihood(npars,pars)
+  double precision function scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
 
     ! calculates the likelihood of of the model output compared to the available
@@ -1535,6 +1538,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -1884,7 +1890,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function sqrt_scale_likelihood(npars,pars)
+  double precision function sqrt_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
 
     ! calculates the likelihood of of the model output compared to the available
@@ -1898,6 +1904,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -2247,7 +2256,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function log_scale_likelihood(npars,pars)
+  double precision function log_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
 
     ! calculates the likelihood of of the model output compared to the available
@@ -2261,6 +2270,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
