@@ -162,9 +162,9 @@ module model_likelihood_module
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, ML_prior_out
 
@@ -186,7 +186,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -195,7 +195,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
                     ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year   &
                     ,PI%parmax, PARS, DATAin%MET &
-                    ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                    ,M_LAI, M_NEE, M_GPP, M_POOLS &
                     ,M_FLUXES, DATAin%meantemp, EDC2)
 
     ! calculate the likelihood
@@ -232,9 +232,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -263,7 +263,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -275,7 +275,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                        ,M_LAI, M_NEE, M_GPP, M_POOLS &
                         ,M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -310,9 +310,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -341,7 +341,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -353,7 +353,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                        ,M_LAI, M_NEE, M_GPP, M_POOLS &
                         ,M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -388,9 +388,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -419,7 +419,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -431,7 +431,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                        ,M_LAI, M_NEE, M_GPP, M_POOLS &
                         ,M_FLUXES, DATAin%meantemp, EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -477,14 +477,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
 !print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,local_fluxes, local_pools, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -1086,9 +1086,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -1117,7 +1117,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
@@ -1129,7 +1129,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                        ,M_LAI, M_NEE, M_GPP, M_POOLS &
                         ,M_FLUXES, DATAin%meantemp, EDC2)
 !print*,"model_likelihood: EDC2 done"
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -1184,7 +1184,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !------------------------------------------------------------------
   !
   !
-  double precision function likelihood(npars, pars)
+  double precision function likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness
 
@@ -1199,6 +1199,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -1569,6 +1572,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -1950,6 +1956,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -2331,6 +2340,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time

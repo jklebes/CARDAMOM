@@ -945,7 +945,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood(npars,pars)
+  double precision function likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
 
     ! calculates the likelihood of of the model output compared to the available
@@ -959,6 +959,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, no_years, y, s
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1170,6 +1173,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, no_years, y, s
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1381,6 +1387,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, no_years, y, s
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1592,6 +1601,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, no_years, y, s
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini
     double precision, allocatable :: mean_annual_pools(:)
 
