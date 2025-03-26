@@ -169,7 +169,7 @@ module model_likelihood_module
     double precision, dimension(PI%npars), intent(inout) :: PARS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
@@ -194,10 +194,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        call EDC1_CROP(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
        ! next need to run the model itself
        call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                             ,vars%M_FLUXES,vars%M_POOLS,DATAin%pft   &
+                             ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                             ,M_FLUXES,M_POOLS,DATAin%pft   &
                              ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,vars%M_GPP                &
+                             ,DATAin%nofluxes,M_GPP                &
                              ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
                              ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
                              ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
@@ -205,8 +205,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
         ! assess post running EDCs
         call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                       ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                      ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                      ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                      ,M_FLUXES,DATAin%meantemp,EDC2)
 
     else
 
@@ -215,16 +215,16 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
         ! next need to run the model itself
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                       ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                       ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                       ,M_FLUXES,M_POOLS,DATAin%nopars &
                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,vars%M_GPP)
+                       ,M_GPP)
 
         ! assess post running EDCs
         call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                       ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                      ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                      ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                      ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                      ,M_FLUXES,DATAin%meantemp,EDC2)
 
     end if ! crop or not if
 
@@ -265,7 +265,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -301,10 +301,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        ! then this is a crop run....
        ! run the dalec model
        call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                             ,vars%M_FLUXES,vars%M_POOLS,DATAin%pft   &
+                             ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                             ,M_FLUXES,M_POOLS,DATAin%pft   &
                              ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,vars%M_GPP                &
+                             ,DATAin%nofluxes,M_GPP                &
                              ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
                              ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
                              ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
@@ -313,10 +313,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
         ! run the dalec model
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                         ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                         ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                         ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                         ,M_FLUXES,M_POOLS,DATAin%nopars &
                          ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                         ,vars%M_GPP)
+                         ,M_GPP)
 
 
     endif ! crop choice
@@ -329,16 +329,16 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
             ! check edc2
             call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                           ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                          ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                          ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                          ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                          ,M_FLUXES,DATAin%meantemp,EDC2)
 
         else ! PFT == 1
 
             ! check edc2
             call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                         ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                         ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                         ,M_FLUXES,DATAin%meantemp,EDC2)
 
         endif ! crop choice
 
@@ -389,19 +389,19 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
        ! next need to run the model itself
        call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                             ,vars%M_FLUXES,vars%M_POOLS,DATAin%pft   &
+                             ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                             ,M_FLUXES,M_POOLS,DATAin%pft   &
                              ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,vars%M_GPP                &
+                             ,DATAin%nofluxes,M_GPP                &
                              ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
                              ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
                              ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
        call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                             ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
+                             ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
                              ,local_fluxes,local_pools,DATAin%pft   &
                              ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                             ,DATAin%nofluxes,vars%M_GPP                &
+                             ,DATAin%nofluxes,M_GPP                &
                              ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
                              ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
                              ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
@@ -410,22 +410,22 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
         ! next need to run the model itself
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                       ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                       ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                       ,M_FLUXES,M_POOLS,DATAin%nopars &
                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,vars%M_GPP)
+                       ,M_GPP)
 
         ! next need to run the model itself
         call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
+                       ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
                        ,local_fluxes,local_pools,DATAin%nopars &
                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,vars%M_GPP)
+                       ,M_GPP)
     end if ! crop or not if
 
     ! Compare outputs
-    flux_error = sum(abs(vars%M_FLUXES - local_fluxes))
-    pool_error = sum(abs(vars%M_POOLS - local_pools))
+    flux_error = sum(abs(M_FLUXES - local_fluxes))
+    pool_error = sum(abs(M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
@@ -434,11 +434,11 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(vars%M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(vars%M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
         end do
         stop
     end if
@@ -693,7 +693,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! LAI time series linear model must retrieve gradient which is at least
     ! positive (or some other reasonable critical threshold)
     ! if ((EDC2 == 1 .or. DIAG == 1) .and. &
-    !     linear_model_gradient(vars%M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
+    !     linear_model_gradient(M_LAI(DATAin%laipts),DATAin%LAI(DATAin%laipts),DATAin%nlai) < 0d0 ) then
     !     EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
     ! endif
 
@@ -1706,7 +1706,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -1748,10 +1748,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
           ! then this is a crop run....
           ! run the dalec model
           call CARBON_MODEL_CROP(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                                ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                                ,vars%M_FLUXES,vars%M_POOLS,DATAin%pft   &
+                                ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                                ,M_FLUXES,M_POOLS,DATAin%pft   &
                                 ,DATAin%nopars,DATAin%nomet,DATAin%nopools   &
-                                ,DATAin%nofluxes,vars%M_GPP                &
+                                ,DATAin%nofluxes,M_GPP                &
                                 ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root &
                                 ,PI%fol_frac,PI%stem_frac,PI%root_frac,PI%DS_LRLV&
                                 ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
@@ -1759,22 +1759,22 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
            ! check edc2
            call EDC2_CROP(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                         ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                         ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                         ,M_FLUXES,DATAin%meantemp,EDC2)
        else
 
            ! run the dalec model
            call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                            ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                            ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                            ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                            ,M_FLUXES,M_POOLS,DATAin%nopars &
                             ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                            ,vars%M_GPP)
+                            ,M_GPP)
 
            ! check edc2
            call EDC2_GSI(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                        ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                        ,M_FLUXES,DATAin%meantemp,EDC2)
 
        endif ! crop choice
 
@@ -1865,7 +1865,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! GPP Log-likelihood
     if (DATAin%ngpp > 0) then
-       tot_exp = sum(((vars%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
                        /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1873,13 +1873,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! LAI log-likelihood
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
-       tot_exp = sum(((vars%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (vars%M_LAI(dn) < 0d0) then
+         if (M_LAI(dn) < 0d0) then
              ! if not then we have unrealistic negative values or NaN so indue
              ! error
              tot_exp = tot_exp+(-log(infini))
@@ -1890,7 +1890,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((vars%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1900,7 +1900,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = vars%M_NEE(dn)+vars%M_GPP(dn)
+         tmp_var = M_NEE(dn)+M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -1913,9 +1913,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nwoo
          dn = DATAin%woopts(n)
          ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4)) &
+         ! tot_exp = tot_exp+(log((M_POOLS(dn,4)-M_POOLS(dn-365,4)) &
          !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
+         tot_exp = tot_exp+((M_POOLS(dn,4)-M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -1926,8 +1926,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(vars%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((vars%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+!         tot_exp = tot_exp+(log(M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+((M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -1941,7 +1941,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-           mean_annual_pools(y) = cal_max_annual_pools(vars%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+           mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -1963,8 +1963,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -1975,7 +1975,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCagb_stock
          dn = DATAin%Cagb_stockpts(n)
          ! remove coarse root fraction from wood (pars29)
-         tmp_var = vars%M_POOLS(dn,4)-(vars%M_POOLS(dn,4)*pars(29))
+         tmp_var = M_POOLS(dn,4)-(M_POOLS(dn,4)*pars(29))
          tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1987,7 +1987,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCcoarseroot_stock
          dn = DATAin%Ccoarseroot_stockpts(n)
          ! extract coarse root component from wood only
-         tmp_var = vars%M_POOLS(dn,4)*pars(29)
+         tmp_var = M_POOLS(dn,4)*pars(29)
          tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1999,8 +1999,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -2013,10 +2013,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12))) &
-!                           *vars%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+(((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12))) &
-                           *(vars%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+!         tot_exp=tot_exp+((log((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
+!                           *M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+(((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
+                           *(M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -2027,8 +2027,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
     endif
@@ -2039,7 +2039,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(vars%M_FLUXES(:,3)) / sum(vars%M_FLUXES(:,1))
+        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
         likelihood = likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
     end if
 
@@ -2082,7 +2082,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! GPP Log-scale_likelihood
     if (DATAin%ngpp > 0) then
-       tot_exp = sum(((vars%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
                        /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2090,13 +2090,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! LAI log-scale_likelihood
     if (DATAin%nlai > 0) then
        ! loop split to allow vectorisation
-       tot_exp = sum(((vars%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (vars%M_LAI(dn) < 0d0) then
+         if (M_LAI(dn) < 0d0) then
              ! if not then we have unrealistic negative values or NaN so indue
              ! error
              tot_exp = tot_exp+(-log(infini))
@@ -2107,7 +2107,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! NEE scale_likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((vars%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2117,7 +2117,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = vars%M_NEE(dn)+vars%M_GPP(dn)
+         tmp_var = M_NEE(dn)+M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -2130,9 +2130,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nwoo
          dn = DATAin%woopts(n)
          ! note that division is the uncertainty
-         ! tot_exp = tot_exp+(log((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4)) &
+         ! tot_exp = tot_exp+(log((M_POOLS(dn,4)-M_POOLS(dn-365,4)) &
          !                   / DATAin%WOO(dn))/log(DATAin%WOO_unc(dn)))**2
-         tot_exp = tot_exp+((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
+         tot_exp = tot_exp+((M_POOLS(dn,4)-M_POOLS(dn-365,4)) / DATAin%WOO_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2143,8 +2143,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCfol_stock
          dn = DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp = tot_exp+(log(vars%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+((vars%M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
+!         tot_exp = tot_exp+(log(M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+((M_POOLS(dn,2)-DATAin%Cfol_stock(dn)) / DATAin%Cfol_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2158,7 +2158,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual foliar pool
-           mean_annual_pools(y) = cal_max_annual_pools(vars%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+           mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -2180,8 +2180,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCwood_stock
          dn = DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/DATAin%Cwood_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2192,7 +2192,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCagb_stock
          dn = DATAin%Cagb_stockpts(n)
          ! remove coarse root fraction from wood (pars29)
-         tmp_var = vars%M_POOLS(dn,4)-(vars%M_POOLS(dn,4)*pars(29))
+         tmp_var = M_POOLS(dn,4)-(M_POOLS(dn,4)*pars(29))
          tot_exp = tot_exp+((tmp_var-DATAin%Cagb_stock(dn))/DATAin%Cagb_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
@@ -2204,7 +2204,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCcoarseroot_stock
          dn = DATAin%Ccoarseroot_stockpts(n)
          ! extract coarse root component from wood only
-         tmp_var = vars%M_POOLS(dn,4)*pars(29)
+         tmp_var = M_POOLS(dn,4)*pars(29)
          tot_exp = tot_exp+((tmp_var-DATAin%Ccoarseroot_stock(dn)) / DATAin%Ccoarseroot_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
@@ -2216,8 +2216,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCroots_stock
          dn = DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,3)-DATAin%Croots_stock(dn)) / DATAin%Croots_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2230,10 +2230,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nClit_stock
          dn = DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12))) &
-!                           *vars%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
-         tot_exp = tot_exp+(((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12))) &
-                           *(vars%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
+!         tot_exp=tot_exp+((log((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
+!                           *M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2d0
+         tot_exp = tot_exp+(((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
+                           *(M_POOLS(dn,5))-DATAin%Clit_stock(dn))/DATAin%Clit_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2244,8 +2244,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCsom_stock
          dn = DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp = tot_exp+((vars%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
+!         tot_exp=tot_exp+(log(M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
+         tot_exp = tot_exp+((M_POOLS(dn,6)-DATAin%Csom_stock(dn))/DATAin%Csom_stock_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-tot_exp
     endif
@@ -2256,7 +2256,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > 0) then
-        tot_exp = sum(vars%M_FLUXES(:,3)) / sum(vars%M_FLUXES(:,1))
+        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
         scale_likelihood = scale_likelihood-((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2d0
     end if
 

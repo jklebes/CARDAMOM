@@ -157,7 +157,7 @@ module model_likelihood_module
     double precision, dimension(PI%npars), intent(inout) :: PARS
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: prob_out
 
@@ -177,20 +177,20 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                   ,DATAin%LAT, vars%M_LAI, vars%M_NEE       &
-                   ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                   ,DATAin%LAT, M_LAI, M_NEE       &
+                   ,M_FLUXES,M_POOLS,DATAin%nopars &
                    ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                   ,vars%M_GPP)
+                   ,M_GPP)
 
     ! assess post running EDCs
     call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                   ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                  ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                  ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                  ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                  ,M_FLUXES,DATAin%meantemp,EDC2)
 
     ! combine results
     if (DATAin%EDC == 1 .and. (EDC1 == 0 .or. EDC2 == 0 .or. &
-        sum(vars%M_LAI) /= sum(vars%M_LAI) .or. sum(vars%M_GPP) /= sum(vars%M_GPP))) then
+        sum(M_LAI) /= sum(M_LAI) .or. sum(M_GPP) /= sum(M_GPP))) then
         EDC=0
     else
         EDC=1
@@ -219,7 +219,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 !    exp_orig=-log(2.)/(DATAin%nodays*DATAin%deltat)
 !    prob_exp=0.
 !    do n = 1, DATAin%nopools
-!       decay_coef=expdecay2(vars%M_POOLS,n,DATAin%deltat,DATAin%nopools,DATAin%nodays+1)
+!       decay_coef=expdecay2(M_POOLS,n,DATAin%deltat,DATAin%nopools,DATAin%nodays+1)
 !       if (decay_coef < exp_orig .and. decay_coef /= 1) then
 !          prob_exp=prob_exp-0.5*((decay_coef-exp_orig)/(exp_orig*10.))**2.
 !       end if
@@ -259,21 +259,21 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
-                     ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,M_FLUXES,M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,vars%M_GPP)
+                     ,M_GPP)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,vars%M_LAI,vars%M_NEE &
+                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,vars%M_GPP)
+                     ,M_GPP)
 
     ! Compare outputs
-    flux_error = sum(abs(vars%M_FLUXES - local_fluxes))
-    pool_error = sum(abs(vars%M_POOLS - local_pools))
+    flux_error = sum(abs(M_FLUXES - local_fluxes))
+    pool_error = sum(abs(M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays))) then
@@ -282,11 +282,11 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(vars%M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(vars%M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
         end do
         stop
     end if
@@ -1248,7 +1248,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
 double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_out ! output variables for log-likelihood
 
@@ -1279,16 +1279,16 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
 
        ! run the dalec model
        call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat,DATAin%nodays  &
-                      ,DATAin%LAT, vars%M_LAI, vars%M_NEE       &
-                      ,vars%M_FLUXES,vars%M_POOLS,DATAin%nopars &
+                      ,DATAin%LAT, M_LAI, M_NEE       &
+                      ,M_FLUXES,M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,vars%M_GPP)
+                      ,M_GPP)
 
        ! check edc2
        call EDC2_CDEA(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                      ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                     ,vars%M_LAI,vars%M_NEE,vars%M_GPP,vars%M_POOLS &
-                     ,vars%M_FLUXES,DATAin%meantemp,EDC2)
+                     ,M_LAI,M_NEE,M_GPP,M_POOLS &
+                     ,M_FLUXES,DATAin%meantemp,EDC2)
 
        ! check if EDCs are switched on
        if (DATAin%EDC == 1) then
@@ -1298,7 +1298,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        end if
 
        ! extra checks to ensure correct running of the model
-       if (sum(vars%M_LAI) /= sum(vars%M_LAI) .or. sum(vars%M_GPP) /= sum(vars%M_GPP)) then
+       if (sum(M_LAI) /= sum(M_LAI) .or. sum(M_GPP) /= sum(M_GPP)) then
            EDC=0
        end if
 
@@ -1372,7 +1372,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%ngpp
          dn=DATAin%gpppts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+((vars%M_GPP(dn)-DATAin%GPP(dn))/2.)**2.
+         tot_exp=tot_exp+((M_GPP(dn)-DATAin%GPP(dn))/2.)**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1384,10 +1384,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
          dn=DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
          ! errors of zero LAI which occur in managed systems
-         if (vars%M_LAI(dn) >= 0.) then
+         if (M_LAI(dn) >= 0.) then
              ! note that division is the uncertainty
-             !tot_exp = tot_exp+(log(max(0.001d0,vars%M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
-             tot_exp = tot_exp + (max(0.001d0,vars%M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
+             !tot_exp = tot_exp+(log(max(0.001d0,M_LAI(dn))/max(0.001d0,DATAin%LAI(dn)))/log(DATAin%LAI_unc(dn)))**2d0
+             tot_exp = tot_exp + (max(0.001d0,M_LAI(dn)-DATAin%LAI(dn))/DATAin%LAI_unc(dn))**2d0
          else
              ! if not then we have unrealistic negative values or NaN so indue
              ! error
@@ -1403,7 +1403,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nnee
          dn=DATAin%neepts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+((vars%M_NEE(dn)-DATAin%NEE(dn))/2.)**2.
+         tot_exp=tot_exp+((M_NEE(dn)-DATAin%NEE(dn))/2.)**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1413,7 +1413,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     if (DATAin%nreco > 0) then
        do n = 1, DATAin%nreco
          dn=DATAin%recopts(n)
-         temp_var=vars%M_NEE(dn)+vars%M_GPP(dn)
+         temp_var=M_NEE(dn)+M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp=tot_exp+((temp_var-DATAin%Reco(dn))/2.)**2.
        end do
@@ -1426,7 +1426,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nwoo
          dn=DATAin%woopts(n)
          ! note that division is the uncertainty
-         tot_exp=tot_exp+(log((vars%M_POOLS(dn,4)-vars%M_POOLS(dn-365,4))/DATAin%WOO(dn))/log(2.))**2.
+         tot_exp=tot_exp+(log((M_POOLS(dn,4)-M_POOLS(dn-365,4))/DATAin%WOO(dn))/log(2.))**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1437,8 +1437,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCfol_stock
          dn=DATAin%Cfol_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((vars%M_POOLS(dn,2)-DATAin%Cfol_stock(dn))/(DATAin%Cfol_stock(dn)*0.20))**2.
+!         tot_exp=tot_exp+(log(M_POOLS(dn,2)/DATAin%Cfol_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((M_POOLS(dn,2)-DATAin%Cfol_stock(dn))/(DATAin%Cfol_stock(dn)*0.20))**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1449,8 +1449,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCwood_stock
          dn=DATAin%Cwood_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((vars%M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
+!         tot_exp=tot_exp+(log(M_POOLS(dn,4)/DATAin%Cwood_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((M_POOLS(dn,4)-DATAin%Cwood_stock(dn))/(DATAin%Cwood_stock(dn)*0.20))**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1461,8 +1461,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCroots_stock
          dn=DATAin%Croots_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((vars%M_POOLS(dn,3)-DATAin%Croots_stock(dn))/(DATAin%Croots_stock(dn)*0.20))**2.
+!         tot_exp=tot_exp+(log(M_POOLS(dn,3)/DATAin%Croots_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((M_POOLS(dn,3)-DATAin%Croots_stock(dn))/(DATAin%Croots_stock(dn)*0.20))**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1475,8 +1475,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nClit_stock
          dn=DATAin%Clit_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+((log((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12)))*vars%M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+(((sum(vars%M_FLUXES(:,10))/sum(vars%M_FLUXES(:,10)+vars%M_FLUXES(:,12)))*(vars%M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*0.20))**2.
+!         tot_exp=tot_exp+((log((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12)))*M_POOLS(dn,5))/DATAin%Clit_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+(((sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12)))*(M_POOLS(dn,5))-DATAin%Clit_stock(dn))/(DATAin%Clit_stock(dn)*0.20))**2.
       end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1487,8 +1487,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
        do n = 1, DATAin%nCsom_stock
          dn=DATAin%Csom_stockpts(n)
          ! note that division is the uncertainty
-!         tot_exp=tot_exp+(log(vars%M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
-         tot_exp=tot_exp+((vars%M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*0.20))**2.
+!         tot_exp=tot_exp+(log(M_POOLS(dn,6)/DATAin%Csom_stock(dn))/log(2.))**2.
+         tot_exp=tot_exp+((M_POOLS(dn,6)-DATAin%Csom_stock(dn))/(DATAin%Csom_stock(dn)*0.20))**2.
        end do
        likelihood=likelihood-0.5*tot_exp
     endif
@@ -1500,7 +1500,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools)) :: M_POOLS
     ! increments as done above for NEE,LAI and GPP
     if (DATAin%otherpriors(1) > -9999) then
        do n = 1, DATAin%nopools
-          pool_dynamics=vars%M_POOLS(DATAin%nodays+1,n)/vars%M_POOLS(1,n)
+          pool_dynamics=M_POOLS(DATAin%nodays+1,n)/M_POOLS(1,n)
           likelihood=likelihood-(0.5*(log(pool_dynamics/DATAin%otherpriors(1))/log(DATAin%otherpriors(1)))**2.)
        end do
     end if
