@@ -1709,7 +1709,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        ML_out=ML_out+log(EDC)
 
        ! calculate final model likelihood when compared to obs
-       ML_out=ML_out+likelihood(PI%npars,PARS)
+       ML_out=ML_out+likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
        ! TLS: development test, add EDC fails to the likelihood calculation to
        ! driver the analysis. NOTE: that the EDCs checking for NaN or negative

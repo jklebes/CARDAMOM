@@ -1587,7 +1587,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
        ! calculate final model likelihood when compared to obs
        if (EDC == 1) then
-          ML_out=ML_out+likelihood(PI%npars,PARS)
+          ML_out=ML_out+likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
        endif ! EDC still == 1
 
     end if ! EDC == 1

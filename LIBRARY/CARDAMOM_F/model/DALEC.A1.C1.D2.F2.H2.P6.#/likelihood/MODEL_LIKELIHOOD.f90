@@ -283,7 +283,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out + scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
   end subroutine sub_model_likelihood
   !
@@ -354,7 +354,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + sqrt_scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out + sqrt_scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
   end subroutine sqrt_model_likelihood
   !
@@ -425,7 +425,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + log_scale_likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out + log_scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
   end subroutine log_model_likelihood
   !
@@ -1090,7 +1090,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS)
     write (*,*) ML_prior_out, PI%npars,DATAin%parpriors,DATAin%parpriorunc,PARS
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
+    ML_obs_out = ML_obs_out + likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
   end subroutine model_likelihood
   !
