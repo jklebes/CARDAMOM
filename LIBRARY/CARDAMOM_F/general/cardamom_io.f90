@@ -1115,8 +1115,8 @@ module cardamom_io
             ,DATAin%M_POOLS((DATAin%nodays+1), DATAin%nopools))
 
     ! force zero in states and fluxes
-    M_LAI(:) = 0d0; DATAin%M_GPP(:) = 0d0; DATAin%M_NEE(:) = 0d0
-    DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0
+    !M_LAI(:) = 0d0; DATAin%M_GPP(:) = 0d0; DATAin%M_NEE(:) = 0d0
+    !DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0
 
     ! alert the user
     write(*,*)"Created fields for model output"

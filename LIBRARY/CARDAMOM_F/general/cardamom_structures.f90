@@ -165,7 +165,7 @@ public:: data_type, DATAin,  emulator_parameters, emulator_pars
                                         ,otherpriorweight   ! other prior weighting
 
   end type  ! DATA_type
-  type (DATA_type), protected, save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
+  type (DATA_type), save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
                                     ! shared object !  Protected (read-only), can only be set via set_datain
 
   ! type io_buffer_space  ! moved, samplers_io, each thread to have its own local intance
