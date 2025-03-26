@@ -173,7 +173,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
-    if (.not.sanity_check) call model_sanity_check(PI%parini)
+    if (.not.sanity_check) call model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
     ! crop or not split....trouble
     if (DATAin%PFT == 1) then
@@ -236,7 +236,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine model_sanity_check(PARS)
+  subroutine model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
@@ -257,6 +257,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
     double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
     double precision :: pool_error, flux_error
+double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Run model
 
