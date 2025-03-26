@@ -1044,6 +1044,7 @@ module cardamom_io
 
   subroutine initialize(infile)  ! formerly read_pari_data
     ! 3 steps must be called in this order 
+    use model_shared, only: initialize_parinfo
     implicit none
     character(350), intent(in):: infile
 
