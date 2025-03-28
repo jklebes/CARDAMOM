@@ -46,9 +46,10 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine cardamom_model_library  ! TODO might be for model_shared
-    use cardamom_structures, only: DATAin
+  subroutine cardamom_model_library(DATAin)  ! TODO might be for model_shared
+    use cardamom_structures, only: DATA_type
     implicit none
+    type(DATA_type), intent(inout):: DATAin 
 
     ! don't forget to update values found in the relevant model*_PARS.f90
 
@@ -540,8 +541,8 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-    subroutine read_binary_data(infile)
-      use cardamom_structures, only: DATAin
+    subroutine read_binary_data(infile, DATAin)
+      use cardamom_structures, only: DATA_type
       use CARBON_MODEL_MOD, only: soil_frac_clay, soil_frac_sand &
                                  ,nos_soil_layers
 
@@ -556,6 +557,8 @@ module cardamom_io
     ! TEMPORAL DRIVERS & DATA: 301-end
 
     implicit none
+
+    type(DATA_type), intetn(inout):: DATAin
 
     ! declare input variables
     character(350):: infile
@@ -1053,20 +1056,20 @@ module cardamom_io
     call initialize_model()
   end subroutine
 
-  !
-  !------------------------------------------------------------------
-  ! split from read_pari_data
-  subroutine read_check_binary_data(infile)
+  subroutine read_check_binary_data(infile, DATAin)
+  !! Read infile, modify fields of a (local) DATA_type struct
+  !! subroutine call for input binary to be read and then allocates the input
+  !! data to extracting the data to the correct observation and parameter types
+  !! split from read_pari_data
     use MODEL_PARAMETERS, only: pars_info
     use model_shared, only : PI
-    use cardamom_structures, only: DATAin
+    use cardamom_structures, only: DATA_type
 
-    ! subroutine call for input binary to be read and then allocates the input
-    ! data to extracting the data to the correct observation and parameter types
 
     implicit none
 
-    ! declare input variables
+    type(DATA_type), intent(inout):: DATAin
+
     character(350), intent(in):: infile
 
     ! declare local variables
@@ -1102,13 +1105,16 @@ module cardamom_io
 
   end subroutine read_check_binary_data
 
-  ! split from read_pari_data
-  ! TODO not io, belongs in a differnt file
-  ! depends on having called read_binary_data or read_check_binary_data first
-  ! for DATAin%nodays and nopools 
-  subroutine initialize_model()
-    use cardamom_structures, only: DATAin
+  subroutine initialize_model(DATAin)
+  !! split from read_pari_data
+  !! TODO not io, belongs in a differnt file
+  !! depends on having called read_binary_data or read_check_binary_data first
+  !! for DATAin%nodays and nopools 
+    use cardamom_structures, only: DATA_type
+
     implicit none 
+
+    type(DATA_type), intent(inout):: DATAin
 
     ! need to allocate memory to the model output variables
     allocate(DATAin%M_LAI(DATAin%nodays), DATAin%M_GPP(DATAin%nodays) &
@@ -1127,9 +1133,8 @@ module cardamom_io
   !
   subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
     use MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
-
-    ! loads required options about the MHMCMC either form hardcoded sources or
-    ! from variables which were read form the command line
+    !! loads required options about the MHMCMC either form hardcoded sources or
+    !! from variables which were read from the command line
 
     implicit none
 
@@ -1187,13 +1192,13 @@ module cardamom_io
   !
   !-------------------------------------------------------------------
   !
-  subroutine update_for_restart_simulation(MCO, MCOUT)
+  subroutine update_for_restart_simulation(MCO, MCOUT, DATAin)
     !! subroutine is responsible for loading previous parameter and step size
     !! information into the current
     !! modifies: arg MCOUT%pars. To be used as starting point for next run.
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
     use model_shared, only: PI
-    use cardamom_structures, only: DATAin
+    use cardamom_structures, only: DATA_type
     use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
 
 
@@ -1202,6 +1207,7 @@ module cardamom_io
     ! local variables
     type(MCMC_OPTIONS), intent(inout):: MCO
     type(MCMC_OUTPUT), intent(inout):: MCOUT
+    type(DATA_type), intent(inout):: DATAin
     integer:: a, b, c, i, j, num_lines, status
     double precision:: dummy
     double precision, dimension(:,:), allocatable:: tmp

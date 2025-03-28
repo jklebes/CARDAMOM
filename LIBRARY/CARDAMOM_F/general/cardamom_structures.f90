@@ -17,7 +17,7 @@ implicit none
 
 private
 
-public:: data_type, DATAin,  emulator_parameters, emulator_pars
+public:: data_type, DATAin, set_datain,  emulator_parameters, emulator_pars
 
   type DATA_type
 
@@ -165,10 +165,10 @@ public:: data_type, DATAin,  emulator_parameters, emulator_pars
                                         ,otherpriorweight   ! other prior weighting
 
   end type  ! DATA_type
-  type (DATA_type), save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
+  type (DATA_type), protected, save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
                                     ! shared object !  Protected (read-only), can only be set via set_datain
 
-  ! type io_buffer_space  ! moved, samplers_io, each thread to have its own local intance
+  
 
   type emulator_parameters
 
@@ -186,5 +186,13 @@ public:: data_type, DATAin,  emulator_parameters, emulator_pars
 
   end type  ! emulator parameters
   type (emulator_parameters), protected, save:: emulator_pars  ! TODO make sure not shared, or read-only
+contains
 
+    subroutine set_datain(datain_source)
+        ! A setter, copying the argument to cardamom_structures:: DATAin
+        ! The central DATAin in module cardamom_structures can ONLY be set by the constructor, 
+        ! this ensures that no model calculations are writing to its elements from different parallel threads
+        type(DATA_type), intent(in):: datain_source
+        DATAin = datain_source
+    end subroutine set_datain
 end module cardamom_structures
