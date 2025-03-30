@@ -46,7 +46,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-  subroutine cardamom_model_library(DATAin)  ! TODO might be for model_shared
+  subroutine cardamom_model_library(DATAin)  ! TODO maybe move this info to model_shared
     use cardamom_structures, only: DATA_type
     implicit none
     type(DATA_type), intent(inout):: DATAin 
@@ -558,7 +558,7 @@ module cardamom_io
 
     implicit none
 
-    type(DATA_type), intetn(inout):: DATAin
+    type(DATA_type), intent(inout):: DATAin
 
     ! declare input variables
     character(350):: infile
@@ -609,7 +609,7 @@ module cardamom_io
     soil_frac_clay(1) = statdat(14)  ! top soil clay percentage
     soil_frac_clay(2:nos_soil_layers) = statdat(15)  ! bot
     ! call for model specific values
-    call cardamom_model_library
+    call cardamom_model_library(DATAin)
 
     ! allocate case specific information
     DATAin%edc_random_search = int(statdat(11))
@@ -1047,13 +1047,16 @@ module cardamom_io
 
   subroutine initialize(infile)  ! formerly read_pari_data
     ! 3 steps must be called in this order 
+    use cardamom_structures, only: DATA_type, set_datain
     use model_shared, only: initialize_parinfo
     implicit none
     character(350), intent(in):: infile
+    type(DATA_type):: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures:: DATAin
 
     call initialize_parinfo()
-    call read_check_binary_data(infile)
-    call initialize_model()
+    call read_check_binary_data(infile, DATAin)
+    call initialize_model(DATAin)
+    call set_datain(DATAin)
   end subroutine
 
   subroutine read_check_binary_data(infile, DATAin)
@@ -1078,7 +1081,7 @@ module cardamom_io
     ! remind us what file we're about to access
     write(*,*) "Input file = ",trim(infile)
     ! initialise data structure and read the binary
-    call read_binary_data(infile)
+    call read_binary_data(infile, DATAin)
     ! check:
     ! PI%npars = DATAin%nopars don't set from DATAin, instead check
     if (PI%npars /= DATAin%nopars) then
@@ -1192,13 +1195,13 @@ module cardamom_io
   !
   !-------------------------------------------------------------------
   !
-  subroutine update_for_restart_simulation(MCO, MCOUT, DATAin)
+  subroutine update_for_restart_simulation(MCO, MCOUT)
     !! subroutine is responsible for loading previous parameter and step size
     !! information into the current
     !! modifies: arg MCOUT%pars. To be used as starting point for next run.
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
     use model_shared, only: PI
-    use cardamom_structures, only: DATA_type
+    use cardamom_structures, only: DATAin  ! read-only
     use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
 
 
@@ -1207,10 +1210,10 @@ module cardamom_io
     ! local variables
     type(MCMC_OPTIONS), intent(inout):: MCO
     type(MCMC_OUTPUT), intent(inout):: MCOUT
-    type(DATA_type), intent(inout):: DATAin
     integer:: a, b, c, i, j, num_lines, status
     double precision:: dummy
     double precision, dimension(:,:), allocatable:: tmp
+
 
     ! the parameter and step files should have already been openned so
     ! read the parameter and step files to get to the end
