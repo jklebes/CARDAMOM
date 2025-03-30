@@ -258,7 +258,8 @@ module cardamom_io
     ! declare local variables
     type(MCMC_OUTPUT), intent(out):: MCOUT  ! TODO array
     type(MCMC_OPTIONS), intent(out):: MCO
-    integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, append_save
+    integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
+    logical:: append_save
     double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
     double precision, dimension(PI%npars):: parini  ! local variable, or array
@@ -268,7 +269,7 @@ module cardamom_io
     append_save = MCO%append
 
     ! set MCMC options needed for EDC run
-    MCO%APPEND = 0
+    MCO%APPEND = .false.
     MCO%nADAPT = 500
     MCO%fADAPT = 1d0
     MCO%nOUT = 100000
@@ -1149,7 +1150,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     ! TODO should be MCO defaults?
-    MCO%append = 1
+    MCO%append = .true.
     MCO%nADAPT = 1000  ! TLS: 500 -> 1000 -> 5000 -> 10000
     MCO%fADAPT = 0.5d0
     !MCO%randparini = .false.

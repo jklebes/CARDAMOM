@@ -238,7 +238,7 @@ program cardamom_framework
          ! correct for this
          MCO%nOUT = max(1, nOUT_save-MCOUT%nos_iterations)
          ! by pass read_options file for StressTest special case
-         MCO%append = 1
+         MCO%append = .true.
          MCO%nADAPT = 1000
          MCO%fADAPT = 0.5d0
          MCO%randparini = .false.
