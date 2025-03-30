@@ -1,9 +1,8 @@
 module model_shared
   use samplers_shared, only: PARINFO  
   use cardamom_structures, only: DATA_TYPE
-  public:: PI 
 
-  type(PARINFO), protected:: PI  ! should not be writted to except by pars_info() !  
+  type(PARINFO)  :: PI  ! should not be writted to except by pars_info() !  
                                 ! If we want parallel runs 
                                 ! now Contains read-only description of the model parameters only
 
@@ -14,12 +13,12 @@ module model_shared
 
   ! split from read_pari_data
   subroutine initialize_parinfo()
-    use MODEL_PARAMETERS, only: pars_info
+    use MODEL_PARAMETERS, only:  pars_info
     implicit none 
     integer:: i
 
     ! load parameter max/min information, npars 
-    call pars_info()
+    call pars_info(PI)
 
   ! Begin allocating parameter info
     if (.not. allocated(PI%parmin)) then 

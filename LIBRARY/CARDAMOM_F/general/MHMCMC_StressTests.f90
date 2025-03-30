@@ -1,7 +1,7 @@
 ! TODO move to tests
 module MHMCMC_StressTests
-    use cardamom_structures, only: DATA_type
     use samplers_shared, only: PARINFO
+    use model_shared, only : PI
 
   ! Module contains a number of diagnostic tests used to ensure that the MCMC
   ! is able to retrieve a known distribution of parameters for simple models.
@@ -22,9 +22,6 @@ module MHMCMC_StressTests
 
   ! Assume all contents private unless explicitly states
   private
-
-  type(PARINFO):: PI
-  type(data_type):: datain 
 
   ! Explicit statement of public variables or functions
   public:: prepare_for_stress_test, StressTest_likelihood_fct, StressTest_sublikelihood_fct
@@ -82,6 +79,8 @@ module MHMCMC_StressTests
     do i = 2, nopars
        area(i-1) = pars(1) * pars(i) ** 2d0
     end do
+    write(*,*) "area, obs", area, circle_obs
+    write(*,*) circle_obs_unc
     ! Convert into log-likelihood
     output = sum(-0.5d0 * (((area-circle_obs) / circle_obs_unc) ** 2))
 
@@ -90,6 +89,7 @@ module MHMCMC_StressTests
   !--------------------------------------------------------------------
   !
   subroutine circle_parameter_prior_ranges
+    use model_shared, only : PI
 
     ! define the parameter prior ranges
 
@@ -241,6 +241,7 @@ module MHMCMC_StressTests
   !
   subroutine prepare_for_stress_test(infile, outfile)
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
+    use cardamom_structures, only: DATA_type, set_datain
     ! Function by-passes the main CARDAMOM i/o code to allow
     ! for a non-standard operation of the model stress test
 
@@ -248,6 +249,7 @@ module MHMCMC_StressTests
 
     ! Arguments
     character(350), intent(inout):: infile, outfile
+    type(Data_type):: DATAin  ! local tmp copy 
 
     ! local variables
     integer:: i
@@ -259,6 +261,7 @@ module MHMCMC_StressTests
 
     if (outfile == "Circle") then
         ! ID = -1 StressTest-Circle
+        write(*,*) "setting datain%id"
         DATAin%ID = -1
         DATAin%nodays = 1
         DATAin%nomet = 1
@@ -304,6 +307,7 @@ module MHMCMC_StressTests
 
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars 
+    write(*,*) "npars2" , PI%npars
     allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), MCOUT%pars(PI%npars) &
             ,PI%parfix(PI%npars), MCOUT%parvar(PI%npars), PI%paradj(PI%npars) &
             ,MCOUT%covariance(PI%npars, PI%npars), MCOUT%meanpar(PI%npars))
@@ -337,6 +341,8 @@ module MHMCMC_StressTests
        MCOUT%covariance(i, i) = 1d0
     end do
 
+    call set_datain(DATAin)
+
   end subroutine prepare_for_stress_test
 
   subroutine stresstest_likelihood_fct(params, npars, loglikelihood)
@@ -348,8 +354,8 @@ module MHMCMC_StressTests
   real(c_double), intent(out):: loglikelihood
 
   real(c_double):: ML_obs_out, ML_prior_out
-
   call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
+  write(*,*) params, ML_obs_out, ML_prior_out
 
   loglikelihood = ML_obs_out+ML_prior_out
 
@@ -359,6 +365,7 @@ module MHMCMC_StressTests
   !------------------------------------------------------------------
   !
   subroutine StressTest_likelihood(PARS, ML_obs_out, ML_prior_out)
+use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
@@ -385,6 +392,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
         ! run the circle model
         call circle(PARS, DATAin%nopars, output)
         ! Estimate the likelihood score
+        write(*,*) "output", output
         ML_obs_out = output + (-0.5d0 * ((((pars(1)-circle_par_1)) / circle_obs_unc)**2))
     else if (DATAin%ID == -2) then
         ! Estimate likelihood for a single parameter retrieval
@@ -418,7 +426,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !------------------------------------------------------------------
   !
   subroutine StressTest_sublikelihood(PARS, ML_obs_out, ML_prior_out)
-
+use cardamom_structures, only: DATAin
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are

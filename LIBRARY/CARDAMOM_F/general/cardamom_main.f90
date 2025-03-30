@@ -134,9 +134,10 @@ program cardamom_framework
  ! Determine whether ot not we are doing a real analysis or running a stress trest
  if (trim(infile) == "StressTest") then
      ! call special functions to prepare for stress test
-     call prepare_for_stress_test(infile, outfile)
+     call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+     write(*,*) "npars3" , PI%npars
  else
-    call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model
+    call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
  end if
 
  ! load module variables needed for restart check

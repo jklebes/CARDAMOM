@@ -84,7 +84,7 @@ logical:: use_multivariate
 logical:: restart
 logical:: randparini
 logical:: returnpars  ! a variable that is never used and has no effect, needs deleting in all model likelihood files
-logical, dimension(:), allocatable:: fixedpars 
+logical:: fixedpars  ! never used
 end type MCMC_OPTIONS
 
 
@@ -406,6 +406,7 @@ contains
     ! TODO implement reading in PI%fix_pars
     if (.not. restart) then
     call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
+    write(*,*) "init random after", PARS_previous
     ! Inform the user
     write(*,*) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
     ! initialize loglikelihood value of the given model with these pars

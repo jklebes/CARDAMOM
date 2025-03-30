@@ -10,14 +10,14 @@ module MODEL_PARAMETERS
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+  ! See function/subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
   ! make all private
   private
 
   ! specify explicitly the public
-  public :: pars_info
+  public:: pars_info
 
   contains
 
@@ -35,7 +35,7 @@ module MODEL_PARAMETERS
     implicit none
 
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
-    ! 22/11/2019 - try not to lose this information as it is needed for comparability
+    ! 22/11/2019-try not to lose this information as it is needed for comparability
 
     !
     ! declare parameters
@@ -45,7 +45,7 @@ module MODEL_PARAMETERS
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
-    ! Fraction of GPP respired as Rm(fol,root,wood)
+    ! Fraction of GPP respired as Rm(fol, root, wood)
     PI%parmin(2) = 0.1d0
     PI%parmax(2) = 0.8d0
 
@@ -60,24 +60,24 @@ module MODEL_PARAMETERS
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 6d0 !8d0
+    PI%parmax(5) = 6d0  ! 8d0
 
-    ! TOR wood* - 1% loss per year value
-    PI%parmin(6) = 0.000009d0 ! 304  years
+    ! TOR wood*- 1% loss per year value
+    PI%parmin(6) = 0.000009d0  ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! TOR roots
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmin(7) = 0.001368925d0  ! 2    years  ! 0.0006844627d0  ! 4 years
     PI%parmax(7) = 0.02d0        ! 0.13 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmin(8) = 0.0001141d0  ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC  ! 0.0001368926d0 !   20 years at 0oC
+!    PI%parmin(9) = 0.0000001d0  ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
@@ -86,17 +86,17 @@ module MODEL_PARAMETERS
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
-    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
+    ! Kattge et al (2011) offers a potential prior range of 3.4-30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
-    ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
-    PI%parmin(11) = 12d0 !3.4d0 !5d0
-    PI%parmax(11) = 30d0 !42d0 !50d0
+    ! Thus CUE = NUE*avN -> 1.64/42.0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61/29.68) from TRY
+    PI%parmin(11) = 12d0  ! 3.4d0  ! 5d0
+    PI%parmax(11) = 30d0  ! 42d0  ! 50d0
     ! log10 avg foliar N (gN.m-2)
     ! Kattge et al., (2011) (Quantiles 25% / 75%)
     ! and Thomas et al., (2019) (Aconite canopy paper)
-!    PI%parmin(11) = 0.07918125d0!0d0 !-0.2218487d0 !TLS: restricted to 1.2 gN/m2leaf
-!    PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
+!    PI%parmin(11) = 0.07918125d0  ! 0d0  ! -0.2218487d0  ! TLS: restricted to 1.2 gN/m2leaf
+!    PI%parmax(11) = 0.4771213d0  ! 0.5563025d0  ! TLS: restricted to 3 gC/m2leaf
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
@@ -127,12 +127,12 @@ module MODEL_PARAMETERS
     PI%parmin(25) = 0.15d0
     PI%parmax(25) = 0.50d0
 
-    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! BUCKET-coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 100d0
-    PI%parmax(26) = 2500d0 !500d0
+    PI%parmax(26) = 2500d0  ! 500d0
 
-    ! BUCKET - maximum rooting depth
+    ! BUCKET-maximum rooting depth
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
@@ -148,7 +148,7 @@ module MODEL_PARAMETERS
     ! Combustion completeness factor for soil
     PI%parmin(31) = 0.001d0
     PI%parmax(31) = 0.1d0
-    ! Combustion completeness factor for foliage + fine root litter
+    ! Combustion completeness factor for foliage+fine root litter
     PI%parmin(32) = 0.01d0
     PI%parmax(32) = 0.99d0
 
@@ -186,7 +186,7 @@ module MODEL_PARAMETERS
 
     ! C_som
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    PI%parmax(23) = 250000d0  ! 90000d0
 
     ! Initial soil water
     ! a fraction of field capacity
