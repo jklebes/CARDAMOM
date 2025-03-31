@@ -250,6 +250,7 @@ program cardamom_framework
      ! Let the user know how many more we will propose
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      ! Call the AP-MCMC
+     write(*,*)"Stresstest runmcmc 2"
      call run_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT, stresstest_likelihood_fct)
      ! Tell the user the best parameter set
      print*,"Best parameters = ",MCOUT%bestpars

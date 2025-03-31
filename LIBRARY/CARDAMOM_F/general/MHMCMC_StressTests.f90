@@ -79,8 +79,9 @@ module MHMCMC_StressTests
     do i = 2, nopars
        area(i-1) = pars(1) * pars(i) ** 2d0
     end do
-    write(*,*) "area, obs", area, circle_obs
-    write(*,*) circle_obs_unc
+    if (isnan(pars(1))) then 
+      stop 1
+    endif
     ! Convert into log-likelihood
     output = sum(-0.5d0 * (((area-circle_obs) / circle_obs_unc) ** 2))
 
@@ -354,8 +355,8 @@ module MHMCMC_StressTests
   real(c_double), intent(out):: loglikelihood
 
   real(c_double):: ML_obs_out, ML_prior_out
+  write(*,*) "likelihood_fct with", params
   call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
-  write(*,*) params, ML_obs_out, ML_prior_out
 
   loglikelihood = ML_obs_out+ML_prior_out
 
@@ -390,6 +391,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 
     if (DATAin%ID == -1) then
         ! run the circle model
+        write(*,*) "evaluating circle likelihood with", PARS
         call circle(PARS, DATAin%nopars, output)
         ! Estimate the likelihood score
         write(*,*) "output", output
