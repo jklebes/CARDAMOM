@@ -262,7 +262,6 @@ module MHMCMC_StressTests
 
     if (outfile == "Circle") then
         ! ID = -1 StressTest-Circle
-        write(*,*) "setting datain%id"
         DATAin%ID = -1
         DATAin%nodays = 1
         DATAin%nomet = 1
@@ -308,7 +307,6 @@ module MHMCMC_StressTests
 
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars 
-    write(*,*) "npars2" , PI%npars
     allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), MCOUT%pars(PI%npars) &
             ,PI%parfix(PI%npars), MCOUT%parvar(PI%npars), PI%paradj(PI%npars) &
             ,MCOUT%covariance(PI%npars, PI%npars), MCOUT%meanpar(PI%npars))
@@ -355,7 +353,6 @@ module MHMCMC_StressTests
   real(c_double), intent(out):: loglikelihood
 
   real(c_double):: ML_obs_out, ML_prior_out
-  write(*,*) "likelihood_fct with", params
   call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
 
   loglikelihood = ML_obs_out+ML_prior_out
@@ -391,10 +388,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 
     if (DATAin%ID == -1) then
         ! run the circle model
-        write(*,*) "evaluating circle likelihood with", PARS
         call circle(PARS, DATAin%nopars, output)
         ! Estimate the likelihood score
-        write(*,*) "output", output
         ML_obs_out = output + (-0.5d0 * ((((pars(1)-circle_par_1)) / circle_obs_unc)**2))
     else if (DATAin%ID == -2) then
         ! Estimate likelihood for a single parameter retrieval

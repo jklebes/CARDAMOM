@@ -68,8 +68,7 @@ double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 
                               ,par_initstepsize = 0.005d0
 double precision:: beta = 0.05d0  ! weighting for gaussian step in multivariate proposals
 ! Optimal scaling variable for parameter searching
-double precision:: N_before_mv_target, & !
-                    opt_scaling_const = 2.381204**2  ! scd = 2.381204 the optimal scaling parameter
+double precision:: opt_scaling_const = 2.381204**2  ! scd = 2.381204 the optimal scaling parameter
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38/sqrt(npars) sometimes used when applied to the Cholesky
                                 ! factor. NOTE 2: 2.381204**2 = 5.670132
@@ -280,7 +279,7 @@ contains
     integer:: MAXITER, nchains, npars
     ! counters-local to this chain's run
     integer:: ITER, ACC, ACC_FIRST, ACCLOC
-    double precision:: ACCRATE, ACCRATE_GLOBAL
+    double precision:: ACCRATE, ACCRATE_GLOBAL, N_before_mv_target
 
 
     ! declare interface for the model likelihood function.
@@ -327,6 +326,7 @@ contains
     MAXITER = MCO%MAXITER
     P_target = MCO%P_target
     MCOUT%use_multivariate = MCO%use_multivariate
+    N_before_mv_target = MCO%N_before_mv*dble(PI%npars)
     beta = MCO%beta
     par_minstepsize = MCO%par_minstepsize
 
@@ -406,7 +406,6 @@ contains
     ! TODO implement reading in PI%fix_pars
     if (.not. restart) then
     call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
-    write(*,*) "init random after", PARS_previous
     ! Inform the user
     write(*,*) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
     ! initialize loglikelihood value of the given model with these pars
@@ -414,10 +413,8 @@ contains
     ! calculate the initial probability/log likelihood.
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
-    write(*,*) "initial model_likelihood call with", PARS_previous
     call model_likelihood(PARS_previous, npars, loglikelihood_previous); 
 
-    write(*,*) loglikelihood_previous
     if (.false. .and. is_infinity(loglikelihood_previous)) then  
         write(*,*) "WARNING  ! loglikelihood = ",loglikelihood_previous, " - &
         & AP-MCMC will get stuck, if so please check initial conditions"
@@ -436,17 +433,14 @@ contains
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 
        ! should include reflectivenedd/redrawing 
-       multivariate = MCOUT%use_multivariate .and. (MCOUT%Nparvar > MCO%N_before_mv_target)
+       multivariate = MCOUT%use_multivariate .and. (MCOUT%Nparvar > N_before_mv_target)
        call step_pars_real(PARS_previous, PARS_proposed, PI, multivariate, MCOUT%covariance, beta, opt_scaling, par_minstepsize, &
           uniform_random_vector)
-        write(*,*) "step from to", pars_previous, pars_proposed
-        write(*,*) multivariate, MCOUT%covariance, beta, opt_scaling, par_minstepsize
        ! if parameter proposal in bounds check the model
        ! TODO LATER if we get a reflective gaussian kernel, no need to check
        if (bounds_check(PI, PARS_proposed)) then
            ! calculate the model likelihood
            ! TODO ideally output just one likelihood value
-            write(*,*) "model_likelihood call with", PARS_proposed
            call model_likelihood(PARS_proposed, npars, loglikelihood_proposed)
            accept = metropolis_choice(loglikelihood_proposed, loglikelihood_previous)
        else
@@ -492,7 +486,6 @@ contains
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
-              write(*,*) "write_model_likelihood call with", PARS_proposed
                call model_likelihood_write(PARS_proposed, npars, output_loglikelihood)
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
@@ -537,12 +530,7 @@ contains
 
                ! adapt the covariance matrix for multivariate proposal
                ! TODO rename "parsall" to replect it's really a small subsample of period's history
-               write(*,*) "Before use_multivariate, covariance", MCOUT%use_multivariate, MCOUT%covariance
-               write(*,*) "Before ACCLOC, N_before_mv_target", ACCLOC, MCO%N_before_mv_target
-               write(*,*) "Before MCOUT%cov", MCOUT%cov
-               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, MCO%N_before_mv_target)
-               write(*,*) "After MCOUT%cov", MCOUT%cov
-               write(*,*) "After use_multivariate, covariance", MCOUT%use_multivariate, MCOUT%covariance
+               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
 
            end if !  have enough parameter been accepted
            ! TODO what if MCO%use_multivariate ???
@@ -581,10 +569,8 @@ contains
     MCOUT%bestll = llmax
     ! Output the current state, so that next simulations can potentially resume here
     MCOUT%pars = PARS_previous  !! (!) TODO should be done outside 
-    write (*,*) "MCOUT%pars", MCOUT%pars
     MCOUT%ll = loglikelihood_previous
     ! record how many iterations were taken to complete
-    write(*,*) MCOUT%nos_iterations, ITER
     MCOUT%nos_iterations = MCOUT%nos_iterations+ITER
     ! set flag MCMC completed
     MCOUT%complete = .true.
@@ -631,10 +617,8 @@ end subroutine
     integer p, i, info  ! counters
     double precision, dimension(npars, npars):: cov_backup
     double precision, dimension(npars):: meanpar_backup
-    double precision:: Nparvar_backup!, Nparvar_local
+    double precision:: Nparvar_backup, Nparvar_local
     double precision:: N_before_mv_target
-    write(*,*) "PARSALL for update statistics", PARSALL
-    write(*,*) "MCOUT%cov", MCOUT%cov
     ! if we have a covariance matrix then we want to update it, if not then we need to create one
     if (MCOUT%cov) then
 
@@ -650,12 +634,8 @@ end subroutine
         ! this allows for the covariance matrix to be more responsive to its local environment.
         !! TODO discuss 
         Nparvar_local = min(N_before_mv_target, Nparvar_backup)
-        write(*,*) "incrementing covariance matrix", PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars 
-        write(*,*) "incrementing covariance matrix", Nparvar_local, ACCLOC
-        write(*,*) "incrementing covariance matrix", MCOUT%covariance
         call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                         ,Nparvar_local, ACCLOC, MCOUT%covariance)
-        write(*,*) "after incrementing covariance matrix", MCOUT%covariance
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
         call cholesky_factor( npars, MCOUT%covariance, info )
@@ -702,11 +682,9 @@ end subroutine
                 ! Keep accumulating information until positive definite matrix
                 ! calculated
                 use_multivariate = .false.
-                write(*,*), "not positive definite", info
             else
                 ! Positive definite found straight away-might as well use it!
                 use_multivariate = .true.
-                write(*,*), "positive definite", info
             endif
 
             ! write out first covariance matrix, this will be compared with the final covariance matrix

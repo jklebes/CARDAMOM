@@ -369,8 +369,6 @@ module samplers_io
 
     ! Increment buffer
     io_space%io_buffer_count = io_space%io_buffer_count+1
-    write(*,*) "buffer count" , io_space%io_buffer_count
-    write (*,*) "vairance", variance
     ! Store information in buffer for later writing
     io_space%variance_buffer(1:npars, io_space%io_buffer_count) = variance
     io_space%meanpars_buffer(1:npars, io_space%io_buffer_count) = meanpars
