@@ -631,7 +631,7 @@ end subroutine
     integer p, i, info  ! counters
     double precision, dimension(npars, npars):: cov_backup
     double precision, dimension(npars):: meanpar_backup
-    double precision:: Nparvar_backup, Nparvar_local
+    double precision:: Nparvar_backup!, Nparvar_local
     double precision:: N_before_mv_target
     write(*,*) "PARSALL for update statistics", PARSALL
     write(*,*) "MCOUT%cov", MCOUT%cov
