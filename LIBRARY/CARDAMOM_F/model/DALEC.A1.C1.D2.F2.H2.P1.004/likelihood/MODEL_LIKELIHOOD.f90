@@ -1009,7 +1009,7 @@ module model_likelihood_module
         ! determine the lower and upper bound of the LES .
         ! not for the upper bound, do not allow a value less than 1.5 years
         tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
-        tmp2 = maxval(1.5d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
+        tmp2 = max(1.5d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
         endif        
