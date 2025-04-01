@@ -100,7 +100,7 @@ create_grid_output_nc<-function(PROJECT) {
                     dim=list(nsites_dimen), missval = -9999, prec="single", compression = 9)
   var9  = ncvar_def("latitude", units = "degree", longname = "Latitude grid (-90/90)",
                     dim=list(long_dimen,lat_dimen), missval = -9999, prec="single", compression = 9)
-  var10 = ncvar_def("longitude", units = "degree", longname = "Longigude grid (-180/180)",
+  var10 = ncvar_def("longitude", units = "degree", longname = "Longitude grid (-180/180)",
                     dim=list(long_dimen,lat_dimen), missval = -9999, prec="single", compression = 9)
   var11 = ncvar_def("steps_per_year", units = "", longname = "Mean number of model time steps per year",
                     dim=list(scalar_dimen), missval = -9999, prec="single", compression = 9)

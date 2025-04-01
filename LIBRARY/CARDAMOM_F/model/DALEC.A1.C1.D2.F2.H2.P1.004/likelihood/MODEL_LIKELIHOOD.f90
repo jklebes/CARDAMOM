@@ -676,7 +676,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi, tmp !, EQF, etol
+    double precision :: infi, tmp, tmp1, tmp2 !, EQF, etol
     !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
@@ -1000,13 +1000,20 @@ module model_likelihood_module
         ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
         ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
         ! Estimating the MTT, converting from days to years using 1/365.25 = 0.002737851
-        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
-              / dble(nodays)) * 0.002737851d0
-        ! determine the lower bound of the LES 
-        if (tmp < 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)) then
+        ! 0.08333333 converts months to years for the LES equation.
+        tmp = sum(M_POOLS(:,2)) / dble(nodays)
+        tmp1 = sum(M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)) / dble(nodays)
+        tmp = (tmp / tmp1) * 0.002737851d0
+!        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
+!              / dble(nodays)) * 0.002737851d0
+        ! determine the lower and upper bound of the LES .
+        ! not for the upper bound, do not allow a value less than 1.5 years
+        tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
+        tmp2 = maxval(1.5d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
+        if (tmp < tmp1) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
         endif        
-        if (tmp > 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0)) then
+        if (tmp > tmp2) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
@@ -1309,7 +1316,7 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, snow_storage_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1464,12 +1471,15 @@ module model_likelihood_module
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
        mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
-       ! Split loop to allow vectorisation
-       tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       ! loop split to allow vectorisation
-       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-       !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+       ! Assume that LAI comparison can only happen if there is no snow on the ground
+!       where (snow_storage_time(DATAin%laipts(1:DATAin%nlai)) < 0.01d0)
+          ! Split loop to allow vectorisation
+          tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                          /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+          ! loop split to allow vectorisation
+          !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+          !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+!       end where
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent
@@ -1708,7 +1718,7 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, snow_storage_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1871,26 +1881,29 @@ module model_likelihood_module
     ! LAI log-likelihood
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
-       ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
-                 * 0.5d0 ) / pars(17)
-       ! Split loop to allow vectorisation
-       tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       ! loop split to allow vectorisation
-       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-       !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       do n = 1, DATAin%nlai
-         dn = DATAin%laipts(n)
-         ! if zero or greater allow calculation with min condition to prevent
-         ! errors of zero LAI which occur in managed systems
-         if (mid_state(dn) < 0d0) then
-             ! if not then we have unrealistic negative values or NaN so indue
-             ! error
-             tot_exp = tot_exp+(-log(infini))
-         endif
-       end do
-       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nlai))
+        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
+        mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
+                  * 0.5d0 ) / pars(17)
+        ! Assume that LAI comparison can only happen if there is no snow on the ground
+!        where (snow_storage_time(DATAin%laipts(1:DATAin%nlai)) < 0.01d0)
+           ! Split loop to allow vectorisation
+           tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                           /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+           ! loop split to allow vectorisation
+           !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+           !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+!        end where
+        do n = 1, DATAin%nlai
+          dn = DATAin%laipts(n)
+          ! if zero or greater allow calculation with min condition to prevent
+          ! errors of zero LAI which occur in managed systems
+          if (mid_state(dn) < 0d0) then
+              ! if not then we have unrealistic negative values or NaN so indue
+              ! error
+              tot_exp = tot_exp+(-log(infini))
+          endif
+        end do
+        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nlai))
     endif
 
     ! NEE likelihood
@@ -2117,7 +2130,7 @@ module model_likelihood_module
   !
   double precision function sqrt_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, snow_storage_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2283,13 +2296,15 @@ module model_likelihood_module
         ! Create vector of (LAI_t0 + LAI_t1) * 0.5,ays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
         mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                     * 0.5d0 ) / pars(17)
-
-        ! Split loop to allow vectorisation
-        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-        ! loop split to allow vectorisation
-        !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+       ! Assume that LAI comparison can only happen if there is no snow on the ground
+!       where (snow_storage_time(DATAin%laipts(1:DATAin%nlai)) < 0.01d0)
+          ! Split loop to allow vectorisation
+          tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                          /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+          ! loop split to allow vectorisation
+          !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+          !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+!       end where
         do n = 1, DATAin%nlai
           dn = DATAin%laipts(n)
           ! if zero or greater allow calculation with min condition to prevent
@@ -2527,7 +2542,7 @@ module model_likelihood_module
   !
   double precision function log_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: layer_thickness, snow_storage_time
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2693,12 +2708,15 @@ module model_likelihood_module
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
        mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
-       ! Split loop to allow vectorisation
-       tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-                       /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
-       ! loop split to allow vectorisation
-       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
-       !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+       ! Assume that LAI comparison can only happen if there is no snow on the ground
+!       where (snow_storage_time(DATAin%laipts(1:DATAin%nlai)) < 0.01d0)
+          ! Split loop to allow vectorisation
+          tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+                          /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+          ! loop split to allow vectorisation
+          !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+          !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
+!       end where
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
          ! if zero or greater allow calculation with min condition to prevent

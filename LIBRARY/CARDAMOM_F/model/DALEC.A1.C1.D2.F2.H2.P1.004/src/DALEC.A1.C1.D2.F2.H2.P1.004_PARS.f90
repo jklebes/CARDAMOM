@@ -203,7 +203,7 @@ module MODEL_PARAMETERS
     PI%parmax(23) = 250000d0 !90000d0
 
     ! Initial soil water fraction
-    PI%parmin(24) = 0.01d0
+    PI%parmin(24) = 0.05d0
     PI%parmax(24) = 1.00d0
 
   end subroutine pars_info

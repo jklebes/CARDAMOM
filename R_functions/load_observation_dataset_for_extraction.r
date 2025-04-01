@@ -345,6 +345,8 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                            " and its uncertainty ",prefix,"_uncertainty do not match",sep=""))
             }
             std_present = TRUE
+        } else {
+            std_present = FALSE
         }
             
         # Begin extraction of the year information found in the file name

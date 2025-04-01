@@ -259,7 +259,10 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
         ! Calculate mean value
         out_var4(i,v) = sum(out_var1(i,1:nodays,v)) / dble(nodays)
      end do
-
+     ! Special case for water utilisation (gs_demand_supply_ratio) which should be calculated for the growing season only
+     tmp = 0d0 ; where(DS_time > 0d0) tmp = 1d0
+     out_var4(i,56) = sum(out_var1(i,1:nodays,56)*tmp) / (dble(nodays)-sum(tmp))
+     
      !
      ! Calculate the mean annual of out_var1
      !
@@ -270,6 +273,8 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do
+        ! Special case for water utilisation (gs_demand_supply_ratio) which should be calculated for the growing season only
+        out_var5(i,a,56) = sum(out_var1(i,s:e,56)*tmp(s:e)) / (dble(nodays)-sum(tmp(s:e)))
         ! Iterate counters
         s = s + steps_per_year ; e = s + steps_per_year - 1
      end do

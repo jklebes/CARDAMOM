@@ -26,7 +26,10 @@
 # Function to load meteorological forcing from various gridded datasets.
 # 
 # Author: T. Luke Smallman (02/05/2024)
-#
+# Modification History:
+# 1) T. Luke Smallman (11/03/2025) 
+#    ERA5 workflow updated to read whole year files and to only read required spatial domain rather than whole domain
+# 2) 
 #########################################################################################
 
 load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyear,endyear,spatial_type,cardamom_ext) {
@@ -43,7 +46,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
 
     } else {
 
-        if (met_source == "trendy_v9" | met_source == "trendy_v11" | met_source == "trendy_v12" | met_source == "trendy_v13") {
+        if (met_source == "trendy") {
 
             # declare variable ids needed to select files / infile variables
             varid = c("dswrf","tmx","pre","vpd","tmn","wsp")
@@ -74,6 +77,11 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # tidy
             nc_close(data1)
 
+            # Unlike ERA5, or rather the standard CARDAMOM meterological input format,
+            # for trendy we read in the whole domain at all times. So the xy_bounds variable 
+            # has a default filling, where 1 is the start point and -1 is the read until end of file.
+            xy_bounds = c(1,-1,1,-1)
+
             # If we are using the GSI model we need the 30 days (or month) before the start date of the simulation, so we need to check if we have this information
             # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
             extra_year = FALSE
@@ -94,36 +102,44 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             varid = c("sw_radiation_daily_mean","airt_daily_max","precipitation_daily_mean","vpd_daily_mean","airt_daily_min","wind_spd_daily_mean")
             infile_varid = c("daily_swrad","airt_max","daily_precip","vpd_mean","airt_min","wind_spd")
 
-            # open first ecmwf file to extract needed information
-            input_file_1 = paste(path_to_met_source,varid[1],"_",startyear,"01.nc",sep="")
+            # Open the ERA5 file for the shortwave radiation.
+            # Could have been a different variable or file, but this is easy to work with.
+            input_file_1 = paste(path_to_met_source,varid[1],"_",startyear,".nc",sep="")
             data1 = nc_open(input_file_1)
 
             # get timing variable
-            steps_in_day = 1
-
+            doy = ncvar_get(data1, "doy")
+            steps_in_day = 1 / (doy[2]-doy[1])
             # extract location variables
-            lat = ncvar_get(data1, "Latitude") ; long = ncvar_get(data1, "Longitude")
-#            # convert input data long to conform to what we need
-#            check1 = which(long > 180) ; if (length(check1) > 0) { long[check1] = long[check1]-360 }
+            lat = ncvar_get(data1, "lat") ; long = ncvar_get(data1, "lon")
 
-            # expand the one directional values here into 2 directional
-            lat_dim = length(lat) ; long_dim = length(long)
-            long = array(long,dim=c(long_dim,lat_dim))
-            lat = array(lat,dim=c(lat_dim,long_dim)) ; lat=t(lat)
+            # Determine the spatial domain we want to read for the cardamom domain
+            # NOTE: this code assumes a regular grid only
+            xy_bounds = unlist(crs(cardamom_ext, describe=TRUE)$extent) # first convert the project domain back into lat / long values
+            xy_bounds[1] = max(1,min(which(long[,1] < xy_bounds[1]))) ; xy_bounds[2] = min(dim(long)[1],max(which(long[,1] > xy_bounds[2])))
+            xy_bounds[3] = max(1,min(which(lat[1,] < xy_bounds[3])))  ; xy_bounds[4] = min(dim(lat)[2],max(which(lat[1,] > xy_bounds[4])))
+            # The netcdf function requires a starting point and a number of reads.
+            # The starting points are xy_bounds[1] and xy_bounds[3], 
+            # the counts need to be filled into xy_bounds[2] and xy_bounds[4]
+            xy_bounds[2] = length(c(xy_bounds[1]:xy_bounds[2]))
+            xy_bounds[4] = length(c(xy_bounds[3]:xy_bounds[4]))
+
+            # Re-read the location information to ensure match with the variable
+            long = ncvar_get(data1, "lon", start=c(xy_bounds[1],xy_bounds[3]), count=c(xy_bounds[2],xy_bounds[4]))
+            lat = ncvar_get(data1, "lat", start=c(xy_bounds[1],xy_bounds[3]), count=c(xy_bounds[2],xy_bounds[4])) 
 
             # Read in an example of the first variable - this should be Shortwave radiation
-            tmp1 = ncvar_get(data1,infile_varid[1])
-            # We only need the first time step for this
-            tmp1 = tmp1[,,1]
-
+            tmp1 = ncvar_get(data1,infile_varid[1], 
+                             start=c(xy_bounds[1],xy_bounds[3],1), 
+                             count=c(xy_bounds[2],xy_bounds[4],1))
             # tidy
             nc_close(data1)
 
-            # If we are using the GSI model we need the 30 days (or month) before the start date of the simulation, so we need to check if we have this information
-            # NOTE that this section of code is duplicated for each of the available datasets because of differences in storage and file name
+            # Several model structures require at least the preceeding months meteorology
+            # for rolling averages. Check here if we have this information.
             extra_year = FALSE ; present = 0
             for (lag in seq(1,length(varid))) {
-                 input_file_1 = paste(path_to_met_source,varid[lag],"_",as.character(as.numeric(startyear)-1),"01.nc",sep="")
+                 input_file_1 = paste(path_to_met_source,varid[lag],"_",as.character(as.numeric(startyear)-1),".nc",sep="")
                  # check whether the files exist or not
                  if (file.exists(input_file_1)) {present = present+1}
             }
@@ -133,7 +149,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         } # met_source
 
         # Convert to a raster, assuming standad WGS84 grid
-        # This dependes on the lat / long / tmp1 spatially matching each other AND
+        # This depends on the lat / long / tmp1 spatially matching each other AND
         # latitude ranging -90/90 and longitude ranging -180/180 degrees
         tmp1 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(tmp1))
         tmp1 = rast(tmp1, crs = ("epsg:4326"), type="xyz")
@@ -152,6 +168,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         tmp1 = extend(tmp1,cardamom_ext)
         # Trim the extent of the overall grid to the analysis domain
         tmp1 = crop(tmp1,cardamom_ext)
+
         # Set error flags to NA
         tmp1[which(as.vector(tmp1) == -9999)] = NA
         # We assume where that the first variable is shortwave radiation or
@@ -201,37 +218,37 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             if (varid[1] != "") {
                 swrad_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 17 %")
             if (varid[2] != "") {
                 maxt_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 33 %")
             if (varid[3] != "") {
                 precip_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 50 %")
             if (varid[4] != "") {
                 vpd_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 67 %")
             if (varid[5] != "") {
                 mint_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 83 %")
             if (varid[6] != "") {
                 wind_out_list=mclapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff,mc.cores = cl)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds,mc.cores = cl)
             }
             print("...met load 100 %")
 
@@ -241,37 +258,37 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             if (varid[1] != "") {
                 swrad_out_list=lapply(load_years,FUN=load_met_function,varid=varid[1],infile_varid=infile_varid[1],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 17 %")
             if (varid[2] != "") {
                 maxt_out_list=lapply(load_years,FUN=load_met_function,varid=varid[2],infile_varid=infile_varid[2],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 33 %")
             if (varid[3] != "") {
                 precip_out_list=lapply(load_years,FUN=load_met_function,varid=varid[3],infile_varid=infile_varid[3],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 50 %")
             if (varid[4] != "") {
                 vpd_out_list=lapply(load_years,FUN=load_met_function,varid=varid[4],infile_varid=infile_varid[4],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 67 %")
             if (varid[5] != "") {
                 mint_out_list=lapply(load_years,FUN=load_met_function,varid=varid[5],infile_varid=infile_varid[5],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 83 %")
             if (varid[6] != "") {
                 wind_out_list=lapply(load_years,FUN=load_met_function,varid=varid[6],infile_varid=infile_varid[6],
                                         spatial_type=spatial_type,cardamom_ext=cardamom_ext,path_to_met_source=path_to_met_source,
-                                        met_source=met_source,wheat=wheat_from_chaff)
+                                        met_source=met_source,wheat=wheat_from_chaff,xy_bounds = xy_bounds)
             }
             print("...met load 100 %")
 
@@ -324,8 +341,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         #
 
         # convert Trendy air temperature of oC to K
-        if (met_source == "trendy_v9" | met_source == "trendy_v11" | 
-            met_source == "trendy_v12" | met_source == "trendy_v13") {
+        if (met_source == "trendy") {
             maxt_out = maxt_out + 273.15
             mint_out = mint_out + 273.15
         }
