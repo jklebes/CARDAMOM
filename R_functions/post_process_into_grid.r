@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to post-process CARDAMOM output for a gridded analysis
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to insert post-processed CARDAMOM output into a gridded output variable
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
 
@@ -36,6 +60,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$parameters[slot_i,slot_j,,] = site_output$parameters
            # track which parameters have converged + likelihood
            grid_output$parameters_converged[slot_i,slot_j,] = site_output$parameters_converged
+           # Parameter priors
+           grid_output$parameter_priors_array[slot_i,slot_j,] = site_output$parameter_priors_array
+           grid_output$parameter_priors_uncertainty_array[slot_i,slot_j,] = site_output$parameter_priors_uncertainty_array
            # Generic dump of the whole driver$met and drivers$obs arrays
            # Long term average first...
            grid_output$met_array_averages[slot_i,slot_j,] = site_output$met_array_averages
@@ -726,6 +753,16 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_gb_mmolH2Om2s[slot_i,slot_j,] = site_output$mean_gb_mmolH2Om2s
                grid_output$gb_mmolH2Om2s[n,,] = site_output$gb_mmolH2Om2s
            }
+           if (any(check_list == "leaf_temperature_celcius") == TRUE) {
+              # Canopy temperature 
+              grid_output$mean_annual_leaf_temperature_celcius[n,,] = site_output$mean_annual_leaf_temperature_celcius
+              grid_output$mean_leaf_temperature_celcius[slot_i,slot_j,] = site_output$mean_leaf_temperature_celcius 
+              grid_output$leaf_temperature_celcius[n,,] = site_output$leaf_temperature_celcius
+              # Soil temperature
+              grid_output$mean_annual_soil_temperature_celcius[n,,] = site_output$mean_annual_soil_temperature_celcius
+              grid_output$mean_soil_temperature_celcius[slot_i,slot_j,] = site_output$mean_soil_temperature_celcius
+              grid_output$soil_temperature_celcius[n,,] = site_output$soil_temperature_celcius
+           }
 
            # Any time series assimilated data overlaps?
            if (any(check_list == "gpp_assim_data_overlap_fraction")) {
@@ -756,11 +793,35 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            # Store mean absolute parameter correlation information
            grid_output$absolute_mean_parameter_correlation[slot_i,slot_j] = site_output$absolute_mean_parameter_correlation
            # Parameter vs C-cycle flux correlation across ensemble member
+           grid_output$lai_parameter_correlation[slot_i,slot_j,] = site_output$lai_parameter_correlation
+           grid_output$nbp_parameter_correlation[slot_i,slot_j,] = site_output$nbp_parameter_correlation           
            grid_output$nee_parameter_correlation[slot_i,slot_j,] = site_output$nee_parameter_correlation
            grid_output$gpp_parameter_correlation[slot_i,slot_j,] = site_output$gpp_parameter_correlation
            grid_output$rauto_parameter_correlation[slot_i,slot_j,] = site_output$rauto_parameter_correlation
            grid_output$rhet_parameter_correlation[slot_i,slot_j,] = site_output$rhet_parameter_correlation
            grid_output$fire_parameter_correlation[slot_i,slot_j,] = site_output$fire_parameter_correlation
+           # Correlations between LAI and key gross and net fluxes
+           grid_output$lai_m2m2_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_GPP_gCm2day_correlation
+           grid_output$lai_m2m2_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_NEE_gCm2day_correlation
+           grid_output$lai_m2m2_to_NBP_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_NBP_gCm2day_correlation           
+           grid_output$lai_m2m2_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rauto_gCm2day_correlation
+           grid_output$lai_m2m2_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rhet_gCm2day_correlation
+           grid_output$lai_m2m2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_wood_gCm2_correlation
+           grid_output$lai_m2m2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_som_gCm2_correlation
+           grid_output$lai_m2m2_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCwood_gCm2_correlation
+           grid_output$lai_m2m2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCsom_gCm2_correlation
+           # If harvest is estimated
+           if (any(check_list == "harvest_gCm2day")) {
+               grid_output$lai_m2m2_to_harvest_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_harvest_gCm2day_correlation
+           }           
+           # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
+           if (any(check_list == "CiCa_parameter_correlation")) {
+               grid_output$CiCa_parameter_correlation[slot_i,slot_j,] = site_output$CiCa_parameter_correlation
+           }
+           # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
+           if (any(check_list == "LWP_parameter_correlation")) {
+               grid_output$LWP_parameter_correlation[slot_i,slot_j,] = site_output$LWP_parameter_correlation
+           }           
            # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
            if (any(check_list == "MTT_wood_years_parameter_correlation")) {
                grid_output$MTT_wood_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_wood_years_parameter_correlation

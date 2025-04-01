@@ -1,11 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to load wood mortality maps which apply to gridded domain
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
-# Created: 28/12/2021
-# Last edited: 28/12/2021 (T. L. Smallman)
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to load wood mortality / turnover information from gridded dataset
+# 
+# Author: T. Luke Smallman (28/12/2021)
+#
+#########################################################################################
 
 load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamom_ext,spatial_type,latlon_in,start,finish,timestep_days) {
 
@@ -75,7 +97,7 @@ load_wood_mortality_maps_for_extraction<-function(Cwood_mortality_source,cardamo
                  Cwood_mortality_uncertainty = rast(paste(path_to_Cwood_mortality,unc_input_file[t],sep=""))
 
                  # Create raster with the target crs
-                 target = rast(crs = ("+init=epsg:4326"), ext = ext(Cwood_mortality), resolution = res(Cwood_mortality))
+                 target = rast(crs = ("epsg:4326"), ext = ext(Cwood_mortality), resolution = res(Cwood_mortality))
                  # Check whether the target and actual analyses have the same CRS
                  if (compareGeom(Cwood_mortality,target) == FALSE) {
                      # Resample to correct grid

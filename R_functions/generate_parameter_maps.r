@@ -1,27 +1,35 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to create generic plots of gridded CARDAMOM analysis parameters and emergent traits
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to create generic plots of gridded CARDAMOM analysis parameters and emergent traits
+# 
+# Author: T. Luke Smallman (12/11/2024)
+#
+#########################################################################################
 
 generate_parameter_maps<-function(PROJECT) {
-
-   # Determine the lat / long for the grid
-   if (PROJECT$grid_type == "UK") {
-       output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-       grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-       grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-       rm(output)
-   } else if (PROJECT$grid_type == "wgs84") {
-       # generate the lat / long grid again
-       output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-       grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-       grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-       rm(output)
-   } else {
-       stop("valid spatial grid option not selected (UK, or wgs84)")
-   }
 
    # Move working directory
    old_wd = getwd() ; setwd(PROJECT$figpath)
@@ -33,6 +41,10 @@ generate_parameter_maps<-function(PROJECT) {
    # Loaded the grid aggregated dataset into memory
    infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
    load(infile)
+
+   # Extract the lat / long information
+   grid_lat = grid_output$lat ; grid_long = grid_output$long
+
    # Ensure that any Inf values are removed to NA
    # This is a hack implemented during a development phase and should be removed
    # or commented out under general operation
@@ -45,17 +57,17 @@ generate_parameter_maps<-function(PROJECT) {
    timestep_days = rep(timestep_days, length.out=grid_output$time_dim)
 
    # Convert avgN log10-normal to gN/m2, in models which use foliar N in gN/m2
-   if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#"| PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | 
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
+   if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.008"| PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.009" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.010" | 
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.011" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.023" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.024" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.026") {
        grid_output$parameters[,,11,] = 10**grid_output$parameters[,,11,]
    }
 
   # Determine correct height and widths
   hist_height = 4000*0.65 ; hist_width = 7200*0.65
   fig_height = 3000*0.65 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
-  if (PROJECT$grid_type == "UK") { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
+  if (grepl("27700",PROJECT$grid_type)) { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
   # load colour palette
   colour_choices_upper = colorRampPalette((brewer.pal(11,"Spectral")))
 
@@ -63,82 +75,8 @@ generate_parameter_maps<-function(PROJECT) {
   print("......have finished loading - now beginning cluster analysis")
 
   if (exists(x = "clusters", where = grid_output) == FALSE | repair == 1) {
-#  if (exists(x = "clusters", where = grid_output) == FALSE) {
+
       if (grepl("DALEC",PROJECT$model$name)) {
-
-          # remove non-constrained parameters (i.e. those not actually used in this analysis)
-          initial_conditions=c(18:23)
-          par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions),median_loc]
-          if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P3.R1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37,41),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,35,37),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,30,31,32,33,35,37,41),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC_CDEA_ACM2_BUCKET_LAB_wMRT") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P6.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24,28),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,24,28),median_loc]
-          } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,37,41),median_loc]
-          } else if (PROJECT$model$name == "DALEC_1005" | PROJECT$model$name == "DALEC_1005a") {
-              par_array_median_normalised = grid_output$parameters[,,-c(initial_conditions,27,36),median_loc]
-          } # PROJECT$model$name == "DALEC_GSI_DFOL_CWD_FR"
-
-          ###
-          ## Begin Affinity propagation clustering - for process parameters only
-
-          # Normalise the parameter values as this helps with the cluster
-          # analyses to account for very different parameter ranges
-          for (i in seq(1,dim(par_array_median_normalised)[3])) {
-               min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
-               max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
-               par_array_median_normalised[,,i] = ((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
-          }
-
-          # Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
-          par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
-          par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
-          actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
-          par_array_tmp=par_array_tmp[actual_forests,]
-          par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
-
-          # Looping to find preference_input, the preferenceRange() returns 2 values,
-          # the first of which minimises the number of clusters, while the seconds
-          # would return as many clusters as there are observations. It is the
-          # responsibility of the user to ensure the most appropriate use of these
-          # information to result in an appropriate number of clusters for error propagation
-          tmp = 0
-          for (i in seq(1,3)) {
-               tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
-          } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
-
-          grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=4, p=preference_input,maxits=1000, convits=100)
-          #grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
-          grid_output$nos_pars_clusters=length(grid_output$cluster_analysis@clusters) ; clusters_exemplars=grid_output$cluster_analysis@exemplars
-          grid_output$pars_clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
-          for (i in seq(1,length(grid_output$cluster_analysis@clusters))) {
-               grid_output$pars_clusters[actual_forests[grid_output$cluster_analysis@clusters[[i]]]] = i
-          }
-          grid_output$pars_clusters=array(grid_output$pars_clusters,dim=c(dim(par_array_median_normalised)[1:2]))
-          # Tidy away the overall analysis in faviour of what we have extracted
-          grid_output = within(grid_output, rm(cluster_analysis))
 
           ###
           ## Begin Affinity propagation clustering - for process parameters + initial conditions
@@ -168,9 +106,9 @@ generate_parameter_maps<-function(PROJECT) {
                tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
 
-          grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=4, p=preference_input,maxits=1000, convits=100)
+          grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=3, p=preference_input,maxits=500, convits=100)
           #grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
-          grid_output$nos_clusters=length(grid_output$cluster_analysis@clusters) ; clusters_exemplars=grid_output$cluster_analysis@exemplars
+          grid_output$nos_clusters=length(grid_output$cluster_analysis@clusters) ; grid_output$clusters_exemplars=grid_output$cluster_analysis@exemplars
           grid_output$clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
           for (i in seq(1,length(grid_output$cluster_analysis@clusters))) {
                grid_output$clusters[actual_forests[grid_output$cluster_analysis@clusters[[i]]]] = i
@@ -182,13 +120,13 @@ generate_parameter_maps<-function(PROJECT) {
           # Save the now updated cluster analysis into the grid_output
           save(grid_output, file = infile)
 
-          # Now plot both possible cluster maps
-          figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
-          jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
-          par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-          image.plot(x = grid_long, y = grid_lat, z = grid_output$pars_clusters, main=paste("Parameter based cluster maps",sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
-          map(add=TRUE, lwd = 2)
-          dev.off()
+#          # Now plot both possible cluster maps
+#          figname = paste("Cluster_map_of_median_parameters_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+#          jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
+#          par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+#          image.plot(x = grid_long, y = grid_lat, z = grid_output$pars_clusters, main=paste("Parameter based cluster maps",sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
+#          map(add=TRUE, lwd = 2)
+#          dev.off()
 
           figname = paste("Cluster_map_of_median_parameters_with_initial_",gsub("%","_",PROJECT$name),".jpeg",sep="")
           jpeg(file=figname, width=fig_width, height=fig_height, res=300, quality=100)
@@ -516,6 +454,41 @@ generate_parameter_maps<-function(PROJECT) {
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
        }
+
+       # Generate generic maps of spatial aggregates of drivers$parpriors
+       if (p <= max(PROJECT$model$nopars)) {
+           if (length(which(is.na(grid_output$parameter_priors_array[,,p]) != TRUE)) > 0) {
+               zrange = c(min(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE),max(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE))
+               zrange = sort(zrange + (c(-0.01,0.01) * zrange))
+               fig_name = paste("mean_parameter_priors_array_maps_",gsub(" ","_",par_names[p]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+               fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+               fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+               jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+               par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+               image.plot(x = grid_long, y = grid_lat, z = grid_output$parameter_priors_array[,,p], col=rev(colour_choices)
+                         ,main=paste(par_names[p],sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0
+                         ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                         ,zlim=zrange)
+               map(add=TRUE, lwd = 2)
+               #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+               dev.off()
+               zrange = c(min(as.vector(grid_output$parameter_priors_uncertainty_array[,,p]),na.rm=TRUE),max(as.vector(grid_output$parameter_priors_uncertainty_array[,,p]),na.rm=TRUE))
+               zrange = sort(zrange + (c(-0.01,0.01) * zrange))
+               fig_name = paste("mean_parameter_priors_uncertainty_array_maps_",gsub(" ","_",par_names[p]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
+               fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
+               fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
+               jpeg(file=fig_name, width=fig_width, height=fig_height, res=300, quality=100)
+               par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
+               image.plot(x = grid_long, y = grid_lat, z = grid_output$parameter_priors_uncertainty_array[,,p], col=rev(colour_choices)
+                         ,main=paste(par_names[p],sep=""),axes=FALSE, cex.main=1.1,legend.width=3.0
+                         ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
+                         ,zlim=zrange)
+               map(add=TRUE, lwd = 2)
+               #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
+               dev.off()
+           } # has a value worth reporting
+       } # Is a parameter not log-likelihood
+
   } # parameter loop
   
   # inform the user

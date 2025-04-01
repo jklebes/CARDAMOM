@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to create generic stock and flux plots for gridded CARDAMOM analyses
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to create generic stock and flux plots for gridded CARDAMOM analyses
+# 
+# Author: T. Luke Smallman (12/11/2024)
+#
+#########################################################################################
 
 generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
@@ -17,31 +41,13 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
   if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
   load(paste(infile))
-
-  # work out area matrix for the pixels in meters
-  # include adjustment for g-> Tg (*1e-12)
-  if (PROJECT$grid_type == "UK") {
-      output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))*1e-12
-      area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else if (PROJECT$grid_type == "wgs84") {
-      # generate the lat / long grid again
-      output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      # then generate the area estimates for each pixel
-      area_with_g_Tg = calc_pixel_area(grid_long,grid_lat)*1e-12
-      area = calc_pixel_area(grid_long,grid_lat)
-      # this output is in vector form and we need matching array shapes so...
-      area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else {
-      stop("valid spatial grid option not selected (UK, or wgs84)")
-  }
+   
+  # generate the lat / long grid again
+  output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+  area = output$area ; grid_lat = output$lat ; grid_long = output$long
+  # include adjustment for g-> Tg (*1e-12)  
+  area_with_g_Tg = area*1e-12
+  rm(output)
 
   # determine the array value for the median,
   num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
@@ -66,6 +72,7 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
   # determine correct height and widths
   fig_height = 3000*0.65 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
+  if (grepl("27700",PROJECT$grid_type)) { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
 
   # If root depth information has been provided plot some of it up here.
   if (exists(x = "mean_RootDepth_m", where = grid_output)) {

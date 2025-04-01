@@ -14,7 +14,8 @@ source("./R_functions/load_all_cardamom_functions.r")
 
 ## projname
 # Give a runid
-projname="FI-Hyy_example"
+#projname="FI-Hyy_example_noflx"
+projname="FI-Hyy_example_rleaf"
 #projname="FI-Hyy_example_O3"
 #projname="FI-Hyy_example_Ofast"
 
@@ -27,18 +28,15 @@ compiler_optimisation = "-Ofast"
 timing=FALSE
 debug=FALSE
 
-## about you (only valid if working on UoE remote server)
-username="lsmallma" # put your Edinburgh uun here
-home_computer="ssh.geos.ed.ac.uk"
-sshpass_key_home = "~/.ssh/id_rsa_geos.pub" # location of passkey on remote server
-
-## use parallel functions?
-use_parallel = TRUE
-numWorkers = 3 # number of cores to assign to parallel job
+## about you
+username="lsmallma"
+home_computer="xrdp.geos.ed.ac.uk"
+sshpass_key_home = "~/.ssh/id_rsa_geos.pub" # location of passkey for home server on remote server
+sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote server on home server
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -71,8 +69,8 @@ path_to_gpp = " "
 path_to_fire = " "
 path_to_forestry=" " #"/exports/csce/datastore/geos/groups/gcel/GlobalForestWatch/global_0.0625deg/"
 path_to_burnt_area=" " #"/exports/csce/datastore/geos/groups/gcel/BurnedArea/MCD64A1/global_0.0625deg/"
-path_to_lca = "/exports/csce/datastore/geos/groups/gcel/TraitMaps/Butler/LCA/global_1deg/"
-path_to_co2 = "/exports/csce/datastore/geos/groups/gcel/Trendy_v11_met/global_CO2/"
+path_to_lca = "/exports/geos.ed.ac.uk/gcel/spatial_datasets/LCA/Butler/global_1deg/"
+path_to_co2 = "/exports/geos.ed.ac.uk/gcel/spatial_datasets/meteorology/trendy/version_13/"
 path_to_site_obs="./example_files/inputs/"
 path_to_landsea = "default"
 met_interp=TRUE
@@ -110,7 +108,7 @@ Croots_stock_source=" " 	# " " or "site_specific"
 Clit_stock_source=" "  	# " " or "site_specific"
 Csom_stock_source=" "  	# " " or "site_specific"
 # Parameter priors
-lca_source = " " # "Butler" or " " or "site_specific"
+lca_source = "Butler" # or " " or "site_specific"
 frac_Cwood_coarse_root_source = "" # " " or "site_specific"
 minLWP_source = "" # " " or "site_specific"
 # Steady state attractor
@@ -142,21 +140,31 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
-request_nos_chains = 3        # Number of chains CARDAMOM should run for each location
-request_nos_samples = 10e6   # Total number of parameter samples / iterations to be explored
-request_nos_subsamples = 1e3  # Number of parameter sets to be sub-sampled from the chain
-request_use_server = FALSE    # Use remote server? Currently coded for UoE Eddie.
-request_use_local_slurm = FALSE# Only applies if request_use_server == FALSE
-request_runtime = 48          # How many hours of compute to request per job. Only applied for running on remote server
-request_compile_server = FALSE# Copy and compile current source code on remote server
-request_compile_local = TRUE  # Compile local copy of the source code 
-request_use_EDCs = TRUE       # Use EDCs
-request_extended_mcmc = FALSE # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples
-request_nos_extended_samples = 90e6 # If request_extened_mcmc == TRUE then this is the number of additional proposals to be made
+# Some interactive node options
+use_parallel=TRUE             # use parallel functions or not
+numWorkers=4                   # number of parallel tasks when using a interactive node
+# Some Slurm server option
+slurm_account = "geos_research"# Slurm research account, if using the slurm cluster
+slurm_concurrent_cpus = 60     # maximum number of concurrent cpus for slurm, impacts stage 3
+slurm_max_run_time = 12        # Number of hours per task to be requested in stage 3, if using slurm
+# Control where to run
+request_use_server = FALSE     # Use remote server? Currently coded for UoE Eddie.
+request_use_local_slurm = TRUE # Only applies if request_use_server == FALSE
+request_compile_server = FALSE # Copy and compile current source code on remote server
+request_compile_local = TRUE   # Compile local executable even if not running on local
+# Remote server options
+request_runtime = 48           # How many hours of compute to request per job for stage 2. For Slurm and remote server. 
+# MCMC specific options
+request_nos_chains = 3         # Number of chains CARDAMOM should run for each location
+request_nos_samples = 10e6     # Total number of parameter samples / iterations to be explored
+request_nos_subsamples = 1e3   # Number of parameter sets to be sub-sampled from the chain
+request_use_EDCs = TRUE        # Use EDCs
+request_extended_mcmc = FALSE  # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples
+request_nos_extended_samples = 40e6 # If request_extened_mcmc == TRUE then this is the number of additional proposals to be made
 request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likelihood score
-                                  # 1 = Normalisation of the likelihood score by sample size
-                                  # 2 = Normalisation of the likelihood score by sqrt(sample size)
-                                  # 3 = Normalisation of the likelihood score by log(sample size) 
+                                  # 1 = Normaliation of the likelihood score by sample size
+                                  # 2 = Normaliation of the likelihood score by sqrt(sample size)
+                                  # 3 = Normaliation of the likelihood score by log(sample size)  
 
 ## Stage
 # stage -1 : Create project first time (load source to eddie)

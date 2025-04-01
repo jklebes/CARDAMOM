@@ -1,8 +1,29 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
 
-module cardamom_io
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
 
-  !!!!!!!!!!!
-  ! Authorship contributions
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Code responsible for input / output operations for CARDAMOM
   !
   ! This code is based on the original C verion of the University of Edinburgh
   ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -11,10 +32,13 @@ module cardamom_io
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
   ! J. F. Exbrayat (University of Edinburgh)
   ! See function/subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+module cardamom_io
 
   ! Module contains subroutines and variables needed to output parameter, 
-  ! likelihood and step size information from the MHMCMC.
+  ! likelihood and step size information from the MCMC algorithms.
 
   implicit none
 
@@ -85,17 +109,17 @@ module cardamom_io
         ! ID = 5-DALEC.A1.C1.D2.F2.H2.P1.R1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 6) then
         ! ID = 6-DALEC.A1.C2.D2.F2.H2.P1.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 35
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 7) then
         ! ID = 7-DALEC.A1.C2.D2.F2.H2.P2.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 36
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 8) then
         ! ID = 8-DALEC.A1.C2.D2.F2.H1.P3.R1.#
         DATAin%nopools = 7
@@ -105,7 +129,7 @@ module cardamom_io
         ! ID = 9-DALEC.A1.C2.D2.F2.H2.P3.R1.#
         DATAin%nopools = 8
         DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 10) then
         ! ID = 10-DALEC.A1.C2.D2.F2.H1.P4.R2.#
         DATAin%nopools = 7
@@ -115,7 +139,7 @@ module cardamom_io
         ! ID = 11-DALEC.A1.C2.D2.F2.H2.P4.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 12) then
         ! ID = 12-DALEC.C4.D1.F2.#
         DATAin%nopools = 3
@@ -135,7 +159,7 @@ module cardamom_io
         ! ID = 15-DALEC.A3.C3.H2.M1.# i.e. the CROP model
         DATAin%nopools = 10
         DATAin%nopars = 38
-        DATAin%nofluxes = 42
+        DATAin%nofluxes = 46
     else if (DATAin%ID == 16) then
         ! ID = 16-DALEC.M2.#
         DATAin%nopools = 5
@@ -145,52 +169,52 @@ module cardamom_io
         ! ID = 17-DALEC.A3.H2.M2.#
         DATAin%nopools = 6
         DATAin%nopars = 37
-        DATAin%nofluxes = 51
+        DATAin%nofluxes = 55
     else if (DATAin%ID == 18) then
         ! ID = 18-DALEC.A1.C1.D2.F2.H2.P2.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 19) then
         ! ID = 19-DALEC.A1.C2.D2.F2.H2.P2.R3.#
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 20) then
         ! ID = 20-DALEC.A2.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 21) then
         ! ID = 21-DALEC.A1.C1.D2.F2.H2.P5.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 22) then
         ! ID = 22-DALEC.A1.C1.D2.F2.H2.P6.#
         DATAin%nopools = 7
         DATAin%nopars = 34
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 23) then
         ! ID = 23-DALEC.A1.C2.D2.F2.H2.P7.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 24) then
         ! ID = 24-DALEC.A1.C2.D2.F2.H2.P8.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 51
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 25) then
         ! ID = 25-DALEC.A1.C2.D2.F2.H2.P9.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 49
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 54
     else if (DATAin%ID == 26) then
         ! ID = 26-DALEC.A1.C2.D2.F2.H2.P10.R2.#
         DATAin%nopools = 8
         DATAin%nopars = 48
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 34
     else if (DATAin%ID == 27) then
         ! ID = 27-DALEC_1005
         DATAin%nopools = 8
@@ -205,17 +229,17 @@ module cardamom_io
         ! ID = 29-DALEC.A1.C1.D2.F2.H3.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 30) then
         ! ID = 30-DALEC.A3.C1.D2.F2.H2.P1.#
         DATAin%nopools = 7
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 49
     else if (DATAin%ID == 31) then
         ! ID = 31-DALEC.A4.C6.D2.F2.H2.P11.#
         DATAin%nopools = 7
-        DATAin%nopars = 40
-        DATAin%nofluxes = 46
+        DATAin%nopars = 42+1
+        DATAin%nofluxes = 56
     else if (DATAin%ID == 32) then
         ! ID = 32 -
     else if (DATAin%ID == 33) then
@@ -615,6 +639,12 @@ module cardamom_io
     ! allocate case specific information
     DATAin%edc_random_search = int(statdat(11))
 
+    ! Do some sanity checks
+    if (DATAin%lat > 90 .or. DATAin%lat < -90) then
+        print*,"Latitude provided is not -90/90"
+        stop
+    end if
+
     ! clean up
     deallocate(statdat)
 
@@ -772,6 +802,10 @@ module cardamom_io
        ! of these are actually contain data
        DATAin%met(1:DATAin%nomet, day) = mettemp
 
+! Hack not to be left in place!!!! Removes first 3 and final 4 months of each year
+!print*,"TLS: THERE IS ARE REALLY IMPORTANT LINES L805, CARDAMOM_IO.F90 THAT NEED REMOVING!!!!"
+!if (DATAin%met(6,day) < 95d0 .or. DATAin%met(6,day) > 244d0) obstemp(3:4) = -9999d0
+!if (obstemp(3) > 0d0) obstemp(4) = 0.5
        ! Gross Primary Productivity (GPP, gC/m2/day)
        DATAin%GPP(day) = obstemp(1)
        if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1

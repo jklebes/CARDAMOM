@@ -1,6 +1,6 @@
 ## CARDAMOM Coupled Models
 
-This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name constructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2.#" == "DALEC.1.".
+This files provides information on the currently coupled models within CARDAMOM. Table 1 provides a summary of the model name, alternate names used in publications and / or source code, publication containing the first or most complete description and status (e.g. published, under development, abandoned). The model name is the combination of the nominal model family (e.g. DALEC) and classifiers indicating the specific sub-models used. If an available classifier is not used in a given models name, please assume that option "0" is implicit. Sub-model specific information in summaries in subsequent tables. Both the model code name and a short code name constructed from the nominal model family and the reference code, e.g. "DALEC.D1.F2.001" == "DALEC.1.".
 
 The current classifiers used are:
 A = Assimilation (Table 2)
@@ -15,40 +15,41 @@ M = Managed Grassland / arable crops (Table 10)
 
 #### TABLE 1. CARDAMOM models, their intended reference for publications, the in-code name and various names previously applied. The details of each model should either be found in a designated peer-reviewed publication or by contacting a point of contact (POC).
 
-|Ref | Model (Code) Name            | Alternate Names     | Short Description                                   | Details (POC)                | Status      |
-|----|------------------------------|---------------------|-----------------------------------------------------|------------------------------|-------------|
-|  1 | DALEC.D1.F2.#                | DALEC_EVERGREEN, E1 | Fire model updated from F1 to F2                    | Williams et al., 2005        | Published   |
-|  2 | DALEC.C1.D1.F2.P1.#          | DALEC_CDEA_LU_FIRES, C1, M1                | Fire model updated from F1 to F2| Bloom & Williams 2015     | Published   |
-|  3 | DALEC.A1.C1.D2.F2.H1.P1.#    | DALEC_CDEA_ACM2, C6, M2                    | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  4 | DALEC.A1.C1.D2.F2.H2.P1.#    | DALEC_CDEA_ACM2_BUCKET, C7, M3             | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  5 | DALEC.A1.C1.D2.F2.H2.P1.R1.# | DALEC_CDEA_ACM2_BUCKET_RmRg, C10, M4       | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  6 | DALEC.A1.C2.D2.F2.H2.P1.R1.# | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5   | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  7 | DALEC.A1.C2.D2.F2.H2.P2.R1.# | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT, C12  | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
-|  8 | DALEC.A1.C2.D2.F2.H1.P3.R1.# | DALEC_GSI_DFOL_CWD_FR, G1                  | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
-|  9 | DALEC.A1.C2.D2.F2.H2.P3.R1.# | DALEC_GSI_BUCKET, G2                       | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
-| 10 | DALEC.A1.C2.D2.F2.H1.P4.R2.# | DALEC, G3           | Fire model updated from F1 to F2                    | Famiglietti et al., 2021     | Published   |
-| 11 | DALEC.A1.C2.D2.F2.H2.P4.R2.# | DALEC_BUCKET, G4    | Fire model updated from F1 to F2                    | Famiglietti et al., 2021     | Published   |
-| 12 | DALEC.C4.D1.F2.#             | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
-| 13 | DALEC.C5.D1.F2.P1.#          | DALEC_CDEA_no_lit_root, S4                 | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
-| 14 | DALEC.C3.M1.#                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
-| 15 | DALEC.A3.C3.H2.M1.#          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman | Unpublished |
-| 16 | DALEC.M2.#                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
-| 17 | DALEC.A3.H2.M2.#             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
-| 18 | DALEC.A1.C1.D2.F2.H2.P2.#    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
-| 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.# | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
-| 20 | DALEC.A2.C1.D2.F2.H2.P1.#    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
-| 21 | DALEC.A1.C1.D2.F2.H2.P5.#    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
-| 22 | DALEC.A1.C1.D2.F2.H2.P6.#    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
-| 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.# | G5                  |                                                     | T. L. Smallman               | Unpublished |
-| 24 | DALEC.A1.C2.D2.F2.H2.P8.R2.# | G6                  |                                                     | T. L. Smallman               | Unpublished |
-| 25 | DALEC.A1.C2.D2.F2.H2.P9.R2.# | G7                  |                                                     | T. L. Smallman               | Unpublished |
-| 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.#| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
-| 27 | DALEC_1005                   | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
-| 28 | DALEC_1005a                  | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
-| 29 | DALEC.A1.C1.D2.F2.H3.P1.#    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Unpublished |
-| 30 | DALEC.A3.C1.D2.F2.H2.P1.#    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
-| 31 | DALEC.A4.C6.D2.F2.H2.P11.#   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
-| 32 | DALEC.A1.C1.D2.F2.H4.P1.#    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
+|Ref | Model (Code) Name              | Alternate Names     | Short Description                                   | Details (POC)                | Status      |
+|----|--------------------------------|---------------------|-----------------------------------------------------|------------------------------|-------------|
+|  1 | DALEC.D1.F2.001                | DALEC_EVERGREEN, E1 | Fire model updated from F1 to F2                    | Williams et al., 2005        | Published   |
+|  2 | DALEC.C1.D1.F2.P1.002          | DALEC_CDEA_LU_FIRES, C1, M1                | Fire model updated from F1 to F2| Bloom & Williams 2015     | Published   |
+|  3 | DALEC.A1.C1.D2.F2.H1.P1.003    | DALEC_CDEA_ACM2, C6, M2                    | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  4 | DALEC.A1.C1.D2.F2.H2.P1.004    | DALEC_CDEA_ACM2_BUCKET, C7, M3             | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  5 | DALEC.A1.C1.D2.F2.H2.P1.R1.005 | DALEC_CDEA_ACM2_BUCKET_RmRg, C10, M4       | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  6 | DALEC.A1.C2.D2.F2.H2.P1.R1.006 | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD, C11, M5   | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  7 | DALEC.A1.C2.D2.F2.H2.P2.R1.007 | DALEC_CDEA_ACM2_BUCKET_RmRg_CWD_wMRT, C12  | Fire model updated from F1 to F2| Smallman et al., 2021     | Published   |
+|  8 | DALEC.A1.C2.D2.F2.H1.P3.R1.008 | DALEC_GSI_DFOL_CWD_FR, G1                  | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
+|  9 | DALEC.A1.C2.D2.F2.H2.P3.R1.009 | DALEC_GSI_BUCKET, G2                       | Fire model updated from F1 to F2| Smallman et al., 2017     | Published   |
+| 10 | DALEC.A1.C2.D2.F2.H1.P4.R2.010 | DALEC, G3           | Fire model updated from F1 to F2                    | Famiglietti et al., 2021     | Published   |
+| 11 | DALEC.A1.C2.D2.F2.H2.P4.R2.011 | DALEC_BUCKET, G4    | Fire model updated from F1 to F2                    | Famiglietti et al., 2021     | Published   |
+| 12 | DALEC.C4.D1.F2.012             | DALEC_EVERGREEN_no_lit_root, S1            | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
+| 13 | DALEC.C5.D1.F2.P1.013          | DALEC_CDEA_no_lit_root, S4                 | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
+| 14 | DALEC.C3.M1.014                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
+| 15 | DALEC.A3.C3.H2.M1.015          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman | Unpublished |
+| 16 | DALEC.M2.016                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
+| 17 | DALEC.A3.H2.M2.017             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
+| 18 | DALEC.A1.C1.D2.F2.H2.P2.018    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
+| 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.019 | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
+| 20 | DALEC.A2.C1.D2.F2.H2.P1.020    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
+| 21 | DALEC.A1.C1.D2.F2.H2.P5.021    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
+| 22 | DALEC.A1.C1.D2.F2.H2.P6.022    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
+| 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
+| 24 | DALEC.A1.C2.D2.F2.H2.P8.R2.024 | G6                  |                                                     | T. L. Smallman               | Unpublished |
+| 25 | DALEC.A1.C2.D2.F2.H2.P9.R2.025 | G7                  |                                                     | T. L. Smallman               | Unpublished |
+| 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
+| 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
+| 28 | DALEC_1005a                    | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
+| 29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Unpublished |
+| 30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
+| 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
+| 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
+| 33 | DALEC.A4.C6.D2.F2.H2.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | Orci-Fernandez               | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -64,7 +65,7 @@ M = Managed Grassland / arable crops (Table 10)
 
 | Model Name | Short Description                                                          | Details                   |
 |------------|----------------------------------------------------------------------------|---------------------------|
-| C0         | 5-pool representation (foliage, fine root, wood, litter, som) | Published (Williams et al., 2005)  |
+| C0         | 5-pool represent1d0ation (foliage, fine root, wood, litter, som) | Published (Williams et al., 2005)  |
 | C1         | 6-pool representation (labile, foliage, fine root, wood, litter, som) where labile supplies foliage only | Published (Bloom & Williams 2015)  |
 | C2         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, wood litter, som) where labile supplies foliage only | Published (Smallman et al., 2021)  |
 | C3         | 7-pool representation (labile, foliage, fine root, wood, fol+root litter, som, crop yield) where labile supplies NPP | Published (Sus et al., 2010)  |
@@ -121,6 +122,7 @@ M = Managed Grassland / arable crops (Table 10)
 | P9         | As P7 but CMI is now 1-CGI. The rolling average NCCE is used to co-determine canopy mortality via a Michaelis-Menten function. | Unpublished |
 | P10        | As P4 but GSI is now a non-linear function of temperature alone. Canopy age is explicitly tracked from point of growth. The canopy photosynthetic efficiency declines on a per-age-class basis as a function of temperature, soil water potential and time. Canopy loss occures when an age class no-longer has a positive NCCE. | Unpublished |
 | P11        | As P1 but allocation to tissues from labile are based on potential growth rates modeified by temperature, water and available labile. | Unpublished |
+| P12        | P11 modified to implement canopy growth and mortality within a P7 style CMP and CGI | Unpublished |
 
 #### TABLE 9. Respiration (either autotrophic or heterotrophic) sub-models
 

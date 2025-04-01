@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to post-process CARDAMOM output for a gridded analysis
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to post-process CARDAMOM output for a gridded analysis.
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,num_quantiles,na_flag,converged,states_all) {
 
@@ -291,7 +315,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # track which parameters have converged + likelihood
   site_output$parameters_converged = rep(0, dim(parameters)[1])
   site_output$parameters_converged[which(converged == "PASS")] = 1
-
+  # Load any parameter priors
+  site_output$parameter_priors_array = drivers$parpriors[1:max(PROJECT$model$nopars)]
+  site_output$parameter_priors_uncertainty_array = drivers$parpriorunc[1:max(PROJECT$model$nopars)]
   # Generic dump of the whole driver$met and drivers$obs arrays
   # Long term averages
   site_output$met_array_averages = apply(drivers$met,2,mean,na.rm = na_flag) 
@@ -1431,6 +1457,16 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       dCbio = states_all$gb_mmolH2Om2s - states_all$gb_mmolH2Om2s[,1] # difference in dom from initial
       site_output$dgb_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
+  if (any(check_list == "leaf_temperature_celcius") == TRUE) {
+      # Canopy temperature 
+      site_output$mean_annual_leaf_temperature_celcius = apply(states_all$mean_annual_leaf_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_leaf_temperature_celcius = quantile(states_all$mean_leaf_temperature_celcius, prob=num_quantiles, na.rm = na_flag)
+      site_output$leaf_temperature_celcius = apply(states_all$leaf_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      # Soil temperature
+      site_output$mean_annual_soil_temperature_celcius = apply(states_all$mean_annual_soil_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_soil_temperature_celcius = quantile(states_all$mean_soil_temperature_celcius, prob=num_quantiles, na.rm = na_flag)
+      site_output$soil_temperature_celcius = apply(states_all$soil_temperature_celcius,2,quantile, prob=num_quantiles, na.rm = na_flag)
+  }
 
   ###
   # Aggregate model ensemble - observation uncertainty consistency
@@ -1466,11 +1502,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Store mean absolute parameter correlation information
   site_output$absolute_mean_parameter_correlation = states_all$absolute_mean_parameter_correlation
   # C-cycle flux correlation with parameters
+  site_output$lai_parameter_correlation = states_all$lai_parameter_correlation
+  site_output$nbp_parameter_correlation = states_all$nbp_parameter_correlation
   site_output$nee_parameter_correlation = states_all$nee_parameter_correlation
   site_output$gpp_parameter_correlation = states_all$gpp_parameter_correlation
   site_output$rauto_parameter_correlation = states_all$rauto_parameter_correlation
   site_output$rhet_parameter_correlation = states_all$rhet_parameter_correlation
   site_output$fire_parameter_correlation = states_all$fire_parameter_correlation
+  # If CiCa retrieved
+  if (any(check_list == "CiCa_parameter_correlation")) {
+      site_output$CiCa_parameter_correlation = states_all$CiCa_parameter_correlation
+  }
+  # If LWP retrieved
+  if (any(check_list == "LWP_parameter_correlation")) {
+      site_output$LWP_parameter_correlation = states_all$LWP_parameter_correlation
+  }
   # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
   if (any(check_list == "MTT_wood_years_parameter_correlation")) {
       site_output$MTT_wood_years_parameter_correlation = states_all$MTT_wood_years_parameter_correlation
@@ -1479,6 +1525,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   if (any(check_list == "NPP_wood_gCm2day_parameter_correlation")) {
       site_output$NPP_wood_gCm2day_parameter_correlation = states_all$NPP_wood_gCm2day_parameter_correlation
   }
+  # Correlations between LAI and key gross and net fluxes
+  site_output$lai_m2m2_to_GPP_gCm2day_correlation = states_all$lai_m2m2_to_GPP_gCm2day_correlation
+  site_output$lai_m2m2_to_NEE_gCm2day_correlation = states_all$lai_m2m2_to_NEE_gCm2day_correlation
+  site_output$lai_m2m2_to_NBP_gCm2day_correlation = states_all$lai_m2m2_to_NBP_gCm2day_correlation           
+  site_output$lai_m2m2_to_Rauto_gCm2day_correlation = states_all$lai_m2m2_to_Rauto_gCm2day_correlation
+  site_output$lai_m2m2_to_Rhet_gCm2day_correlation = states_all$lai_m2m2_to_Rhet_gCm2day_correlation
+  site_output$lai_m2m2_to_wood_gCm2_correlation = states_all$lai_m2m2_to_wood_gCm2_correlation
+  site_output$lai_m2m2_to_som_gCm2_correlation = states_all$lai_m2m2_to_som_gCm2_correlation
+  site_output$lai_m2m2_to_dCwood_gCm2_correlation = states_all$lai_m2m2_to_dCwood_gCm2_correlation
+  site_output$lai_m2m2_to_dCsom_gCm2_correlation = states_all$lai_m2m2_to_dCsom_gCm2_correlation  
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      site_output$lai_m2m2_to_harvest_gCm2day_correlation = states_all$lai_m2m2_to_harvest_gCm2day_correlation
+  }
+
   # If the correlation between wood MTT and wood allocation have been determined
   if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
       site_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation = states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation

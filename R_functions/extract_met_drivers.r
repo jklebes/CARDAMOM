@@ -1,12 +1,36 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to extract meteorology data from global gridded data
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# These functions are by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to extract meteorology data from global gridded data
+# 
+# Author: T. Luke Smallman (02/05/2024),
 # Exceptions are given within specific functions.
+#
+#########################################################################################
 
-extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,met_in,met_source,site_name) {
+extract_met_drivers<-function(n,timestep_days,start_year,end_year,lat_degrees,met_in,met_source,site_name,grid_type) {
 
   if (met_source == "site_specific") {
 
@@ -42,9 +66,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
           }
       } else {
           # currently assumed defaults
-          steps_in_day = 24   # steps per day
-          input_step_size = 1 # hours
-          print("No day of year (doy) variable provided in the *_timeseries_met.csv files. The default assumptions used are 24 steps per day, steps lasting 1 hour.")
+          stop("No day of year (doy) variable provided in the *_timeseries_met.csv files.")
       } # doy[1] != -9999
 
       # Max, min and average timestep air temperatures (oC)
@@ -113,48 +135,10 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       maxt_out = 0 ; mint_out = 0 ; swrad_out = 0 ; co2_out = 0 ; precip_out = 0 ; vpd_out = 0 ; avgTemp_out = 0 ; wind_spd_out = 0
       vpd_lagged_out = 0 ; photoperiod_out = 0 ; avgTmax_out = 0
 
-      if (steps_in_day > 1) {
-          # loop through days to generate daily mean values first
-          # lagged variables for GSI calculated afterwards
-          for (daily in seq(1,length(swrad),steps_in_day)) {
-               if (maxt[1] != -9999 & mint[1] != -9999) {
-                   maxt_out = append(maxt_out,max(maxt[daily:(daily+steps_in_day-1)]))
-                   mint_out = append(mint_out,min(mint[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out = append(avgTemp_out,(mint[daily:(daily+steps_in_day-1)]+maxt[daily:(daily+steps_in_day-1)])*0.5)
-                   avgTmax_out = append(avgTmax_out,max(maxt[daily:(daily+steps_in_day-1)]))
-               } else {
-                   maxt_out = append(maxt_out,max(airt[daily:(daily+steps_in_day-1)]))
-                   mint_out = append(mint_out,min(airt[daily:(daily+steps_in_day-1)]))
-                   avgTemp_out = append(avgTemp_out,mean(airt[daily:(daily+steps_in_day-1)]))
-                   avgTmax_out = append(avgTmax_out,max(airt[daily:(daily+steps_in_day-1)]))
-               }
-               # Short wave radiation (W.m-2)
-               swrad_out = append(swrad_out,sum(swrad[daily:(daily+steps_in_day-1)]))
-               # precipitation mean over time period (kgH2O.m-2.s-1)
-               precip_out = append(precip_out,mean(precip[daily:(daily+steps_in_day-1)]))
-               # wind speed mean over time period (m/s)
-               wind_spd_out = append(wind_spd_out,mean(wind_spd[daily:(daily+steps_in_day-1)]))
-               # cumulative precip lagged over a given number of days, in this case 42
-               co2_out = append(co2_out,mean(co2[daily:(daily+steps_in_day-1)]))
-               vpd_out = append(vpd_out,mean(vpd[daily:(daily+steps_in_day-1)]))
-         } # looping within days
-
-         # remove initial values from datasets
-         swrad_out = swrad_out[-1] ; maxt_out = maxt_out[-1]
-         mint_out = mint_out[-1]   ; co2_out = co2_out[-1]
-         precip_out = precip_out[-1]
-         avgTemp_out = avgTemp_out[-1]
-         avgTmax_out = avgTmax_out[-1]
-         vpd_out = vpd_out[-1] ; wind_spd_out = wind_spd_out[-1]
-
-      } else {
-
-         # currently provided drivers cover greater than a day, so just pass drivers directly
-         maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmax_out = maxt
-         swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
-         co2_out = co2 ; vpd_out = vpd
-
-      } # if there are more than 1 time step per day...
+      # currently provided drivers cover greater than a day, so just pass drivers directly
+      maxt_out = maxt ; mint_out = mint ; avgTemp_out = airt ; avgTmax_out = maxt
+      swrad_out = swrad ; precip_out = precip ; wind_spd_out = wind_spd
+      co2_out = co2 ; vpd_out = vpd
 
       # determine the actual daily positions
       run_day_selector = cumsum(timestep_days)
@@ -167,7 +151,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # rolling averaged for GSI
       avg_days = 30 # assume that the first 30 days are just the actual values, We expect this should result in a small error only
       # create photoperiod information; add 30 days to the output
-      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq(365-(avg_days+1),365,1),doy))
+      photoperiod_out = calc_photoperiod_sec(lat_degrees,c(seq(365-(avg_days+1),365,1),doy))
 
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)
@@ -188,15 +172,14 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
       # Extraction from global databases
       #
 
-      # calculate approximate offset for time zone
-      #offset = round(latlon_wanted[2] * 24 / 360, digits=0)
-      ## should I be applying the offset here?
-
       # sub-select for sites
-      swrad_out = met_in$swrad[n,] ; maxt_out = met_in$maxt[n,] ; precip_out = met_in$precip[n,]
-      vpd_out = met_in$vpd[n,]
-      mint_out = met_in$mint[n,] ; wind_spd_out = met_in$wind_spd[n,]
-      co2_out = met_in$co2 ; avgTmax_out = maxt_out
+      swrad_out = met_in$swrad[n,]   ; maxt_out = met_in$maxt[n,]
+      precip_out = met_in$precip[n,] ; vpd_out = met_in$vpd[n,]
+      mint_out = met_in$mint[n,]     ; wind_spd_out = met_in$wind_spd[n,]
+      # global variable
+      co2_out = met_in$co2 
+      # Derived variable
+      avgTmax_out = maxt_out
       avgTemp_out = (mint_out + maxt_out) * 0.5
 
       # user update
@@ -204,7 +187,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,latlon_wanted,
 
       avg_days = 30 # assume that the first 30 days are just the actual values
       # create photoperiod information; add 30 days to the output
-      photoperiod_out = calc_photoperiod_sec(latlon_wanted[1],c(seq((365-(avg_days-2)),365,1),met_in$doy))
+      photoperiod_out = calc_photoperiod_sec(lat_degrees,c(seq((365-(avg_days-2)),365,1),met_in$doy))
 
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out, avg_days, mean, na.rm=FALSE)

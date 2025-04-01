@@ -1,6 +1,34 @@
-###
-## Function to run CARDAMOM parameters via the chosen model
-###
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to run CARDAMOM parameters via the chosen model
+# 
+# Author: T. Luke Smallman (12/11/2024)
+# Exceptions states below in specific functions
+#
+#########################################################################################
 
 run_each_site<-function(n,PROJECT,repair,grid_override) {
 
@@ -25,7 +53,9 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           return(output)
       }
       # Otherwise we should assume these variables exist
-      parameters = output$parameters ; converged = output$converged ; rm(output)      
+      parameters = output$parameters ; converged = output$converged ; kept_chains = output$kept_chains 
+      # Then tidy
+      rm(output)      
 
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
@@ -90,9 +120,9 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
 
           # ...if this is a site run save the full ensemble and everything else...
-          save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
+          save(kept_chains,parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
           # store the parameters and driver information
-          save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
+          save(kept_chains,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
 #          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
 #               file=outfile_parameters, compress="gzip", compression_level = 6)

@@ -1,5 +1,34 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-# The functions contained within this file were created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Functions run and manage input / output data for DALEC runs (part of stage 3).
+# 
+# Author: T. Luke Smallman (12/11/2024)
+# Exceptions states below in specific functions
+#
+#########################################################################################
 
 rollapply_mean_annual_max<-function(var_in, step) {
 
@@ -61,6 +90,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$parameters = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)+1,dim(site_output$labile_gCm2)[1]))
           # track which parameters have converged + likelihood
           grid_output$parameters_converged = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)+1))
+          # Parameter priors
+          grid_output$parameter_priors_array = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$parameter_priors_uncertainty_array = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           # Mean meteorological conditions
           grid_output$mean_temperature_C = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$mean_radiation_MJm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -748,6 +780,16 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$mean_gb_mmolH2Om2s = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$gb_mmolH2Om2s = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
           }
+          if (any(check_list == "leaf_temperature_celcius") == TRUE) {
+              # Canopy temperature 
+              grid_output$mean_annual_leaf_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_leaf_temperature_celcius = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$leaf_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+              # Soil temperature
+              grid_output$mean_annual_soil_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+              grid_output$mean_soil_temperature_celcius = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$soil_temperature_celcius = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
+          }
 
           # Create overlap statistics variables - may not always get filled in the end
 #          if (any(check_list == "gpp_assim_data_overlap_fraction") == TRUE) {
@@ -777,11 +819,35 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
 
           # Time and uncertainty invarient information,
           # this is the correlation between ensemble members for parameter and C-cycle flux variables
+          grid_output$lai_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          grid_output$nbp_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$nee_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$gpp_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rauto_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$rhet_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
           grid_output$fire_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          # Assess within pixel correlations with LAI
+          grid_output$lai_m2m2_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_NBP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$lai_m2m2_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          # If harvest 
+          if (any(check_list == "harvest_gCm2day")) {
+              grid_output$lai_m2m2_to_harvest_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          }                                        
+          # If CiCa
+          if (any(check_list == "CiCa_parameter_correlation") == TRUE) {
+              grid_output$CiCa_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          }
+          # If Leaf Water Potential
+          if (any(check_list == "LWP_parameter_correlation") == TRUE) {
+              grid_output$LWP_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
+          }
           # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
           if (any(check_list == "MTT_wood_years_parameter_correlation") == TRUE) {
               grid_output$MTT_wood_years_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,max(PROJECT$model$nopars)))
@@ -852,17 +918,16 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$j_location = rep(NA, length.out = PROJECT$nosites)
 
           # generate the lat / long grid again
-          output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-          grid_output$lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-          grid_output$long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-
-          # Determine grid area (m2)
-          grid_output$area_m2 = calc_pixel_area(grid_output$long,grid_output$lat)
+          output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+          grid_output$lat = output$lat
+          grid_output$long = output$long
+          # Structure area (in m) as a grid
+          grid_output$area_m2 = output$area
 
           # Load the land mask...
-          grid_output$landmask=array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$landmask = array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           # ...and land fraction
-          grid_output$land_fraction=array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$land_fraction = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 
       } else {
 
@@ -934,7 +999,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
   } # repair !=1
 
   # now request the creation of the plots
-  if (use_parallel & length(nos_plots) > 1 & request_use_local_slurm) {
+  if (length(nos_plots) > 1 & request_use_local_slurm) {
 
       # use parallel in interactive mode
 
@@ -960,7 +1025,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
 
       print("...finished parallel operations using slurm mode")
 
-  } else if (use_parallel & length(nos_plots) > 1 & request_use_local_slurm == FALSE) {
+  } else if (use_parallel & length(nos_plots) > 1) {
 
       # use parallel in interactive mode
 

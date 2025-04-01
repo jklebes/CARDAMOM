@@ -1,12 +1,35 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to check the for the presence of options from control files,
-## where appropriate set default values and provide warnings for obvious errors
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to check the for the presence of options from control files,
+# where appropriate set default values and provide warnings for obvious errors
 # Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
-check_control_file_defaults<-function() {
+check_control_file_defaults<-function(paths) {
 
   ## Set defaults incase missing, NOTE: <<- to assign global
 
@@ -15,6 +38,8 @@ check_control_file_defaults<-function() {
   if (exists("select_country") == FALSE)                {select_country <<- FALSE}
   if (exists("met_interp") == FALSE)                    {met_interp <<- FALSE}
   if (exists("pft_specific_parameters") == FALSE)       {pft_specific_parameters <<- FALSE}
+  if (exists("cardamom_grid_type") == FALSE)            {cardamom_grid_type <<- "epsg:4326"}
+  if (cardamom_grid_type == " " | cardamom_grid_type == "") {cardamom_grid_type <<- "epsg:4326"}
   # Site combined forcings and assimilated data path
   if (exists("path_to_site_obs") == FALSE)              {path_to_site_obs <<- " "}
   # Forcings data paths 
@@ -52,7 +77,7 @@ check_control_file_defaults<-function() {
   if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
   if (exists("Cwood_mortality_source") == FALSE)        {Cwood_mortality_source <<- " "}
-  if (exists("GPP_source") == FALSE)                    {GPP_source <<- " "}
+  if (exists("gpp_source") == FALSE)                    {gpp_source <<- " "}
   if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
   if (exists("Reco_source") == FALSE)                   {Reco_source <<- " "}
   if (exists("NEE_source") == FALSE)                    {NEE_source <<- " "}
@@ -85,27 +110,34 @@ check_control_file_defaults<-function() {
   if (exists("request_use_EDCs") == FALSE)              {request_use_EDCs <<- TRUE}
   if (exists("request_extended_mcmc") == FALSE)         {request_extended_mcmc <<- 10e6}
   if (exists("request_cost_function_scaling") == FALSE) {request_cost_function_scaling <<- 0}
-  # Computer options
+  # Computer running / compiler locations
   if (exists("request_use_server") == FALSE)            {request_use_server <<- FALSE}
   if (exists("request_use_local_slurm") == FALSE)       {request_use_local_slurm <<- FALSE} 
   if (exists("request_runtime") == FALSE)               {request_runtime <<- 48}
   if (exists("request_compile_server") == FALSE)        {request_compile_server <<- FALSE}
   if (exists("request_compile_local") == FALSE)         {request_compile_local <<- TRUE}
   # Computer defaults
-  if (request_use_server & exists("sshpass_key_home") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
-                                                                       The sshpass_key_home variable is missing. 
-                                                                       This please create a passkey for both your home and server machines and specify using 
-                                                                       sshpass_key_home and sshpass_key_server as appropriate")}
-  if (request_use_server & exists("sshpass_key_server") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
-                                                                          The sshpass_key_server variable is missing. 
-                                                                          This please create a passkey for both your home and server machines and specify using 
-                                                                          sshpass_key_home and sshpass_key_server as appropriate")}
+  #if (request_use_server & exists("sshpass_key_home") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
+  #                                                                     The sshpass_key_home variable is missing. 
+  #                                                                     This please create a passkey for both your home and server machines and specify using 
+  #                                                                     sshpass_key_home and sshpass_key_server as appropriate")}
+  #if (request_use_server & exists("sshpass_key_server") == FALSE) {print("CARDAMOM R code base assumes that access to the remote service is managed using ssh passkey. 
+  #                                                                        The sshpass_key_server variable is missing. 
+  #                                                                        This please create a passkey for both your home and server machines and specify using 
+  #                                                                        sshpass_key_home and sshpass_key_server as appropriate")}
   if (request_use_server & exists("home_computer") == FALSE) {print("A request to run CARDAMOM on a remote server has been made, but not home_computer has been set.
                                                                      Please specify the address of the home computer used for moving files to and from the remote server")}
+  # Compiler options
   if (exists("language") == FALSE) {language = "Fortran"} # Assume that the language is Fortran, currently all that actually works
   if (exists("compiler") == FALSE) {compiler = "gfortran"} # Assume GNU compiler option if intel not specified
   if (exists("compiler_optimisation") == FALSE) {compiler_optimisation = "-O2"} # tested options are current models are -O2, -O3, -Ofast
-
+  # Slurm options
+  if (exists("slurm_concurrent_cpus") == FALSE) {slurm_concurrent_cpus = 60} # number of concurrent cpus allowed by slurm
+  if (exists("slurm_max_run_time") == FALSE) {slurm_max_run_time = 12} # Number of hours which will be asked for task in stage 3 
+  if (request_use_local_slurm & exists("slurm_account") == FALSE) {print("The slurm local cluster has been requested for use but no slurm account has been specified (e.g. slurm_account = 'geos_research')")} 
+  # Any R library options which need setting
+  if (exists("cardamom_temporary_directory") == FALSE) { cardamom_temporary_directory <<- paste(paths$cardamom_outputs,"/temporary_files",sep="") }
+  if (dir.exists(cardamom_temporary_directory) == FALSE) {dir.create(cardamom_temporary_directory)}
   ## Check for obvious combination errors
   # Forcings datasets
   if (met_source != "site_specific" & path_to_met_source == " ")                                       {stop(paste("specified 'met_source' and 'path_to_met_source' incompatible"))}
@@ -124,7 +156,7 @@ check_control_file_defaults<-function() {
   if (Cwood_potential_source != "site_specific" & Cwood_potential_source != " " & path_to_Cwood_potential == " "){stop(paste("specified 'Cwood_potential_source' and 'path_to_Cwood_potential' incompatible"))}
   if (soilwater_initial_source != "site_specific" & soilwater_initial_source != " " & path_to_gleam == " ")      {stop(paste("specified 'soilwater_initial_source' and 'path_to_gleam' incompatible"))}
   if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
-  if (GPP_source != "site_specific" & GPP_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'GPP_source' and 'path_to_gpp' incompatible"))}
+  if (gpp_source != "site_specific" & gpp_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'gpp_source' and 'path_to_gpp' incompatible"))}
   if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
   if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'fire_source' and 'path_to_lca' incompatible"))}
 

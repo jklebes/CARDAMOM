@@ -1,24 +1,48 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! This file contains the source code of DALEC_1005
+!
+! This version of DALEC (consistent with JPL version 1005, including any bugs) is derived from the following primary references:
+! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
+! Yang et al., (2021, submitted to GMDD) CARDAMOM-FluxVal Version 1.0: a FLUXNET-based Validation System for CARDAMOM Carbon and Water Flux Estimates
+! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA) and Yan Yang (JPL)
+! available from the JPL-Stanford-UCSB repository at https://github.com/CARDAMOM-framework/.
+! Subsequent modifications by:
+! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
+! J. F. Exbrayat (University of Edinburgh)
+! A. A. Bloom (JPL, USA)
+! Implementing a two pool water model with evapotranspiration estimated as a function of GPP.
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module CARBON_MODEL_MOD
 
 implicit none
 
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
-  ! This version of DALEC (consistent with JPL version 1005, including any bugs) is derived from the following primary references:
-  ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
-  ! Yang et al., (2021, submitted to GMDD) CARDAMOM-FluxVal Version 1.0: a FLUXNET-based Validation System for CARDAMOM Carbon and Water Flux Estimates
-  ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA) and Yan Yang (JPL)
-  ! available from the JPL-Stanford-UCSB repository at https://github.com/CARDAMOM-framework/.
-  ! Subsequent modifications by:
-  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! A. A. Bloom (JPL, USA)
-  ! Implementing a two pool water model with evapotranspiration estimated as a function of GPP.
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
 ! make all private
 private

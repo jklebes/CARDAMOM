@@ -36,7 +36,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
 #load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
+#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_OCO2v11_NBE/infofile.RData")
+load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_OCO2v11_NBE/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
 #load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
 
@@ -994,7 +995,7 @@ skip_clusters = FALSE
 if (skip_clusters == FALSE) {
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(6,6), mar = c(2,2,2,1))
+par(mfrow=c(7,7), mar = c(2,2,2,1))
 # Loop parameters
 for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Set to local variables
@@ -1002,7 +1003,7 @@ for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
-     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
      ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
      # Reset ymax for update across clusters
      ymax = 0

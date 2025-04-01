@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to load potential biomass maps to be used as attractor
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to load potential woody biomass from gridded dataset
+# 
+# Author: T. Luke Smallman (02/05/2024)
+#
+#########################################################################################
 
 load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_source,start,finish,timestep_days,cardamom_ext,spatial_type) {
 
@@ -25,12 +49,12 @@ load_potential_biomass_maps_for_extraction<-function(latlon_in,Cwood_potential_s
 
        # Convert to a raster, assuming standad WGS84 grid
        biomass_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_gCm2))
-       biomass_gCm2 = rast(biomass_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+       biomass_gCm2 = rast(biomass_gCm2, crs = ("epsg:4326"), type="xyz")
        biomass_uncertainty_gCm2 = data.frame(x = as.vector(long), y = as.vector(lat), z = as.vector(biomass_uncertainty_gCm2))
-       biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("+init=epsg:4326"), type="xyz")
+       biomass_uncertainty_gCm2 = rast(biomass_uncertainty_gCm2, crs = ("epsg:4326"), type="xyz")
 
        # Create raster with the target crs (technically this bit is not required)
-       target = rast(crs = ("+init=epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
+       target = rast(crs = ("epsg:4326"), ext = ext(biomass_gCm2), resolution = res(biomass_gCm2))
        # Check whether the target and actual analyses have the same CRS
        if (compareGeom(biomass_gCm2,target) == FALSE) {
            # Resample to correct grid

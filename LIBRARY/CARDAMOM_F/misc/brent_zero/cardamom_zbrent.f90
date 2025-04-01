@@ -34,7 +34,7 @@ module cardamom_zbrent
 
     ! local variables..
     integer            :: iter
-    integer, parameter:: ITMAX = 8
+    integer, parameter:: ITMAX = 10
     double precision   :: a, b, c, d, e, fa, fb, fc, p, q, r, s, tol1, tol0, xm
     double precision, parameter:: EPS = 6d-8
 
