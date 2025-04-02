@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,16 +14,16 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Code responsible for input / output operations for CARDAMOM
+! Code responsible for input/output operations for CARDAMOM
   !
   ! This code is based on the original C verion of the University of Edinburgh
   ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -271,8 +271,8 @@ module cardamom_io
     !! pre-loop, Run MCMC sampler with modified likelihood fct  
     use model_shared, only: PI
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc
-    use model_likelihood_module, only: model_likelihood, &
-    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
+    !use model_likelihood_module, only: model_likelihood, &
+    !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
     use model_likelihood_wrapper  ! TODO next refactoring step
     use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
 
@@ -641,7 +641,7 @@ module cardamom_io
 
     ! Do some sanity checks
     if (DATAin%lat > 90 .or. DATAin%lat < -90) then
-        print*,"Latitude provided is not -90/90"
+        print*,"Latitude provided is not-90/90"
         stop
     end if
 
@@ -804,7 +804,7 @@ module cardamom_io
 
 ! Hack not to be left in place!!!! Removes first 3 and final 4 months of each year
 !print*,"TLS: THERE IS ARE REALLY IMPORTANT LINES L805, CARDAMOM_IO.F90 THAT NEED REMOVING!!!!"
-!if (DATAin%met(6,day) < 95d0 .or. DATAin%met(6,day) > 244d0) obstemp(3:4) = -9999d0
+!if (DATAin%met(6, day) < 95d0 .or. DATAin%met(6, day) > 244d0) obstemp(3:4) = -9999d0
 !if (obstemp(3) > 0d0) obstemp(4) = 0.5
        ! Gross Primary Productivity (GPP, gC/m2/day)
        DATAin%GPP(day) = obstemp(1)

@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
@@ -77,9 +77,9 @@ module model_likelihood_module
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, ML_prior_out
 
@@ -145,9 +145,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -216,9 +216,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -287,9 +287,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -364,9 +364,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision, dimension((DATAin%nodays+1), DATAin%nopools):: local_pools
     double precision, dimension(DATAin%nodays, DATAin%nofluxes):: local_fluxes
     double precision:: pool_error, flux_error
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 
     ! Run model
 
@@ -570,7 +570,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) < pars(44)) then
        EDC1 = 0d0; EDCD%PASSFAIL(11) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater than foliage
+    ! Combustion completeness for foliar+fine root litter should be greater than foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(45) < pars(42)) then
        EDC1 = 0d0; EDCD%PASSFAIL(12) = 0
     endif
@@ -969,7 +969,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         ! Determine the input/output ratio
 
         ! Soil surface water pool
-        26, 33
+        ! 26, 33
 
         ! Clabile
 !        in_out_lab     = sumlab &
@@ -1476,9 +1476,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -1583,9 +1583,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -1969,9 +1969,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -2364,9 +2364,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time
@@ -2759,9 +2759,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer:: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision:: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays):: mid_state
     double precision, dimension(DATAin%steps_per_year):: sub_time

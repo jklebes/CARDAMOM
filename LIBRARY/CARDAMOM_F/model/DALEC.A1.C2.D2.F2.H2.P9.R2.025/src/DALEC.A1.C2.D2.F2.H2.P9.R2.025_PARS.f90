@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.A1.C2.D2.F2.H2.P9.R2 model.
@@ -30,7 +30,7 @@
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+  ! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -43,7 +43,7 @@ use samplers_shared, only: PARINFO
   private
 
   ! specify explicitly the public
-  public :: pars_info
+  public:: pars_info
 
   contains
 
@@ -63,19 +63,20 @@ use samplers_shared, only: PARINFO
 
     !
     ! Declare parameters
+    type(PARINFO), intent(inout):: PI
     !
 
     ! Decomposition efficiency of litter/CWD to som (fraction)
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
-    ! Fraction of GPP respired as Rm(wood,root)
+    ! Fraction of GPP respired as Rm(wood, root)
     PI%parmin(2) = 0.05d0
     PI%parmax(2) = 0.40d0
 
     ! Baseline canopy turnover
     ! NOT IN USE
-    PI%parmin(3) = 0.0002737851 ! 10 years
+    PI%parmin(3) = 0.0002737851  ! 10 years
     PI%parmax(3) = 0.002737851  ! 1 year
 
     ! Fraction of (1-fgpp) to roots*/
@@ -87,23 +88,23 @@ use samplers_shared, only: PARINFO
     PI%parmax(5) = 0.07142857d0   ! 14 days
 
     ! Turnover fraction of wood
-    PI%parmin(6) = 0.000009d0 ! 304  years
+    PI%parmin(6) = 0.000009d0  ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! Turnover fraction of roots
     ! Gill and Jackson (2000), New Phytol., 147, 13–31
     ! Fig. 6 turnover by diameter class
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmin(7) = 0.001368925d0  ! 2    years  ! 0.0006844627d0  ! 4 years
     PI%parmax(7) = 0.02d0        ! 0.13 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmin(8) = 0.0001141d0  ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC  ! 0.0001368926d0 !   20 years at 0oC
+!    PI%parmin(9) = 0.0000001d0  ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Exponential coefficient for Rhet temperature response
@@ -113,16 +114,16 @@ use samplers_shared, only: PARINFO
     ! log10 avg foliar N (gN.m-2)
     ! Kattge et al., (2011) (Quantiles 25% / 75%)
     ! and Thomas et al., (2019) (Aconite canopy paper)
-    PI%parmin(11) = 0.07918125d0!0d0 !-0.2218487d0 !TLS: restricted to 1.2 gN/m2leaf
-    PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
+    PI%parmin(11) = 0.07918125d0  ! 0d0  ! -0.2218487d0  ! TLS: restricted to 1.2 gN/m2leaf
+    PI%parmax(11) = 0.4771213d0  ! 0.5563025d0  ! TLS: restricted to 3 gC/m2leaf
 
     ! Max labile turnover fraction to foliage
     PI%parmin(12) = 0.0006844627d0 !  4 years
     PI%parmax(12) = 0.07142857d0   ! 14 days
 
     ! Fraction of GPP to Clab*/
-    PI%parmin(13) = 0.15d0 ! 0.05d0
-    PI%parmax(13) = 0.55d0 ! 0.35d0
+    PI%parmin(13) = 0.15d0  ! 0.05d0
+    PI%parmax(13) = 0.55d0  ! 0.35d0
 
     ! CGI minimum temperature (oC)
     PI%parmin(14) = -50d0
@@ -137,7 +138,7 @@ use samplers_shared, only: PARINFO
     PI%parmax(16) = 70d0
 
     ! LMA
-    ! Kattge et al. 2011,
+    ! Kattge et al. 2011, 
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
 
@@ -149,7 +150,7 @@ use samplers_shared, only: PARINFO
     ! NCCE per gCleaf at which
     ! CMI is suppressed by 0.5
     ! Now in units of relative to maximum NCCE in sensitive period
-    PI%parmin(25) = 0d0 !-0.1d0
+    PI%parmin(25) = 0d0  ! -0.1d0
     PI%parmax(25) = 0.1d0
 
     ! Number of days overwhich cmi_ncce is sensitive
@@ -157,8 +158,8 @@ use samplers_shared, only: PARINFO
     PI%parmax(26) = 183d0
 
     ! Net Canopy Carbon Export due to new leaf (gC/m2/day)
-    PI%parmin(27) = 0.0001d0 !0.1d0
-    PI%parmax(27) = 0.5d0 !0.025d0
+    PI%parmin(27) = 0.0001d0  ! 0.1d0
+    PI%parmax(27) = 0.5d0  ! 0.025d0
 
     ! Initial NCCE reference value
     PI%parmin(28) = 0d0
@@ -166,7 +167,7 @@ use samplers_shared, only: PARINFO
 
     ! fraction of Cwood which is coarse root
     PI%parmin(29) = 0.15d0
-    PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
+    PI%parmax(29) = 0.50d0  ! increased based on evidence of savannah system 50 % below  ! 0.30d0
 
     ! CGI rSWP at which stress total (MPa)
     PI%parmin(30) = -6d0
@@ -182,30 +183,30 @@ use samplers_shared, only: PARINFO
 
     ! CGI min photoperiod threshold (sec)
     PI%parmin(33) = 3600d0*3d0  !  3 hours
-    PI%parmax(33) = 3600d0*21d0 ! 21 hours
+    PI%parmax(33) = 3600d0*21d0  ! 21 hours
 
     ! CGI max photoperiod threshold (sec)
     PI%parmin(34) = 3600d0*3d0   !  3 hours
     PI%parmax(34) = 3600d0*21d0  ! 21 hours
 
-    ! Reich - Leaf N linked respiration exponential coefficient
-    PI%parmin(35) = 0.935d0 ! 1.639-0.01
-    PI%parmax(35) = 1.774d0 ! 1.639+0.01
-    ! Reich - Leaf N linked respiration intercept
+    ! Reich-Leaf N linked respiration exponential coefficient
+    PI%parmin(35) = 0.935d0  ! 1.639-0.01
+    PI%parmax(35) = 1.774d0  ! 1.639+0.01
+    ! Reich-Leaf N linked respiration intercept
     ! max/min values based on observed ranges from Reich et al (2008)
     ! Figure 1
-    PI%parmin(36) = 0.10d0 !0.645
-    PI%parmax(36) = 1.10d0 !0.911
+    PI%parmin(36) = 0.10d0  ! 0.645
+    PI%parmax(36) = 1.10d0  ! 0.911
 
     ! Turnover rate for CWD
-    PI%parmin(38) = 1.368925d-05 ! 200.00 years at 0oC
+    PI%parmin(38) = 1.368925d-05  ! 200.00 years at 0oC
     PI%parmax(38) = 0.001d0       !   2.74 years at 0oC
 
-    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 % of max depth
+    ! BUCKET-coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 % of max depth
     PI%parmin(39) = 100d0
-    PI%parmax(39) = 2000d0 !500d0
+    PI%parmax(39) = 2000d0  ! 500d0
 
-    ! BUCKET - maximum rooting depth
+    ! BUCKET-maximum rooting depth
     PI%parmin(40) = 0.35d0
     PI%parmax(40) = 10d0
 
@@ -216,7 +217,7 @@ use samplers_shared, only: PARINFO
     ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
     ! Xu et al., (2017):
     ! Variations of leaf longevity in tropical moist forests predicted by a
-    ! trait-driven carbon optimality model,
+    ! trait-driven carbon optimality model, 
     ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
     ! Thus we will compromise on the value between these but closer to the
     ! newer estimate (i.e. 30 gC/gN/day)
@@ -225,7 +226,7 @@ use samplers_shared, only: PARINFO
 
     ! Initial leaf lifespan (days)
     PI%parmin(43) =  60.d0
-    PI%parmax(43) = 365.25d0 * 4d0
+    PI%parmax(43) = 365.25d0*4d0
 
     ! Resilience factor for burned but not combusted C stocks
     PI%parmin(44) = 0.1d0
@@ -239,7 +240,7 @@ use samplers_shared, only: PARINFO
     ! Combustion completeness factor for soil
     PI%parmin(47) = 0.001d0
     PI%parmax(47) = 0.1d0
-    ! Combustion completeness factor for foliage + fine root litter
+    ! Combustion completeness factor for foliage+fine root litter
     PI%parmin(48) = 0.01d0
     PI%parmax(48) = 0.99d0
     ! Combustion completeness factor for wood litter
@@ -272,7 +273,7 @@ use samplers_shared, only: PARINFO
 
     ! C_som
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    PI%parmax(23) = 250000d0  ! 90000d0
 
     ! C wood litter
     PI%parmin(37) = 1d0

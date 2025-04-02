@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.C3.M1 model.
@@ -30,7 +30,7 @@
 ! All code translation into Fortran, integration into the University of
 ! Edinburgh CARDAMOM code and subsequent modifications by:
 ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-! See function / subroutine specific comments for exceptions and contributors
+! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -43,7 +43,7 @@ use samplers_shared, only: PARINFO
   private
 
   ! specify explicitly the public
-  public :: pars_info
+  public:: pars_info
 
   contains
 
@@ -51,7 +51,6 @@ use samplers_shared, only: PARINFO
   !------------------------------------------------------------------
   !
   subroutine pars_info(PI)
-    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -66,6 +65,7 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
+    type(PARINFO), intent(inout):: PI
     !
 
     ! Decomposition rate (frac/day)
@@ -86,11 +86,11 @@ use samplers_shared, only: PARINFO
     PI%parmax(4) = 0.05d0
  
     ! turnover rate foliage (frac/day)
-    PI%parmin(5) = 0.002737851d0 ! 365.25 days
+    PI%parmin(5) = 0.002737851d0  ! 365.25 days
     PI%parmax(5) = 0.03571429d0  ! 28 days 
 
-    ! TOR stem* - 1% loss per year value (day-1)
-    PI%parmin(6) = 0.002737851d0 ! 365.25 days
+    ! TOR stem*- 1% loss per year value (day-1)
+    PI%parmin(6) = 0.002737851d0  ! 365.25 days
     PI%parmax(6) = 0.03571429d0  ! 28 days
     ! maximum rate of foliar turnover (day-1) due to self-shading
     PI%parmin(7) = 0.02380952d0  ! 42 days
@@ -101,22 +101,22 @@ use samplers_shared, only: PARINFO
     PI%parmax(8) = 32d0
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(9) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmin(9) = 0.0001141d0  ! 24   years at 0oC
     PI%parmax(9) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(10) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(10) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
+    PI%parmax(10) = 9.126169d-05   !   30 years at 0oC  ! 0.0001368926d0 !   20 years at 0oC
 
     ! log10 avg foliar N (gN.m-2)
-    !PI%parmin(11) = -0.0001d0 !-0.2218487d0 
+    !PI%parmin(11) = -0.0001d0  ! -0.2218487d0 
     !PI%parmax(11) = 0.6382028d0
     ! Photosynthetic nitrogen use efficiency (gC/gN/m2/day)
     PI%parmin(11) = 1d0
     PI%parmax(11) = 40d0    
 
     ! sow day
-    PI%parmin(12) = 365.25d0 !100d0 
+    PI%parmin(12) = 365.25d0  ! 100d0 
     PI%parmax(12) = 4d0*365.25d0
 
     ! Respiratory cost of labile transfer (per gC.m-2 labile)
@@ -131,7 +131,7 @@ use samplers_shared, only: PARINFO
 
     ! harvest day
     PI%parmin(15) = 365.25d0     !15d0 
-    PI%parmax(15) = 4d0*365.25d0 !365d0
+    PI%parmax(15) = 4d0*365.25d0  ! 365d0
 
     ! plough day
     ! NOT CURRENTLY IN USE
@@ -148,23 +148,23 @@ use samplers_shared, only: PARINFO
 
     ! minimum temperature for development (oC)
     PI%parmin(26) = (-1d0+273.15d0) 
-    PI%parmax(26) = ( 8d0+273.15d0)  ! -1,8
+    PI%parmax(26) = ( 8d0+273.15d0)  ! -1, 8
     ! maximum temperature for development (oC)
     PI%parmin(27) = (18d0+273.15d0) 
-    PI%parmax(27) = (36d0+273.15d0)   ! 18,36
+    PI%parmax(27) = (36d0+273.15d0)   ! 18, 36
     ! optimum temperature for development (oC)
     PI%parmin(28) = ( 8d0+273.15d0) 
-    PI%parmax(28) = (22d0+273.15d0)   ! 8,22
+    PI%parmax(28) = (22d0+273.15d0)   ! 8, 22
    
     ! minimum temperature for vernalisation (oC)
     PI%parmin(29) = (-5.3d0+273.15d0)
-    PI%parmax(29) = (-0.3d0+273.15d0)   ! -5,0
+    PI%parmax(29) = (-0.3d0+273.15d0)   ! -5, 0
     ! maximum temperature for vernalisation (oC)
     PI%parmin(30) = (12.0d0+273.15d0) 
-    PI%parmax(30) = (19.0d0+273.15d0)    ! 12,19
+    PI%parmax(30) = (19.0d0+273.15d0)    ! 12, 19
     ! optimum temperature for vernalisation (oC)
     PI%parmin(31) = (2.0d0+273.15d0) 
-    PI%parmax(31) = (7.0d0+273.15d0)   ! 2,7
+    PI%parmax(31) = (7.0d0+273.15d0)   ! 2, 7
    
     ! critical photoperiod for development (hrs)
     PI%parmin(32) = 6d0 
@@ -182,7 +182,7 @@ use samplers_shared, only: PARINFO
 
     ! Intercept value for canopy N (gN/m2) dilution model
     PI%parmin(36) = 2.5d0
-    PI%parmax(36) = 6.0d0 ! 5.5d0
+    PI%parmax(36) = 6.0d0  ! 5.5d0
     ! Coefficient relating crop development stage to N dilution
     PI%parmin(37) = -0.04d0
     PI%parmax(37) = -0.005d0
@@ -217,17 +217,17 @@ use samplers_shared, only: PARINFO
     PI%parmax(25) = 1d0
 
     ! Read in the crop type specific development file
-    call crop_development_parameters(PI%stock_seed_labile,PI%DS_shoot &
-                                    ,PI%DS_root,PI%fol_frac,PI%stem_frac &
-                                    ,PI%root_frac,PI%DS_LRLV,PI%LRLV &
-                                    ,PI%DS_LRRT,PI%LRRT)
+    call crop_development_parameters(PI%stock_seed_labile, PI%DS_shoot &
+                                    ,PI%DS_root, PI%fol_frac, PI%stem_frac &
+                                    ,PI%root_frac, PI%DS_LRLV, PI%LRLV &
+                                    ,PI%DS_LRRT, PI%LRRT)
 
   end subroutine pars_info
   !
   !------------------------------------------------------------------
   !
-  subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
+  subroutine crop_development_parameters(stock_seed_labile, DS_shoot, DS_root, fol_frac &
+                                        ,stem_frac, root_frac, DS_LRLV, LRLV, DS_LRRT, LRRT)
 
     ! subroutine reads in the fixed crop development files which are linked the
     ! the development state of the crops. The development model varies between
@@ -238,8 +238,8 @@ use samplers_shared, only: PARINFO
 
     ! declare inputs
     ! crop specific variables
-    double precision,intent(inout) :: stock_seed_labile
-    double precision, allocatable, dimension(:),intent(inout)  :: DS_shoot, & !
+    double precision, intent(inout):: stock_seed_labile
+    double precision, allocatable, dimension(:), intent(inout)  :: DS_shoot, & !
                                                                    DS_root, & !
                                                                   fol_frac, & !
                                                                  stem_frac, & !
@@ -251,58 +251,58 @@ use samplers_shared, only: PARINFO
 
     ! local variables..
     integer        :: columns, i, rows, input_crops_unit, ios
-    character(100) :: variables,filename
+    character(100):: variables, filename
 
     ! for the moment hard code the file name
     filename="winter_wheat_development.csv"
-    input_crops_unit = 20 ; ios = 0
+    input_crops_unit = 20; ios = 0
 
     ! crop development file
-    open(unit = input_crops_unit, file=trim(filename),iostat=ios, status='old', action='read')
+    open(unit = input_crops_unit, file = trim(filename), iostat = ios, status='old', action='read')
 
     ! ensure we are definitely at the beginning
     rewind(input_crops_unit)
 
     ! read in the amount of carbon available (as labile) in each seed..
-    read(unit=input_crops_unit,fmt=*)variables,stock_seed_labile,variables,variables
+    read(unit = input_crops_unit, fmt=*)variables, stock_seed_labile, variables, variables
 
     ! read in C partitioning/fraction data and corresponding developmental
     ! stages (DS)
     ! shoot
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_shoot(rows) , fol_frac(rows) , stem_frac(rows)  )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_shoot(i), fol_frac(i), stem_frac(i)
+    read(unit = input_crops_unit, fmt=*) variables
+    read(unit = input_crops_unit, fmt=*) rows, columns
+    allocate( DS_shoot(rows), fol_frac(rows), stem_frac(rows)  )
+    do i = 1, rows
+      read(unit = input_crops_unit, fmt=*) DS_shoot(i), fol_frac(i), stem_frac(i)
     enddo
 
     ! root
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_root(rows) , root_frac(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_root(i), root_frac(i)
+    read(unit = input_crops_unit, fmt=*) variables
+    read(unit = input_crops_unit, fmt=*) rows, columns
+    allocate( DS_root(rows), root_frac(rows) )
+    do i = 1, rows
+      read(unit = input_crops_unit, fmt=*) DS_root(i), root_frac(i)
     enddo
 
     ! loss rates of leaves and roots
     ! leaves
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRLV(rows) , LRLV(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRLV(i), LRLV(i)
+    read(unit = input_crops_unit, fmt=*) variables
+    read(unit = input_crops_unit, fmt=*) rows, columns
+    allocate( DS_LRLV(rows), LRLV(rows) )
+    do i = 1, rows
+      read(unit = input_crops_unit, fmt=*) DS_LRLV(i), LRLV(i)
     enddo
 
     ! roots
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRRT(rows) , LRRT(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRRT(i), LRRT(i)
+    read(unit = input_crops_unit, fmt=*) variables
+    read(unit = input_crops_unit, fmt=*) rows, columns
+    allocate( DS_LRRT(rows), LRRT(rows) )
+    do i = 1, rows
+      read(unit = input_crops_unit, fmt=*) DS_LRRT(i), LRRT(i)
     enddo
 
     ! rewind and close
-    rewind(input_crops_unit) ; close(input_crops_unit)
+    rewind(input_crops_unit); close(input_crops_unit)
 
   end subroutine crop_development_parameters
   !
