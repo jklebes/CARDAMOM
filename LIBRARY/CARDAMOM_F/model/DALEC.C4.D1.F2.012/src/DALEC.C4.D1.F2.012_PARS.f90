@@ -35,6 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -49,8 +50,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use model_shared, only: PI
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or
@@ -66,6 +67,7 @@ module MODEL_PARAMETERS
 
     !
     ! declare parameters
+    type(PARINFO), intent(inout):: PI
     !
 
     ! Fraction of GPP respired as autotrophic
