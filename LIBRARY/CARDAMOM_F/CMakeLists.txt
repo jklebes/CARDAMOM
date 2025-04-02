@@ -20,7 +20,7 @@ set(MODELFILE
                 )
 
 set(ALLMODELNAMES
-DALEC_1005  # problem - extracting last 3 characters as "id" is same as another
+DALEC_1005 
 DALEC_1005a
 DALEC.A1.C1.D2.F2.H1.P1.003
 DALEC.A1.C1.D2.F2.H2.P1
@@ -77,14 +77,11 @@ if(TEST_COMPILE_ALL)
     list(APPEND FILES ${FILES2})
     list(APPEND FILES "model/${n}/src/${n}.f90")
     list(APPEND FILES "model/${n}/likelihood/MODEL_LIKELIHOOD.f90")
-    string(LENGTH ${n} len)
-    math(EXPR lenminus3 "${len} -  4")
-    string(SUBSTRING ${n} ${lenminus3} 4 MODELID)
-    add_library("cardamom-lib-${MODELID}" SHARED ${FILES})
-    add_dependencies("cardamom-lib-${MODELID}" cardamom-samplers-lib) 
-    target_link_libraries("cardamom-lib-${MODELID}" PUBLIC cardamom-samplers-lib)
-    add_executable("cardamom-${MODELID}" general/cardamom_main.f90)
-    target_link_libraries("cardamom-${MODELID}" PUBLIC "cardamom-lib-${MODELID}")
+    add_library("cardamom-lib-${n}" SHARED ${FILES})
+    add_dependencies("cardamom-lib-${n}" cardamom-samplers-lib) 
+    target_link_libraries("cardamom-lib-${n}" PUBLIC cardamom-samplers-lib)
+    add_executable("cardamom-${n}" general/cardamom_main.f90)
+    target_link_libraries("cardamom-${n}" PUBLIC "cardamom-lib-${n}")
   endforeach()
 endif()
 
