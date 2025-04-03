@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! This is the main subroutine for the CARDAMOM framework. The specific model
@@ -35,7 +35,7 @@
 ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
 ! J. F. Exbrayat (University of Edinburgh)
 ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
-! See function / subroutine specific comments for exceptions and contributors
+! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -311,7 +311,7 @@ program cardamom_framework
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
-     MCOUT%Nparvar = 0d0; MCOUT%parvar = 0d0
+     MCOUT%Nparvar = 1d0; MCOUT%parvar = 0d0
      MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0
      MCOUT%cov = .false. ; MCOUT%use_multivariate = .false.
      do n = 1, PI%npars
