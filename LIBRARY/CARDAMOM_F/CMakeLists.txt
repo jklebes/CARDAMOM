@@ -64,6 +64,24 @@ add_library(cardamom-samplers-lib SHARED
               method/MHMCMC/MHMCMC.f90
 )
 
+set_target_properties(
+  "cardamom-samplers-lib"
+  PROPERTIES
+  POSITION_INDEPENDENT_CODE TRUE
+  Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/include"
+)
+target_include_directories(
+  "cardamom-samplers-lib"
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
+)
+if(NOT EXISTS "${PROJECT_BINARY_DIR}/include")
+  make_directory("${PROJECT_BINARY_DIR}/include")
+endif()
+
+
 find_package(OpenMP)
 if(OpenMP_Fortran_FOUND)
   target_link_libraries(cardamom-samplers-lib PUBLIC OpenMP::OpenMP_Fortran)
