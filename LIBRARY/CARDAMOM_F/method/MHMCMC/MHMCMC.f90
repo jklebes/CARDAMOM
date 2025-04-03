@@ -777,7 +777,7 @@ end subroutine
     if (multivariate) then !((MCOUT%use_multivariate .and. MCOUT%Nparvar > N_before_mv_target)) then
 
         ! Is this step a multivariate proposal or not
-        ! MCOUT%multivariate_proposal = .true. ! this only affects ACC_first counter  ! TODO move to where use_multivariate, Nparvar updates
+        !MCOUT%multivariate_proposal = .true. ! this only affects ACC_first counter  ! TODO move to where use_multivariate, Nparvar updates
 
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
