@@ -114,7 +114,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_variance(sample, meanpar, cur, new, variance)
+  subroutine increment_variance(sample, meanpar, cur1, new, variance)
 
     ! Subroutine for incremental update of the variance
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
@@ -132,14 +132,14 @@ module samplers_math
 
     ! Arguments
     integer, intent(in):: new
-    integer, intent(inout):: cur
+    integer, intent(inout):: cur1
     double precision, intent(in):: sample(new)
     double precision, intent(inout):: meanpar, variance
 
     ! local variables
     integer:: n, i, j
-    double precision:: new_meanpar, nnew
-
+    double precision:: new_meanpar, nnew, cur
+    cur = dble(cur1)
     nnew = 1d0
     ! loop through each accepted parameter set...
     do n = 1, new
@@ -154,7 +154,7 @@ module samplers_math
        ! update running totals and mean for the next iteration
        cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
-
+    cur1 = int(cur)
     ! return to user
     return
 
@@ -211,14 +211,14 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur, new, covariance)
+  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur1, new, covariance)
 
     ! Subroutine for incremental update of a covariance matrix
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
     ! M  = mean vector for parameters
     ! Mi = new mean vector for updated covariance_matrix
-    ! new = number of new parameters to be added
-    ! cur = number of parameters accepted so far
+    ! ar = number of new parameters to be added
+    ! N = number of parameters accepted so far
     ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
@@ -227,15 +227,16 @@ module samplers_math
 
     ! Arguments
     integer, intent(in):: npars, new
-    integer, intent(inout):: cur
+    integer, intent(inout):: cur1
     double precision, intent(in):: PARSALL(npars, new)
-    double precision, intent(inout)::  meanpar(npars), covariance(npars, npars)
+    double precision, intent(inout):: meanpar(npars), covariance(npars, npars)
 
     ! local variables
     integer:: n, i, j
-    double precision:: new_meanpar(npars), nnew
+    double precision:: new_meanpar(npars), nnew, cur
 
     nnew = 1d0
+    cur = dble(cur1)
     ! loop through each accepted parameter set...
     do n = 1, new
        ! ...estimate the new mean value for each parameter...
@@ -254,6 +255,7 @@ module samplers_math
        cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
 
+    cur1 = int(cur)
     ! return to user
     return
 
@@ -891,7 +893,7 @@ end function log_nor2par
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Fri 04 Apr 2025 17:23:21 BST
+    !  Last Modified: Fri 04 Apr 2025 18:01:29 BST
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -1000,7 +1002,7 @@ end function log_nor2par
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Fri 04 Apr 2025 17:23:21 BST
+    !  Last Modified: Fri 04 Apr 2025 18:01:29 BST
     !
     !    03/05/2019
     !

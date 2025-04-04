@@ -532,9 +532,10 @@ contains
 
                ! adapt the covariance matrix for multivariate proposal
                ! TODO rename "parsall" to replect it's really a small subsample of period's history
+               write(*,*) "Nparvar", MCOUT%Nparvar
+               write(*,*) "Nparvar", PARSALL(1, 1:3)
                call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
 
-               write(*,*) "Nparvar", MCOUT%Nparvar
            end if !  have enough parameter been accepted
            ! TODO what if MCO%use_multivariate ???
 
@@ -648,6 +649,7 @@ end subroutine
         ! reject the update in favour of the existing matrix
         ! TODO ??
         write(*,*) "info", info, ACCLOC
+        write(*,*), MCOUT%covariance
         if (info == 0) then
             ! Set multivariate sampling to true
             use_multivariate = .true.
