@@ -1,7 +1,4 @@
 module MHMCMC
-  !! More standard adaptive MCMC, minus cardamom quirks:
-  !! -only recording current position to history once, when newly accepted
-  !! -passing extremely sparsified history of 1 or 3 rows to make covariance matrix from
 
   !!!!!!!!!!!
   ! Authorship contributions
@@ -53,7 +50,7 @@ public
 !> A collection of input options to the DEMCz sampler run
 !> contains default values 
 type MCMC_OPTIONS
-integer:: nout = 10000  ! overall steps, if convergence not reached
+integer:: MAXITER = 10000  ! overall steps, if convergence not reached
 integer:: nadapt  =1000  ! steps per "local" sampling period, between adaptation steps
 integer:: N_chains = 1  ! consider setting OMP env to something compatible
 integer:: nwrite = 1000
@@ -80,6 +77,7 @@ double precision:: N_before_mv = 10d0
 ! Is current proposal multivariate or not?
 logical:: multivariate_proposal = .false.
 real:: fadapt  ! TODO fraction adapt-move to outsied
+integer:: nout 
 logical:: append
 logical:: use_multivariate
 logical:: restart
@@ -280,7 +278,7 @@ contains
     integer:: i
     integer:: MAXITER, nchains, npars
     ! counters-local to this chain's run
-    integer:: ITER, ACC, ACC_FIRST, ACCLOC, ITERLOC
+    integer:: ITER, ACC, ACC_FIRST, ACCLOC
     double precision:: ACCRATE, ACCRATE_GLOBAL, N_before_mv_target
 
 
@@ -385,7 +383,6 @@ contains
     ACC = 0
     ACC_first = 0
     ACCLOC = 0
-    ITERLOC = 0
     ACCRATE = 0d0
     ACCRATE_GLOBAL = 0d0
 
@@ -428,15 +425,15 @@ contains
     ! initalize bestpars to current pars
     BESTPARS = PARS_previous
     llmax = loglikelihood_previous
-    ITERLOC = 0
+
 
     ! Begin the main AP-MCMC loop
     do while (ITER < MAXITER)! .and. Pmax < P_target)
-        ITERLOC = ITERLOC+1
+
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 
        ! should include reflectivenedd/redrawing 
-       multivariate = MCOUT%use_multivariate .and. (ITER > N_before_mv_target)
+       multivariate = MCOUT%use_multivariate .and. (MCOUT%Nparvar > N_before_mv_target)
        call step_pars_real(PARS_previous, PARS_proposed, PI, multivariate, MCOUT%covariance, beta, opt_scaling, par_minstepsize, &
           uniform_random_vector)
        ! if parameter proposal in bounds check the model
@@ -460,6 +457,7 @@ contains
            ! (this chain)
            ! Because this history matrix is used for (normalized) statistics for adaptiveness, 
            ! store normalized version of pars
+            PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
            ! store the best parameter set
            if (loglikelihood_proposed >= llmax) then
                BESTPARS = PARS_proposed; llmax = loglikelihood_proposed
@@ -471,12 +469,10 @@ contains
            ! TODO may have to do with whether to calc covariance matrix
 
            PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save as previous pars
-           PARSALL(1:npars, ITERLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
            !norPARS0(1:PI%npars) = norPARS(1:PI%npars)                    ! normalize
            loglikelihood_previous = loglikelihood_proposed;               ! save as previous loglikelihood
         else  
           ! write to history  ! not done in CARDAMOM-MHMCMC version to match original
-            PARSALL(1:npars, ITERLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
        endif  ! accept or reject proposed pars
 
        ! count iteration 
@@ -495,7 +491,7 @@ contains
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
                                       MCOUT%covariance, &
-                                      MCOUT%meanpar, dble(ITER), &
+                                      MCOUT%meanpar, MCOUT%Nparvar, &
                                       PARS_previous, output_loglikelihood, npars, ITER == MCO%nOUT, io_space)
            end if 
        end if  ! write or not to write
@@ -517,15 +513,31 @@ contains
            write(*,*) "ACCRATE", ACCRATE, "=", ACCLOC, "/" , dble(MCO%nadapt)
 
            ! Second, are we still in the adaption phase?
+           ! TODO how does fortran integer division work
            if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not.MCOUT%use_multivariate) then
 
-           ! adapt the covariance matrix for multivariate proposal
-           call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ITER, ITERLOC, N_before_mv_target)
+               ! Once covariance matrix has been created just update based on a
+               ! single parameter set from each period.
+            ! TODO ??
+               if (MCOUT%cov) then
+                   ACCLOC = 1  ! TODO this is really a different variable than ACCLOC
+                   PARSALL(1:npars, ACCLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
+                   ! leads to call to increment_covariance_matrix with the one new row
+               else if (ACCLOC > 3) then
+                   PARSALL(1:npars, 2) = PARSALL(1:npars, ceiling(ACCLOC*0.5d0))
+                   PARSALL(1:npars, 3) = PARSALL(1:npars, ACCLOC)
+                    ACCLOC = 3
+                    ! leads to attempting to make new covariance matrix from the first, middle, and last rows of local history
+               endif
+
+               ! adapt the covariance matrix for multivariate proposal
+               ! TODO rename "parsall" to replect it's really a small subsample of period's history
+               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
 
            end if !  have enough parameter been accepted
+           ! TODO what if MCO%use_multivariate ???
 
            ! resets the local acceptance counter
-           ITERLOC = 0
            ACCLOC = 0
 
        end if  ! time to adapt?
@@ -580,7 +592,7 @@ end subroutine
   !
   !------------------------------------------------------------------
   !
-  subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, ITER, nadapt, N_before_mv_target)
+  subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, ACCLOC, N_before_mv_target)
     use samplers_io, only: write_covariance_matrix, write_covariance_info
     use samplers_math, only: nor2par, par2nor, log_nor2par, log_par2nor, &
                               cholesky_factor, std, covariance_matrix, &
@@ -597,8 +609,8 @@ end subroutine
     logical, intent (inout):: use_multivariate
     ! declare inputs variables
     integer, intent(in):: npars
-    integer, intent(in):: ITER, nadapt
-    double precision, intent(in):: PARSALL(npars, nadapt)  ! collection of recently accepted normalised parameter combinations
+    integer, intent(in):: ACCLOC
+    double precision, intent(in):: PARSALL(npars, ACCLOC)  ! collection of recently accepted normalised parameter combinations
     !! two CARDAMOM quirks here :  1) only accepted steps were recorded, not repeat entries for non-accepted steps
     !!                             2) update_statistics is passed only first or first, middle, and last rows instead of whole history, extremely limnited covariance estimate
 
@@ -614,17 +626,19 @@ end subroutine
         ! Increment the variance-covariance matrix with new accepted parameter sets
         ! NOTE: that this also increments the total accepted counter (PI%Nparvar)
 
-        cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar
+        cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
 !        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
 !                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
         ! Have started hardcoding a maximum number of observations to be 100.
         ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
         ! this allows for the covariance matrix to be more responsive to its local environment.
-        !write(*,*) "incrementing with", PARSALL(1:npars, 1:nadapt)
-        call increment_covariance_matrix(PARSALL(1:npars, 1:nadapt), MCOUT%meanpar, npars &
-                                        ,ITER-nadapt, nadapt, MCOUT%covariance)
-        !write(*,*) "incrementing to", MCOUT%covariance
+        !! TODO discuss  - in fact this is having the effect of extremely downweighting the entire history equally in new covariance
+        !matrix, not dropping all
+        !but the last Nparvar_local steps 
+        Nparvar_local = min(N_before_mv_target, Nparvar_backup)
+        call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
+                                        ,Nparvar_local, ACCLOC, MCOUT%covariance)
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
         call cholesky_factor( npars, MCOUT%covariance, info )
@@ -654,13 +668,12 @@ end subroutine
 
         ! we have not yet created a covariance matrix based on accepted
         ! parameters. Assuming we have some then create one...
-        ! start collecting statistics after a few thousand steps..
-        if (ITER > N_before_mv_target) then  
+        if (ACCLOC > 2) then
 
             ! estimate covariance matrix
-            call covariance_matrix(PARSALL(1:npars, 1:nadapt), MCOUT%meanpar, &
-            & npars, nadapt, MCOUT%covariance)
-            MCOUT%cov = .true. ; MCOUT%Nparvar = nadapt
+            call covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, &
+            & npars, ACCLOC, MCOUT%covariance)
+            MCOUT%cov = .true. ; MCOUT%Nparvar = ACCLOC
 
             ! Calculate the cholesky factor as this includes a determination of
             ! whether the covariance matrix is positive definite.
@@ -677,7 +690,13 @@ end subroutine
                 use_multivariate = .true.
             endif
 
-        end if 
+            ! write out first covariance matrix, this will be compared with the final covariance matrix
+            if (MCO%nWRITE > 0) then
+                call write_covariance_matrix(MCOUT%covariance, npars, .true.)
+                call write_covariance_info(MCOUT%meanpar, MCOUT%Nparvar, npars)
+            endif
+
+        end if  ! N%ACCLOC > 2
 
     end if  ! PI%cov == .true.
 
@@ -767,7 +786,9 @@ end subroutine
         ! NOTE: if covariance matrix provided is not positive definite
         !       a sample from normal distribution is returned
         call random_multivariate(npars, 1, covariance, mu, rn, random_uniform_vector)
-        !write(*,*) covariance
+        write(*,*) covariance
+        write(*,*) mu
+        write(*,*) rn
 
         ! Estimate the step to be applied to the current parameter vector to
         ! create the new proposal. scd = a scaling parameter linking searching

@@ -8,9 +8,6 @@ module model_shared
 
   contains
 
-  subroutine set_datain()
-  end subroutine
-
   ! split from read_pari_data
   subroutine initialize_parinfo()
     use MODEL_PARAMETERS, only:  pars_info
@@ -29,15 +26,14 @@ module model_shared
         allocate(PI%parmax(PI%npars))
         PI%parmax = 0d0 
     endif
-    allocate(&
-            !PI%parini(PI%npars) &
-            PI%parfix(PI%npars), & ! never used
-            !PI%parvar(PI%npars), 
-            PI%paradj(PI%npars) &
-            !,PI%covariance(PI%npars, PI%npars), PI%meanpar(PI%npars) &
-            !,PI%iC(PI%npars, PI%npars)&
-            )
-
+    if (.not. allocated(PI%parfix)) then 
+        allocate(PI%parfix(PI%npars))
+        PI%parfix = .false.
+    endif
+    if (.not. allocated(PI%paradj)) then 
+        allocate(PI%paradj(PI%npars))
+        PI%paradj = 0d0 
+    endif
 
     ! force zero
     !PI%parini = 0d0  ! no longer exist-use DATAIN directly to -> pars in MCOUT

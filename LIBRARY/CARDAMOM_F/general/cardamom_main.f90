@@ -261,11 +261,12 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT%cov .and. MCOUT%use_multivariate) then
-             MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
+             MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0 
          else
              ! TODO fct for this
              ! reset the parameter step size at the beginning of each attempt
              MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
+            MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0 
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
              MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.

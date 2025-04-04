@@ -10,7 +10,9 @@ set(MODELPARS
 set(FILES2
                   general/cardamom_io.f90
                   general/model_likelihood_wrapper.f90
+                  general/wrappers_for_R.f90
                   general/MHMCMC_StressTests.f90
+                  general/stresstest_wrappers_for_R.f90
                 )
 set(MODELLIKELIHOODFILE
                   model/DALEC.A1.C1.D2.F2.H2.P1/likelihood/MODEL_LIKELIHOOD.f90

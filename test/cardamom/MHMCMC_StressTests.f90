@@ -1,7 +1,5 @@
-! TODO move to tests
+
 module MHMCMC_StressTests
-    use samplers_shared, only: PARINFO
-    use model_shared, only : PI
 
   ! Module contains a number of diagnostic tests used to ensure that the MCMC
   ! is able to retrieve a known distribution of parameters for simple models.
@@ -24,7 +22,7 @@ module MHMCMC_StressTests
   private
 
   ! Explicit statement of public variables or functions
-  public:: prepare_for_stress_test, StressTest_likelihood_fct, StressTest_sublikelihood_fct
+  public:: prepare_for_stress_test, StressTest_likelihood, StressTest_sublikelihood
 
   ! Declare any module level variables
 
@@ -79,9 +77,6 @@ module MHMCMC_StressTests
     do i = 2, nopars
        area(i-1) = pars(1) * pars(i) ** 2d0
     end do
-    if (isnan(pars(1))) then 
-      stop 1
-    endif
     ! Convert into log-likelihood
     output = sum(-0.5d0 * (((area-circle_obs) / circle_obs_unc) ** 2))
 
@@ -90,7 +85,7 @@ module MHMCMC_StressTests
   !--------------------------------------------------------------------
   !
   subroutine circle_parameter_prior_ranges
-    use model_shared, only : PI
+    use MCMCOPT, only: PI
 
     ! define the parameter prior ranges
 
@@ -174,6 +169,7 @@ module MHMCMC_StressTests
   !--------------------------------------------------------------------
   !
   subroutine single_circle_parameter_prior_ranges
+    use MCMCOPT, only: PI
 
     ! define the parameter prior ranges
 
@@ -223,6 +219,7 @@ module MHMCMC_StressTests
   !--------------------------------------------------------------------
   !
   subroutine single_parameter_prior_ranges
+    use MCMCOPT, only: PI
 
     ! define the parameter prior ranges
 
@@ -241,8 +238,9 @@ module MHMCMC_StressTests
   !--------------------------------------------------------------------
   !
   subroutine prepare_for_stress_test(infile, outfile)
-    use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
-    use cardamom_structures, only: DATA_type, set_datain
+    use MCMCOPT, only: PI, MCO
+    use cardamom_structures, only: DATAin
+
     ! Function by-passes the main CARDAMOM i/o code to allow
     ! for a non-standard operation of the model stress test
 
@@ -250,12 +248,9 @@ module MHMCMC_StressTests
 
     ! Arguments
     character(350), intent(inout):: infile, outfile
-    type(Data_type):: DATAin  ! local tmp copy 
 
     ! local variables
     integer:: i
-    type(MCMC_OUTPUT):: MCOUT
-    type(MCMC_OPTIONS):: MCO
 
     ! Set internal parameters in the absence of an input file
     ! allocate the default run information
@@ -298,7 +293,6 @@ module MHMCMC_StressTests
     outfile = "stress_test_output_"
 
     ! need to allocate memory to the model output variables
-    ! ->They are now local variables of model likelihood fcts  ! TODO
     allocate(DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes)&
             ,DATAin%M_POOLS((DATAin%nodays+1), DATAin%nopools))
 
@@ -306,15 +300,16 @@ module MHMCMC_StressTests
     write(*,*)"Created fields for model output"
 
     ! Begin allocating parameter info
-    PI%npars = DATAin%nopars 
-    allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), MCOUT%pars(PI%npars) &
-            ,PI%parfix(PI%npars), MCOUT%parvar(PI%npars), PI%paradj(PI%npars) &
-            ,MCOUT%covariance(PI%npars, PI%npars), MCOUT%meanpar(PI%npars))
+    PI%npars = DATAin%nopars
+    allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), PI%parini(PI%npars) &
+            ,PI%parfix(PI%npars), PI%parvar(PI%npars), PI%paradj(PI%npars) &
+            ,PI%covariance(PI%npars, PI%npars), PI%mean_par(PI%npars) &
+            ,PI%iC(PI%npars, PI%npars))
 
     ! force zero
-    PI%parmin = 0d0; PI%parmax = 0d0; MCOUT%pars = 0d0
-    PI%parfix = .false.; MCOUT%parvar = 0d0; PI%paradj = 0d0
-    MCOUT%covariance = 0d0; 
+    PI%parmin = 0d0; PI%parmax = 0d0; PI%parini = 0d0
+    PI%parfix = 0d0; PI%parvar = 0d0; PI%paradj = 0d0
+    PI%covariance = 0d0; PI%iC = 0d0
 
     ! load parameter max/min information
     if (DATAin%ID == -1) then
@@ -330,39 +325,22 @@ module MHMCMC_StressTests
     ! we here instead calculate the adjustment need to ensure positive only values
     where (PI%parmin <= 0d0) PI%paradj = abs(PI%parmin) + 1d0
 
-    ! TODO fct reset_stats(MCOUT)
     ! defining initial MHMCMC stepsize and standard deviation
-    MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
+    PI%parvar = 1d0; PI%Nparvar = 0d0
     ! Covariance matrix cannot be set to zero therefore set initial value to a
     ! small positive value along to variance access
-    MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false. ; MCOUT%use_multivariate = .false.
+    PI%covariance = 0d0; PI%mean_par = 0d0; PI%cov = .false. ; PI%use_multivariate = .false.
     do i = 1, PI%npars
-       MCOUT%covariance(i, i) = 1d0
+       PI%covariance(i, i) = 1d0
     end do
 
-    call set_datain(DATAin)
-
   end subroutine prepare_for_stress_test
-
-  subroutine stresstest_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_stresstest_likelihood") 
-    !! wrapper to make stresstest_likelihood function compatible with cardamom-samplers lib, C, R
-  use iso_c_binding
-  implicit none
-  integer(c_int), intent(in)  :: npars
-  real(c_double), intent(inout), dimension(npars):: params
-  real(c_double), intent(out):: loglikelihood
-
-  real(c_double):: ML_obs_out, ML_prior_out
-  call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
-
-  loglikelihood = ML_obs_out+ML_prior_out
-  end subroutine
-
   !
   !------------------------------------------------------------------
   !
   subroutine StressTest_likelihood(PARS, ML_obs_out, ML_prior_out)
-use cardamom_structures, only: DATAin
+    use MCMCOPT, only:  PI
+    use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
@@ -398,28 +376,13 @@ use cardamom_structures, only: DATAin
     end if
 
   end subroutine StressTest_likelihood
-
-  subroutine stresstest_sublikelihood_fct(params, npars, loglikelihood)
-    !! wrapper to make stresstest_likelihood function compatible with cardamom-samplers lib, C, R
-  use iso_c_binding
-  implicit none
-  integer(c_int), intent(in)  :: npars
-  real(c_double), intent(inout), dimension(npars):: params
-  real(c_double), intent(out):: loglikelihood
-
-  real(c_double):: ML_obs_out, ML_prior_out
-
-  call stresstest_sublikelihood(params, ML_obs_out, ML_prior_out)
-
-  loglikelihood = ML_obs_out+ML_prior_out
-
-  end subroutine
-
   !
   !------------------------------------------------------------------
   !
   subroutine StressTest_sublikelihood(PARS, ML_obs_out, ML_prior_out)
-use cardamom_structures, only: DATAin
+    use MCMCOPT, only:  PI
+    use cardamom_structures, only: DATAin
+
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
@@ -429,9 +392,6 @@ use cardamom_structures, only: DATAin
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood

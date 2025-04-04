@@ -4,13 +4,19 @@ if(NOT TARGET "test-drive::test-drive")
   find_package("test-drive" REQUIRED)
 endif()
 
+
 # Unit testing
 set(
   tests
-  "suite1"
+  "random"
+  "math"
+  "common"
+  "MCMC"
+  "DEMCz"
 )
 set(
   test-srcs
+  "test_functions.f90"
   "main.f90"
 )
 foreach(t IN LISTS tests)
@@ -22,6 +28,7 @@ add_executable(
   "${PROJECT_NAME}-tester"
   "${test-srcs}"
 )
+
 target_link_libraries(
   "${PROJECT_NAME}-tester"
   PRIVATE

@@ -11,7 +11,7 @@ subroutine get_npars(npars) bind(c, name="C_getmodelnpars")
   use model_shared, only: PI
   implicit none
   integer(c_int), intent(out)  :: npars
-  call pars_info()  ! ideally this would bt written in an object, not a function in model_parameters
+  call pars_info(PI)
   npars =  PI%npars
 end subroutine
 
@@ -24,7 +24,7 @@ subroutine get_parmin(npars, parmin) bind(c, name="C_getmodelparmin")
   implicit none
   integer(c_int), intent(in):: npars
   real(c_double), dimension(npars), intent(out)  :: parmin
-  call pars_info()
+  call pars_info(PI)
   parmin =  PI%parmin
 end subroutine
 
@@ -35,7 +35,7 @@ subroutine get_parmax(npars, parmax) bind(c, name="C_getmodelparmax")
     implicit none
     integer(c_int), intent(in):: npars
     real(c_double), dimension(npars), intent(out)  :: parmax
-    call pars_info()
+    call pars_info(PI)
     parmax =  PI%parmax
     end subroutine
 

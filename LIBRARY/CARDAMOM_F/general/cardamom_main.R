@@ -21,7 +21,7 @@
 library(BayesianTools) # if not found install.packages("BayesianTools")
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
-dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libcardamom-lib.so")
+dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
 print(paste("function modellikelihood is loaded:", is.loaded("C_modellikelihood")))
 
 

@@ -114,7 +114,7 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_variance(sample, meanpar, cur, new, variance)
+  subroutine increment_variance(sample, meanpar, cur_in, new, variance)
 
     ! Subroutine for incremental update of the variance
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
@@ -132,14 +132,16 @@ module samplers_math
 
     ! Arguments
     integer, intent(in):: new
+    integer, intent(in):: cur_in
     double precision, intent(in):: sample(new)
-    double precision, intent(inout):: cur, meanpar, variance
+    double precision, intent(inout):: meanpar, variance
 
     ! local variables
-    integer:: n, i, j
+    integer:: n, i, j, cur
     double precision:: new_meanpar, nnew
 
     nnew = 1d0
+    cur = cur_in
     ! loop through each accepted parameter set...
     do n = 1, new
        ! ...estimate the new mean value for each parameter...
@@ -210,14 +212,14 @@ module samplers_math
   !
   !--------------------------------------------------------------------
   !
-  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur, new, covariance)
+  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur_in, new, covariance)
 
     ! Subroutine for incremental update of a covariance matrix
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
     ! M  = mean vector for parameters
     ! Mi = new mean vector for updated covariance_matrix
-    ! ar = number of new parameters to be added
-    ! N = number of parameters accepted so far
+    ! new = number of new parameters to be added
+    ! cur = number of parameters accepted so far
     ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
@@ -226,13 +228,15 @@ module samplers_math
 
     ! Arguments
     integer, intent(in):: npars, new
+    integer, intent(in):: cur_in
     double precision, intent(in):: PARSALL(npars, new)
-    double precision, intent(inout):: cur, meanpar(npars), covariance(npars, npars)
+    double precision, intent(inout)::  meanpar(npars), covariance(npars, npars)
 
     ! local variables
-    integer:: n, i, j
+    integer:: n, i, j, cur
     double precision:: new_meanpar(npars), nnew
 
+    cur = cur_in
     nnew = 1d0
     ! loop through each accepted parameter set...
     do n = 1, new
@@ -889,7 +893,7 @@ end function log_nor2par
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Mon 31 Mar 2025 10:54:59 BST
+    !  Last Modified: Fri 04 Apr 2025 10:37:43 BST
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -998,7 +1002,7 @@ end function log_nor2par
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Mon 31 Mar 2025 10:54:59 BST
+    !  Last Modified: Fri 04 Apr 2025 10:37:43 BST
     !
     !    03/05/2019
     !
