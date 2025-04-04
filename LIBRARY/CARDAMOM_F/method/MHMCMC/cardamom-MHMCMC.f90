@@ -278,8 +278,8 @@ contains
     integer:: i
     integer:: MAXITER, nchains, npars
     ! counters-local to this chain's run
-    integer:: ITER, ACC, ACC_FIRST, ACCLOC
-    double precision:: ACCRATE, ACCRATE_GLOBAL, N_before_mv_target
+    integer:: ITER, ACC, ACC_FIRST, ACCLOC, N_before_mv_target
+    double precision:: ACCRATE, ACCRATE_GLOBAL
 
 
     ! declare interface for the model likelihood function.
@@ -534,6 +534,7 @@ contains
                ! TODO rename "parsall" to replect it's really a small subsample of period's history
                call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
 
+               write(*,*) "Nparvar", MCOUT%Nparvar
            end if !  have enough parameter been accepted
            ! TODO what if MCO%use_multivariate ???
 
@@ -618,8 +619,8 @@ end subroutine
     integer p, i, info  ! counters
     double precision, dimension(npars, npars):: cov_backup
     double precision, dimension(npars):: meanpar_backup
-    double precision:: Nparvar_backup, Nparvar_local
-    double precision:: N_before_mv_target
+    integer:: Nparvar_backup, Nparvar_local
+    integer:: N_before_mv_target
     ! if we have a covariance matrix then we want to update it, if not then we need to create one
     if (MCOUT%cov) then
 
@@ -639,15 +640,19 @@ end subroutine
         Nparvar_local = min(N_before_mv_target, Nparvar_backup)
         call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                         ,Nparvar_local, ACCLOC, MCOUT%covariance)
+                                      write(*,*) Nparvar_local
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
         call cholesky_factor( npars, MCOUT%covariance, info )
         ! If the updated covariance matrix is not positive definite we should
         ! reject the update in favour of the existing matrix
         ! TODO ??
+        write(*,*) "info", info, ACCLOC
         if (info == 0) then
             ! Set multivariate sampling to true
             use_multivariate = .true.
+            MCOUT%Nparvar = Nparvar_local
+            write(*,*) "start matrix"
         else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive
@@ -660,6 +665,7 @@ end subroutine
                 MCOUT%Nparvar = Nparvar_backup
             else
                 ! Keep accumulating use_multivariatethe information
+
                 use_multivariate = .false.
             end if
         endif
@@ -691,10 +697,10 @@ end subroutine
             endif
 
             ! write out first covariance matrix, this will be compared with the final covariance matrix
-            if (MCO%nWRITE > 0) then
-                call write_covariance_matrix(MCOUT%covariance, npars, .true.)
-                call write_covariance_info(MCOUT%meanpar, MCOUT%Nparvar, npars)
-            endif
+            !if (MCO%nWRITE > 0) then
+            !    call write_covariance_matrix(MCOUT%covariance, npars, .true.)
+            !    call write_covariance_info(MCOUT%meanpar, MCOUT%Nparvar, npars)
+            !endif
 
         end if  ! N%ACCLOC > 2
 
@@ -786,9 +792,6 @@ end subroutine
         ! NOTE: if covariance matrix provided is not positive definite
         !       a sample from normal distribution is returned
         call random_multivariate(npars, 1, covariance, mu, rn, random_uniform_vector)
-        write(*,*) covariance
-        write(*,*) mu
-        write(*,*) rn
 
         ! Estimate the step to be applied to the current parameter vector to
         ! create the new proposal. scd = a scaling parameter linking searching
@@ -802,7 +805,6 @@ end subroutine
 
       !MCOUT%multivariate_proposal = .false.
       pars = pars0 + (par_minstepsize*rn2)
-        write(*,*) par_minstepsize, rn2
 
     end if
 

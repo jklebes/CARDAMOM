@@ -266,7 +266,6 @@ program cardamom_framework
              ! TODO fct for this
              ! reset the parameter step size at the beginning of each attempt
              MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-            MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0 
              ! Covariance matrix cannot be set to zero therefore set initial
              ! value to a small positive value along to variance access
              MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.

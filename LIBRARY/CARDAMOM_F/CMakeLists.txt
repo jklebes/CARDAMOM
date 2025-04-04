@@ -63,7 +63,7 @@ add_library(cardamom-samplers-lib SHARED
               method/samplers_io/samplers_io.f90
               method/samplers_shared.f90
               method/DEMCz.f90
-              method/MHMCMC/MHMCMC.f90
+              method/MHMCMC/cardamom-MHMCMC.f90
 )
 
 set_target_properties(
