@@ -445,13 +445,15 @@ contains
                                         ,Nparvar_local,nint(N%ACCLOC),PI%covariance)
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
-        cholesky = PI%covariance
+        cholesky = PI%covariance 
         call cholesky_factor( PI%npars, cholesky, info )
         ! If the updated covariance matrix is not positive definite we should
         ! reject the update in favour of the existing matrix
+
         if (info == 0) then
             ! Set multivariate sampling to true
             PI%use_multivariate = .true.
+            PI%Nparvar = Nparvar_local
         else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive

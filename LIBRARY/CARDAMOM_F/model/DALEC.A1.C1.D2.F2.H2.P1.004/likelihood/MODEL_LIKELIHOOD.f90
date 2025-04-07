@@ -612,6 +612,11 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
+    ! Initial leaf area index should not be larger than ~10 m2/m2
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    endif    
+
     !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     !! difference from GPP allocation to roots
     !if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
@@ -811,11 +816,11 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
 !    end if
 !
-!    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
-!    ! the empirical phenology but mechanistic hydrology / photosynthesis
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
-!    end if
+    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
+    ! the empirical phenology but mechanistic hydrology / photosynthesis
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    end if
 
 !    ! Specific for dealing with needleleaf forests in the northern hemisphere.
 !    ! Assesses whether the mean LAI in the summer months (June, July, August)
@@ -920,15 +925,33 @@ module model_likelihood_module
 !           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           !end if
 !        end do
-!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 3
+        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 2
+!        ! Restrict mean rates of increase
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
-         end if
+!        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!        end if
+!        ! Restrict exponential behaviour at initialisation         
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        ! Fine root pool, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 3
+!        ! Restrict mean rates of increase
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        ! Restrict rates from deviating unrealistically from the mean
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation         
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
@@ -937,17 +960,10 @@ module model_likelihood_module
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-!!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!!        end if
-!         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-!                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
-!         end if
-!!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!!        end if
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
@@ -1007,13 +1023,15 @@ module model_likelihood_module
 !        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
 !              / dble(nodays)) * 0.002737851d0
         ! determine the lower and upper bound of the LES .
-        ! not for the upper bound, do not allow a value less than 1.5 years
+        ! not for the upper bound, do not allow a value less than 1 years
         tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
-        tmp2 = max(1.5d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
+        tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
+            ! The current leaf lifespan is shorter than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
         endif        
         if (tmp > tmp2) then
+            ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1

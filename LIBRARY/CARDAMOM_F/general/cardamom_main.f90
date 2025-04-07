@@ -78,7 +78,7 @@ program cardamom_framework
  ! 4) print-to-screen frequency
  ! 5) write-to-file frequency
  ! 6) 0 / 1 flag to use normalised log-likelihood pre-mcmc
- ! 7) Flag to select the cost function normalisation approach
+ ! 7) Flag to select the cost function normalisation approachs
 
  implicit none
 
@@ -188,6 +188,13 @@ program cardamom_framework
      ! We are doing a stress test
      write(*,*)"Carrying out a stress test analysis"
      write(*,*)"Any existing files will be ignored"
+
+     ! Template for calling a StressTest
+     ! ./<PROJECT name>.exe StressTest <StressTestType> NoProposals 0 SampleRate 0 0
+     ! Current StressTest options are:
+     ! 1) Single
+     ! 2) SingleCircle
+     ! 3) Circle
 
      ! Reset interations counter
      MCOUT%nos_iterations = 0
