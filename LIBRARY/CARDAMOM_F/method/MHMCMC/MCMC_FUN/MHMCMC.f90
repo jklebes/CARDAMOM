@@ -69,7 +69,7 @@ double precision :: N_before_mv_target, & !
                                 ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
-logical :: multivariate_proposal = .false.
+!TLS:2025logical :: multivariate_proposal = .false.
 double precision, parameter :: N_before_mv = 10d0
 
 contains
@@ -174,11 +174,10 @@ contains
     ! initial values
     uniform = 1
     P = -1d0 ; Pprior = -1d0
-    N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0
+    N%ACC = 0d0 ; N%ITER = 0d0 !TLS:2025 ; N%ACC_first = 0d0 
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
 
-    ! Determine how long we will continue to adapt our proposal covariance
-    ! matrix and use of Delayed Rejection
+    ! Determine how long we will adapt our proposal covariance matrix
     burn_in_period = MCO%fADAPT * dble(MCO%nOUT)
     N_before_mv_target = N_before_mv * dble(PI%npars)
 
@@ -294,10 +293,15 @@ contains
            endif
            ! Keep count of the number of accepted proposals in this local period
            N%ACCLOC = N%ACCLOC + 1d0
-           ! Accepted first proposal from multivariate
-           if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
+           ! Accepted proposal from multivariate
+           !TLS:2025if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
 
            P0 = P ; P0prior = Pprior
+
+       else 
+         
+           ! Track the current parameter vector for the covariance matrix
+           ! but do not increment the acceptance information
 
        endif ! accept or reject condition
 
@@ -336,14 +340,24 @@ contains
            ! Calculate local acceptance rate (i.e. since last adapt)
            N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
 
-           ! Second, are we still in the adaption phase?
-           if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
+           ! Second, are we in the adaption phase? 
+           ! Adapt if we are still within the burn in period or we still have not found a viable covariance matrix
+           !TLS:2025if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
+           if (burn_in_period > N%ITER .or. .not.PI%use_multivariate) then           
 
-               ! Once covariance matrix has been created just update based on a
-               ! single parameter set from each period.
-               if (PI%cov) then
-                   N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
-               else if (.not.PI%cov .and. N%ACCLOC > 3d0) then
+!TLS:2025               ! Once covariance matrix has been created just update based on a
+!               ! single parameter set from each period.
+!               if (PI%cov) then
+!                   N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
+!               else if (.not.PI%cov .and. N%ACCLOC > 3d0) then
+!                   PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
+!                   PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
+!                   N%ACCLOC = 3d0
+!               endif
+
+               ! Until the covariance has been first created be selective about the variables being fed 
+               ! into the matrix
+               if (.not.PI%cov .and. N%ACCLOC > 3d0) then
                    PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
                    PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
                    N%ACCLOC = 3d0
@@ -561,7 +575,7 @@ contains
     if ((PI%use_multivariate .and. PI%Nparvar > N_before_mv_target)) then
 
         ! Is this step a multivariate proposal or not
-        multivariate_proposal = .true.
+        !TLS:2025multivariate_proposal = .true.
 
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
@@ -583,7 +597,7 @@ contains
     else ! nint(PI%Nparvar) > N_before_mv*PI%npars
 
        ! is this step a multivariate proposal or not
-       multivariate_proposal = .false.
+       !TLS:2025multivariate_proposal = .false.
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars

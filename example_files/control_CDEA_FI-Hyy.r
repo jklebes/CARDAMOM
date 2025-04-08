@@ -15,7 +15,7 @@ source("./R_functions/load_all_cardamom_functions.r")
 ## projname
 # Give a runid
 #projname="FI-Hyy_example_noflx"
-projname="FI-Hyy_example_rleaf"
+projname="FI-Hyy_example"
 #projname="FI-Hyy_example_O3"
 #projname="FI-Hyy_example_Ofast"
 
@@ -24,7 +24,7 @@ projname="FI-Hyy_example_rleaf"
 language="Fortran"
 ## Compiler options (Fortan only)
 compiler="ifort" #"ifort", "gfortran"
-compiler_optimisation = "-Ofast"
+compiler_optimisation = "-O2"
 timing=FALSE
 debug=FALSE
 
@@ -36,7 +36,7 @@ sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote 
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.31."
+model="DALEC.4."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -108,7 +108,7 @@ Croots_stock_source=" " 	# " " or "site_specific"
 Clit_stock_source=" "  	# " " or "site_specific"
 Csom_stock_source=" "  	# " " or "site_specific"
 # Parameter priors
-lca_source = "Butler" # or " " or "site_specific"
+lca_source = "Gridded_tif" # or " " or "site_specific"
 frac_Cwood_coarse_root_source = "" # " " or "site_specific"
 minLWP_source = "" # " " or "site_specific"
 # Steady state attractor
@@ -174,7 +174,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=4
+stage=3
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

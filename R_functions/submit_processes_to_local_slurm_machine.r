@@ -150,7 +150,8 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
          write(    c("# THIS SCRIPT MUST BE ACCOMPANIED BY CARDAMOM_ECDF_EXECUTABLES_LIST.txt IN THE SAME DIRECTORY"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("# arguments are start and end lines!"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c(paste("task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $(SLURM_ARRAY_TASK_ID+",bundle_offset,")\\!d )",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c(paste("sitenum=$((($SLURM_ARRAY_TASK_ID)+",bundle_offset,"))",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         write(    c("task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $sitenum\\!d )"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("command ${task}"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 
          # Record directory to change back in a moment
