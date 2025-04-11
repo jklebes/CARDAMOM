@@ -8,6 +8,7 @@ program tester
   use test_common, only : collect_commontests
   use test_MCMC, only : collect_MCMCtests
   use test_DEMCz, only : collect_DEMCztests
+  use test_wrappers_for_R, only : collect_test_wrappers_for_R
   implicit none
   integer:: stat, is
   character(len=:), allocatable:: suite_name, test_name
@@ -21,7 +22,8 @@ program tester
     new_testsuite("math", collect_mathtests), &
     new_testsuite("common", collect_commontests), &
     new_testsuite("MCMC", collect_MCMCtests), &
-    new_testsuite("DEMCz", collect_DEMCztests) &
+    new_testsuite("DEMCz", collect_DEMCztests), &
+    new_testsuite("wrappers_for_R", collect_test_wrappers_for_R) &
      ]
 
   call get_argument(1, suite_name)

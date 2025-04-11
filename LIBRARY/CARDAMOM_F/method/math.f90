@@ -154,7 +154,7 @@ module samplers_math
        ! update running totals and mean for the next iteration
        cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
-    cur1 = int(cur)
+    cur1 = nint(cur)
     ! return to user
     return
 
@@ -237,6 +237,7 @@ module samplers_math
 
     nnew = 1d0
     cur = dble(cur1)
+    cur1 = 0
     ! loop through each accepted parameter set...
     do n = 1, new
        ! ...estimate the new mean value for each parameter...
@@ -254,8 +255,7 @@ module samplers_math
        ! update running totals and mean for the next iteration
        cur = cur+1; meanpar = new_meanpar
     end do  ! new_accepted
-
-    cur1 = int(cur)
+    cur1 = nint(cur)
     ! return to user
     return
 
@@ -893,7 +893,7 @@ end function log_nor2par
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Fri 04 Apr 2025 18:01:29 BST
+    !  Last Modified: Mon 07 Apr 2025 10:06:12 BST
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -1002,7 +1002,7 @@ end function log_nor2par
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Fri 04 Apr 2025 18:01:29 BST
+    !  Last Modified: Mon 07 Apr 2025 10:06:12 BST
     !
     !    03/05/2019
     !

@@ -13,6 +13,7 @@ set(
   "common"
   "MCMC"
   "DEMCz"
+  "wrappers_for_R"
 )
 set(
   test-srcs

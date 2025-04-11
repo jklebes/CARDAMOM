@@ -21,7 +21,8 @@
 library(BayesianTools) # if not found install.packages("BayesianTools")
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
-dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
+cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
+dyn.load(cardamom_dll)
 
 
 # command line args : infile, outfile, solution_wanted_char, freq_print_char, &
@@ -83,6 +84,7 @@ cardamom_stresstestcirclelikelihood <- function(pars){
     #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
 }
 
+
 print("initial loglikelihood:")
 ll <- cardamom_stresstestcirclelikelihood(initial)
 print(ll)
@@ -91,25 +93,39 @@ print("Best loglikelihood would be")
 answers = c(3.14, 1.2, 3, 8, 10, 15, 200, 193, 88, 291, 1)
 print(cardamom_stresstestcirclelikelihood(answers))
 
+# ============= RUN MCMC ===========
+
 print("Running R adaptive MCMC on Stresstest Circle")
 
-
+ncores <- 4
 bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
                                      lower = model_parmin,
-                                     upper = model_parmax, parallel=TRUE)
-#print("created setup")
-# ============= RUN MCMC ===========
-iter = 100000
-settings = list(iterations = iter, startValue=initial , message = TRUE)
-out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
+                                     upper = model_parmax, 
+                                     parallel=ncores, #auto parallelism - works with DEzs
+                                     # make fortran/C function available on all cores
+                                     parallelOptions = list(variables = "all", packages = "all", dlls = cardamom_dll),
+                                     )
+iter = 10000
 
-print(out$current)
+settings = list(iterations = 20, startValue=4 , message = TRUE) # hacky: short run to have runMCMC start a cluster
+out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings) 
+# so that we can initialize cardamom stresstest (i.e. fill DATAin, PI) on each core
+parallel::clusterEvalQ(out_parallel[["setup"]][["likelihood"]][["cl"]], out_ <- .C("C_initialize_stresstest_circle") )
 
-out <- runMCMC(out, sampler="AM", settings=settings)
+settings = list(iterations = iter, startValue=4 , message = TRUE)
+out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-print(out$current)
-plot(out)
+# Result : 60x slower with 4 cores than with parallel=FALSE.  
+# There is syncronizing and information sharing between chains
+# Not faster because the circle stresstest likleihood function is trivial
 
-# try different samplers: Metropolis, AM, DEzs, ...
-out <- runMCMC(bayesianSetup, sampler="DEzs")
-plot(out$chain[[1]])
+# compare 
+bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
+                                     lower = model_parmin,
+                                     upper = model_parmax, 
+                                     parallel=FALSE
+)
+out_serial <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
+
+summary(out_parallel)
+plot(out_parallel)

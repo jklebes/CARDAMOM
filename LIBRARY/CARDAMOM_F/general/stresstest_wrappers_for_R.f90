@@ -12,7 +12,6 @@ subroutine initialize_stresstest_circle() bind(c, name = "C_initialize_stresstes
   infile = ""
   outfile = "Circle"
   call prepare_for_stress_test(infile, outfile)
-  call initialize_parinfo()
 end subroutine
 
 subroutine get_stresstest_parmax(npars, parmax) bind(c, name="C_getstresstestparmax")

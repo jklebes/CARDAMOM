@@ -289,7 +289,7 @@ module MHMCMC_StressTests
         DATAin%nofluxes = 1
     else
         print*,"Valid Stress Test has not been specified"
-        stop
+        stop 1
     end if
 
     ! Now we have used the infile to determine that this is going to be stress test, 

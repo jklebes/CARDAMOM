@@ -128,6 +128,7 @@ subroutine test_running_avg_scalar(error)
   double precision, dimension(1, 1):: covariance   ! irrelevant covariance matrix
   double precision, dimension(1):: mean, mean75, mean85  ! correct answers
   double precision, dimension(1):: running_mean85  ! answers from increment_covariance_matrix update to mean
+  integer:: cur
   covariance = 1d0
   ! ransom values 0..1
   call random_number(series)
@@ -141,8 +142,10 @@ subroutine test_running_avg_scalar(error)
   ! mean up to 85
   mean85(1) = sum(series(1:85))/size(series(1:85))
   ! try getting mean up to 85 from mean up to 75+running average fct
-  running_mean85(1) = mean75(1)
-  call increment_covariance_matrix(series(76:85), running_mean85, 1, 75, 10, covariance)
+  running_mean85(1) =  mean75(1)
+  cur = 75  ! is also incremented by the call
+  call increment_covariance_matrix(series(76:85), running_mean85, 1, cur, 10, covariance)
+  call check(error, cur, 85)
   call check(error, mean85(1), running_mean85(1))
 end subroutine 
 
@@ -154,6 +157,7 @@ subroutine test_running_covariance(error)
   double precision, dimension(2):: mean, mean10  
   double precision, dimension(2, 2):: covariance, covariance_10   ! 2 x 2 covariance matrix
   double precision, dimension(2, 2):: covariance_running   
+  integer:: cur
   covariance = 0
   call random_number(series)
   
@@ -166,7 +170,8 @@ subroutine test_running_covariance(error)
   mean10(2) = sum(series(2, 1:10))/size(series(2, 1:10))
   covariance_running = covariance_10
   ! try getting covariance by incrementing
-  call increment_covariance_matrix(series(1:2, 11:100), mean10, 2, 10, 90, covariance_running)
+  cur = 10
+  call increment_covariance_matrix(series(1:2, 11:100), mean10, 2, cur, 90, covariance_running)
   ! expect values in 
   write(*,*) covariance
   write(*,*) covariance_10
@@ -182,6 +187,7 @@ subroutine test_zero_variance(error)
   double precision, dimension(2):: mean  ! irrelevant mean
   double precision, dimension(2, 2):: covariance, covariance_10   ! 2 x 2 covariance matrix
   double precision, dimension(2, 2):: covariance_running   
+  integer:: cur
   covariance = 0
   series = 0.5d0  ! then constant
   series(1:2, 2) = 0.1d0  ! some initial movement
@@ -195,7 +201,8 @@ subroutine test_zero_variance(error)
 
   ! try getting covariance by incrementing
   covariance_running = covariance_10
-  call increment_covariance_matrix(series(1:2, 11:500000), mean, 2, 10, 499990, covariance_running)
+  cur = 10
+  call increment_covariance_matrix(series(1:2, 11:500000), mean, 2, cur, 499990, covariance_running)
   ! expect values in 
   write(*,*) covariance
   write(*,*) covariance_10

@@ -145,4 +145,5 @@ bayesianSetup = createBayesianSetup(
 
 iter = 1000000
 settings = list(iterations=iter, startValue=initial, adapt=TRUE)
-out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
+# try samplers - Metropolis, AM, DEzs , ...
+out <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)

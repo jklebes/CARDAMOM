@@ -41,7 +41,7 @@
 
 program cardamom_framework
  use math_functions, only:  rnstrt, idum  ! TODO redo random seeds
- use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc !, initialise_mcmc_output  ! TODO parallel
+ use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc 
  use model_shared, only: PI
  use cardamom_structures, only: DATAin 
  use cardamom_io, only: initialize, &

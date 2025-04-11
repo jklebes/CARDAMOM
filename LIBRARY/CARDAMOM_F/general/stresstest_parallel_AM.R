@@ -21,7 +21,8 @@
 library(BayesianTools) # if not found install.packages("BayesianTools")
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
-dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
+cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
+dyn.load(cardamom_dll)
 
 
 # command line args : infile, outfile, solution_wanted_char, freq_print_char, &
@@ -83,6 +84,7 @@ cardamom_stresstestcirclelikelihood <- function(pars){
     #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
 }
 
+
 print("initial loglikelihood:")
 ll <- cardamom_stresstestcirclelikelihood(initial)
 print(ll)
@@ -90,26 +92,21 @@ print(ll)
 print("Best loglikelihood would be")
 answers = c(3.14, 1.2, 3, 8, 10, 15, 200, 193, 88, 291, 1)
 print(cardamom_stresstestcirclelikelihood(answers))
+pLikelihood <- function(param) parallel::parApply(cl = cl, X = pars, MARGIN = 1, FUN = cardamom_stresstestcirclelikelihood)
+# ============= RUN MCMC ===========
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-
+nchains <- ncores
 bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
                                      lower = model_parmin,
-                                     upper = model_parmax, parallel=TRUE)
-#print("created setup")
-# ============= RUN MCMC ===========
+                                     upper = model_parmax, 
+                                     parallel=ncores, #auto parallelism - works with DEzs
+                                     )
 iter = 100000
-settings = list(iterations = iter, startValue=initial , message = TRUE)
-out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
+settings = list(iterations = iter, startValue=4 , message = TRUE)
+out <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-print(out$current)
-
-out <- runMCMC(out, sampler="AM", settings=settings)
-
-print(out$current)
-plot(out)
-
-# try different samplers: Metropolis, AM, DEzs, ...
-out <- runMCMC(bayesianSetup, sampler="DEzs")
-plot(out$chain[[1]])
+# Result : 6x slower with 4 cores than with parallel=FALSE.  
+# There is syncronizing and information sharing between chains
+# Not faster because the circle stresstest likleihood function is trivial

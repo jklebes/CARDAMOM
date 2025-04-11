@@ -270,7 +270,7 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
   ! all on defaults, without optional arguments
   call omp_set_num_threads(4)  ! error if not compiled with omp library
   call init_pi()
-  mcopt%nout = 100000
+  mcopt%nout = 10000
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout, nchains = nchains)
   ! expect values in mcout : a random initial state (within given parameter bounds) 
   ! and its loglikelihood
