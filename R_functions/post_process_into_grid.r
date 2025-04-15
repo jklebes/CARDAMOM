@@ -34,6 +34,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
   # Loop through all sites
   for (n in 1:PROJECT$nosites) {
 
+       # Update the user
+       if (n%%10000 == 0) {print(paste("...",floor((n/PROJECT$nosites)*100),"% completed",sep=""))}
+
        # Extract current site file name from output object
        site_output = site_output_all[[n]]
 

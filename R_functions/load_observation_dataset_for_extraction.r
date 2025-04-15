@@ -79,9 +79,11 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
-            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years, data_available = FALSE) 
+            output_all = list(-9999, -9999, -9999, doy_obs = -9999, years = -9999, 
+                              lat = -9999, long = -9999, missing_years = missing_years, 
+                              data_available = FALSE) 
             # Update with the correct variable names
-            names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
+            names(output_all)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
             # Return to function
             return(output_all)
         }
@@ -167,10 +169,10 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                     }
                  } # Assuming we have any global attributes
 
-                 # read the observation estimate 
+                 # Read the observation estimate 
                  est_in = ncvar_get(data1, est_var_name_in) # Variable estimate
                  if (twodim) {est_in = array(est_in, dim=c(dim(est_in),1))}
-                 # read error variable, if present
+                 # Read error variable, if present
                  if (length(which(names(data1$var) == unc_var_name_in)) > 0) {
                      std_in = ncvar_get(data1, unc_var_name_in) # Variable standard deviation 
                      std_present = TRUE
@@ -178,6 +180,14 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  } else {
                      std_in = -9999 ; std_present = FALSE
                  }                 
+                 # Read lag variable, if present
+                 if (length(which(names(data1$var) == lag_var_name_in)) > 0) {
+                     lag_in = ncvar_get(data1, unc_var_name_in) # Variable standard deviation 
+                     lag_present = TRUE
+                     if (twodim) {lag_in = array(lag_in, dim=c(dim(lag_in),1))}
+                 } else {
+                     lag_in = -9999 ; lag_present = FALSE
+                 } 
                  # Close the current file
                  nc_close(data1) 
 
@@ -192,7 +202,11 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           var2 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(std_in[,,t]))
                           var2 = rast(var2, crs = paste("epsg:",epsg,sep=""), type="xyz")
                       } 
-
+                      # Check that we have a lag estimate
+                      if (lag_present) {
+                          var3 = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(lag_in[,,t]))
+                          var3 = rast(var3, crs = paste("epsg:",epsg,sep=""), type="xyz")
+                      } 
                       # Extract the epsg from the file
                       epsg = crs(var1, describe = TRUE)$code
                       if (is.null(epsg) | epsg == "") { stop(paste("......the use_lcm specification leads to a geotif which does not contain epsg information."))}
@@ -209,11 +223,18 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                               var2 = crop(var2, ext(unlist(crs(grid_type, describe=TRUE)$extent)))
                               var2 = project(var2, grid_type, method="near", align = FALSE) ; gc() 
                           }
+                          if (lag_present) { 
+                              # Ensure that the extent of the input object is consistent 
+                              # with the possible extent of the selected epsg
+                              var3 = crop(var3, ext(unlist(crs(grid_type, describe=TRUE)$extent)))
+                              var3 = project(var3, grid_type, method="near", align = FALSE) ; gc() 
+                          }                          
                       }
  
                       # Use extend and crop to ensure we closely match the extent of the analysis
                       var1 = extend(var1,cardamom_ext) ; var1 = crop(var1,cardamom_ext) 
                       if (std_present) { var2 = extend(var2,cardamom_ext) ; var2 = crop(var2,cardamom_ext) }
+                      if (lag_present) { var3 = extend(var3,cardamom_ext) ; var3 = crop(var3,cardamom_ext) }
 
                       # Adjust spatial resolution of the datasets, this occurs in all cases
                       if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
@@ -221,6 +242,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           # Probably should be done via aggregate function to allow for correct error propogation
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster
@@ -228,11 +250,13 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           # create output raster
                           est_out_tif = var1 ; rm(var1)
                           if (std_present) { std_out_tif = var2 ; rm(var2) }
+                          if (lag_present) { lag_out_tif = var3 ; rm(var3) }
                           done_first_time = TRUE                   
                       } else {                  
                           # add to existing output raster
                           add(est_out_tif) <- var1 ; rm(var1)
                           if (std_present) { add(std_out_tif) <- var2 ; rm(var2) }
+                          if (lag_present) { add(lag_out_tif) <- var3 ; rm(var3) }
                       }                     
 
                } # loop through available time steps in the current year
@@ -280,12 +304,23 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                    std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
               }
           }
+          if (lag_present) { 
+              # Extract from the raster structure into arrays
+              lag_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+              for (d in seq(1, length(doy_out))) {
+                   lag_out[,,d] = array(as.integer(values(subset(lag_out_tif, d))), dim=c(xdim,ydim))
+              }
+          }
       } else {
           est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
           if (std_present) {                 
               std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
               std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))
           }
+          if (lag_present) {                 
+              lag_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+              lag_out[,,1] = array(as.vector(values(lag_out_tif)), dim=c(xdim,ydim))
+          }          
       }
 
 
@@ -297,15 +332,23 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
           # and remove those which differ
           est_out[filter] = NA ; std_out[filter] = NA
       }
- 
+      if (lag_present) {
+          # Check which are NA in either the estimate or the uncertainty
+          filter = which(is.na(est_out) | is.na(lag_out))
+          # and remove those which differ
+          est_out[filter] = NA ; lag_out[filter] = NA
+      }
       # Set dummy value for the output uncertainty if required
       if (std_present == FALSE) {std_out = -9999} 
+      # Set default value for the lag period if required, i.e. 0 day
+      if (lag_present == FALSE) {lag_out = array(as.integer(0), dim=c(xdim,ydim,length(doy_out)))} #  
       if (length(missing_years) == 0) {missing_years = -9999}
 
       # Create output object
-      output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
+      output_all = list(est_out, std_out, lag_out, doy_obs = doy_out, years = years_with_obs, 
+                        lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
       # Update with the correct variable names
-      names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
+      names(output_all)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
 
       # clean up variables
       rm(doy_in,est_out,std_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
@@ -334,8 +377,10 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         input_files = input_files[grepl(prefix, input_files)]
 
         # Pull out those specifically for the variable of interest
-        # based on them not being those with uncertainty
+        # based on them not being those with uncertainty...
         est_input_files = input_files[grepl("uncertainty", input_files) == FALSE]
+        # ...and any lagged files
+        est_input_files = est_input_files[grepl("lag", input_files) == FALSE]        
         # As we are using geotifs, we need to be sure we have matching estimate
         # and uncertainty files. Assuming we have asked for an uncertainty variable.
         if (unc_var_name_in != "") {
@@ -348,7 +393,22 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         } else {
             std_present = FALSE
         }
-            
+        # As we are using geotifs, we need to be sure we have matching estimate
+        # and lag files. Assuming we have asked for an lag variable.
+        if (lag_var_name_in != "") {
+            lag_input_files = input_files[grepl("lag", input_files)]
+            if (length(est_input_files) > 0 & length(est_input_files) != length(lag_input_files)) {
+                stop(paste("The number of estimate files for ",prefix,
+                           " and its lag ",prefix,"_lag do not match",sep=""))
+            } else if (length(est_input_files) == 0) {
+                lag_present = FALSE
+            } else {
+                lag_present = TRUE
+            }
+        } else {
+            lag_present = FALSE
+        }
+
         # Begin extraction of the year information found in the file name
         years_with_obs = gsub(data_path,"",est_input_files)
         years_with_obs = gsub(prefix,"",years_with_obs)
@@ -396,9 +456,11 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         if (length(missing_years) == length(years_to_load)) {
             print(paste("WARNINGS: ",est_var_name_in," have been requested but none found for the analysis time period",sep=""))
             # Create output object
-            output_all = list(-9999, -9999, doy_obs = -9999, years = -9999, lat = -9999, long = -9999, missing_years = missing_years, data_available = FALSE) 
+            output_all = list(-9999, -9999, -9999, doy_obs = -9999, years = -9999, 
+                              lat = -9999, long = -9999, missing_years = missing_years, 
+                              data_available = FALSE) 
             # Update with the correct variable names
-            names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
+            names(output_all)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
             # Return to function
             return(output_all)
         }
@@ -415,6 +477,9 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  if (std_present) {
                      std_files = unc_input_files[grepl(years_with_obs[t],unc_input_files)]
                  }
+                 if (lag_present) {
+                     lag_files = lag_input_files[grepl(years_with_obs[t],lag_input_files)]
+                 }
 
                  # Loop through all available steps in the current year
                  for (tt in seq(1, length(est_files))) {
@@ -422,6 +487,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                       # Read in the estimate and uncertainty rasters
                       var1 = rast(est_files[tt])
                       if (std_present) { var2 = rast(std_files[tt]) }
+                      if (lag_present) { var3 = rast(lag_files[tt]) }
 
                       # Extract the epsg from the file
                       epsg = crs(var1, describe = TRUE)$code
@@ -439,11 +505,18 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                               var2 = crop(var2, ext(unlist(crs(grid_type, describe=TRUE)$extent)))                                                
                               var2 = project(var2, grid_type, method="near", align = FALSE) ; gc() 
                           }
+                          if (lag_present) { 
+                              # Ensure that the extent of the input object is consistent 
+                              # with the possible extent of the selected epsg
+                              var3 = crop(var3, ext(unlist(crs(grid_type, describe=TRUE)$extent)))                                                
+                              var3 = project(var3, grid_type, method="near", align = FALSE) ; gc() 
+                          }
                       }
 
                       # Use extend and crop to ensure we closely match the extent of the analysis
                       var1 = extend(var1,cardamom_ext) ; var1 = crop(var1,cardamom_ext) 
                       if (std_present) { var2 = extend(var2,cardamom_ext) ; var2 = crop(var2,cardamom_ext) }
+                      if (lag_present) { var3 = extend(var3,cardamom_ext) ; var3 = crop(var3,cardamom_ext) }
 
                       # Adjust spatial resolution of the datasets, this occurs in all cases
                       if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
@@ -451,6 +524,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           # Probably should be done via aggregate function to allow for correct error propogation
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster
@@ -458,11 +532,13 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           # create output raster
                           est_out_tif = var1 ; rm(var1)
                           if (std_present) { std_out_tif = var2 ; rm(var2) }
+                          if (lag_present) { lag_out_tif = var3 ; rm(var3) }
                           done_first_time = TRUE                   
                       } else {                  
                           # add to existing output raster
                           add(est_out_tif) <- var1 ; rm(var1)
                           if (std_present) { add(std_out_tif) <- var2 ; rm(var2) }
+                          if (lag_present) { add(lag_out_tif) <- var3 ; rm(var3) }                          
                       }                     
 
                  } # Looping with within year
@@ -502,12 +578,23 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                      std_out[,,d] = array(values(subset(std_out_tif, d)), dim=c(xdim,ydim))
                 }
             }
+            if (lag_present) { 
+                # Extract from the raster structure into arrays
+                lag_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+                for (d in seq(1, length(doy_out))) {
+                     lag_out[,,d] = array(as.integer(values(subset(lag_out_tif, d))), dim=c(xdim,ydim))
+                }
+            }
         } else {
             est_out[,,1] = array(values(est_out_tif), dim=c(xdim,ydim))
             if (std_present) { 
                 std_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
                 std_out[,,1] = array(values(std_out_tif), dim=c(xdim,ydim))
             }
+            if (lag_present) { 
+                lag_out = array(NA, dim=c(xdim,ydim,length(doy_out)))      
+                lag_out[,,1] = array(as.integer(values(lag_out_tif)), dim=c(xdim,ydim))
+            }            
         }
 
         # If the standard deviation exists, then we should ensure that 
@@ -519,17 +606,29 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
             est_out[filter] = NA ; std_out[filter] = NA
         }
  
+        # If the lag exists, then we should ensure that 
+        # both the estimate and uncertainty have common occurance of NaN
+        if (lag_present) {
+            # Check which are NA in either the estimate or the uncertainty
+            filter = which(is.na(est_out) | is.na(lag_out))
+            # and remove those which differ
+            est_out[filter] = NA ; lag_out[filter] = NA
+        }
+
         # Set dummy value for the output uncertainty if required
         if (std_present == FALSE) {std_out = -9999} 
+        # Set a default value for the output lag if required, 0 day.
+        if (lag_present == FALSE) {lag_out = array(as.integer(0), dim=c(xdim,ydim,length(doy_out)))} #  
         if (length(missing_years) == 0) {missing_years = -9999}
 
         # Create output object
-        output_all = list(est_out, std_out, doy_obs = doy_out, years = years_with_obs, lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
+        output_all = list(est_out, std_out, lag_out, doy_obs = doy_out, years = years_with_obs, 
+                          lat = lat, long = long, missing_years = missing_years, data_available = TRUE) 
         # Update with the correct variable names
-        names(output_all)[1:2]<-c(est_var_name_out,unc_var_name_out)
+        names(output_all)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
 
         # clean up variables
-        rm(est_out,std_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
+        rm(est_out,std_out,lag_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
         return(output_all)
 
     } else if (data_source == " " | data_source == "site_specific") {

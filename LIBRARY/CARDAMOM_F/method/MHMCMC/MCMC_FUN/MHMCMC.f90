@@ -66,7 +66,7 @@ double precision :: N_before_mv_target, & !
                     opt_scaling ! scd = 2.381204 the optimal scaling parameter
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
-                                ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
+                                ! factor.
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
 !TLS:2025logical :: multivariate_proposal = .false.
@@ -185,8 +185,7 @@ contains
     ! scd = 2.381204 the optimal scaling parameter for MCMC search, when applied
     ! to multivariate proposal.
     ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky factor
-    ! NOTE 2: 2.381204 ** 2 = 5.670132
-    opt_scaling = 5.670132d0 / dble(PI%npars)
+    opt_scaling = 2.381204d0 / sqrt(dble(PI%npars))
 
     ! calculate initial vector of uniform random values
     unif_length = MCO%nADAPT * 5
@@ -275,11 +274,11 @@ contains
 
        end if ! in bound
 
-       ! Only update the parameter history for accepted parameter sets. 
+       ! Update the parameter history for accepted parameter sets. 
        ! This means that the written out value remains unchanged, consistent with MCMC theory, 
-       ! but is also means that the covariance matrix does not get updated either. This avoid the 
-       ! covariance matrix rapidly reducing the very small variances which cause the analysis to get 
-       ! stuck in a local minima. Not updating the covariance matrix is a bespoke modification.
+       ! but is also means that the covariance matrix does not get updated either, not consistent with MCMC theory. 
+       ! In CARDAMOM's large parameter hypervolume, this avoid the covariance matrix rapidly reducing the very 
+       ! small variances which cause the analysis to get stuck in a local minima. 
        if (AM_likelihood > crit1) then
 
            ! Store accepted parameter proposals
@@ -302,6 +301,7 @@ contains
          
            ! Track the current parameter vector for the covariance matrix
            ! but do not increment the acceptance information
+           ! ===What should happen if consistent with theory but not doing so here...===
 
        endif ! accept or reject condition
 
@@ -336,7 +336,6 @@ contains
            N%ACC = N%ACC + N%ACCLOC
            ! Calculate global acceptance rate
            N%ACCRATE_GLOBAL = N%ACC / N%ITER
-
            ! Calculate local acceptance rate (i.e. since last adapt)
            N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
 
@@ -356,7 +355,7 @@ contains
 !               endif
 
                ! Until the covariance has been first created be selective about the variables being fed 
-               ! into the matrix
+               ! into the matrix. Then let everything feed into the matrix for learning.
                if (.not.PI%cov .and. N%ACCLOC > 3d0) then
                    PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
                    PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))

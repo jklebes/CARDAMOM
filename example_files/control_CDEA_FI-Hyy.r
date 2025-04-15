@@ -23,7 +23,7 @@ projname="FI-Hyy_example"
 # i.e. "Fortran", "C"
 language="Fortran"
 ## Compiler options (Fortan only)
-compiler="ifort" #"ifort", "gfortran"
+compiler="ifx" #"ifort", "gfortran"
 compiler_optimisation = "-O2"
 timing=FALSE
 debug=FALSE
@@ -36,7 +36,7 @@ sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote 
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.31."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -141,7 +141,7 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
 # Some interactive node options
-use_parallel=TRUE             # use parallel functions or not
+use_parallel=FALSE             # use parallel functions or not
 numWorkers=4                   # number of parallel tasks when using a interactive node
 # Some Slurm server option
 slurm_account = "geos_research"# Slurm research account, if using the slurm cluster
@@ -174,7 +174,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=3
+stage=0
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

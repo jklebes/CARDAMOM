@@ -292,8 +292,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
       OBSMAT[,29] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
       OBSMAT[,30] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
-      OBSMAT[,31] = OBS$Evap                  # Evapotranspiration (kgH2O/m2/day)
-      OBSMAT[,32] = OBS$Evap_unc              # Evapotranspiration variance
+      OBSMAT[,31] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
+      OBSMAT[,32] = OBS$ET_unc                # Evapotranspiration variance
       OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
       OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
       OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
@@ -700,6 +700,13 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #    tmp2 = (0.0031*(PARPRIORS[17]+PARPRIORUNC[17]/0.48)**c(1.82))/12 # Upper 95 % CI estimate
           #    OTHERPRIORUNC[6] = (tmp2-tmp1) * 0.5
           #}
+          # Hack to remove LAI observations out of growing season for high LCA areas
+          if (PARPRIORS[17] > 100) {
+              if (lat_degrees > 50) {
+                  filter = which(MET[,6] < 150 | MET[,6] > 250)
+                  OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
+              }
+          }          
       } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.030") {
           PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #          PARPRIORS[11]=1.89*14.77735          ; PARPRIORUNC[11]=1.89*0.4696238 # Derived from ACM2 recalibration.

@@ -62,6 +62,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_gleam") == FALSE)                 {path_to_gleam <<- " "}
   if (exists("path_to_nbe") == FALSE)                   {path_to_nbe <<- " "}
   if (exists("path_to_gpp") == FALSE)                   {path_to_gpp <<- " "}
+  if (exists("path_to_et") == FALSE)                    {path_to_et <<- " "}
   if (exists("path_to_fire") == FALSE)                  {path_to_fire <<- " "}
   if (exists("path_to_lca") == FALSE)                   {path_to_lca <<- " "}
   # Forcings data options
@@ -74,7 +75,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("fapar_source") == FALSE)                  {fapar_source <<- " "}
   if (exists("Csom_source") == FALSE)                   {Csom_source <<- " "}
   if (exists("soilwater_initial_source") == FALSE)      {soilwater_initial_source <<- " "}
-  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
+  if (exists("et_source") == FALSE)                     {et_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
   if (exists("Cwood_mortality_source") == FALSE)        {Cwood_mortality_source <<- " "}
   if (exists("gpp_source") == FALSE)                    {gpp_source <<- " "}

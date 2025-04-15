@@ -116,8 +116,8 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
             # Determine the spatial domain we want to read for the cardamom domain
             # NOTE: this code assumes a regular grid only
             xy_bounds = unlist(crs(cardamom_ext, describe=TRUE)$extent) # first convert the project domain back into lat / long values
-            xy_bounds[1] = max(1,min(which(long[,1] < xy_bounds[1]))) ; xy_bounds[2] = min(dim(long)[1],max(which(long[,1] > xy_bounds[2])))
-            xy_bounds[3] = max(1,min(which(lat[1,] < xy_bounds[3])))  ; xy_bounds[4] = min(dim(lat)[2],max(which(lat[1,] > xy_bounds[4])))
+            xy_bounds[1] = max(1,min(which(long[,1] >= xy_bounds[1]))) ; xy_bounds[2] = min(dim(long)[1],max(which(long[,1] <= xy_bounds[2])))
+            xy_bounds[3] = max(1,min(which(lat[1,] >= xy_bounds[3])))  ; xy_bounds[4] = min(dim(lat)[2],max(which(lat[1,] <= xy_bounds[4])))
             # The netcdf function requires a starting point and a number of reads.
             # The starting points are xy_bounds[1] and xy_bounds[3], 
             # the counts need to be filled into xy_bounds[2] and xy_bounds[4]

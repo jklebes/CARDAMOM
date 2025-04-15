@@ -83,8 +83,8 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
-    MCO%nADAPT = 500
-    MCO%fADAPT = 1d0
+    MCO%nADAPT = 100
+    MCO%fADAPT = 0.5d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
     MCO%nWRITE = 0
@@ -625,8 +625,8 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) < pars(41)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
-    ! Weighted soil water potential (MPa) at which full suppression is achieved must be greater than minlwp,
-    ! i.e. growth should be more limited than photosynthesis
+    ! Weighted soil water potential (MPa) at which full suppression of foliar growth 
+    ! is achieved must be greater than minlwp, i.e. growth should be more limited than photosynthesis
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) > pars(41)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
@@ -649,20 +649,25 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
+    ! Initial leaf area index should not be larger than ~10 m2/m2
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    endif    
+
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
 
     ! could always add more / remove some
@@ -708,7 +713,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi, tmp !, EQF, etol
+    double precision :: infi, tmp, tmp1, tmp2 !, EQF, etol
     double precision, dimension(nodays) :: lab_ratio
     double precision, dimension(nopools) :: mean_pools, Fin, Fout, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -839,32 +844,32 @@ module model_likelihood_module
      if ((EDC2 == 1 .or. DIAG == 1)) then
          ! Foliage
          if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
          end if
          ! Fine roots
          if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
          end if
          ! Wood
          if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
          end if
      end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
     endif
 
     ! While it is possible for the CiCa, the ratio of internal to external leaf
     ! CO2 concentrations it should not on average be greater than 1
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(cica_time)/dble(nodays) > 1d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
 
     ! We can roughly say that the mean gpp per unit leaf area 
@@ -1013,13 +1018,20 @@ module model_likelihood_module
         ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
         ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
         ! Estimating the MTT, converting from days to years using 1/365.25 = 0.002737851
-        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
-              / dble(nodays)) * 0.002737851d0
-        ! determine the lower bound of the LES 
-        if (tmp < 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)) then
+        ! 0.08333333 converts months to years for the LES equation.
+        tmp = sum(M_POOLS(:,2)) / dble(nodays)
+        tmp1 = sum(M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)) / dble(nodays)
+        tmp = (tmp / tmp1) * 0.002737851d0
+        ! determine the lower and upper bound of the LES .
+        ! not for the upper bound, do not allow a value less than 1 years
+        tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
+        tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
+        if (tmp < tmp1) then
+            ! The current leaf lifespan is shorter than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
         endif        
-        if (tmp > 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0)) then
+        if (tmp > tmp2) then
+            ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1

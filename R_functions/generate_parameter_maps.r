@@ -85,16 +85,16 @@ generate_parameter_maps<-function(PROJECT) {
           par_array_median_normalised = grid_output$parameters[,,,median_loc]
           # now normalise the parameter values
           for (i in seq(1,dim(par_array_median_normalised)[3])) {
-               min_par_val=min(par_array_median_normalised[,,i],na.rm=TRUE)
-               max_par_val=max(par_array_median_normalised[,,i],na.rm=TRUE)
-               par_array_median_normalised[,,i]=((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
+               min_par_val = min(par_array_median_normalised[,,i],na.rm=TRUE)
+               max_par_val = max(par_array_median_normalised[,,i],na.rm=TRUE)
+               par_array_median_normalised[,,i] = ((par_array_median_normalised[,,i]-min_par_val)/(max_par_val-min_par_val))
           }
           # Create temporary arrays needed to allow removing of NAs and convert array into (space,par)
-          par_array_tmp=array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
-          par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]]=par_array_median_normalised
-          actual_forests=which(is.na(par_array_tmp[,1]) == FALSE)
-          par_array_tmp=par_array_tmp[actual_forests,]
-          par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
+          par_array_tmp = array(NA,dim=c(prod(dim(grid_output$parameters)[1:2]),dim(par_array_median_normalised)[3]))
+          par_array_tmp[1:prod(dim(par_array_median_normalised)[1:2]),1:dim(par_array_median_normalised)[3]] = par_array_median_normalised
+          actual_forests = which(is.na(par_array_tmp[,1]) == FALSE)
+          par_array_tmp = par_array_tmp[actual_forests,]
+          par_array_tmp = array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
 
           # Looping to find preference_input, the preferenceRange() returns 2 values,
           # the first of which minimises the number of clusters, while the seconds
@@ -103,10 +103,18 @@ generate_parameter_maps<-function(PROJECT) {
           # information to result in an appropriate number of clusters for error propagation
           tmp = 0
           for (i in seq(1,3)) {
-               tmp=append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
-          } ; preference_input=max(mean(tmp[-1]),median(tmp[-1]))
-
-          grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1,sweeps=3, p=preference_input,maxits=500, convits=100)
+               tmp = append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
+          } ; preference_input = max(mean(tmp[-1]), median(tmp[-1]))
+          #print(paste("q = ",preference_input))
+          # Determine the number of pixels to be in the subsample.
+          # 1500 sites is an arbitary selection.
+          subsample_frac = min(0.1,1500/PROJECT$nosites)
+          # Conduct the affinity propagation clustering analysis.
+          # convits = how many iterations to wait for a change in clustering before cancelling process.
+          # maxits  = maximum number of iteration to perform regardless or clustering still changing
+          # frac    = if set, clustering is done on a randomly selected sub-sample of pixels. The sub-sample is the fraction specified.
+          # sweeps  = if frac set, how many times to repeat the subsampling processes
+          grid_output$cluster_analysis = apclusterL(negDistMat(r=2), par_array_tmp, frac = subsample_frac, sweeps = 3, p = preference_input, maxits=200, convits=20)
           #grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
           grid_output$nos_clusters=length(grid_output$cluster_analysis@clusters) ; grid_output$clusters_exemplars=grid_output$cluster_analysis@exemplars
           grid_output$clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))

@@ -59,10 +59,12 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
    # Extract current location to local variable
    obs = data_all[[est_var_name_in]][i1,j1,]
    unc = data_all[[unc_var_name_in]][i1,j1,]
+   lag = data_all[[lag_var_name_in]][i1,j1,]
 
    # declare output variable
    obs_out = array(NA, dim=length(doy_obs))
    obs_unc_out = array(NA, dim=length(doy_obs))
+   obs_lag_out = array(NA, dim=length(doy_obs))
 
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
@@ -72,7 +74,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
           if (doy_obs[i] == data_all$doy_obs[b]) {
-              obs_out[i] = obs[b] ; obs_unc_out[i] = unc[b] ; b = b + 1
+              obs_out[i] = obs[b] ; obs_unc_out[i] = unc[b] ; obs_lag_out[i] = lag[b] ; b = b + 1
           } # end if doy matches
       } # end if missing year
 
@@ -111,42 +113,52 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
        # create needed variables
        obs_agg = array(NA,dim=length(run_day_selector))
        obs_unc_agg = array(NA,dim=length(run_day_selector))
+       obs_lag_agg = array(NA,dim=length(run_day_selector))
 
        # Determine whether we are aggregating by mean or by sum
        if (agg_func == "mean") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = mean(obs_out[pick], na.rm=TRUE)
-                obs_unc_agg[y] = mean(obs_unc_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = sum(obs_out[pick], na.rm=TRUE)
-                obs_unc_agg[y] = sum(obs_unc_out[pick], na.rm=TRUE)
+                # Take the mean first to allow for weighting based on the lags
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
+                # Then reaccumulate based on the total number of lags
+                obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
+                obs_unc_agg[y] = obs_unc_agg[y] * obs_lag_agg[y]
            }       
        } else {
             stop("A non-valid function has been specified for the extract_timeseries_observations_with_uncertainty()")
        }
+       # Convert the lag periods into model time steps
+       obs_lag_agg = pmax(1,obs_lag_agg / mean(timestep_days))
        # update with new output information
-       obs_out = obs_agg ; obs_unc_out = obs_unc_agg
+       obs_out = obs_agg ; obs_unc_out = obs_unc_agg ; obs_lag_out = obs_lag_agg
        # clean up
-       rm(obs_agg,obs_unc_agg,y) ; gc()
+       rm(obs_agg,obs_unc_agg,obs_lag_agg,y) ; gc()
 
    } # temporal aggregation etc
 
    # convert missing data to -9999
-   obs_out[which(is.na(obs_out))] = -9999 ; obs_unc_out[which(is.na(obs_unc_out))] = -9999
+   na_loc = which(is.na(obs_out) | is.na(obs_unc_out) | is.na(obs_lag_out))
+   obs_out[filter] = -9999 ; obs_unc_out[filter] = -9999 ; obs_lag_out[filter] = -9999
 
    # clean up
    rm(i1,j1,obs,unc,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # Create output object
-   output = list(obs_out, obs_unc_out)
+   output = list(obs_out, obs_unc_out, obs_lag_out)
    # Update with the correct variable names
-   names(output)[1:2]<-c(est_var_name_out,unc_var_name_out)
+   names(output)[1:2]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
    # Return function
    return(output)
 
@@ -164,9 +176,11 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
 
    # Extract current location to local variable
    obs = data_all[[est_var_name_in]][i1,j1,]
+   lag = data_all[[lag_var_name_in]][i1,j1,]
 
    # declare output variable
    obs_out = array(NA, dim=length(doy_obs))
+   obs_lag_out = array(NA, dim=length(doy_obs))
 
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
@@ -176,7 +190,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
           if (doy_obs[i] == data_all$doy_obs[b]) {
-              obs_out[i] = obs[b] ; b = b + 1
+              obs_out[i] = obs[b] ; obs_lag_out[i] = lag[b] ; b = b + 1
           } # end if doy matches
       } # end if missing year
 
@@ -212,40 +226,48 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
        run_day_selector = cumsum(timestep_days)
        # create needed variables
        obs_agg = array(NA,dim=length(run_day_selector))
+       obs_lag_agg = array(NA,dim=length(run_day_selector))
 
        # Determine whether we are aggregating by mean or by sum
        if (agg_func == "mean") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = mean(obs_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = sum(obs_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
+                # Then reaccumulate based on the total number of lags
+                obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
            }       
        } else {
             stop("A non-valid function has been specified for the extract_timeseries_observations_without_uncertainty()")
        }
+       # Convert the lag periods into model time steps
+       obs_lag_agg = pmax(1,obs_lag_agg / mean(timestep_days))       
        # update with new output information
-       obs_out = obs_agg 
+       obs_out = obs_agg ; obs_lag_out = obs_lag_agg
        # clean up
        rm(obs_agg,y) ; gc()
 
    } # temporal aggregation etc
 
    # convert missing data to -9999
-   obs_out[which(is.na(obs_out))] = -9999
+   na_loc = which(is.na(obs_out) | is.na(obs_lag_out)) 
+   obs_out[na_loc] = -9999 ; obs_lag_out[na_loc] = -9999
 
    # clean up
-   rm(i1,j1,obs,i,a) ; gc(reset=TRUE,verbose=FALSE)
+   rm(i1,j1,obs,lag,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # Create output object
-   output = list(obs_out)
+   output = list(obs_out,obs_lag_out)
    # Update with the correct variable names
-   names(output)[1]<-c(est_var_name_out)
+   names(output)[1]<-c(est_var_name_out,lag_var_name_out)
    # Return function
    return(output)
 

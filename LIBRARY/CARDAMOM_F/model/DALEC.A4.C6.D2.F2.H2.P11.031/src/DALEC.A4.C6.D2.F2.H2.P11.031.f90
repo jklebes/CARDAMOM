@@ -433,7 +433,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
 
-    ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    ! Combustion efficiencies and fire resilience
     double precision :: burnt_area
     double precision, dimension(6) :: cf,rfac
     ! local deforestation related variables
@@ -843,7 +843,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
     leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
     soilT = leafT ! initially assume that the soil and canopy temperature are the same
-    dayT = leafT ! initially assume that the air and canopy temperature are the same
+    dayT = leafT  ! initially assume that the air and canopy temperature are the same
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
@@ -1018,9 +1018,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
+           ! Autotrophic respiration (gC.m-2.day-1)
+           ! Combine the fixed fraction assumption for growth respiration and maintenance of
+           ! fine root and wood with the maintenance respiration associated with leaves
+           FLUXES(n,3) = pars(2)*FLUXES(n,1)
+           !FLUXES(n,3) = dark_respiration * umol_to_gC * dayl_seconds
+           !FLUXES(n,3) = pars(2)*(FLUXES(n,1)-FLUXES(n,3))            
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0 ; FLUXES(n,3) = 0d0
        endif
 
        ! Estimate average leaf water potential based on effective hydraulic resistance, wSWP and transpiration.
@@ -1036,15 +1042,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
        ! Seasonal canopy growth and leaffall factors
        FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2)
-       !FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2)
        FLUXES(n,16) = exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2) ! modified to scale 0-1
-
-       ! Autotrophic respiration (gC.m-2.day-1)
-       ! Combine the fixed fraction assumption for growth respiration and maintenance of
-       ! fine root and wood with the maintenance respiration associated with leaves
-       !FLUXES(n,3) = pars(2)*FLUXES(n,1)
-       FLUXES(n,3) = dark_respiration * umol_to_gC * dayl_seconds
-       FLUXES(n,3) = pars(2)*(FLUXES(n,1)-FLUXES(n,3)) 
 
        ! Accumulate this time steps labile C (gC.m-2.day-1)
        FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
@@ -1079,7 +1077,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Simple linear model of soil moisture impact of decomposition processes
        ! Ask Bloom for reference. Shared as a diagnostic test
-       tmp = 0.25d0 + 0.75d0 * soil_waterfrac(1)
+       tmp = 1d0!0.25d0 + 0.75d0 * soil_waterfrac(1)
        ! respiration heterotrophic litter
        FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*tmp)**deltat(n))/deltat(n)
        ! respiration heterotrophic som
@@ -1338,8 +1336,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                      * airt_adj
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
-    dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
-    !!dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
+    !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
+    dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! TO BE REPLACED WITH EQUATIONS FROM TABLE 2?
     ! R2 of fit 0.22
@@ -1804,7 +1802,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Calculate potential Penman Montheith (kgH2O.m-2.day-1)
         wetcanopy_evap = max(0d0,(((slope*canopy_radiation) + (ET_demand_coef*gb)) &
                                  / (lambda*(slope+psych))) * dayl_seconds)
-if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy_lwrad_Wm2,canopy_swrad_MJday
+!if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy_lwrad_Wm2,canopy_swrad_MJday
 
         ! Update based on canopy water storage
         call canopy_interception_and_storage(wetcanopy_evap,storage)
@@ -2348,7 +2346,7 @@ if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy
 
     ! Determine Tleaf-Tair
     !Tdiff = warming_term - cooling_term
-    Tdiff = min(20d0,max(-20d0,warming_term - cooling_term))
+    Tdiff = min(10d0,max(-10d0,warming_term - cooling_term))
 
     ! Return function
     return
@@ -2677,66 +2675,6 @@ if (wetcanopy_evap /= wetcanopy_evap) print*,"pet",slope,canopy_radiation,canopy
     do i = 1, nos_soil_layers
        call calculate_soil_conductivity(i,soil_waterfrac(i),soil_conductivity(i))
     end do ! soil layers
-
-    !!!!!!!!!!!
-    ! Calculate root profile
-    !!!!!!!!!!!
-
-    ! The original SPA src generates an exponential distribution which aims
-    ! to maintain 50 % of root biomass in the top 25 % of the rooting depth.
-    ! In a simple 3 root layer system this can be estimates more simply
-
-!    ! top 25 % of root profile
-!    root_depth_50 = root_reach * root_depth_frac_50
-!    if (root_depth_50 <= layer_thickness(1)) then
-!
-!        ! Greater than 50 % of the fine root biomass can be found in the top
-!        ! soil layer
-!
-!        ! Start by assigning all 50 % of root biomass to the top soil layer
-!        root_mass(1) = fine_root_biomass * 0.5d0
-!        ! Then quantify how much additional root is found in the top soil layer
-!        ! assuming that the top 25 % depth is found somewhere within the top
-!        ! layer
-!        bonus = (fine_root_biomass-root_mass(1)) &
-!              * (layer_thickness(1)-root_depth_50) / (root_reach - root_depth_50)
-!        root_mass(1) = root_mass(1) + bonus
-!        ! partition the remaining root biomass between the seconds and third
-!        ! soil layers
-!        if (root_reach > sum(layer_thickness(1:2))) then
-!            root_mass(2) = (fine_root_biomass - root_mass(1)) &
-!                         * (layer_thickness(2)/(root_reach-layer_thickness(1)))
-!            root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-!        else
-!            root_mass(2) = fine_root_biomass - root_mass(1)
-!        endif
-!
-!    else if (root_depth_50 > layer_thickness(1) .and. root_depth_50 <= sum(layer_thickness(1:2))) then
-!
-!        ! Greater than 50 % of fine root biomass found in the top two soil
-!        ! layers. We will divide the root biomass uniformly based on volume,
-!        ! plus bonus for the second layer (as done above)
-!        root_mass(1) = fine_root_biomass * (layer_thickness(1)/root_depth_50)
-!        root_mass(2) = fine_root_biomass * ((root_depth_50-layer_thickness(1))/root_depth_50)
-!        root_mass(1:2) = root_mass(1:2) * 0.5d0
-!
-!        ! determine bonus for the seconds layer
-!        bonus = (fine_root_biomass-sum(root_mass(1:2))) &
-!              * ((sum(layer_thickness(1:2))-root_depth_50)/(root_reach-root_depth_50))
-!        root_mass(2) = root_mass(2) + bonus
-!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-!
-!    else
-!
-!        ! Greater than 50 % of fine root biomass stock spans across all three
-!        ! layers
-!        root_mass(1:2) = fine_root_biomass * 0.5d0 * (layer_thickness(1:2)/root_depth_50)
-!        root_mass(3) = fine_root_biomass - sum(root_mass(1:2))
-!
-!    endif
-!    ! now convert root mass into lengths
-!    root_length = root_mass * root_mass_length_coef_1
-!!    root_length = root_mass / (root_density * root_cross_sec_area)
 
     !!!!!!!!!!!
     ! Calculate hydraulic properties and each rooted layer

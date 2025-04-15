@@ -38,16 +38,13 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
 
     if (met_source == "ERA" | met_source == "isimip3a") {
 
-        # Initialise the output variable
-        var1_out = 0
-
         # Determine the next file we expect to read in
         input_file_1 = paste(path_to_met_source,varid[1],"_",year_to_do,".nc",sep="")        
         # open netcdf files
         data1 = nc_open(input_file_1)
         # read the met drivers
         var_in = ncvar_get(data1, infile_varid[1],start=c(xy_bounds[1],xy_bounds[3],1), 
-                                                  count=c(xy_bounds[2],xy_bounds[4],1))
+                                                  count=c(xy_bounds[2],xy_bounds[4],-1))
         # keep count of time steps
         t_grid = dim(var_in)[3]
         # read in the location information
@@ -57,8 +54,14 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
         # close files after use
         nc_close(data1)
 
+        # Initialise the output variable
+        var1_out = rep(NA, length(wheat)*dim(var_in)[3])
+
         # Loop each time step and aggregte before placing into to an out variables
         for (t in seq(1, dim(var_in)[3])) {
+
+             # Inform the user
+             #if (use_parallel == FALSE) {print(paste("...processing time step ",t," of ",dim(var_in)[3]," for ",year_to_do,sep=""))}
 
              # Convert to a raster, assuming standad WGS84 grid
              # This dependes on the lat / long / tmp1 spatially matching each other AND
@@ -89,14 +92,16 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
                  var1 = resample(var1, cardamom_ext, method="average") ; gc() 
              } # Aggrgeate to resolution
 
-             # break out from the rasters so can manipulate
-             var1_out = append(var1_out, values(var1)[wheat])
+             # determine new (s)tart and (e)nd points for the output array
+             s = (length(wheat)*(t-1)) + 1 ; e = length(wheat)*t
+             # Load the current output into the output variable.
+             # Don't use append as this requires copying of the whole array each time,
+             # takes time.
+             #var1_out = append(var1_out, values(var1)[wheat])
+             var1_out[s:e] = values(var1)[wheat]
 
         } # t loop
         
-        # Remove initial value
-        var1_out = var1_out[-1]
-
         # clean up
         rm(var1,epsg,lat,long,var_in) ; gc(reset=TRUE,verbose=FALSE)
 
@@ -128,6 +133,10 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
         # Loop each time step and aggregte before placing into to an out variables
         var1_out = 0
         for (t in seq(1, dim(var_in)[3])) {
+
+             # Inform the user
+             #if (use_parallel == FALSE) {print(paste("...processing time step ",t," of ",dim(var_in)[3]," for ",year_to_do,sep=""))}
+
              # Convert to a raster, assuming standad WGS84 grid
              # This dependes on the lat / long / tmp1 spatially matching each other AND
              # latitude ranging -90/90 and longitude ranging -180/180 degrees

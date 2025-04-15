@@ -702,7 +702,7 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                   C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.100        !
+                                H2O_etol = 0.10d0        !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
