@@ -149,7 +149,7 @@ slurm_concurrent_cpus = 60     # maximum number of concurrent cpus for slurm, im
 slurm_max_run_time = 12        # Number of hours per task to be requested in stage 3, if using slurm
 # Control where to run
 request_use_server = FALSE     # Use remote server? Currently coded for UoE Eddie.
-request_use_local_slurm = TRUE # Only applies if request_use_server == FALSE
+request_use_local_slurm = FALSE # Only applies if request_use_server == FALSE
 request_compile_server = FALSE # Copy and compile current source code on remote server
 request_compile_local = TRUE   # Compile local executable even if not running on local
 # Remote server options
@@ -174,7 +174,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=1
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
