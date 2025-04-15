@@ -1080,7 +1080,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         burnt_area_lag = read_site_specific_obs("burnt_area_fraction_lag",infile)
     } else if (burnt_area_source == " "){
         # assume no data available
-        burnt_area = 0
+        burnt_area = 0 ; burnt_area_lag = 0
     } else {
         # Extract from the gridded array
         output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
