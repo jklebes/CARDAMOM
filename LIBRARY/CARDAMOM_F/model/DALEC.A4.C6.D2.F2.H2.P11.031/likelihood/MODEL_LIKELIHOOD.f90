@@ -83,8 +83,8 @@ module model_likelihood_module
 
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
-    MCO%nADAPT = 100
-    MCO%fADAPT = 0.5d0
+    MCO%nADAPT = 500
+    MCO%fADAPT = 1.0d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
     MCO%nWRITE = 0
