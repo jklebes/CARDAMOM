@@ -600,7 +600,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       # Hack to remove LAI observations out of growing season for high LCA areas
       if (PARPRIORS[17] > 100) {
           if (lat_degrees > 50) {
-              filter = which(MET[,6] < 150 | MET[,6] > 250)
+              filter = which(MET[,6] < 175 | MET[,6] > 250)
               OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
           }
       }
@@ -703,7 +703,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # Hack to remove LAI observations out of growing season for high LCA areas
           if (PARPRIORS[17] > 100) {
               if (lat_degrees > 50) {
-                  filter = which(MET[,6] < 150 | MET[,6] > 250)
+                  filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
               }
           }          

@@ -150,7 +150,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
 
    # convert missing data to -9999
    na_loc = which(is.na(obs_out) | is.na(obs_unc_out) | is.na(obs_lag_out))
-   obs_out[filter] = -9999 ; obs_unc_out[filter] = -9999 ; obs_lag_out[filter] = -9999
+   obs_out[na_loc] = -9999 ; obs_unc_out[na_loc] = -9999 ; obs_lag_out[na_loc] = -9999
 
    # clean up
    rm(i1,j1,obs,unc,i,a) ; gc(reset=TRUE,verbose=FALSE)
