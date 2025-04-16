@@ -331,10 +331,14 @@ contains
     par_minstepsize = MCO%par_minstepsize
 
     ! initialize output fields
+    if (.not. allocated(MCOUT%parvar)) then
+      ! we recieved blank new MCOUT, start new stats collection
     MCOUT%Nparvar = 0
     allocate(MCOUT%parvar(npars))
     allocate(MCOUT%meanpar(npars))
     allocate(MCOUT%covariance(npars, npars))
+    ! TODO call reset_stats ?
+    endif
 
     ! process file names 
     outfile = MCO%outfile
@@ -392,6 +396,7 @@ contains
     !TODO opt scaling scalin by n
 
     !!! prepare file writing
+    if (MCO%nwrite > 0) then
     ! allocate buffers (different one for each chain)
     call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
     ! TODO potential restart handling !  outside 
@@ -399,6 +404,9 @@ contains
     !, parname, stepname, covname, covinfoname)
     !TODO open separate output file for each chain !
     call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
+  else
+    write(*,*) "No output files will be created because nwrite == 0 "
+    endif 
 
 
 
@@ -510,7 +518,6 @@ contains
 
            ! Calculate local acceptance rate (i.e. since last adapt)
            ACCRATE = ACCLOC/dble(MCO%nadapt)
-           write(*,*) "ACCRATE", ACCRATE, "=", ACCLOC, "/" , dble(MCO%nadapt)
 
            ! Second, are we still in the adaption phase?
            ! TODO how does fortran integer division work
@@ -532,8 +539,6 @@ contains
 
                ! adapt the covariance matrix for multivariate proposal
                ! TODO rename "parsall" to replect it's really a small subsample of period's history
-               write(*,*) "Nparvar", MCOUT%Nparvar
-               write(*,*) "Nparvar", PARSALL(1, 1:3)
                call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
 
            end if !  have enough parameter been accepted
@@ -587,7 +592,7 @@ contains
     write(*,*)"Final local acceptance rate = ",ACCRATE
     ! TODO function to output these two 
     write(*,*)"Best log-likelihood = ", llmax
-    !write(*,*)"Best parameters = ",MCOUT%bestpars
+    write(*,*)"Best parameters = ",MCOUT%bestpars
 
 end subroutine
 
@@ -641,20 +646,16 @@ end subroutine
         Nparvar_local = min(N_before_mv_target, Nparvar_backup)
         call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                         ,Nparvar_local, ACCLOC, MCOUT%covariance)
-                                      write(*,*) Nparvar_local
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
         call cholesky_factor( npars, MCOUT%covariance, info )
         ! If the updated covariance matrix is not positive definite we should
         ! reject the update in favour of the existing matrix
         ! TODO ??
-        write(*,*) "info", info, ACCLOC
-        write(*,*), MCOUT%covariance
         if (info == 0) then
             ! Set multivariate sampling to true
             use_multivariate = .true.
             MCOUT%Nparvar = Nparvar_local
-            write(*,*) "start matrix"
         else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive

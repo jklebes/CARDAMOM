@@ -305,6 +305,7 @@ module MHMCMC_StressTests
     ! alert the user
     write(*,*)"Created fields for model output"
 
+    ! TODO replace some of this with initialize_stats
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars 
     allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), MCOUT%pars(PI%npars) &

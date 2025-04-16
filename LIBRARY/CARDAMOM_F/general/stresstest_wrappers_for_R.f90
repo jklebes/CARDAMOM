@@ -19,7 +19,6 @@ subroutine get_stresstest_parmax(npars, parmax) bind(c, name="C_getstresstestpar
   implicit none
   integer(c_int), intent(in):: npars
   real(c_double), intent(inout), dimension(npars):: parmax
-  write(*,*), PI%parmax
   parmax = PI%parmax
 end subroutine
 

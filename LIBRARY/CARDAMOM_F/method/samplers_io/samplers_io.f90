@@ -240,8 +240,6 @@ module samplers_io
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
 
-    write(*,*) "irec", irec
-
     do i = 1, npars
        do j = 1, npars
           irec = irec+1

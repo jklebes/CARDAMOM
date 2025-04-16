@@ -514,7 +514,6 @@ contains
 
            ! Calculate local acceptance rate (i.e. since last adapt)
            ACCRATE = ACCLOC/dble(MCO%nadapt)
-           write(*,*) "ACCRATE", ACCRATE, "=", ACCLOC, "/" , dble(MCO%nadapt)
 
            ! Second, are we still in the adaption phase?
            if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not.MCOUT%use_multivariate) then
@@ -573,7 +572,7 @@ contains
     write(*,*)"Final local acceptance rate = ",ACCRATE
     ! TODO function to output these two 
     write(*,*)"Best log-likelihood = ", llmax
-    !write(*,*)"Best parameters = ",MCOUT%bestpars
+    write(*,*)"Best parameters = ",MCOUT%bestpars
 
 end subroutine
 
@@ -781,7 +780,6 @@ end subroutine
 
       !MCOUT%multivariate_proposal = .false.
       pars = pars0 + (par_minstepsize*rn2)
-        write(*,*) par_minstepsize, rn2
 
     end if
 

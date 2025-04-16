@@ -47,7 +47,6 @@ module cardamom_io
 
   ! allow access to specific functions
   public:: update_for_restart_simulation   &
-          ,find_edc_initial_values          &
            ,cardamom_model_library          &
            ,initialize                      &
            ,read_options                    &
@@ -262,129 +261,6 @@ module cardamom_io
     endif
 
   end subroutine cardamom_model_library
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine find_edc_initial_values(MCO, MCOUT)  ! TODO move this and others to main loop fcts collection
-    !! subroutine deals with the determination of initial parameter and initial
-    !! conditions which are consistent with EDCs
-    !! pre-loop, Run MCMC sampler with modified likelihood fct  
-    use model_shared, only: PI
-    use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc
-    !use model_likelihood_module, only: model_likelihood, &
-    !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
-    use model_likelihood_wrapper  ! TODO next refactoring step
-    use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
-
-
-    implicit none
-
-    ! declare local variables
-    type(MCMC_OUTPUT), intent(out):: MCOUT  ! TODO array
-    type(MCMC_OPTIONS), intent(out):: MCO
-    integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
-    logical:: append_save
-    double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
-    double precision, dimension(PI%npars+1):: EDC_pars
-    double precision, dimension(PI%npars):: parini  ! local variable, or array
-
-    ! Hold for later
-    nOUT_save = MCO%nOUT; nWRITE_save = MCO%nWRITE; nADAPT_save = MCO%nADAPT
-    append_save = MCO%append
-
-    ! set MCMC options needed for EDC run
-    MCO%APPEND = .false.
-    MCO%nADAPT = 500
-    MCO%fADAPT = 1d0
-    MCO%nOUT = 100000
-    MCO%nPRINT = 0
-    MCO%nWRITE = 0
-    ! the next two lines ensure that parameter inputs are either given or
-    ! entered as-9999
-    MCO%randparini = .true.
-    MCO%returnpars = .true.
-    MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
-
-    ! Set initial priors to vector...
-    ! TODO array for multichain
-    parini = DATAin%parpriors(1:PI%npars)
-    ! ... and assume we need to find random parameters
-    ! Target likelihood allows for controlling when the MCMC will stop
-    P_target = 0d0
-
-    ! if the prior is not missing and we have not told the edc to be random
-    ! keep the value
-!    do n = 1, PI%npars
-!       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
-!    end do  ! parameter loop
-
-    ! set the parameter step size at the beginning
-    MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-    MCOUT%use_multivariate = .false.
-    ! Covariance matrix cannot be set to zero therefore set initial value to a
-    ! small positive value along to variance access
-    MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-    do n = 1, PI%npars
-       MCOUT%covariance(n, n) = 1d0
-    end do
-
-    
-    ! if this is not a restart run, i.e. we do not already have a starting
-    ! position we must being the EDC search procedure to find an ecologically
-    ! consistent initial parameter set
-    if (.not. restart_flag) then  ! TODO outside-only run this fct if not restart
-
-        ! set up edc log likelihood for MHMCMC initial run
-        PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
-        do while (PEDC < 0d0)
-
-           write(*,*)"Beginning EDC search attempt"
-           ! call the MHMCMC directing to the appropriate likelihood function
-           call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
-
-           ! store the best parameters from that loop
-           parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
-           ! turn off random selection for initial values
-           MCO%randparini = .false.
-           write(*,*)"...intermediate EDC search progress check"
-           ! call edc likelihood function to get final edc probability
-           call edc_model_likelihood(parini, PEDC, ML_prior)
-
-           ! keep track of attempts
-           counter_local = counter_local+1
-           ! periodically reset the initial conditions
-           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
-               ! Reset the previous EDC likelihood score
-               PEDC_prev = -1000d0
-               ! Reset parameters back to default
-               parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
-               ! reset to select random starting point
-               MCO%randparini = .true.
-               ! reset the parameter step size at the beginning of each attempt
-               ! TODO make fct initialize stats
-               MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-               ! Covariance matrix cannot be set to zero therefore set initial value to a
-               ! small positive value along to variance access
-               MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-               MCOUT%use_multivariate = .false.
-               do n = 1, PI%npars
-                  MCOUT%covariance(n, n) = 1d0
-               end do
-           else
-               PEDC_prev = PEDC
-           endif
-
-        end do  ! for while condition
-
-    endif  ! if for restart
-
-    ! reset so that currently saved parameters will be used
-    ! starting point in main MCMC
-    ! PI%parfix(1:PI%npars) = 0  ! TODO
-    MCOUT%bestpars = 0d0
-
-  end subroutine find_edc_initial_values
-
   
   !
   !--------------------------------------------------------------------
@@ -1088,7 +964,7 @@ module cardamom_io
     character(350), intent(in):: infile
     type(DATA_type):: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures:: DATAin
 
-    call initialize_parinfo()
+    call initialize_parinfo()  ! TODO not really a file reading thing
     call read_check_binary_data(infile, DATAin)
     call initialize_model(DATAin)
     call set_datain(DATAin)
