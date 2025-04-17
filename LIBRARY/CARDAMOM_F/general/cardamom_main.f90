@@ -113,6 +113,8 @@ program cardamom_framework
  type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
  type(MCMC_OPTIONS):: MCO
 
+ integer:: nchains = 4
+
  ! user update
  write(*,*)"Beginning read of the command line"
 
@@ -255,7 +257,12 @@ program cardamom_framework
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          !call run_mcmc(1d0, StressTest_likelihood, StressTest_sublikelihood)
-         call run_parallel_mcmc(stresstest_sublikelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = 4)
+
+         allocate(MCOUT_list(nchains))
+         MCOUT_list(1) = MCOUT
+         call run_parallel_mcmc(stresstest_sublikelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = nchains)
+         MCOUT = MCOUT_list(1)
+
          ! Use the best parameter set as the starting point for the next stage
 ! REALLY NOT SURE I SHOULD BE DOING THIS-SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
          MCOUT%pars = MCOUT%bestpars
@@ -285,7 +292,9 @@ program cardamom_framework
      ! Let the user know how many more we will propose
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      ! Call the AP-MCMC
+     MCOUT_list(1) = MCOUT
      call run_parallel_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = 4)
+     MCOUT = MCOUT_list(1)
      ! Tell the user the best parameter set
      print*,"Best parameters = ",MCOUT%bestpars
 
@@ -294,7 +303,7 @@ program cardamom_framework
      ! Begin search for initial conditions
      write(*,*) "Beginning search for initial parameter conditions"
      ! Determine initial values, this requires using the AP-MCMC
-     call find_edc_initial_values(MCO, MCOUT) 
+     call find_edc_initial_values(MCO, MCOUT, nchains) 
 
      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
      MCOUT%nos_iterations = 0
@@ -304,12 +313,7 @@ program cardamom_framework
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
-     MCOUT%Nparvar = 1d0; MCOUT%parvar = 0d0
-     MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0
-     MCOUT%cov = .false. ; MCOUT%use_multivariate = .false.
-     do n = 1, PI%npars
-        MCOUT%covariance(n, n) = 1d0
-     end do
+     call reset_stats(MCOUT)
 
      if (restart_flag) then
          ! Restarting an old one
@@ -354,7 +358,9 @@ program cardamom_framework
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          ! TODO model_likelihood function from model_likelihood_module (each model's) does not conform to specs, needs a wrapper 
-         call run_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+         MCOUT_list(1) = MCOUT
+         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+         MCOUT = MCOUT_list(1) 
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
@@ -394,19 +400,21 @@ program cardamom_framework
      ! But to avoid getting through the EDC do_inflate sections before finding
      ! out that the cost_function_scaling has not been set correctly, 
      ! ensure code after the command line read (above) has been correctly maintained
+     MCOUT_list(1) = MCOUT
      if (cost_func_scaling_dble == 0) then
         ! Caution: order of loglikelihood function arguments is being switched so that the first 
         ! function in the (maybe scaled) one to do the sampling calculation with, second optional 
         ! function argument is the one for writing only
      else if (cost_func_scaling_dble == 1) then
-         call run_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
      else if (cost_func_scaling_dble == 2) then
-         call run_mcmc(sqrt_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+         call run_parallel_mcmc(sqrt_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
      else if (cost_func_scaling_dble == 3) then
-         call run_mcmc(log_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+         call run_parallel_mcmc(log_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
      !else if (cost_func_scaling_dble == 4) then
      !    call MHMCMC(1d0, model_likelihood, log_model_likelihood_dtm)
      end if  ! cost_func_scaling_dble == 
+     MCOUT = MCOUT_list(1)
      
      ! Let the user know we are done
      write(*,*)"AP-MCMC done now, moving on ..."
@@ -447,12 +455,12 @@ end subroutine
   !
   !------------------------------------------------------------------
   !
-  subroutine find_edc_initial_values(MCO, MCOUT)  ! TODO move this and others to main loop fcts collection
+  subroutine find_edc_initial_values(MCO, MCOUT, nchains)
     !! subroutine deals with the determination of initial parameter and initial
     !! conditions which are consistent with EDCs
     !! pre-loop, Run MCMC sampler with modified likelihood fct  
     use model_shared, only: PI
-    use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc
+    use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc, run_parallel_mcmc
     !use model_likelihood_module, only: model_likelihood, &
     !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
     use model_likelihood_wrapper  ! TODO next refactoring step
@@ -462,13 +470,17 @@ end subroutine
     implicit none
 
     ! declare local variables
-    type(MCMC_OUTPUT), intent(inout):: MCOUT  ! TODO array
+    integer, intent(in):: nchains
+    type(MCMC_OUTPUT), intent(inout):: MCOUT
+    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
     type(MCMC_OPTIONS), intent(out):: MCO
     integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
     logical:: append_save
     double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
     double precision, dimension(PI%npars):: parini  ! local variable, or array
+
+    allocate(MCOUT_list(nchains))
 
     ! Hold for later
     nOUT_save = MCO%nOUT; nWRITE_save = MCO%nWRITE; nADAPT_save = MCO%nADAPT
@@ -522,7 +534,9 @@ end subroutine
 
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood function
-           call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT, model_likelihood_fct)
+           MCOUT_list(1) = MCOUT
+           call run_parallel_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+           MCOUT = MCOUT_list(1)
 
            ! store the best parameters from that loop
            parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)

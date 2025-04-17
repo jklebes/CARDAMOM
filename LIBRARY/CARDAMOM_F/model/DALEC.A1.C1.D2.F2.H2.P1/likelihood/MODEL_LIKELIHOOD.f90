@@ -361,27 +361,25 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision, dimension((DATAin%nodays+1), DATAin%nopools):: local_pools
     double precision, dimension(DATAin%nodays, DATAin%nofluxes):: local_fluxes
     double precision:: pool_error, flux_error
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
+double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 
     ! Run model
-
+                     
+!print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
-                     
-!print*,"sanity_check: carbon_model done 1"
-    ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,local_fluxes, local_pools, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,M_GPP)
-!print*,"sanity_check: carbon_model done 2"
+    !print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(M_FLUXES-local_fluxes))
     pool_error = sum(abs(M_POOLS-local_pools))
@@ -394,11 +392,11 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1, DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           !print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))  ! TODO
+           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))  ! TODO
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           !print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))  ! TODO
+           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))  ! TODO
         end do
         stop
     end if
@@ -1134,7 +1132,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   double precision function likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: top_soil_depth
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1470,7 +1468,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = (M_POOLS(1, 7) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
+        tot_exp = (M_POOLS(1, 7) * 1d-3) / top_soil_depth  ! convert mm -> m3/m3
         tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         likelihood = likelihood-tot_exp
     end if
@@ -1520,7 +1518,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   double precision function scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: top_soil_depth
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1868,7 +1866,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = (M_POOLS(1, 7) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
+        tot_exp = (M_POOLS(1, 7) * 1d-3) / top_soil_depth  ! convert mm -> m3/m3
         tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -1917,7 +1915,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   double precision function sqrt_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: top_soil_depth
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2265,7 +2263,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = (M_POOLS(1, 7) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
+        tot_exp = (M_POOLS(1, 7) * 1d-3) / top_soil_depth  ! convert mm -> m3/m3
         tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -2314,7 +2312,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   double precision function log_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness
+    use carbon_model_mod, only: top_soil_depth
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2662,7 +2660,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! field capacity so here is were that soil water at t = 1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = (M_POOLS(1, 7) * 1d-3) / layer_thickness(1)  ! convert mm -> m3/m3
+        tot_exp = (M_POOLS(1, 7) * 1d-3) / top_soil_depth  ! convert mm -> m3/m3
         tot_exp = DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if

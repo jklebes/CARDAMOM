@@ -18,38 +18,6 @@ module CARBON_MODEL_MOD
   ! See function/subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
-  ! make all private
-  private
-
-  ! explicit publics
-  public:: CARBON_MODEL     &
-           ,layer_thickness  &
-           ,wSWP_time        &
-           ,rSWP_time        &
-           ,cica_time        &
-           ,root_depth_time        &
-           ,gs_demand_supply_ratio &
-           ,gs_total_canopy        &
-           ,gb_total_canopy        &
-           ,canopy_par_MJday_time  &
-           ,soil_par_MJday_time &
-           ,snow_storage_time&
-           ,soil_frac_clay   &
-           ,soil_frac_sand   &
-           ,nos_soil_layers  &
-           ,dim_1, dim_2      &
-           ,nos_trees        &
-           ,nos_inputs       &
-           ,leftDaughter     &
-           ,rightDaughter    &
-           ,nodestatus       &
-           ,xbestsplit       &
-           ,nodepred         &
-           ,bestvar
-
-  !!!!!!!!!
-  ! Parameters
-  !!!!!!!!!
 
   ! useful technical parameters
   double precision, parameter:: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
@@ -166,7 +134,18 @@ module CARBON_MODEL_MOD
        canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
     canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
 
-  double precision:: minlwp = minlwp_default
+  contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine CARBON_MODEL(start, finish, met, pars, deltat, nodays, lat, lai_out, NEE, FLUXES, POOLS &
+                         ,nopars, nomet, nopools, nofluxes, GPP)
+
+  !!!!!!!!!
+  ! Parameters-now all local to main carbon_model function 
+  !!!!!!!!!
+
+  double precision:: minlwp 
 
   ! Photosynthetic Metrics
   double precision, allocatable, dimension(:):: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
@@ -312,13 +291,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
 
-  contains
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine CARBON_MODEL(start, finish, met, pars, deltat, nodays, lat, lai_out, NEE, FLUXES, POOLS &
-                         ,nopars, nomet, nopools, nofluxes, GPP)
-
     ! The Data Assimilation Linked Ecosystem Carbon-Combined Deciduous
     ! Evergreen Analytical-ACMv2-BUCKET (DALEC_CDEA_ACM2_BUCKET) model.
     ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
@@ -331,7 +303,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! on burned fraction and fixed combusion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
-    implicit none
 
     ! declare input variables
     integer, intent(in):: start    &
@@ -493,6 +464,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
 !    ! Debugging print statements
 !    print*,"carbon_model: "
+    minlwp = minlwp_default
+    lai_out = 0d0
+    GPP = 0d0
+    NEE = 0d0
 
     ! Set some initial states
     infi = 0d0; FLUXES = 0d0; POOLS = 0d0
@@ -842,6 +817,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            ! on average below freezing, so some snow based on proportion of temperture
            ! below freezing
+           !TODO made up value !! to fix missing initialization
+           airt_zero_fraction = 0.5d0
            snowfall = rainfall * (1d0-airt_zero_fraction); rainfall = rainfall-snowfall
            ! Add rainfall to the snowpack and clear rainfall variable
            snow_storage = snow_storage + (snowfall*seconds_per_step)
@@ -1197,7 +1174,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    ! Debugging print statements
 !    print*,"carbon_model: done"
 
-  end subroutine CARBON_MODEL
+contains
   !
   !------------------------------------------------------------------
   !
@@ -3446,4 +3423,5 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !
 !--------------------------------------------------------------------
 !
+  end subroutine CARBON_MODEL
 end module CARBON_MODEL_MOD

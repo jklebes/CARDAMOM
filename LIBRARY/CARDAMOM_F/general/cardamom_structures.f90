@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Describes module variables containing critical declarable types to support passing
@@ -150,6 +150,10 @@ public:: data_type, DATAin, set_datain,  emulator_parameters, emulator_pars
                 ,nNBE                   & ! number of net biome exchange of CO2
                 ,nfAPAR                 & ! number of fAPAR by green vegetation
                 ,nharvest                 ! number of harvest observations
+  
+
+      double precision, dimension(:), allocatable:: soil_frac_clay, soil_frac_sand  ! clay and soil fractions of soil-
+      ! initial value as read from input file.  
 
       ! saving computational speed by allocating memory to model output
       double precision, allocatable, dimension(:):: M_GPP    & !

@@ -444,8 +444,8 @@ module cardamom_io
   !
     subroutine read_binary_data(infile, DATAin)
       use cardamom_structures, only: DATA_type
-      use CARBON_MODEL_MOD, only: soil_frac_clay, soil_frac_sand &
-                                 ,nos_soil_layers
+    !  use CARBON_MODEL_MOD, only: soil_frac_clay, soil_frac_sand &  ! now part of DATAin 
+      use CARBON_MODEL_MOD, only: nos_soil_layers
 
     ! subroutine opens and reads the binary data files provided by/for the
     ! CARDAMOM framework. This data is then loaded into the DATAin type
@@ -505,10 +505,12 @@ module cardamom_io
     nopars_dummy = int(statdat(10))  ! needed for next dev stage
     ! Assume 3 soil layers only and that the
     ! top soil layer is assigned the top soil condition
-    soil_frac_sand(1) = statdat(12)  ! top soil sand percentage
-    soil_frac_sand(2:nos_soil_layers) = statdat(13)  ! bot
-    soil_frac_clay(1) = statdat(14)  ! top soil clay percentage
-    soil_frac_clay(2:nos_soil_layers) = statdat(15)  ! bot
+    allocate(DATAin%soil_frac_sand(nos_soil_layers))
+    allocate(DATAin%soil_frac_clay(nos_soil_layers))
+    DATAin%soil_frac_sand(1) = statdat(12)  ! top soil sand percentage
+    DATAin%soil_frac_sand(2:nos_soil_layers) = statdat(13)  ! bot
+    DATAin%soil_frac_clay(1) = statdat(14)  ! top soil clay percentage
+    DATAin%soil_frac_clay(2:nos_soil_layers) = statdat(15)  ! bot
     ! call for model specific values
     call cardamom_model_library(DATAin)
 
