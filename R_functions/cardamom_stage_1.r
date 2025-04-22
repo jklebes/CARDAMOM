@@ -287,7 +287,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                              lag_var_name_out = "Cwood_mortality_lag")                      
            # Surface soil water content (m3/m3)
 #           soilwater_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-#                                                             soilwater_initial_source,path_to_soil_water,prefix = "soil_water_m3m3_",
+#                                                             soilwater_source,path_to_soil_water,prefix = "soil_water_m3m3_",
 #                                                             as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
 #                                                             est_var_name_in = "soil_moisture",
 #                                                             unc_var_name_in = "soil_moisture_SD",

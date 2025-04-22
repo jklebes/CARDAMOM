@@ -1334,7 +1334,10 @@ module model_likelihood_module
   !
   double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, snow_storage_time
+    use carbon_model_mod, only: layer_thickness, &
+                              snow_storage_time, & 
+                          canopy_par_MJday_time, &
+                                sw_par_fraction
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1348,7 +1351,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
-    double precision, dimension(DATAin%nodays) :: mid_state
+    double precision, dimension(DATAin%nodays) :: mid_state, model_vec, obs_vec, unc_vec
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1427,7 +1430,7 @@ module model_likelihood_module
            s = ((DATAin%steps_per_year*(y-1))+1) ; f = (DATAin%steps_per_year*y)
            where (DATAin%GPP(s:f) > -9998d0) sub_time = 1d0
            if (sum(sub_time) > 0d0) then
-               ! Determine the current years mean NBE from observations and model
+               ! Determine the current years mean GPP from observations and model
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
@@ -1449,6 +1452,16 @@ module model_likelihood_module
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        likelihood = likelihood-tot_exp
     endif
+
+    ! fAPAR Log-likelihood
+    if (DATAin%nfAPAR > 0) then
+        model_vec = canopy_par_MJday_time / (DATAin%met(4,:)*sw_par_fraction)
+        tot_exp = sum(((model_vec(DATAin%fAPARpts(1:DATAin%nfAPAR))-DATAin%fAPAR(DATAin%fAPARpts(1:DATAin%nfAPAR))) &
+                       /DATAin%fAPAR_unc(DATAin%fAPARpts(1:DATAin%nfAPAR)))**2)
+        ! Update the likelihood
+        likelihood = likelihood-tot_exp
+    endif
+
 !print*,"likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
@@ -1736,7 +1749,10 @@ module model_likelihood_module
   !
   double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, snow_storage_time
+    use carbon_model_mod, only: layer_thickness, &
+                              snow_storage_time, & 
+                          canopy_par_MJday_time, &
+                                sw_par_fraction
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -1750,7 +1766,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
-    double precision, dimension(DATAin%nodays) :: mid_state
+    double precision, dimension(DATAin%nodays) :: mid_state, model_vec, obs_vec, unc_vec
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -1858,6 +1874,16 @@ module model_likelihood_module
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
     endif
+
+    ! fAPAR Log-likelihood
+    if (DATAin%nfAPAR > 0) then
+        model_vec = canopy_par_MJday_time / (DATAin%met(4,:)*sw_par_fraction)
+        tot_exp = sum(((model_vec(DATAin%fAPARpts(1:DATAin%nfAPAR))-DATAin%fAPAR(DATAin%fAPARpts(1:DATAin%nfAPAR))) &
+                       /DATAin%fAPAR_unc(DATAin%fAPARpts(1:DATAin%nfAPAR)))**2)
+        ! Update the likelihood
+        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nfAPAR))
+    endif
+
 !print*,"scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
@@ -2148,7 +2174,10 @@ module model_likelihood_module
   !
   double precision function sqrt_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, snow_storage_time
+    use carbon_model_mod, only: layer_thickness, &
+                              snow_storage_time, & 
+                          canopy_par_MJday_time, &
+                                sw_par_fraction
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2162,7 +2191,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
-    double precision, dimension(DATAin%nodays) :: mid_state
+    double precision, dimension(DATAin%nodays) :: mid_state, model_vec, obs_vec, unc_vec
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -2270,6 +2299,16 @@ module model_likelihood_module
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nEvap)))
     endif
+
+    ! fAPAR Log-likelihood
+    if (DATAin%nfAPAR > 0) then
+        model_vec = canopy_par_MJday_time / (DATAin%met(4,:)*sw_par_fraction)
+        tot_exp = sum(((model_vec(DATAin%fAPARpts(1:DATAin%nfAPAR))-DATAin%fAPAR(DATAin%fAPARpts(1:DATAin%nfAPAR))) &
+                       /DATAin%fAPAR_unc(DATAin%fAPARpts(1:DATAin%nfAPAR)))**2)
+        ! Update the likelihood
+        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nfAPAR)))
+    endif
+
 !print*,"sqrt_scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
@@ -2560,7 +2599,10 @@ module model_likelihood_module
   !
   double precision function log_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: layer_thickness, snow_storage_time
+    use carbon_model_mod, only: layer_thickness, &
+                              snow_storage_time, & 
+                          canopy_par_MJday_time, &
+                                sw_par_fraction
 
     ! calculates the likelihood of of the model output compared to the available
     ! observations which have been input to the model
@@ -2574,7 +2616,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, dn, y, s, f
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
-    double precision, dimension(DATAin%nodays) :: mid_state
+    double precision, dimension(DATAin%nodays) :: mid_state, model_vec, obs_vec, unc_vec
     double precision, dimension(DATAin%steps_per_year) :: sub_time
     double precision, allocatable :: mean_annual_pools(:)
 
@@ -2682,6 +2724,16 @@ module model_likelihood_module
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nEvap))))
     endif
+
+    ! fAPAR Log-likelihood
+    if (DATAin%nfAPAR > 0) then
+        model_vec = canopy_par_MJday_time / (DATAin%met(4,:)*sw_par_fraction)
+        tot_exp = sum(((model_vec(DATAin%fAPARpts(1:DATAin%nfAPAR))-DATAin%fAPAR(DATAin%fAPARpts(1:DATAin%nfAPAR))) &
+                       /DATAin%fAPAR_unc(DATAin%fAPARpts(1:DATAin%nfAPAR)))**2)
+        ! Update the likelihood
+        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nfAPAR))))
+    endif
+
 !print*,"log_scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then

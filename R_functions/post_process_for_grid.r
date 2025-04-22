@@ -1489,6 +1489,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   if (any(check_list == "soil_assim_data_overlap_fraction")) {
       site_output$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction
   }
+  if (any(check_list == "fapar_assim_data_overlap_fraction")) {
+      site_output$fapar_assim_data_overlap_fraction = states_all$fapar_assim_data_overlap_fraction
+  }  
   if (any(check_list == "et_assim_data_overlap_fraction")) {
       site_output$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction
   }
@@ -1538,6 +1541,21 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
       site_output$lai_m2m2_to_harvest_gCm2day_correlation = states_all$lai_m2m2_to_harvest_gCm2day_correlation
+  }
+
+  # Correlations between NBP and key gross and net fluxes
+  site_output$NBP_gCm2day_to_GPP_gCm2day_correlation = states_all$NBP_gCm2day_to_GPP_gCm2day_correlation
+  site_output$NBP_gCm2day_to_NEE_gCm2day_correlation = states_all$NBP_gCm2day_to_NEE_gCm2day_correlation
+  site_output$NBP_gCm2day_to_lai_m2m2_correlation = states_all$NBP_gCm2day_to_lai_m2m2_correlation           
+  site_output$NBP_gCm2day_to_Rauto_gCm2day_correlation = states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation
+  site_output$NBP_gCm2day_to_Rhet_gCm2day_correlation = states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation
+  site_output$NBP_gCm2day_to_wood_gCm2_correlation = states_all$NBP_gCm2day_to_wood_gCm2_correlation
+  site_output$NBP_gCm2day_to_som_gCm2_correlation = states_all$NBP_gCm2day_to_som_gCm2_correlation
+  site_output$NBP_gCm2day_to_dCwood_gCm2_correlation = states_all$NBP_gCm2day_to_dCwood_gCm2_correlation
+  site_output$NBP_gCm2day_to_dCsom_gCm2_correlation = states_all$NBP_gCm2day_to_dCsom_gCm2_correlation  
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      site_output$NBP_gCm2day_to_harvest_gCm2day_correlation = states_all$NBP_gCm2day_to_harvest_gCm2day_correlation
   }
 
   # If the correlation between wood MTT and wood allocation have been determined

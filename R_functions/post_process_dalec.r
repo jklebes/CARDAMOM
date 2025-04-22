@@ -169,6 +169,23 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$harvest_gCm2day))
   }
 
+  # Correlations between NBP and key gross and net fluxes
+  states_all$NBP_gCm2day_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$gpp_gCm2day))
+  states_all$NBP_gCm2day_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$nee_gCm2day))
+  states_all$NBP_gCm2day_to_lai_m2m2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$lai_m2m2))
+  states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rauto_gCm2day))
+  states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rhet_gCm2day))
+  states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$wood_gCm2))
+  states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$som_gCm2))
+  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
+  states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
+  states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      states_all$NBP_gCm2day_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$harvest_gCm2day))
+  }
+
   # Determine whether have have both mean transit time and allocation to wood
   if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
       # As both exist determine their correlations with parameters...
@@ -427,6 +444,34 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
           states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction / nobs
       } else {
           states_all$soil_assim_data_overlap_fraction = 0
+      }
+  } # was the obs assimilated?
+
+  ## fAPAR (0-1)
+  obs_id = 23 ; unc_id = obs_id+1
+  if (any(drivers$obs[,obs_id] != -9999)) {
+      # Loop through time to assess model overlap with observations
+      nobs = 0 ; states_all$fapar_assim_data_overlap_fraction = 0
+      to_do = which(drivers$obs[,obs_id] != -9999)
+      for (a in 1:length(to_do)) {
+           # Assign correct time step
+           t = to_do[a]
+           # Estimate the min / max values for the observations
+           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
+           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           # Create list object containing each observations distributions
+           # NOTE 0.5 is assumed fraction of shortwave radiation that is PAR
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$APAR_MJm2day[,t]/(drivers$met[,4]*0.5))
+           # Estimate average model ensemble within observated range
+           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+           states_all$fapar_assim_data_overlap_fraction = states_all$fapar_assim_data_overlap_fraction + tmp2
+           nobs = nobs + 1
+           } # time loop
+      # Average the overlap
+      if (nobs > 0) {
+          states_all$fapar_assim_data_overlap_fraction = states_all$fapar_assim_data_overlap_fraction / nobs
+      } else {
+          states_all$fapar_assim_data_overlap_fraction = 0
       }
   } # was the obs assimilated?
 

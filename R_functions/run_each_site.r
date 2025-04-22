@@ -130,7 +130,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           dummy = 0 ; return(dummy)
       } else {
           # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-          num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
           na_flag = TRUE
 
           # Run post-processing for gridded analysis

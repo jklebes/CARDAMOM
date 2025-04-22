@@ -67,7 +67,7 @@ regrid_func<-function(var1_in, epsg_in, lat_in, long_in, cardamom_ext) {
         }
 
         # Create raster with the target crs (technically this bit is not required)
-        target = rast(crs = cardamom_grid_type, ext = ext(var1), resolution = res(var1))
+        target = rast(crs = epsg_in, ext = ext(var1), resolution = res(var1))
 
         # Check whether the target and actual analyses have the same CRS
         if (compareGeom(var1,target) == FALSE) {
@@ -172,7 +172,7 @@ regrid_gdal_func<-function(tmp_dir, var1_in, epsg_in, lat_in, long_in, cardamom_
         }
 
         # Create raster with the target crs (technically this bit is not required)
-        target = raster(crs = cardamom_grid_type, ext = ext(var1), resolution = res(var1))
+        target = raster(crs = epsg_in, ext = ext(var1), resolution = res(var1))
         # Check whether the target and actual analyses have the same CRS
         if (compareCRS(var1,target) == FALSE) {
             # Resample to correct grid
@@ -189,7 +189,7 @@ regrid_gdal_func<-function(tmp_dir, var1_in, epsg_in, lat_in, long_in, cardamom_
             writeRaster(var1, outfile_tmp, format = "GTiff", overwrite=TRUE)
             # Carry out aggregation using gdal libraries
             gdal_translate(src_dataset = outfile_tmp, dst_dataset = outfile_agg,
-                           a_srs = gsub("epsg","EPSG",cardamom_grid_type), of = "GTiff", tr = res(cardamom_ext),
+                           a_srs = gsub("epsg","EPSG",epsg_in), of = "GTiff", tr = res(cardamom_ext),
                            r = "average")
 #            gdalwarp(srcfile = outfile_tmp, dstfile = outfile_agg,
 #                     a_srs = "EPSG:4326", of = "GTiff", tr = res(cardamom_ext),

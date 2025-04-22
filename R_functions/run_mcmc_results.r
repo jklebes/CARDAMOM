@@ -807,6 +807,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
 #          if (any(check_list == "soil_assim_data_overlap_fraction") == TRUE) {
               grid_output$soil_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 #          }
+#          if (any(check_list == "fapar_assim_data_overlap_fraction") == TRUE) {
+              grid_output$fapar_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+#          }              
 #          if (any(check_list == "et_assim_data_overlap_fraction") == TRUE) {
               grid_output$et_assim_data_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 #          }
@@ -836,9 +839,20 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$lai_m2m2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$lai_m2m2_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           grid_output$lai_m2m2_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          # Assess within pixel correlations with NBP
+          grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_NEE_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
+          grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))     
           # If harvest 
           if (any(check_list == "harvest_gCm2day")) {
               grid_output$lai_m2m2_to_harvest_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+              grid_output$NBP_gCm2day_to_harvest_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           }                                        
           # If CiCa
           if (any(check_list == "CiCa_parameter_correlation") == TRUE) {

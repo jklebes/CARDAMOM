@@ -52,6 +52,7 @@ module CARBON_MODEL_MOD
   ! explicit publics
   public :: CARBON_MODEL     &
            ,layer_thickness  &
+           ,sw_par_fraction  &
            ,leafT_time       &
            ,soilT_time       &
            ,wSWP_time        &

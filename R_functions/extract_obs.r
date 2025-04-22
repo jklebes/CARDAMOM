@@ -976,12 +976,12 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
-    ## Get initial soil water fraction prior (initial conditions)
+    ## Get soil water fraction (m3/m3 vol.)
 
-    if (soilwater_initial_source == "site_specific") {
-        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
-        soilwater = read_site_specific_obs("soil_water_fraction",infile)
-        soilwater_unc = read_site_specific_obs("soil_water_unc_fraction",infile)
+    if (soilwater_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
+        soilwater = read_site_specific_obs("soil_water_m3m3",infile)
+        soilwater_unc = read_site_specific_obs("soil_water_unc_m3m3",infile)
         soilwater_lag = read_site_specific_obs("soil_water_lag",infile)
         if (soilwater_unc == -9999 & soilwater > 0) {
           # on the other hand if not then we have no uncertainty info, so use default
@@ -991,9 +991,6 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
           # on the other hand if not then we have no uncertainty info, so use default
           soilwater_lag = 0
         }        
-#    } else if (soilwater_initial_source == "GLEAM") {
-#        output = extract_soilwater_initial(spatial_type,resolution,grid_type,latlon_wanted,soilwater_all)
-#        soilwater = output$soil_water ; soilwater_unc = output$soil_water_unc
     } else {
         # assume no data available
         soilwater = -9999 ; soilwater_unc = -9999 ; soilwater_lag = -9999

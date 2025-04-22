@@ -59,7 +59,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_Cwood") == FALSE)                 {path_to_Cwood <<- " "}
   if (exists("path_to_Cwood_initial") == FALSE)         {path_to_Cwood_initial <<- " "}
   if (exists("path_to_Cwood_potential") == FALSE)       {path_to_Cwood_potential <<- " "}
-  if (exists("path_to_gleam") == FALSE)                 {path_to_gleam <<- " "}
+  if (exists("path_to_soilwater") == FALSE)             {path_to_soilwater <<- " "}
   if (exists("path_to_nbe") == FALSE)                   {path_to_nbe <<- " "}
   if (exists("path_to_gpp") == FALSE)                   {path_to_gpp <<- " "}
   if (exists("path_to_et") == FALSE)                    {path_to_et <<- " "}
@@ -74,7 +74,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("lai_source") == FALSE)                    {lai_source <<- " "}
   if (exists("fapar_source") == FALSE)                  {fapar_source <<- " "}
   if (exists("Csom_source") == FALSE)                   {Csom_source <<- " "}
-  if (exists("soilwater_initial_source") == FALSE)      {soilwater_initial_source <<- " "}
+  if (exists("soilwater_source") == FALSE)              {soilwater_source <<- " "}
   if (exists("et_source") == FALSE)                     {et_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
   if (exists("Cwood_mortality_source") == FALSE)        {Cwood_mortality_source <<- " "}
@@ -155,7 +155,7 @@ check_control_file_defaults<-function(paths) {
   if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
   if (Cwood_initial_source != "site_specific" & Cwood_initial_source != " " & path_to_Cwood_initial == " ")      {stop(paste("specified 'Cwood_initial_source' and 'path_to_Cwood_initial' incompatible"))}
   if (Cwood_potential_source != "site_specific" & Cwood_potential_source != " " & path_to_Cwood_potential == " "){stop(paste("specified 'Cwood_potential_source' and 'path_to_Cwood_potential' incompatible"))}
-  if (soilwater_initial_source != "site_specific" & soilwater_initial_source != " " & path_to_gleam == " ")      {stop(paste("specified 'soilwater_initial_source' and 'path_to_gleam' incompatible"))}
+  if (soilwater_source != "site_specific" & soilwater_source != " " & path_to_soilwater == " ")                  {stop(paste("specified 'soilwater_source' and 'path_to_soilwater' incompatible"))}
   if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
   if (gpp_source != "site_specific" & gpp_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'gpp_source' and 'path_to_gpp' incompatible"))}
   if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}

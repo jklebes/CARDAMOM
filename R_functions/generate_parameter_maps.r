@@ -96,28 +96,28 @@ generate_parameter_maps<-function(PROJECT) {
           par_array_tmp = par_array_tmp[actual_forests,]
           par_array_tmp = array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
 
+          # Determine the number of pixels to be in the subsample.
+          # 2000 sites is an arbitary selection.
+          subsample_frac = min(0.1,2000/PROJECT$nosites)
           # Looping to find preference_input, the preferenceRange() returns 2 values,
           # the first of which minimises the number of clusters, while the seconds
           # would return as many clusters as there are observations. It is the
           # responsibility of the user to ensure the most appropriate use of these
           # information to result in an appropriate number of clusters for error propagation
-          tmp = 0
+          tmp = 0 
           for (i in seq(1,3)) {
-               tmp = append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],0.05*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
+               tmp = append(tmp,preferenceRange(negDistMat(par_array_tmp[sample(1:dim(par_array_tmp)[1],subsample_frac*dim(par_array_tmp)[1], replace=FALSE),],r=2))[1])
           } ; preference_input = max(mean(tmp[-1]), median(tmp[-1]))
           #print(paste("q = ",preference_input))
-          # Determine the number of pixels to be in the subsample.
-          # 1500 sites is an arbitary selection.
-          subsample_frac = min(0.1,1500/PROJECT$nosites)
           # Conduct the affinity propagation clustering analysis.
           # convits = how many iterations to wait for a change in clustering before cancelling process.
           # maxits  = maximum number of iteration to perform regardless or clustering still changing
           # frac    = if set, clustering is done on a randomly selected sub-sample of pixels. The sub-sample is the fraction specified.
           # sweeps  = if frac set, how many times to repeat the subsampling processes
-          grid_output$cluster_analysis = apclusterL(negDistMat(r=2), par_array_tmp, frac = subsample_frac, sweeps = 3, p = preference_input, maxits=200, convits=20)
+          grid_output$cluster_analysis = apclusterL(negDistMat(r=2), par_array_tmp, frac = subsample_frac, sweeps = 3, p = preference_input, maxits=250, convits=20)
           #grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
-          grid_output$nos_clusters=length(grid_output$cluster_analysis@clusters) ; grid_output$clusters_exemplars=grid_output$cluster_analysis@exemplars
-          grid_output$clusters=array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
+          grid_output$nos_clusters = length(grid_output$cluster_analysis@clusters) ; grid_output$clusters_exemplars=grid_output$cluster_analysis@exemplars
+          grid_output$clusters = array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
           for (i in seq(1,length(grid_output$cluster_analysis@clusters))) {
                grid_output$clusters[actual_forests[grid_output$cluster_analysis@clusters[[i]]]] = i
           }
