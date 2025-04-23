@@ -1,9 +1,8 @@
-module test_DEMCz
+Module test_DEMCz
   use testdrive, only : new_unittest, unittest_type, error_type, check
   use DEMCz_module
   use test_functions
   implicit none
-  private
 
   public:: collect_DEMCztests
 
@@ -19,27 +18,16 @@ subroutine collect_DEMCztests(testsuite)
   type(unittest_type), allocatable, intent(out):: testsuite(:)
 
   testsuite = [ &
-    new_unittest("addition", test_test), &
     new_unittest("Options_type", test_MCO), &
     new_unittest("random_int", test_random_int), &
     new_unittest("metropolis_choice", test_metropolis_choice), &
     new_unittest("metropolis_increase", test_metropolis_increase), &
-    new_unittest("metropolis_stochastic", test_metropolis_stochastic) &
+    new_unittest("metropolis_stochastic", test_metropolis_stochastic), &
+    new_unittest("DEMcz runs", test_DEMcz_runs), &
+    new_unittest("DEMcz runs with omp threads", test_DEMcz_runs_enforce_omp) &
     ]
 
 end subroutine collect_DEMCztests
-
-subroutine test_test(error)
-  implicit none
-  type(error_type), allocatable, intent(out):: error
-
-  call check(error, 1+2 == 3)
-  if (allocated(error)) return
-
-  ! equivalent to the above
-  call check(error, 1+2, 3)
-  if (allocated(error)) return
-end subroutine test_test
 
 subroutine test_MCO(error)
   type(error_type), allocatable, intent(out):: error
@@ -63,7 +51,7 @@ subroutine test_metropolis_choice(error)
   !> Metropolis chioce function takes two log(!) likelihoods
   !> and returns logical
   !> The first argument is the new/proposed loglikelihood
-    use DEMCz_module, only: metropolis_choice
+    use samplers_shared, only: metropolis_choice
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! certain acceptance of state with probability 1 vs 0
@@ -76,10 +64,10 @@ subroutine test_metropolis_choice(error)
   subroutine test_metropolis_increase(error)
     !> We are maximizing ll
     !> unconditional acceptance if new ll is bigger
-      use DEMCz_module, only: metropolis_choice
+      use samplers_shared, only: metropolis_choice
       implicit none
       type(error_type), allocatable, intent(out):: error
-      ! certain accept if new(first) ll is bigger
+      ! certain accept if new (first argument) ll is bigger
       call check(error, metropolis_choice(1.1_dp, 1.0_dp), .true. )
   end subroutine test_metropolis_increase
 
@@ -87,7 +75,7 @@ subroutine test_metropolis_stochastic(error)
   !> Metropolis chioce function takes two log(!) likelihoods
   !> and returns logical
   !> The first argument is the new/proposed loglikelihood
-    use DEMCz_module, only: metropolis_choice
+      use samplers_shared, only: metropolis_choice
     implicit none
     type(error_type), allocatable, intent(out):: error
     double precision:: new_loglikelihood, old_loglikelihood, accept_ratio
@@ -107,7 +95,6 @@ subroutine test_metropolis_stochastic(error)
     accept_ratio  = accept_count/real(N)
     write (*,*) accept_count
     write (*,*) accept_ratio
-
     call check(error, accept_ratio > .4  .and. accept_ratio < .6)
   end subroutine test_metropolis_stochastic
 
@@ -116,26 +103,40 @@ subroutine test_metropolis_stochastic(error)
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
-    ! it returns/modifies no info; it writes to file
 
-    type(PARINFO):: PI
     type(DEMCzOPT):: options
+     !! new DEMCZ options struct with default values
     type(MCMC_OUTPUT):: DEMCzOUT 
+     !! new (blank) struct to write results to
+    
+    ! PI: use the PI_xy struct from test_functions quadratic potential
+    call init_pi()
 
+    options%nout = 10
 
-   
-    ! single chain
-    options%nadapt = 100
-    options%MAXITER = 1000
-    options%N_chains = 1
-    options%differential_weight = 0.8
-
-    call DEMCz(ll_normal, PI, Options, DEMCzOUT)
-
-    ! multi-chain
-    options%N_chains = 4
-    call DEMCz(ll_normal, PI, Options, DEMCzOUT)
+    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
     
   end subroutine test_DEMCz_runs
+
+  subroutine test_DEMCz_runs_enforce_omp(error)
+    use DEMCz_module, only: DEMCz, PARINFO  
+    implicit none
+    type(error_type), allocatable, intent(out):: error
+    ! test the main DEMCz function just runs when given a function
+
+    type(DEMCzOPT):: options
+     !! new DEMCZ options struct with default values
+    type(MCMC_OUTPUT):: DEMCzOUT 
+     !! new (blank) struct to write results to
+    
+    ! PI: use the PI_xy struct from test_functions quadratic potential
+    call init_pi()
+
+    call omp_set_num_threads(4)
+    options%nout = 10
+
+    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT, nchains_in = 4)
+    
+  end subroutine test_DEMCz_runs_enforce_omp
 
 end module test_DEMCz

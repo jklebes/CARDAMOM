@@ -24,6 +24,9 @@ LIBRARY/zbrent-testcompile/
 **/*gprof*.txt
 examine/
 **/*.RData
+*notes*.md
+doc/
+
 ## potential copyright issue
 CARDAMOM_F/misc/brent_zero/cardamom_zbrent.*
 
