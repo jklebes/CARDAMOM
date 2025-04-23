@@ -1,6 +1,7 @@
 Module test_DEMCz
   use testdrive, only : new_unittest, unittest_type, error_type, check
-  use DEMCz_module
+  use DEMCz
+  use model_shared, only : PI
   use test_functions
   implicit none
 
@@ -38,7 +39,7 @@ end subroutine
 
 ! TODO move to common
 subroutine test_random_int(error)
-  use DEMCz_module, only: random_int
+  use DEMCz, only: random_int
   implicit none
   type(error_type), allocatable, intent(out):: error
   integer:: r
@@ -99,7 +100,6 @@ subroutine test_metropolis_stochastic(error)
   end subroutine test_metropolis_stochastic
 
   subroutine test_DEMCz_runs(error)
-    use DEMCz_module, only: DEMCz, PARINFO  
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
@@ -114,12 +114,11 @@ subroutine test_metropolis_stochastic(error)
 
     options%nout = 10
 
-    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+    call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
     
   end subroutine test_DEMCz_runs
 
   subroutine test_DEMCz_runs_enforce_omp(error)
-    use DEMCz_module, only: DEMCz, PARINFO  
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
@@ -135,7 +134,7 @@ subroutine test_metropolis_stochastic(error)
     call omp_set_num_threads(4)
     options%nout = 10
 
-    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT, nchains_in = 4)
+    call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT, nchains_in = 4)
     
   end subroutine test_DEMCz_runs_enforce_omp
 
