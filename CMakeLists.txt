@@ -5,7 +5,7 @@ project(CARDAMOM VERSION 1.0 #TODO
   LANGUAGES Fortran)
 enable_language(Fortran)
 
-add_compile_options(-ffree-line-length-0 -g -pg)
+add_compile_options(-ffree-line-length-0 -g -pg -Wuninitialized -Wmaybe-uninitialized)
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
