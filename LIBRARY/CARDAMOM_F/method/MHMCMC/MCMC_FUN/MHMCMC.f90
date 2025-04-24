@@ -292,9 +292,7 @@ contains
            endif
            ! Keep count of the number of accepted proposals in this local period
            N%ACCLOC = N%ACCLOC + 1d0
-           ! Accepted proposal from multivariate
-           !TLS:2025if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
-
+           ! Update the new prior likelihoods for the observations and priors
            P0 = P ; P0prior = Pprior
 
        else 
@@ -341,18 +339,7 @@ contains
 
            ! Second, are we in the adaption phase? 
            ! Adapt if we are still within the burn in period or we still have not found a viable covariance matrix
-           !TLS:2025if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
            if (burn_in_period > N%ITER .or. .not.PI%use_multivariate) then           
-
-!TLS:2025               ! Once covariance matrix has been created just update based on a
-!               ! single parameter set from each period.
-!               if (PI%cov) then
-!                   N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
-!               else if (.not.PI%cov .and. N%ACCLOC > 3d0) then
-!                   PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
-!                   PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
-!                   N%ACCLOC = 3d0
-!               endif
 
                ! Until the covariance has been first created be selective about the variables being fed 
                ! into the matrix. Then let everything feed into the matrix for learning.

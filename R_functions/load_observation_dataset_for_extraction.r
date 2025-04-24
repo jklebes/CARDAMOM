@@ -380,14 +380,14 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         # based on them not being those with uncertainty...
         est_input_files = input_files[grepl("uncertainty", input_files) == FALSE]
         # ...and any lagged files
-        est_input_files = est_input_files[grepl("lag", input_files) == FALSE]        
+        est_input_files = est_input_files[grepl("lag", est_input_files) == FALSE]        
         # As we are using geotifs, we need to be sure we have matching estimate
         # and uncertainty files. Assuming we have asked for an uncertainty variable.
         if (unc_var_name_in != "") {
             unc_input_files = input_files[grepl("uncertainty", input_files)]
             if (length(est_input_files) != length(unc_input_files)) {
                 stop(paste("The number of estimate files for ",prefix,
-                           " and its uncertainty ",prefix,"_uncertainty do not match",sep=""))
+                           " and its uncertainty ",prefix,"uncertainty do not match",sep=""))
             }
             std_present = TRUE
         } else {
@@ -397,10 +397,10 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         # and lag files. Assuming we have asked for an lag variable.
         if (lag_var_name_in != "") {
             lag_input_files = input_files[grepl("lag", input_files)]
-            if (length(est_input_files) > 0 & length(est_input_files) != length(lag_input_files)) {
+            if (length(lag_input_files) > 0 & length(est_input_files) != length(lag_input_files)) {
                 stop(paste("The number of estimate files for ",prefix,
-                           " and its lag ",prefix,"_lag do not match",sep=""))
-            } else if (length(est_input_files) == 0) {
+                           " and its lag ",prefix,"lag do not match",sep=""))
+            } else if (length(lag_input_files) == 0) {
                 lag_present = FALSE
             } else {
                 lag_present = TRUE
