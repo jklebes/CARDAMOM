@@ -108,7 +108,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine sub_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine sub_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
@@ -128,6 +128,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
 
@@ -186,7 +187,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine sqrt_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine sqrt_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: carbon_model, mvs
     use cardamom_structures, only: DATAin
@@ -206,6 +207,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
 
@@ -264,7 +266,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine log_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine log_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
@@ -284,6 +286,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
 
@@ -1019,7 +1022,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
@@ -1039,6 +1042,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
 

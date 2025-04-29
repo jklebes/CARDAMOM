@@ -96,11 +96,12 @@ contains
 
       ! the function to minimize  ! TODO change name to loglikelihood everywehere
       interface
-    subroutine model_likelihood(param_vector, n, ML)
+    subroutine model_likelihood(param_vector, n, ML, id)
          implicit none
          double precision, dimension(n), intent(inout):: param_vector
          integer, intent(in):: n
          double precision, intent(out):: ML
+         integer, intent(in), optional:: id
     end subroutine model_likelihood
     end interface
       
@@ -263,11 +264,12 @@ contains
     ! the function, vector of normalized par values -> loglikelihood
 
     interface
-    subroutine model_likelihood(param_vector, n, ML)
+    subroutine model_likelihood(param_vector, n, ML, id)
          implicit none
          double precision, dimension(n), intent(inout):: param_vector
          integer, intent(in):: n
          double precision, intent(out):: ML
+         integer, intent(in), optional:: id
     end subroutine model_likelihood
     end interface
 

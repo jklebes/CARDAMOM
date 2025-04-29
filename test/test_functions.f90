@@ -8,10 +8,11 @@ module test_functions
 contains
 
 ! A test function E = A*(x-x_0)^2+B*(y-y_0)^2 
-subroutine ll_normal(pars, npars, res)
+subroutine ll_normal(pars, npars, res, id)
   integer, intent(in):: npars 
 double precision, dimension(npars), intent(inout):: pars  ! has to be inout because of C compatibilty
 double precision, intent(out):: res
+integer, intent(in), optional:: id
 double precision:: x, y  ! the pars to fit
 double precision:: x_0, y_0  ! The correct, energy/loglikelihood-minimizing answer will be x = x0, y = y0
 double precision:: A, B 

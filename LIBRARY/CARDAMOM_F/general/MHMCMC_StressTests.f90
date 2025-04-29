@@ -345,13 +345,14 @@ module MHMCMC_StressTests
 
   end subroutine prepare_for_stress_test
 
-  subroutine stresstest_likelihood_fct(params, npars, loglikelihood) bind(c, name="C_stresstest_likelihood") 
+  subroutine stresstest_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_stresstest_likelihood") 
     !! wrapper to make stresstest_likelihood function compatible with cardamom-samplers lib, C, R
   use iso_c_binding
   implicit none
   integer(c_int), intent(in)  :: npars
   real(c_double), intent(inout), dimension(npars):: params
   real(c_double), intent(out):: loglikelihood
+  integer(c_int), intent(in), optional:: id
 
   real(c_double):: ML_obs_out, ML_prior_out
   call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
@@ -362,7 +363,7 @@ module MHMCMC_StressTests
   !
   !------------------------------------------------------------------
   !
-  subroutine StressTest_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine StressTest_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
 use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -377,6 +378,7 @@ use cardamom_structures, only: DATAin
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
 
     ! local variables
     double precision:: output
@@ -400,7 +402,7 @@ use cardamom_structures, only: DATAin
 
   end subroutine StressTest_likelihood
 
-  subroutine stresstest_sublikelihood_fct(params, npars, loglikelihood)
+  subroutine stresstest_sublikelihood_fct(params, npars, loglikelihood, id)
     !! wrapper to make stresstest_likelihood function compatible with cardamom-samplers lib, C, R
   use iso_c_binding
   implicit none
@@ -409,6 +411,7 @@ use cardamom_structures, only: DATAin
   real(c_double), intent(out):: loglikelihood
 
   real(c_double):: ML_obs_out, ML_prior_out
+  integer(c_int), intent(in), optional:: id
 
   call stresstest_sublikelihood(params, ML_obs_out, ML_prior_out)
 
@@ -419,7 +422,7 @@ use cardamom_structures, only: DATAin
   !
   !------------------------------------------------------------------
   !
-  subroutine StressTest_sublikelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine StressTest_sublikelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
 use cardamom_structures, only: DATAin
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
@@ -436,6 +439,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    integer, intent(in), optional:: thread_id
 
     ! local variables
     double precision:: output

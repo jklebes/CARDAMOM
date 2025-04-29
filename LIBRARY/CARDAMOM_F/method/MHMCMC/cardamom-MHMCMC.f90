@@ -163,11 +163,12 @@ contains
       ! the function to minimize  ! TODO change name to loglikelihood everywhere
       ! Completely agnostic, samples any functions pars -> loglikelihood
       interface
-    subroutine model_likelihood(param_vector, n, ML)
+    subroutine model_likelihood(param_vector, n, ML, id)
          implicit none
          double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
          integer, intent(in):: n
          double precision, intent(out):: ML
+         integer, intent(in), optional:: id
     end subroutine model_likelihood
     end interface! 
     !optionally  give a second function with same shape as model_likelihood, 
@@ -295,11 +296,12 @@ contains
     !double precision, dimension(PI%npars, PI%npars):: convariance
 
     interface
-    subroutine model_likelihood(param_vector, n, ML)
+    subroutine model_likelihood(param_vector, n, ML, id)
          implicit none
          double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
          integer, intent(in):: n
          double precision, intent(out):: ML
+         integer, intent(in), optional:: id
     end subroutine model_likelihood
     end interface
 
@@ -449,7 +451,7 @@ contains
        if (bounds_check(PI, PARS_proposed)) then
            ! calculate the model likelihood
            ! TODO ideally output just one likelihood value
-           call model_likelihood(PARS_proposed, npars, loglikelihood_proposed)
+           call model_likelihood(PARS_proposed, npars, loglikelihood_proposed, chainid)
            accept = metropolis_choice(loglikelihood_proposed, loglikelihood_previous)
        else
            accept = .false.
