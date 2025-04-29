@@ -37,10 +37,10 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use cardamom_structures, only: DATAin
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: mvs, carbon_model
 
     ! Model likelihood function specifically intended for the determination of
     ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
@@ -55,6 +55,7 @@ double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, ML_prior_out
+    integer, intent(in), optional:: thread_id
 
     ! declare local variables
     integer ::  n
@@ -78,7 +79,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(thread_id)) 
 !print*,"edc_model_likelihood: carbon_model done"
     ! assess post running EDCs
     call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
@@ -109,7 +110,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   subroutine sub_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model, 
@@ -155,7 +156,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1)) 
 !print*,"sub_model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -187,7 +188,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   subroutine sqrt_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: carbon_model, mvs
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model, 
@@ -233,7 +234,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1))
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -265,7 +266,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   subroutine log_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible for running the model, 
@@ -311,7 +312,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1))
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -344,7 +345,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   subroutine model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
     use cardamom_structures, only: DATAin
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: mvs, carbon_model
 
     ! Carries out multiple carbon model iterations using the same parameter set
     ! to ensure that model outputs are consistent between iterations, i.e. that
@@ -373,12 +374,12 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1))
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,local_fluxes, local_pools, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1))
     !print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(M_FLUXES-local_fluxes))
@@ -1020,7 +1021,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   subroutine model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+    use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -1065,7 +1066,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,M_GPP, mVs(1))
 !print*,"model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then

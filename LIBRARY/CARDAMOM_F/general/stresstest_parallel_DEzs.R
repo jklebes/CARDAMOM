@@ -115,6 +115,9 @@ parallel::clusterEvalQ(out_parallel[["setup"]][["likelihood"]][["cl"]], out_ <- 
 settings = list(iterations = iter, startValue=4 , message = TRUE)
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
+# Result : 60x slower with 4 cores than with parallel=FALSE.  
+# There is syncronizing and information sharing between chains
+# Not faster because the circle stresstest likleihood function is trivial
 
 # compare 
 bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 

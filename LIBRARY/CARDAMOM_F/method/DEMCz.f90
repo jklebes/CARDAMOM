@@ -1,4 +1,4 @@
-module DEMCz
+module DEMCz_module
 
    !!!!!!!!!!!
    ! MC differential evolution z algorithm
@@ -81,7 +81,7 @@ contains
    !> IN: OPT type(DEMCz) collection of sampling options
    !> OUT: MCOUT type(DEMCzOUT) collection of results
    !> Also writes history to file/output stream and progress to console.  
-   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart_in, nchains_in)
+   subroutine DEMCz(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart_in, nchains_in)
     implicit none
 
       !! input and output structs
@@ -304,4 +304,4 @@ contains
       random_int = floor(N*r)+1
    end function
 
-end module DEMCz
+end module DEMCz_module

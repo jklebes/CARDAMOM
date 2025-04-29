@@ -21,8 +21,8 @@ module CARBON_MODEL_MOD
   ! make all private
   private
 
-  ! explicit publics
-  public:: CARBON_MODEL 
+  ! explicit publics: procedures and parameters only
+  public:: CARBON_MODEL, nos_soil_layers, top_soil_depth, mvs
 
   !!!!!!!!!
   ! Parameters
@@ -290,6 +290,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                 rSWP_time, & ! Soil water potential weighted by access water
                                                 wSWP_time    ! Soil water potential weighted by supply of water
   end type
+
+  type(model_working_variables), allocatable, dimension(:):: mVs
 
   contains
   !

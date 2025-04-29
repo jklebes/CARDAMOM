@@ -5,7 +5,7 @@ contains
 ! helpers for use from R-
 
 
-subroutine initialize_stresstest_circlex() bind(c, name = "C_initialize_stresstest_circle")
+subroutine initialize_stresstest_circle() bind(c, name = "C_initialize_stresstest_circle")
   use model_shared, only: PI, initialize_parinfo
   implicit none
   character(len = 350):: infile, outfile
