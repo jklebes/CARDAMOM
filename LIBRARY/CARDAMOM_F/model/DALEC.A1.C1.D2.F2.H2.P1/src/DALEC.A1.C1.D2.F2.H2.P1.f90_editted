@@ -22,7 +22,30 @@ module CARBON_MODEL_MOD
   private
 
   ! explicit publics
-  public:: CARBON_MODEL 
+  public:: CARBON_MODEL     &
+           ,layer_thickness  &
+           ,wSWP_time        &
+           ,rSWP_time        &
+           ,cica_time        &
+           ,root_depth_time        &
+           ,gs_demand_supply_ratio &
+           ,gs_total_canopy        &
+           ,gb_total_canopy        &
+           ,canopy_par_MJday_time  &
+           ,soil_par_MJday_time &
+           ,snow_storage_time&
+           ,soil_frac_clay   &
+           ,soil_frac_sand   &
+           ,nos_soil_layers  &
+           ,dim_1, dim_2      &
+           ,nos_trees        &
+           ,nos_inputs       &
+           ,leftDaughter     &
+           ,rightDaughter    &
+           ,nodestatus       &
+           ,xbestsplit       &
+           ,nodepred         &
+           ,bestvar
 
   !!!!!!!!!
   ! Parameters
@@ -168,7 +191,7 @@ module CARBON_MODEL_MOD
                                                             bestvar    ! for randomForests
 
   ! hydraulic model variables
-  integer:: water_retention_pass
+  integer:: water_retention_pass, soil_layer
   double precision, dimension(nos_soil_layers):: soil_frac_clay, soil_frac_sand  ! clay and soil fractions of soil
   double precision, dimension(nos_root_layers):: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
@@ -312,8 +335,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! declare input variables
     integer, intent(in):: start    &
                           ,finish   &
@@ -528,7 +550,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! check positive values only for rainfall input
            mV%rainfall_time(n) = max(0d0, met(7, n))
            ! calculate daylength in hours and seconds
-           call calculate_daylength((met(6, n)-(deltat(n)*0.5d0)), lat, mV)
+           call calculate_daylength((met(6, n)-(deltat(n)*0.5d0)), lat)
            mV%daylength_hours(n) = mV%dayl_hours; mV%daylength_seconds(n) = mV%dayl_seconds
         end do
 
@@ -549,9 +571,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! zero variables not done elsewhere
         mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
-        call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand, mV)
-        call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand, mV)
-        call update_soil_initial_conditions(pars(24), mV)
+        call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand)
+        call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand)
+        call update_soil_initial_conditions(pars(24))
         ! save the initial conditions for later
         mV%soil_waterfrac_initial = mV%soil_waterfrac
         mV%SWP_initial = mV%SWP
@@ -572,7 +594,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! input initial soil water fraction then
         ! update SWP and soil conductivity accordingly
-        call update_soil_initial_conditions(pars(24), mV)
+        call update_soil_initial_conditions(pars(24))
 
     endif  ! deltat_1 allocated
 
@@ -759,7 +781,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%days_per_step_1 =  mV%deltat_1(1)
 
     ! calculate some temperature dependent meteorologial properties
-    call meteorological_constants(mV%leafT, mV%leafT+freeze, mV%vpd_kPa, mV)
+    call meteorological_constants(mV%leafT, mV%leafT+freeze, mV%vpd_kPa)
 
     ! Initialise root reach based on initial coarse root biomass
     mV%fine_root_biomass = max(min_root, POOLS(1, 3)*2d0)
@@ -773,9 +795,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%layer_thickness(4) = top_soil_depth
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
-    call calculate_Rtot(mV)
+    call calculate_Rtot
     call calculate_update_soil_water(transpiration, soilevaporation, snowsublimation, &
-                                     0d0, FLUXES(1, 29), mV)  ! assume no evap or rainfall
+                                     0d0, FLUXES(1, 29))  ! assume no evap or rainfall
     ! Reset variable used to track ratio of water supply used to meet demand
     mV%gs_demand_supply_ratio = 0d0
 
@@ -856,11 +878,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! calculate some temperature dependent meteorologial properties
-       call meteorological_constants(mV%leafT, mV%leafT+freeze, mV%vpd_kPa, mV)
+       call meteorological_constants(mV%leafT, mV%leafT+freeze, mV%vpd_kPa)
        ! pass variables from memory objects
        mV%convert_ms1_mmol_1 = mV%convert_ms1_mol_1*1d3
        ! calculate aerodynamic using consistent approach with SPA
-       call calculate_aerodynamic_conductance(mV)
+       call calculate_aerodynamic_conductance
        ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
        mV%gb_total_canopy(n) = mV%aerodynamic_conductance*mV%convert_ms1_mmol_1 * &
                             mV%leaf_canopy_wind_scaling
@@ -869,7 +891,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
-       call calculate_radiation_balance(mV)
+       call calculate_radiation_balance
        mV%canopy_par_MJday_time(n) = mV%canopy_par_MJday
        mV%soil_par_MJday_time(n) = mV%soil_par_MJday
 
@@ -880,7 +902,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
        if (mV%lai > 0d0) then  ! is this conditional needed?
-           call calculate_wetcanopy_evaporation(wetcanopy_evap, mV%canopy_storage, mV)
+           call calculate_wetcanopy_evaporation(wetcanopy_evap, mV%canopy_storage)
        else
            ! reset pools
            mV%intercepted_rainfall = 0d0; mV%canopy_storage = 0d0; wetcanopy_evap = 0d0
@@ -890,12 +912,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! fine root mass ! *2*2 => *RS*C->Bio
        mV%fine_root_biomass = max(min_root, POOLS(n, 3)*2d0)
        mV%root_biomass = mV%fine_root_biomass+max(min_root, POOLS(n, 4)*pars(25)*2d0)
-       call calculate_Rtot(mV)
+       call calculate_Rtot
        ! Pass wSWP to output variable
        mV%wSWP_time(n) = mV%wSWP; mV%rSWP_time(n) = mV%rSWP; mV%root_depth_time(n) = mV%root_reach
 
        ! calculate radiation absorption and estimate stomatal conductance
-       call calculate_stomatal_conductance(mV)
+       call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum/maximum, i.e. how
        ! close are we to maxing out supply (note 0.01 taken from min_gs)
        mV%gs_demand_supply_ratio(n) = (mV%stomatal_conductance  - mV%minimum_conductance) &
@@ -910,10 +932,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (mV%stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
-           FLUXES(n, 1) = acm_gpp_stage_2(mV%stomatal_conductance, mV) * umol_to_gC*mV%dayl_seconds
+           FLUXES(n, 1) = acm_gpp_stage_2(mV%stomatal_conductance) * umol_to_gC*mV%dayl_seconds
            mV%cica_time(n) = mV%ci/mV%co2
            ! Canopy transpiration (kgH2O/m2/day)
-           call calculate_transpiration(transpiration, mV)
+           call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0, transpiration)
        else
@@ -993,7 +1015,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! do mass balance (i.e. is there enough water to support ET)
        call calculate_update_soil_water(transpiration, soilevaporation, snowsublimation, &
                                         ((mV%rainfall-mV%intercepted_rainfall)*seconds_per_day) &
-                                       ,FLUXES(n, 29), mV)
+                                       ,FLUXES(n, 29))
        ! now that soil mass balance has been updated we can add the wet canopy
        ! evaporation (kgH2O.m-2.day-1)
        FLUXES(n, 29) = FLUXES(n, 29) + wetcanopy_evap
@@ -1190,8 +1212,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! Declare local variables
     double precision:: a, b, c, Pl_max, PAR_m2, airt_ad
 
@@ -1241,15 +1262,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  double precision function acm_gpp_stage_2(gs, mV)
+  double precision function acm_gpp_stage_2(gs)
 
     ! Combine the temperature (pn) and light (pl) limited gross primary productivity
     ! estimates with CO2 supply limited via stomatal conductance (gs).
     ! See acm_gpp_stage_1() for additional details on pn and pl calculation.
 
     implicit none
-
-      type(model_working_variables):: mV
 
     ! declare input variables
     double precision, intent(in):: gs
@@ -1273,27 +1292,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! Combining in series the stomatal and boundary layer conductances
     ! to make canopy resistence (s/m2/molCO2)
-    rc = (gs*gs_H2Ommol_CO2mol) ** (-1d0) + mV%rb_mol_1
+    rc = (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
-    pp = mV%metabolic_limited_photosynthesis*rc; qq = mV%co2_comp_point-mV%co2_half_sat
-    mult = mV%co2+qq-pp
+    pp = metabolic_limited_photosynthesis*rc; qq = co2_comp_point-co2_half_sat
+    mult = co2+qq-pp
     ! calculate internal CO2 concentration (ppm or umol/mol)
-    mV%ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(mV%co2*qq-pp*mV%co2_comp_point)))
+    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! calculate CO2 limited rate of photosynthesis (umolC.m-2.s-1)
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
     !pd = ((co2-ci)/rc) * umol_to_gC*dayl_hours_fraction
-    pd = ((mV%co2-mV%ci)/rc)
+    pd = ((co2-ci)/rc)
 
     !
     ! Estimate CO2 and light co-limitation
     !
 
     ! calculate combined light and CO2 limited photosynthesis (umolC/m2/s)
-    acm_gpp_stage_2 = mV%light_limited_photosynthesis*pd/(mV%light_limited_photosynthesis+pd)
+    acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! Estimate ci as a function of the final combined GPP estimate
     !pp = acm_gpp_stage_2*rc; mult = co2+qq-pp
@@ -1310,7 +1329,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
-  double precision function find_gs_iWUE(gs_in, mV)
+  double precision function find_gs_iWUE(gs_in)
 
     ! Calculate CO2 limited photosynthesis as a function of metabolic limited
     ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
@@ -1320,14 +1339,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! arguments
     double precision, intent(in):: gs_in
 
-      type(model_working_variables):: mV
-
     !!!!!!!!!!
     ! Optimise intrinsic water use efficiency
     !!!!!!!!!!
 
     ! Determine impact of gs increment on pd and how far we are from iWUE
-    find_gs_iWUE = mV%iWUE_step - (acm_gpp_stage_2(gs_in+mV%delta_gs, mV) - acm_gpp_stage_2(gs_in, mV))
+    find_gs_iWUE = iWUE_step - (acm_gpp_stage_2(gs_in+delta_gs) - acm_gpp_stage_2(gs_in))
 
     ! Remember to return back to the user
     return
@@ -1345,8 +1362,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! local variables
     double precision:: denom, iWUE_upper!, iWUE_lower
     double precision, parameter:: max_gs = 1000d0, &  ! mmolH2O.m-2.s-1 (leaf area)
@@ -1404,13 +1420,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
-        call acm_gpp_stage_1(mV)
+        call acm_gpp_stage_1
 
 !        if (do_iWUE) then
             ! Intrinsic WUE optimisation
             ! Check that the water restricted water range brackets the root solution for the bisection
-            iWUE_upper = find_gs_iWUE(mV%potential_conductance, mV) !; iWUE_lower = find_gs_iWUE(min_gs)
-            if ( iWUE_upper*find_gs_iWUE(min_gs, mV) > 0d0 ) then
+            iWUE_upper = find_gs_iWUE(mV%potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
+            if ( iWUE_upper*find_gs_iWUE(min_gs) > 0d0 ) then
                 ! Then both proposals indicate that photosynthesis
                 ! would be increased by greater opening of the stomata
                 ! and is therefore water is limiting!
@@ -1422,7 +1438,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
                 ! In all other cases iterate
                 mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                              find_gs_iWUE_, mV%minimum_conductance, mV%potential_conductance, tol_gs*mV%lai, mV%iWUE_step*0.10d0)
+                                              find_gs_iWUE, mV%minimum_conductance, mV%potential_conductance, tol_gs*mV%lai, mV%iWUE_step*0.10d0)
 
             end if
 
@@ -1434,15 +1450,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! set minimum (computer) precision level flow
         mV%max_supply = vsmall
 
-        
-
     endif  ! if aerodynamic conductance > vsmall
-
-  contains 
-  double precision function find_gs_iWUE_(x)
-    double precision, intent(in):: x
-    find_gs_iWUE_ = find_gs_iWUE(x, mV)
-  end function
 
   end subroutine calculate_stomatal_conductance
   !
@@ -1456,8 +1464,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: input_temperature, input_temperature_K, &
                                     input_vpd_kPa
@@ -1520,8 +1527,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(out):: transpiration  ! kgH2O.m-2.day-1
 
@@ -1570,8 +1576,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(inout):: storage      ! canopy water storage kgH2O/m2
     double precision, intent(out):: wetcanopy_evap  ! kgH2O.m-2.day-1
@@ -1606,7 +1611,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                  / (mV%lambda*(mV%slope+mV%psych))) * mV%dayl_seconds)
 
         ! Update based on canopy water storage
-        call canopy_interception_and_storage(wetcanopy_evap, storage, mV)
+        call canopy_interception_and_storage(wetcanopy_evap, storage)
 
     else
 
@@ -1626,8 +1631,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(out):: potential_evap  ! kgH2O.m-2.day-1
 
@@ -1667,8 +1671,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(out):: soilevap  ! kgH2O.m-2.day-1
 
@@ -1726,8 +1729,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! local variables
     double precision:: local_lai, &
            mixing_length_momentum, & ! mixing length parameter for momentum (m)
@@ -1737,7 +1739,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     local_lai = max(min_lai, mV%lai)
 
     ! calculate the zero plane displacement and roughness length
-    call z0_displacement(mV%ustar_Uh, local_lai, mV)
+    call z0_displacement(mV%ustar_Uh, local_lai)
     ! calculate friction velocity at tower height (reference height ) (m.s-1)
     ! WARNING neutral conditions only; see WRF module_sf_sfclay.F for 'with
     ! stability versions'
@@ -1752,7 +1754,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mixing_length_momentum = 2d0*(mV%ustar_Uh**3)*length_scale_momentum
 
     ! based on Harman & Finnigan (2008); neutral conditions only
-    call log_law_decay(mV)
+    call log_law_decay
 
     ! now we are interested in the within canopy wind speed, 
     ! here we assume that the wind speed just inside of the canopy is most important.
@@ -1764,9 +1766,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                              / (mV%ustar_Uh/mixing_length_momentum)
 
     ! calculate_soil_conductance
-    call calculate_soil_conductance(mixing_length_momentum, local_lai, mV)
+    call calculate_soil_conductance(mixing_length_momentum, local_lai)
     ! calculate leaf level conductance (m/s) for water vapour under forced convective conditions
-    call average_leaf_conductance(mV%aerodynamic_conductance, mV)
+    call average_leaf_conductance(mV%aerodynamic_conductance)
 
   end subroutine calculate_aerodynamic_conductance
   !
@@ -1783,8 +1785,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(out):: gv_forced  ! canopy conductance (m/s) for water vapour under forced convection
 
@@ -1818,8 +1819,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! log law decay, NOTE: given canopy height (9 m) the log function reduces
     ! to a constant value down to ~ 7 decimal place (0.3161471806). Therefore
     ! 1/vonkarman*0.31 = 0.7710906
@@ -1840,8 +1840,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! local variables..
     integer:: i
     double precision:: x1, x2
@@ -1851,14 +1850,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        mV%water_retention_pass = i
        ! field capacity is water content at which SWP = -10 kPa
        mV%field_capacity(i) = zbrent('water_retention:water_retention_saxton_eqns', &
-                                   water_retention_saxton_eqns_, x1, x2, 0.001d0, 0d0 )
+                                   water_retention_saxton_eqns, x1, x2, 0.001d0, 0d0 )
     enddo
-
-    contains
-      double precision function water_retention_saxton_eqns_(x)
-        double precision, intent(in):: x
-        water_retention_saxton_eqns_ = water_retention_saxton_eqns(x, mV)
-      end function
 
   end subroutine calculate_field_capacity
   !
@@ -1871,8 +1864,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: doy, lat
 
@@ -1918,8 +1910,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: canopy_temperature, soil_temperature  ! oC
 
@@ -2081,8 +2072,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! subroutine call ensures that both shortwave and longwave radiation balance
     ! are calculated at the same time but with the more readable code split
     ! between a shortwave and longwave specific subroutines.
@@ -2092,10 +2082,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! radiation
 
     ! Estimate shortwave radiation balance
-    call calculate_shortwave_balance(mV)
+    call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
     !call calculate_longwave_isothermal(meant, meant)
-    call calculate_longwave_isothermal(mV%leafT, mV%soilT, mV)
+    call calculate_longwave_isothermal(mV%leafT, mV%soilT)
 
   end subroutine calculate_radiation_balance
   !
@@ -2115,8 +2105,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! local variables
     double precision:: balance                     &
                        ,transmitted_fraction        &
@@ -2268,8 +2257,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     integer:: i, rooted_layer
 
-      type(model_working_variables):: mV
-    double precision:: transpiration_resistance, root_reach_local, &
+      type(model_working_variables) :: mV    double precision:: transpiration_resistance, root_reach_local, &
                         slpa, mult, prev, exp_func!, root_depth_50, bonus
     double precision, dimension(nos_root_layers):: Rcond_layer, &
                                                     root_mass,  &
@@ -2301,7 +2289,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers
-       call calculate_soil_conductivity(i, mV%soil_waterfrac(i), mV%soil_conductivity(i), mV)
+       call calculate_soil_conductivity(i, mV%soil_waterfrac(i), mV%soil_conductivity(i))
     end do  ! soil layers
 
     !!!!!!!!!!!
@@ -2405,7 +2393,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! calculate and accumulate steady state water flux in mmol.m-2.s-1
            call plant_soil_flow(i, root_length(i), root_mass(i) &
                                ,mV%demand(i), root_reach_local &
-                               ,transpiration_resistance, Rcond_layer(i), mV)
+                               ,transpiration_resistance, Rcond_layer(i))
        else
            ! ...if there is not then we wont have any below...
            exit
@@ -2455,8 +2443,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(inout):: storage, & ! canopy water storage (kgH2O/m2)
                          potential_evaporation    ! wet canopy evaporation (kgH2O.m-2.day-1), 
@@ -2591,8 +2578,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: rainfall_in   ! rainfall (kgH2O.m-2.day-1)
     double precision, intent(inout):: Eleaf, Esoil, Esnow  ! evapotranspiration estimate (kgH2O.m-2.day-1)
@@ -2650,7 +2636,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !drythick = max(min_drythick, top_soil_depth*max(0d0, (1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        mV%drythick = max(min_drythick, top_soil_depth*max(0d0, (1d0 - (mV%soil_waterfrac(1) / mV%porosity(1)))))
        ! Soil surface (kgH2O.m-2.day-1)
-       call calculate_soil_evaporation(Esoil_local, mV)
+       call calculate_soil_evaporation(Esoil_local)
 
        ! If snow present assume that soil evaporation is sublimation of soil first
        if (Esoil_local > 0d0 .and. mV%snow_storage > 0d0) then
@@ -2708,7 +2694,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! if rainfall is probably liquid/soil surface is probably not frozen
        ! reset soil water change variable
        mV%waterchange = 0d0
-       call infiltrate(rainfall_in, mV)
+       call infiltrate(rainfall_in)
        ! update soil profiles. Convert fraction into depth specific values
        ! (rather than m3/m3) then update fluxes
        mV%soil_waterfrac(1:nos_soil_layers) = mV%soil_waterfrac(1:nos_soil_layers) &
@@ -2720,7 +2706,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Determine drainage flux between surface -> sub surface
-       call gravitational_drainage(1, mV)
+       call gravitational_drainage(1)
 
     end do  ! days_per_step
 
@@ -2838,7 +2824,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     endif  ! root reach beyond top layer
 
     ! Update soil water potential
-    call soil_water_potential(mV)
+    call soil_water_potential
 
 !    ! check water balance
 !    balance = (rainfall_in-corrected_ET-underflow-runoff) * days_per_step
@@ -2874,8 +2860,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: rainfall_in  ! rainfall (kg.m-2.day-1)
 
@@ -2927,13 +2912,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     integer, intent(in):: time_period_days
 
     ! local variables..
-    integer:: t, soil_layer
+    integer:: t
     double precision, dimension(nos_soil_layers):: dx, & ! range between the start and end points of the integration
                                                halfway, & ! half way point between start and end point of integration
                                                 liquid, & ! liquid water in local soil layer (m3/m3)
@@ -2968,14 +2952,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     do t = 1, nos_soil_layers
        if (avail_to_flow(t) > 0d0) then
            ! Trapezium rule for approximating integral of drainage rate
-           call calculate_soil_conductivity(t, liquid(t), tmp1, mV)
-           call calculate_soil_conductivity(t, mV%field_capacity(t), tmp2, mV)
-           call calculate_soil_conductivity(t, halfway(t), tmp3, mV)
+           call calculate_soil_conductivity(t, liquid(t), tmp1)
+           call calculate_soil_conductivity(t, mV%field_capacity(t), tmp2)
+           call calculate_soil_conductivity(t, halfway(t), tmp3)
            pot_drainage(t) = 0.5d0*dx(t) * ((tmp1+tmp2) + 2d0*tmp3)
        else
            ! We are at field capacity currently even after rainfall has been infiltrated.
            ! Assume that the potential drainage rate is that at field capacity
-           call calculate_soil_conductivity(t, mV%field_capacity(t), pot_drainage(t), mV)
+           call calculate_soil_conductivity(t, mV%field_capacity(t), pot_drainage(t))
        endif  ! water above field capacity to flow?
     end do  ! soil layers
     ! Scale potential drainage from per second to per day
@@ -2991,24 +2975,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                      - mV%field_capacity(1:nos_soil_layers)
 
        ! ...then from the top down
-       do soil_layer = 1, nos_soil_layers
+       do mV%soil_layer = 1, nos_soil_layers
 
           ! initial conditions; i.e. is there liquid water and more water than
           ! layer can hold
-          if (avail_to_flow(soil_layer) > 0d0 .and. mV%soil_waterfrac(soil_layer+1) < mV%porosity(soil_layer+1)) then
+          if (avail_to_flow(mV%soil_layer) > 0d0 .and. mV%soil_waterfrac(mV%soil_layer+1) < mV%porosity(mV%soil_layer+1)) then
 
               ! Unsaturated volume of layer below (m3 m-2)
-              unsat = ( mV%porosity(soil_layer+1) - mV%soil_waterfrac(soil_layer+1) ) &
-                    * mV%layer_thickness(soil_layer+1) / mV%layer_thickness(soil_layer)
+              unsat = ( mV%porosity(mV%soil_layer+1) - mV%soil_waterfrac(mV%soil_layer+1) ) &
+                    * mV%layer_thickness(mV%soil_layer+1) / mV%layer_thickness(mV%soil_layer)
               ! Restrict potential rate calculate above for the available water
               ! and available space in the layer below.
               ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
-              change = min(unsat, min(pot_drainage(soil_layer), avail_to_flow(soil_layer))) * mV%layer_thickness(soil_layer)
+              change = min(unsat, min(pot_drainage(mV%soil_layer), avail_to_flow(mV%soil_layer))) * mV%layer_thickness(mV%soil_layer)
               ! update soil layer below with drained liquid
-              mV%waterchange( soil_layer+1 ) = mV%waterchange( soil_layer+1 ) + change
-              mV%waterchange( soil_layer     ) = mV%waterchange( soil_layer     ) - change
+              mV%waterchange( mV%soil_layer+1 ) = mV%waterchange( mV%soil_layer+1 ) + change
+              mV%waterchange( mV%soil_layer     ) = mV%waterchange( mV%soil_layer     ) - change
               ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
-              mV%water_grav_flow(soil_layer) = mV%water_grav_flow(soil_layer) + change
+              mV%water_grav_flow(mV%soil_layer) = mV%water_grav_flow(mV%soil_layer) + change
 
           end if  ! some liquid water and drainage possible
 
@@ -3042,8 +3026,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, dimension(nos_soil_layers):: soil_frac_clay &
                                                    ,soil_frac_sand
@@ -3071,8 +3054,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, dimension(nos_soil_layers):: soil_frac_clay &
                                                    ,soil_frac_sand
@@ -3089,9 +3071,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (soil_frac_sand(i) > 70d0) soil_frac_sand(i) = 70d0
     end do
     ! calculate soil porosity (m3/m3)
-    call soil_porosity(soil_frac_clay, soil_frac_sand, mV)
+    call soil_porosity(soil_frac_clay, soil_frac_sand)
     ! calculate field capacity (m3/m-3)
-    call calculate_field_capacity(mV)
+    call calculate_field_capacity
 
     ! final sanity check for porosity
     do i = 1, nos_soil_layers+1
@@ -3111,8 +3093,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(in):: input_soilwater_frac  ! initial soil water status as fraction of field capacity
 
@@ -3128,12 +3109,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! calculate initial soil water fraction
         mV%soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac !* field_capacity(1:nos_soil_layers)
         ! calculate initial soil water potential
-        call soil_water_potential(mV)
+        call soil_water_potential
     endif
 
     ! Seperately calculate the soil conductivity as this applies to each layer
     do i = 1, nos_soil_layers
-       call calculate_soil_conductivity(i, mV%soil_waterfrac(i), mV%soil_conductivity(i), mV)
+       call calculate_soil_conductivity(i, mV%soil_waterfrac(i), mV%soil_conductivity(i))
     end do  ! soil layers
     ! but apply the lowest soil layer to the core as well in initial conditions
     mV%soil_conductivity(nos_soil_layers+1) = mV%soil_conductivity(nos_soil_layers)
@@ -3149,8 +3130,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     integer, intent(in):: soil_layer
     double precision, intent(in):: waterfrac
@@ -3173,8 +3153,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, dimension(nos_soil_layers):: soil_frac_clay &
                                                    ,soil_frac_sand
@@ -3223,8 +3202,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! declare arguments
     double precision, intent(in):: lm, local_lai
 
@@ -3263,8 +3241,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     integer:: i
 
     ! reformulation aims to remove if statement within loop to hopefully improve
@@ -3287,8 +3264,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     double precision, intent(out):: ustar_Uh  ! ratio of friction velocity over wind speed at canopy top
     double precision, intent(in):: local_lai
@@ -3354,8 +3330,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables):: mV
-
+      type(model_working_variables) :: mV
     ! arguments
     integer, intent(in):: root_layer
     double precision, intent(in):: root_length, &
@@ -3441,13 +3416,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  double precision function water_retention_saxton_eqns( xin, mV)
+  double precision function water_retention_saxton_eqns( xin )
 
     ! field capacity calculations for saxton eqns !
 
     implicit none
-
-      type(model_working_variables):: mV
 
     ! arguments..
     double precision, intent(in):: xin
@@ -3456,7 +3429,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision:: soil_wp
 
     ! calculate the soil water potential (kPa)..
-    soil_wp = -mV%potA(mV%water_retention_pass) * xin**mV%potB(mV%water_retention_pass)
+    soil_wp = -potA(water_retention_pass) * xin**potB(water_retention_pass)
     water_retention_saxton_eqns = soil_wp+10d0    ! 10 kPa represents air-entry swp
 
     return
