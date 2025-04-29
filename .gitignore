@@ -25,6 +25,7 @@ LIBRARY/zbrent-testcompile/
 examine/
 **/*.RData
 *notes*.md
+test/data/
 doc/
 
 ## potential copyright issue
