@@ -69,7 +69,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
     ! TODO not check on PI%parini . 
-    if (.not.sanity_check) call model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    if (.not.sanity_check) call model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES, thread_id)
 
     ! call EDCs which can be evaluated prior to running the model
     call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
@@ -157,7 +157,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1)) 
+                     ,M_GPP, mVs(thread_id)) 
 !print*,"sub_model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -236,7 +236,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1))
+                     ,M_GPP, mVs(thread_id))
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -315,7 +315,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1))
+                     ,M_GPP, mVs(thread_id))
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -345,7 +345,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  subroutine model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES, thread_id)
     use cardamom_structures, only: DATAin
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: mvs, carbon_model
@@ -368,6 +368,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
 double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
 double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    integer, intent(in):: thread_id
 
     ! Run model
                      
@@ -377,12 +378,12 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1))
+                     ,M_GPP, mVs(thread_id))
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,local_fluxes, local_pools, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1))
+                     ,M_GPP, mVs(thread_id))
     !print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
     flux_error = sum(abs(M_FLUXES-local_fluxes))
@@ -1070,7 +1071,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                      ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
                      ,M_FLUXES, M_POOLS, DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP, mVs(1))
+                     ,M_GPP, mVs(thread_id))
 !print*,"model_likelihood: carbon_model done"
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then

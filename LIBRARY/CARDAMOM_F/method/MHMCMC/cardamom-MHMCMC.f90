@@ -423,7 +423,7 @@ contains
     ! calculate the initial probability/log likelihood.
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
-    call model_likelihood(PARS_previous, npars, loglikelihood_previous); 
+    call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid)
 
     if (.false. .and. is_infinity(loglikelihood_previous)) then  
         write(*,*) "WARNING  ! loglikelihood = ",loglikelihood_previous, " - &
@@ -497,7 +497,7 @@ contains
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
-               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood)
+               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood, chainid)
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
                                       MCOUT%covariance, &

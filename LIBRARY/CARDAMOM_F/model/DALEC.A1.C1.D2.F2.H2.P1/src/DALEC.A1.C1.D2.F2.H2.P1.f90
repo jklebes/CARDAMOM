@@ -22,7 +22,8 @@ module CARBON_MODEL_MOD
   private
 
   ! explicit publics: procedures and parameters only
-  public:: CARBON_MODEL, nos_soil_layers, top_soil_depth, mvs
+  public:: CARBON_MODEL, initialize_carbon_model, &
+    nos_soil_layers, top_soil_depth, mvs
 
   !!!!!!!!!
   ! Parameters
@@ -294,6 +295,87 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   type(model_working_variables), allocatable, dimension(:):: mVs
 
   contains
+
+  subroutine initialize_carbon_model(nodays, nomet, nopars, deltat, met, lat, n_chains)
+    ! prepare N model_working_variables type objects to hold seperate sets of persistent values for 
+    ! each independent parallel chain
+    integer, intent(in):: nodays, nomet, nopars
+    double precision, intent(in):: deltat(nodays)    ! time step in decimal days
+    double precision, intent(in):: met(nomet, nodays)  ! met drivers
+    double precision, intent(in):: lat  ! site latitude
+    integer, intent(in), optional:: n_chains
+    integer:: n_chains_
+    integer:: i
+    if (present(n_chains)) then
+      n_chains_ = n_chains
+    else
+      n_chains_ = 1
+    endif 
+    allocate(mVs(n_chains))
+    do i = 1, n_chains_
+        call initialize_mv(Mvs(i), nodays, nomet, nopars, deltat, met, lat)
+    end do
+    end subroutine
+
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, met, lat)
+    type(model_working_variables):: mV
+    integer, intent(in):: nodays, nomet, nopars
+    double precision, intent(in):: deltat(nodays)     ! time step in decimal days
+    double precision, intent(in):: met(nomet, nodays)  ! met drivers
+    double precision, intent(in):: lat
+    integer:: n
+        ! allocate variables dimension which are fixed per site only the once
+        allocate(mV%deltat_1(nodays), mV%wSWP_time(nodays), mV%rSWP_time(nodays), mV%gs_demand_supply_ratio(nodays), &
+                 mV%gs_total_canopy(nodays), mV%gb_total_canopy(nodays), mV%canopy_par_MJday_time(nodays), &
+                 mV%soil_par_MJday_time(nodays), &
+                 mV%daylength_hours(nodays), mV%daylength_seconds(nodays), mV%daylength_seconds_1(nodays), &
+                 mV%rainfall_time(nodays), mV%cica_time(nodays), mV%root_depth_time(nodays), mV%snow_storage_time(nodays))
+
+        !
+        ! Timing variables which are needed first
+        !
+
+        mV%deltat_1 = deltat**(-1d0)
+
+        !
+        ! Iteration independent variables using functions and thus need to be in a loop
+        !
+
+        ! first those linked to the time period of the analysis
+        do n = 1, nodays
+           ! check positive values only for rainfall input
+           mV%rainfall_time(n) = max(0d0, met(7, n))
+           ! calculate daylength in hours and seconds
+           call calculate_daylength((met(6, n)-(deltat(n)*0.5d0)), lat, mV)
+           mV%daylength_hours(n) = mV%dayl_hours; mV%daylength_seconds(n) = mV%dayl_seconds
+        end do
+
+        ! calculate inverse for each time step in seconds
+        mV%daylength_seconds_1 = mV%daylength_seconds ** (-1d0)
+        ! fraction of temperture period above freezing
+        mV%airt_zero_fraction_time = (met(3, :)-0d0) / (met(3, :)-met(2, :))
+
+        ! number of time steps per year
+        mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
+        ! mean days per step
+        mV%mean_days_per_step = sum(deltat) / dble(nodays)
+
+        !
+        ! Initialise the water model
+        !
+
+        ! zero variables not done elsewhere
+        mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
+        ! initialise some time invarient parameters
+        call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand, mV)
+        call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand, mV)
+        ! save the initial conditions for later
+        mV%soil_waterfrac_initial = mV%soil_waterfrac
+        mV%SWP_initial = mV%SWP
+        mV%field_capacity_initial = mV%field_capacity
+        mV%porosity_initial = mV%porosity
+  end subroutine
+
   !
   !--------------------------------------------------------------------
   !
@@ -328,7 +410,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in):: met(nomet, nodays) & ! met drivers
                          ,deltat(nodays)    & ! time step in decimal days
                          ,pars(nopars)      & ! number of parameters
-                         ,lat                 ! site latitude (degrees)
+                         ,lat                 ! site latitude (degrees)  ! TODO lat no longer needed after initialize
 
     double precision, dimension(nodays), intent(out):: lai_out & ! leaf area index
                                                              ,GPP & ! Gross primary productivity
@@ -496,7 +578,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%root_k = pars(26); mV%max_depth = pars(27)
 
     ! assigning initial conditions
-    if (start == 1) then
+    if (start == 1) then  ! always called with start = 1
        POOLS(1, 1) = pars(18)  ! labile
        POOLS(1, 2) = pars(19)  ! foliar
        POOLS(1, 3) = pars(20)  ! roots
@@ -506,61 +588,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !POOLS(1, 7) = assigned later  ! soil water (0-10cm)
     endif
 
-    ! Some time consuming variables we only want to set once
+    ! Some time consuming variables we only want to set once TODO move to initialize
     if (.not.allocated(mV%deltat_1)) then
-        ! allocate variables dimension which are fixed per site only the once
-        allocate(mV%deltat_1(nodays), mV%wSWP_time(nodays), mV%rSWP_time(nodays), mV%gs_demand_supply_ratio(nodays), &
-                 mV%gs_total_canopy(nodays), mV%gb_total_canopy(nodays), mV%canopy_par_MJday_time(nodays), &
-                 mV%soil_par_MJday_time(nodays), &
-                 mV%daylength_hours(nodays), mV%daylength_seconds(nodays), mV%daylength_seconds_1(nodays), &
-                 mV%rainfall_time(nodays), mV%cica_time(nodays), mV%root_depth_time(nodays), mV%snow_storage_time(nodays))
-
-        !
-        ! Timing variables which are needed first
-        !
-
-        mV%deltat_1 = deltat**(-1d0)
-
-        !
-        ! Iteration independent variables using functions and thus need to be in a loop
-        !
-
-        ! first those linked to the time period of the analysis
-        do n = 1, nodays
-           ! check positive values only for rainfall input
-           mV%rainfall_time(n) = max(0d0, met(7, n))
-           ! calculate daylength in hours and seconds
-           call calculate_daylength((met(6, n)-(deltat(n)*0.5d0)), lat, mV)
-           mV%daylength_hours(n) = mV%dayl_hours; mV%daylength_seconds(n) = mV%dayl_seconds
-        end do
-
-        ! calculate inverse for each time step in seconds
-        mV%daylength_seconds_1 = mV%daylength_seconds ** (-1d0)
-        ! fraction of temperture period above freezing
-        mV%airt_zero_fraction_time = (met(3, :)-0d0) / (met(3, :)-met(2, :))
-
-        ! number of time steps per year
-        mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
-        ! mean days per step
-        mV%mean_days_per_step = sum(deltat) / dble(nodays)
-
-        !
-        ! Initialise the water model
-        !
-
-        ! zero variables not done elsewhere
-        mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
-        ! initialise some time invarient parameters
-        call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand, mV)
-        call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand, mV)
-        call update_soil_initial_conditions(pars(24), mV)
-        ! save the initial conditions for later
-        mV%soil_waterfrac_initial = mV%soil_waterfrac
-        mV%SWP_initial = mV%SWP
-        mV%field_capacity_initial = mV%field_capacity
-        mV%porosity_initial = mV%porosity
-
     else  ! deltat_1 allocated?
+        call update_soil_initial_conditions(pars(24), mV)
 
         !
         ! Load initial soil water conditions from memory

@@ -58,6 +58,7 @@ program cardamom_framework
  !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
  use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &
      sub_model_likelihood_fct
+ use CARBON_MODEL_MOD, only: initialize_carbon_model
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -180,6 +181,7 @@ program cardamom_framework
      call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
  else
     call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
+    call initialize_carbon_model(DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat,  DATAin%met, DATAin%lat, nchains)
  end if
  ! having filled PI%npars from model file, we can allocate stats array in MCOUT
  call initialize_stats(MCOUT, PI%npars)
@@ -293,7 +295,7 @@ program cardamom_framework
      write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
      ! Call the AP-MCMC
      MCOUT_list(1) = MCOUT
-     call run_parallel_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = 4)
+     call run_parallel_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = nchains)
      MCOUT = MCOUT_list(1)
      ! Tell the user the best parameter set
      print*,"Best parameters = ",MCOUT%bestpars
@@ -474,7 +476,7 @@ end subroutine
     type(MCMC_OUTPUT), intent(inout):: MCOUT
     type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
     type(MCMC_OPTIONS), intent(out):: MCO
-    integer:: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
+    integer:: n, i, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
     logical:: append_save
     double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
@@ -522,7 +524,7 @@ end subroutine
        MCOUT%covariance(n, n) = 1d0
     end do
 
-    
+   ! TODO sort out omp loop over this 
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
@@ -535,6 +537,7 @@ end subroutine
            write(*,*)"Beginning EDC search attempt"
            ! call the MHMCMC directing to the appropriate likelihood function
            MCOUT_list(1) = MCOUT
+           write(*,*) "nchains", nchains
            call run_parallel_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
            MCOUT = MCOUT_list(1)
 
@@ -544,7 +547,11 @@ end subroutine
            MCO%randparini = .false.
            write(*,*)"...intermediate EDC search progress check"
            ! call edc likelihood function to get final edc probability
-           call edc_model_likelihood(parini, PEDC, ML_prior)
+           !$omp parallel do
+           do i = 1, nchains
+           call edc_model_likelihood(parini, PEDC, ML_prior, i)  ! TODO
+           end do
+           !$omp end parallel do
 
            ! keep track of attempts
            counter_local = counter_local+1
