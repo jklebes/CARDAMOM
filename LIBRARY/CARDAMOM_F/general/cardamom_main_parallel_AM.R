@@ -13,16 +13,19 @@
 # 
 # Disadvantages: 
 # - The Roberts and Rosenthal adaptive method with beta is not implemented in R
-# - We have standard R parallelism, i.e. probably threads, not OMP or MPI
-# 
-# I estimate performance should be ok as the model integration is still in fortran;
-# top level sampling loop was not a big factor in performance. 
+#   ; this is not exactly the same as cardamom-samplers adaptive MCMC
+#
+# This script runs parallel adaptive MCMC with parallelism implemented 
+# at R script level rather than by fortran and ompenmp .  
+# It demonstrates that the cardamom dalec model loglikelihood calculation 
+# can be queried in parallel, i.e. is thread safe,
+# and what the performance is like with a standard sampler.
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
-dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
-
+cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
+dyn.load(cardamom_dll)
 
 # command line args : infile, outfile, solution_wanted_char, freq_print_char, &
 #                   freq_write_char, do_inflate_char, cost_func_scaling_char
@@ -76,12 +79,12 @@ print(initial)
 #wrap that .C function to a more usual R function
 cardamom_stresstestcirclelikelihood <- function(pars){
     #print("Calling")
-    npars <- as.integer(11)
     out_ <- 0.0
     ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
-    #l <- -pars[3]**2
+    # l <- -pars[3]**2+model_npars
     #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
 }
+
 
 print("initial loglikelihood:")
 ll <- cardamom_stresstestcirclelikelihood(initial)
@@ -90,26 +93,39 @@ print(ll)
 print("Best loglikelihood would be")
 answers = c(3.14, 1.2, 3, 8, 10, 15, 200, 193, 88, 291, 1)
 print(cardamom_stresstestcirclelikelihood(answers))
+nchains <- 4
+cl <- parallel::makeCluster(nchains)
+#p_likelihood <- function(param) parallel::parApply(cl = cl, X = param, MARGIN = 1, FUN = cardamom_stresstestcirclelikelihood)
+
+# ============= RUN MCMC ===========
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-
 bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
                                      lower = model_parmin,
-                                     upper = model_parmax, parallel=TRUE)
-#print("created setup")
-# ============= RUN MCMC ===========
+                                     upper = model_parmax, 
+                                     parallel=F
+                                     )
+
+# sampler AM works with this outer-level parallelization only.  We run N
+# separate single-chain samplers on N cores.
+
+parallel::clusterEvalQ(cl, library(BayesianTools))
+parallel::clusterExport(cl, "cardamom_dll" )
+parallel::clusterExport(cl, "model_npars" )
+parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
+parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
 iter = 100000
-settings = list(iterations = iter, startValue=initial , message = TRUE)
-out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
 
-print(out$current)
+settings = list(iterations = iter, nrChains=1, message = TRUE)
+#parallel::clusterExport(cl, "bayesianSetup")
+#parallel::clusterExport(cl, "settings")
+# This will be useful for when you want to pass chainId X to function:
+out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
+    bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
 
-out <- runMCMC(out, sampler="AM", settings=settings)
 
-print(out$current)
+out <- createMcmcSamplerList(out)
 plot(out)
 
-# try different samplers: Metropolis, AM, DEzs, ...
-out <- runMCMC(bayesianSetup, sampler="DEzs")
-plot(out$chain[[1]])

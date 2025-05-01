@@ -243,6 +243,7 @@ module MHMCMC_StressTests
   subroutine prepare_for_stress_test(infile, outfile)
     use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
     use cardamom_structures, only: DATA_type, set_datain
+    use cardamom_main_utils, only: initialize_stats
     ! Function by-passes the main CARDAMOM i/o code to allow
     ! for a non-standard operation of the model stress test
 
@@ -298,24 +299,26 @@ module MHMCMC_StressTests
     outfile = "stress_test_output_"
 
     ! need to allocate memory to the model output variables
-    ! ->They are now local variables of model likelihood fcts  ! TODO
-    allocate(DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes)&
-            ,DATAin%M_POOLS((DATAin%nodays+1), DATAin%nopools))
+    ! ->They are now local variables of model likelihood fcts  
+    if (.not.allocated(DATAin%M_FLUXES)) allocate(DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes))
+    if (.not.allocated(DATAin%M_POOLS)) allocate (DATAin%M_POOLS(DATAin%nodays+1, DATAin%nopools))
 
     ! alert the user
     write(*,*)"Created fields for model output"
 
-    ! TODO replace some of this with initialize_stats
     ! Begin allocating parameter info
     PI%npars = DATAin%nopars 
-    allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), MCOUT%pars(PI%npars) &
-            ,PI%parfix(PI%npars), MCOUT%parvar(PI%npars), PI%paradj(PI%npars) &
-            ,MCOUT%covariance(PI%npars, PI%npars), MCOUT%meanpar(PI%npars))
+    if (.not.allocated(MCOUT%parvar)) call initialize_stats(MCOUT, PI%npars)
+
+    if (.not.allocated(PI%parmin)) then
+    allocate(PI%parmin(PI%npars), PI%parmax(PI%npars), &
+             PI%parfix(PI%npars), PI%paradj(PI%npars))
+    endif 
+    if (.not.allocated(MCOUT%pars)) allocate(MCOUT%pars(PI%npars))
 
     ! force zero
     PI%parmin = 0d0; PI%parmax = 0d0; MCOUT%pars = 0d0
-    PI%parfix = .false.; MCOUT%parvar = 0d0; PI%paradj = 0d0
-    MCOUT%covariance = 0d0; 
+    PI%parfix = .false.
 
     ! load parameter max/min information
     if (DATAin%ID == -1) then
@@ -330,16 +333,6 @@ module MHMCMC_StressTests
     ! To facilitate easy of setting parameter ranges to real values
     ! we here instead calculate the adjustment need to ensure positive only values
     where (PI%parmin <= 0d0) PI%paradj = abs(PI%parmin) + 1d0
-
-    ! TODO fct reset_stats(MCOUT)
-    ! defining initial MHMCMC stepsize and standard deviation
-    MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-    ! Covariance matrix cannot be set to zero therefore set initial value to a
-    ! small positive value along to variance access
-    MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false. ; MCOUT%use_multivariate = .false.
-    do i = 1, PI%npars
-       MCOUT%covariance(i, i) = 1d0
-    end do
 
     call set_datain(DATAin)
 

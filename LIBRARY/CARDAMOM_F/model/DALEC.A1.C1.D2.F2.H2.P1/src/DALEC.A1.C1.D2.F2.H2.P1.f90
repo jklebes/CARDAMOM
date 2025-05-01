@@ -296,13 +296,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
   contains
 
-  subroutine initialize_carbon_model(nodays, nomet, nopars, deltat, met, lat, n_chains)
-    ! prepare N model_working_variables type objects to hold seperate sets of persistent values for 
-    ! each independent parallel chain
-    integer, intent(in):: nodays, nomet, nopars
-    double precision, intent(in):: deltat(nodays)    ! time step in decimal days
-    double precision, intent(in):: met(nomet, nodays)  ! met drivers
-    double precision, intent(in):: lat  ! site latitude
+  subroutine initialize_carbon_model(n_chains)
+    !! prepare N model_working_variables type objects to hold seperate sets of persistent values for 
+    !! each independent parallel chain.
+    !! Must have DATAin filled first.
+    use cardamom_structures, only: DATAin
     integer, intent(in), optional:: n_chains
     integer:: n_chains_
     integer:: i
@@ -313,11 +311,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     endif 
     allocate(mVs(n_chains))
     do i = 1, n_chains_
-        call initialize_mv(Mvs(i), nodays, nomet, nopars, deltat, met, lat)
+        call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat, DATAin%met, DATAin%lat)
     end do
     end subroutine
 
   subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, met, lat)
+    !! For a single chain's model_working_varibles type object mV, allocate arrays
+    !! and calculate initial values.  
     type(model_working_variables):: mV
     integer, intent(in):: nodays, nomet, nopars
     double precision, intent(in):: deltat(nodays)     ! time step in decimal days

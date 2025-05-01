@@ -59,6 +59,7 @@ program cardamom_framework
  use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &
      sub_model_likelihood_fct
  use CARBON_MODEL_MOD, only: initialize_carbon_model
+ use cardamom_main_utils
 
  !!!!!!!!!!!
  ! Authorship contributions
@@ -181,10 +182,10 @@ program cardamom_framework
      call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
  else
     call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
-    call initialize_carbon_model(DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat,  DATAin%met, DATAin%lat, nchains)
+    call initialize_carbon_model(nchains)
+    call initialize_stats(MCOUT, PI%npars)
  end if
  ! having filled PI%npars from model file, we can allocate stats array in MCOUT
- call initialize_stats(MCOUT, PI%npars)
 
  ! load module variables needed for restart check
  ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
@@ -274,7 +275,7 @@ program cardamom_framework
          if (MCOUT%cov .and. MCOUT%use_multivariate) then
              MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0 
          else
-             call reset_stats(MCOUT)
+             call reset_stats(MCOUT, PI%npars)
              ! reset the parameter step size at the beginning of each attempt  ! TODO where does this comment come from, to do?
          endif  ! do we need a new covariance matrix or can we use the existing one?
 
@@ -315,7 +316,7 @@ program cardamom_framework
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
-     call reset_stats(MCOUT)
+     call reset_stats(MCOUT, PI%npars)
 
      if (restart_flag) then
          ! Restarting an old one
@@ -432,26 +433,6 @@ program cardamom_framework
  write(*,*)"==========================================================="
  write(*,*)"=========================Honestly=========================="
   contains 
-
-subroutine initialize_stats(MCOUT, npars)
-    use MHMCMC, only: MCMC_OUTPUT
-    integer, intent(in):: npars
-    type(MCMC_OUTPUT), intent(inout):: MCOUT  
-    allocate(MCOUT%covariance(npars, npars), MCOUT%parvar(npars), MCOUT%meanpar(npars))
-    call reset_stats(MCOUT)
-end subroutine 
-subroutine reset_stats(MCOUT)
-    use MHMCMC, only: MCMC_OUTPUT
-    type(MCMC_OUTPUT), intent(inout):: MCOUT  
-             MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-             ! Covariance matrix cannot be set to zero therefore set initial
-             ! value to a small positive value along to variance access
-             MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-             MCOUT%use_multivariate = .false.
-             do n = 1, PI%npars
-                MCOUT%covariance(n, n) = 1d0
-             end do
-end subroutine 
 
 
   !

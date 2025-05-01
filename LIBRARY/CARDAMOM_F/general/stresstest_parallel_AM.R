@@ -25,34 +25,14 @@ cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
 dyn.load(cardamom_dll)
 
 
-# command line args : infile, outfile, solution_wanted_char, freq_print_char, &
-#                   freq_write_char, do_inflate_char, cost_func_scaling_char
-
-
-#derived variables:  5 of these as int, 
-# do_inflate flag 
-
-# some checks on input args 
-
-# ======= INIT ===========  
-# random seed - for R library sampler 
-
-
-# read_pari_data (also get npars and allocates arrays based on npars - shouldnt 
-#                 should instead just check npars in data matches npars in model)
-
-# read_options 
-# check files for restart
-# ~~initialise_mcmc_output~~
-# ~~open_output_files~~
-# ~~ buffering to prepare output streams~~ ... all to be outsourced to R mcmc data collection
-
 ## ----- Pass model to R ----------
 out_ <- .C("C_initialize_stresstest_circle")
 
 # TODO keep R wrappers in a different file
 #model_name <- .C("getmodelname")
-model_npars <- as.integer(10)
+
+out <- as.integer(0)
+model_npars <- .C("C_getmodelnpars", out)[[1]]
 
 out <- rep(as.numeric(0), model_npars)
 model_parmin <- .C("C_getstresstestparmin", npars=model_npars, out)[[2]]
@@ -62,9 +42,17 @@ model_parmax <- .C("C_getstresstestparmax", npars=model_npars, out)[[2]]
 print("Fetched model parmax")
 print(model_parmax)
 
-
 get_initial <- function(){
     initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
+}
+
+#wrap that .C function to a more usual R function
+cardamom_stresstestcirclelikelihood <- function(pars){
+    #print("Calling")
+    out_ <- 0.0
+    ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
+    # l <- -pars[3]**2+model_npars
+    #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
 }
 
 # call modellikelihood once as a test
@@ -72,41 +60,43 @@ print("random initial:")
 initial <- get_initial()
 print(initial)
 #print(ll0)
-
-
-#wrap that .C function to a more usual R function
-cardamom_stresstestcirclelikelihood <- function(pars){
-    #print("Calling")
-    npars <- as.integer(11)
-    out_ <- 0.0
-    ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
-    #l <- -pars[3]**2
-    #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
-}
-
-
 print("initial loglikelihood:")
 ll <- cardamom_stresstestcirclelikelihood(initial)
 print(ll)
 
-print("Best loglikelihood would be")
-answers = c(3.14, 1.2, 3, 8, 10, 15, 200, 193, 88, 291, 1)
-print(cardamom_stresstestcirclelikelihood(answers))
-pLikelihood <- function(param) parallel::parApply(cl = cl, X = pars, MARGIN = 1, FUN = cardamom_stresstestcirclelikelihood)
+nchains <- 4
+cl <- parallel::makeCluster(nchains)
+
 # ============= RUN MCMC ===========
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-nchains <- ncores
 bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
                                      lower = model_parmin,
                                      upper = model_parmax, 
-                                     parallel=ncores, #auto parallelism - works with DEzs
+                                     parallel=F
                                      )
-iter = 100000
-settings = list(iterations = iter, startValue=4 , message = TRUE)
-out <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-# Result : 6x slower with 4 cores than with parallel=FALSE.  
-# There is syncronizing and information sharing between chains
-# Not faster because the circle stresstest likleihood function is trivial
+# sampler AM works with this outer-level parallelization only.  We run N
+# separate single-chain samplers on N cores.
+
+parallel::clusterEvalQ(cl, library(BayesianTools))
+parallel::clusterExport(cl, "cardamom_dll" )
+parallel::clusterExport(cl, "model_npars" )
+parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
+parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
+iter = 100000
+
+settings = list(iterations = iter, nrChains=1, message = TRUE)
+#parallel::clusterExport(cl, "bayesianSetup")
+#parallel::clusterExport(cl, "settings")
+
+# This will be useful for when you want to pass chainId X to function:
+out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
+    bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
+
+
+out <- createMcmcSamplerList(out)
+plot(out)
+
