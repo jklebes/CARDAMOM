@@ -47,12 +47,14 @@ program cardamom_framework
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
-                        close_output_files, write_covariance_info
+                        close_output_files, write_covariance_info, &
+                        update_obs_scaling_normal, update_obs_scaling_nsamples, &
+                        update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, &
-                                    find_edc_initial_values, &
-                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
+                                    scaled_model_likelihood, &
+                                    find_edc_initial_values
 
  ! Created: Anthony A. Bloom
  ! Major modification history:
@@ -64,6 +66,7 @@ program cardamom_framework
  ! Version 1.4: Pre-APMCMC phase using normalised likelihoods added by T. L. Smallman
  !            : Pre-APMCMC allows for rapidly moving towards observations from very bad starting points.
  ! Version 1.5: Added options for varied scaling approaches for the cost function (e.g. division by sample size (i.e. n), sqrt(n), 1+log(n))
+ ! Version 1.6: Created a more harmonized workflow of model likelihood calculations where the scaling is calculated in main and just used.
  ! Specific citations for developments included in the code.
 
  ! This is the main subroutine for the CARDAMOM framework. The specific model
@@ -284,10 +287,11 @@ program cardamom_framework
      ! Reset the MCMC parameters for the next stage
      call read_options(solution_wanted,freq_print,freq_write,outfile)
 
-     ! Reset stepsize and covariance for main DRAM-MCMC
+     ! Reset stepsize and covariance variables
      PI%Nparvar = 0d0 ; PI%parvar = 0d0
      PI%covariance = 0d0 ; PI%mean_par = 0d0
      PI%cov = .false. ; PI%use_multivariate = .false.
+     ! Initialise the covariance matrix diagnal
      do n = 1, PI%npars
         PI%covariance(n,n) = 1d0
      end do
@@ -334,7 +338,8 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
+         call update_obs_scaling_nsamples
+         call MHMCMC(1d0,model_likelihood,scale_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          MCO%fixedpars  = .true.
@@ -372,17 +377,20 @@ program cardamom_framework
      ! out that the cost_function_scaling has not been set correctly, 
      ! ensure code after the command line read (above) has been correctly maintained
      if (cost_func_scaling_dble == 0) then
-         call MHMCMC(1d0,model_likelihood,model_likelihood)
+         call update_obs_scaling_normal
      else if (cost_func_scaling_dble == 1) then
-         call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
+         (tot_exp/dble(DATAin%nnbe))   
+         call update_obs_scaling_nsamples
      else if (cost_func_scaling_dble == 2) then
-         call MHMCMC(1d0,model_likelihood,sqrt_model_likelihood)
+         (tot_exp/sqrt(dble(DATAin%nnbe)))
+         call update_obs_scaling_sqrt_nsamples
      else if (cost_func_scaling_dble == 3) then
-         call MHMCMC(1d0,model_likelihood,log_model_likelihood)
-     !else if (cost_func_scaling_dble == 4) then
-     !    call MHMCMC(1d0,model_likelihood,log_model_likelihood_dtm)
+         (tot_exp/(1d0+log(dble(DATAin%nnbe))))         
+         call update_obs_scaling_log_nsamples
      end if ! cost_func_scaling_dble == 
-     
+     ! Run the mcmc analysis
+     call MHMCMC(1d0,model_likelihood,scale_model_likelihood)
+
      ! Let the user know we are done
      write(*,*)"AP-MCMC done now, moving on ..."
 

@@ -34,7 +34,8 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                                                   years_to_load,
                                                   est_var_name_in,unc_var_name_in,
                                                   lag_var_name_in,est_var_name_out,
-                                                  unc_var_name_out,lag_var_name_out) {
+                                                  unc_var_name_out,lag_var_name_out,
+                                                  default_lag) {
 
     # Select data_source option
     if (data_source == "Gridded_nc") {
@@ -341,7 +342,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
       # Set dummy value for the output uncertainty if required
       if (std_present == FALSE) {std_out = -9999} 
       # Set default value for the lag period if required, i.e. 0 day
-      if (lag_present == FALSE) {lag_out = array(as.integer(0), dim=c(xdim,ydim,length(doy_out)))} #  
+      if (lag_present == FALSE) {lag_out = array(as.integer(default_lag), dim=c(xdim,ydim,length(doy_out)))} #  
       if (length(missing_years) == 0) {missing_years = -9999}
 
       # Create output object
@@ -618,7 +619,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         # Set dummy value for the output uncertainty if required
         if (std_present == FALSE) {std_out = -9999} 
         # Set a default value for the output lag if required, 0 day.
-        if (lag_present == FALSE) {lag_out = array(as.integer(0), dim=c(xdim,ydim,length(doy_out)))} #  
+        if (lag_present == FALSE) {lag_out = array(as.integer(default_lag), dim=c(xdim,ydim,length(doy_out)))} #  
         if (length(missing_years) == 0) {missing_years = -9999}
 
         # Create output object

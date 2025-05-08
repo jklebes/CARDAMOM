@@ -140,7 +140,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
             stop("A non-valid function has been specified for the extract_timeseries_observations_with_uncertainty()")
        }
        # Convert the lag periods into model time steps
-       obs_lag_agg = pmax(1,obs_lag_agg / mean(timestep_days))
+       obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))
        # update with new output information
        obs_out = obs_agg ; obs_unc_out = obs_unc_agg ; obs_lag_out = obs_lag_agg
        # clean up
@@ -249,7 +249,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
             stop("A non-valid function has been specified for the extract_timeseries_observations_without_uncertainty()")
        }
        # Convert the lag periods into model time steps
-       obs_lag_agg = pmax(1,obs_lag_agg / mean(timestep_days))       
+       obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))       
        # update with new output information
        obs_out = obs_agg ; obs_lag_out = obs_lag_agg
        # clean up

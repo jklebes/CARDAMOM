@@ -124,9 +124,9 @@ contains
     ! the interface allows for making the requirements of this explicit
     interface
       subroutine model_likelihood_option(param_vector, ML_obs_out, ML_prior_out)
-        use cardamom_structures, only: DATAin, emulator_pars
+        use cardamom_structures, only: DATAin
         use MCMCOPT, only: PI
-        use CARBON_MODEL_MOD, only: carbon_model
+        use carbon_model_mod, only: carbon_model
            implicit none
            ! declare input variables
            double precision, dimension(PI%npars), intent(inout) :: param_vector
@@ -137,9 +137,9 @@ contains
 
     interface
       subroutine model_likelihood_default(param_vector, ML_obs_out, ML_prior_out)
-        use cardamom_structures, only: DATAin, emulator_pars
+        use cardamom_structures, only: DATAin
         use MCMCOPT, only: PI
-        use CARBON_MODEL_MOD, only: carbon_model
+        use carbon_model_mod, only: carbon_model
            implicit none
            ! declare input variables
            double precision, dimension(PI%npars), intent(inout) :: param_vector

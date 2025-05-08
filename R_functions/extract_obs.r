@@ -148,7 +148,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             lai_unc[which(lai != -9999)] = 0.25
         }
         if (max(lai_lag) == -9999) {
-            lai_lag = rep(0,times = length(lai))
+            lai_lag = rep(1,times = length(lai))
         }        
     } else {
         # Set missing data value
@@ -227,7 +227,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(Cfol_stock_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cfol_stock_lag = rep(0,times = length(Cfol_stock))
+            Cfol_stock_lag = rep(1,times = length(Cfol_stock))
         }        
     } else {
         # assume no data available
@@ -328,7 +328,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         if (length(Cwood_mortality_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Cwood_mortality_lag = rep(-9999,times = length(Cwood_mortality))
-            Cwood_mortality_lag[which(Cwood_mortality > 0)] = 1 # assume applies to current time step only
+            Cwood_mortality_lag[which(Cwood_mortality > 0)] = 0 # assume applies to current time step only
         }
     } else if (Cwood_mortality_source == "Gridded_nc" | Cwood_mortality_source == "Gridded_tif") {
         # If there are any values in the analysis window
@@ -549,6 +549,9 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # 0.16 gC/m2/day, therefore 0.74 gC/m2/day
             Reco_unc[which(Reco > 0)] = 0.74
         }
+        if (length(Reco_lag) == 1) {
+            Reco_lag = rep(0,length(Reco))
+        }
     } else {
         # assume no data available
         Reco = -9999 ; Reco_unc = -9999 ; Reco_lag = -9999
@@ -597,7 +600,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(Cwood_stock_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cwood_stock_lag = rep(0,times = length(Cwood_stock))
+            Cwood_stock_lag = rep(1,times = length(Cwood_stock))
         }        
     } else if (Cwood_stock_source == "Gridded_nc" | Cwood_stock_source == "Gridded_tif") {
         if (Cwood_stock_all$data_available) {
@@ -654,7 +657,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(Cagb_stock_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cagb_stock_lag = rep(0,times = length(Cagb_stock))
+            Cagb_stock_lag = rep(1,times = length(Cagb_stock))
         }
     } else {
         # assume no data available
@@ -679,7 +682,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(Croots_stock_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Croots_stock_lag = rep(0,times = length(Croots_stock))
+            Croots_stock_lag = rep(1,times = length(Croots_stock))
         }
     } else {
         # assume no data available
@@ -701,7 +704,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(Clit_stock_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-           Clit_stock_lag = rep(0,times = length(Clit_stock))
+           Clit_stock_lag = rep(1,times = length(Clit_stock))
         }
     } else {
         # assume no data available
@@ -723,7 +726,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
       }
       if (length(Csom_stock_lag) == 1) {
         # on the other hand if not then we have no uncertainty info, so use default
-        Csom_stock_lag = rep(0,times = length(Csom_stock))
+        Csom_stock_lag = rep(1,times = length(Csom_stock))
       }
     } else {
       # assume no data available
@@ -751,7 +754,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
       }
       if (length(Ccoarseroot_stock_lag) == 1) {
           # on the other hand if not then we have no uncertainty info, so use default
-          Ccoarseroot_stock_lag = rep(0,times = length(Ccoarseroot_stock))
+          Ccoarseroot_stock_lag = rep(1,times = length(Ccoarseroot_stock))
       }
     } else {
         # assume no data available
@@ -789,7 +792,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (length(which(SWE_lag != -9999)) == 0) {
             # on the other hand if not then we have no uncertainty info, so use default
-           SWE_lag=rep(0,length.out=length(SWE))
+           SWE_lag=rep(1,length.out=length(SWE))
         }
     } else {
         # assume no data available
@@ -989,7 +992,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
         if (soilwater_lag == -9999 & soilwater > 0) {
           # on the other hand if not then we have no uncertainty info, so use default
-          soilwater_lag = 0
+          soilwater_lag = rep(1, length(soilwater))
         }        
     } else {
         # assume no data available

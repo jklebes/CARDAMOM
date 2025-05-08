@@ -3880,7 +3880,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                               ,lat=as.double(lat)
                               ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                               ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                              ,nodays=as.integer(dim(met)[1])
+                              ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                               ,nos_years = as.integer(noyears)
                               ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                               ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))

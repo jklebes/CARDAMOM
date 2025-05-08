@@ -51,22 +51,9 @@ module CARBON_MODEL_MOD
 
   ! explicit publics
   public :: CARBON_MODEL     &
-           ,layer_thickness  &
+           ,top_soil_depth   &
            ,sw_par_fraction  &
-           ,leafT_time       &
-           ,soilT_time       &
-           ,wSWP_time        &
-           ,rSWP_time        &
-           ,cica_time        &
-           ,root_depth_time        &
-           ,gs_demand_supply_ratio &
-           ,gs_total_canopy        &
-           ,gb_total_canopy        &
-           ,canopy_par_MJday_time  &
-           ,snow_storage_time&
-           ,LWP_time         &
            ,minlwp           &
-           ,Reff_time        &
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -178,13 +165,8 @@ module CARBON_MODEL_MOD
       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
    canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
                          iWUE = 4.6875d-4 !1.5d-2 ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
-
+  ! Canopy scale minimum leaf water potential default assignment
   double precision :: minlwp = minlwp_default
-  ! Photosynthetic Metrics
-  double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                        gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
-                                                        gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
-                                                  canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -333,7 +315,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                   wind_spd, & ! wind speed (m/s)
                    vpd_kPa, & ! Vapour pressure deficit (kPa)
  leaf_canopy_light_scaling, & ! approximate scaling factor from leaf to canopy for gpp and gs
-                    step, &
                        lai    ! leaf area index (m2/m2)
 
   ! Module level varoables for step specific timing information
@@ -356,26 +337,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
   double precision, dimension(:), allocatable :: deltat_1, & ! inverse of decimal days
                                   airt_zero_fraction_time, &
+                                            rainfall_time, &
                                           daylength_hours, &
                                         daylength_seconds, &
-                                      daylength_seconds_1, &
-                                               leafT_time, &
-                                               soilT_time, &
-                                            rainfall_time, &
-                                                cica_time, & ! Internal vs ambient CO2 concentrations
-                                          root_depth_time, &
-                                        snow_storage_time, &
-                                                rSWP_time, & ! Soil water potential weighted by access water
-                                                wSWP_time, & ! Soil water potential weighted by supply of water
-                                                Reff_time, & ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
-                                                 LWP_time    ! mean Leaf Water Potential (MPa)
+                                      daylength_seconds_1
 
   contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai_out,NEE,FLUXES,POOLS &
-                         ,nopars,nomet,nopools,nofluxes,GPP)
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
+                         ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical - ACMv2 - BUCKET (DALEC_CDEA_ACM2_BUCKET) model.
@@ -397,6 +369,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     ! Version 1.0: 25/12/2023
+    ! Version 1.1: 06/05/2025 - Modified io to include all variables as FLUXES, POOLS, DIAGS
 
     implicit none
 
@@ -407,20 +380,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
-                          ,nodays     ! number of days in simulation
+                          ,nodays   & ! number of days in simulation
+                          ,nodiags    ! number of model diagnositic variables
 
     double precision, intent(in) :: met(nomet,nodays) & ! met drivers
                          ,deltat(nodays)    & ! time step in decimal days
                          ,pars(nopars)      & ! number of parameters
                          ,lat                 ! site latitude (degrees)
 
-    double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
-                                                             ,GPP & ! Gross primary productivity
-                                                             ,NEE   ! net ecosystem exchange of CO2
-
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
 
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
     ! declare local variables
     double precision ::  tmp,infi &
@@ -565,7 +536,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    print*,"carbon_model: "
 
     ! Set some initial states for the io variables
-    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
     ! Reset hydrology variables
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0 ; snowsublimation = 0d0
@@ -599,11 +570,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Some time consuming variables we only want to set once
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
-                 gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays), &
-                 leafT_time(nodays),soilT_time(nodays),LWP_time(nodays),Reff_time(nodays))
+        allocate(deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
+                 daylength_seconds_1(nodays),rainfall_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -868,9 +836,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29)) ! assume no evap or rainfall
 
-    ! Reset variable used to track ratio of water supply used to meet demand
-    gs_demand_supply_ratio = 0d0
-
     ! Store soil water content of the surface zone (mm)
     POOLS(1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
 
@@ -895,8 +860,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
 
        ! calculate LAI value
-       lai_out(n) = POOLS(n,2)/pars(17)
-       lai = lai_out(n)
+       lai = POOLS(n,2)/pars(17)
+       DIAGS(n,1) = lai
 
        ! extract timing related values
        dayl_hours = daylength_hours(n)
@@ -942,7 +907,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snow_melt = 0d0
        end if
-       snow_storage_time(n) = snow_storage
+       DIAGS(n,2) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -954,22 +919,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
-       ! Units converted from canopy top m/s to canopy scale mmolH2O/m2/s
-       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1 * &
-                            leaf_canopy_wind_scaling
+       ! Units converted from canopy top m/s to canopy scale (mmolH2O/m2ground/s)
+       DIAGS(n,6) = aerodynamic_conductance * convert_ms1_mmol_1 * &
+                    leaf_canopy_wind_scaling
 
        !!!!!!!!!!
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
        call calculate_radiation_balance
-       canopy_par_MJday_time(n) = canopy_par_MJday
-       ! Update steady state soil temperature
+       DIAGS(n,3) = canopy_par_MJday ! Absorbed PAR by canopy (MJ/m2ground/day)
+       ! Update steady state soil temperature (oC)
        ! NOTE: Commented out due to lack of ground heat flux term, 
        !       resulting in extreme warming and cooling
        !call calculate_soil_temperature_update(tmp)
        !soilT = soilT + tmp
-       soilT_time(n) = soilT
+       DIAGS(n,14) = soilT
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -981,20 +946,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot
-       ! Pass wSWP to output variable
-       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP 
-       root_depth_time(n) = root_reach ; Reff_time(n) = Reff
+       ! Pass root~water~soil variables to output variable
+       DIAGS(n,8) = root_reach ! Rooting depth (m)
+       DIAGS(n,10) = wSWP      ! Soil water potential weighted by supply of water
+       DIAGS(n,11) = rSWP      ! Soil water potential weighted by access water
+       DIAGS(n,12) = Reff      ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
        ! close are we to maxing out supply
-       gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
-                                 / (potential_conductance - minimum_conductance)
+       DIAGS(n,7) = (stomatal_conductance  - minimum_conductance) &
+                  / (potential_conductance - minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
-       gs_total_canopy(n) = stomatal_conductance
+       DIAGS(n,5) = stomatal_conductance
        ! Store day time mean canopy temperature (oC)
-       leafT_time(n) = leafT
+       DIAGS(n,13) = leafT
 
        ! Canopy intercepted rainfall evaporation (kgH2O/m2/day)
        if (lai > 0d0) then ! is this conditional needed?
@@ -1014,7 +981,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! conductance calculation
            FLUXES(n,1) = (acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
                        * umol_to_gC * dayl_seconds
-           cica_time(n) = ci / co2
+           DIAGS(n,4) = ci / co2
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
@@ -1027,17 +994,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            !FLUXES(n,3) = pars(2)*(FLUXES(n,1)-FLUXES(n,3))            
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0 ; FLUXES(n,3) = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0 ; FLUXES(n,3) = 0d0
        endif
 
-       ! Estimate average leaf water potential based on effective hydraulic resistance, wSWP and transpiration.
+       ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
        ! Positive LWPs can be estimated given very small gs and cold temperatures.
        ! Debugging print statements
        !print*,"Estimate LWP"
        !LWP = SWP(1:nos_root_layers) - head*canopy_height &
        !     - transpiration*uptake_fraction(1:nos_root_layers) &
        !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
-       LWP_time(n) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
+       DIAGS(n,9) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
@@ -1085,11 +1052,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*tmp)**deltat(n))/deltat(n)
        ! litter to som
        FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(1)*tmp)**deltat(n))/deltat(n)
-
-       ! calculate the NEE
-       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
-       ! load GPP
-       GPP(n) = FLUXES(n,1)
 
        !
        ! update pools for next timestep

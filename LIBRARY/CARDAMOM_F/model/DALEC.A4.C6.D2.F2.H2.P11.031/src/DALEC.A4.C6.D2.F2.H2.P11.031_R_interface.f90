@@ -33,16 +33,11 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
                    ,out_var1,out_var2,out_var3,out_var4,out_var5 &
                    ,lat,nopars,nomet &
-                   ,nofluxes,nopools,nodays,nos_years,deltat &
+                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time &
-                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
-                             ,gs_demand_supply_ratio, cica_time &
-                             ,gs_total_canopy, gb_total_canopy &
-                             ,canopy_par_MJday_time, root_depth_time &
-                             ,snow_storage_time, leafT_time, soilT_time &
-                             ,LWP_time
+  use CARBON_MODEL_MOD, only: CARBON_MODEL &
+                             ,soil_frac_clay, soil_frac_sand, nos_soil_layers
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -57,6 +52,7 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
+                        ,nodiags        & ! number of model diagnostic variables
                         ,nodays         & ! number of time steps in simulation
                         ,nos_years        ! number of years in simulation
 
@@ -75,19 +71,19 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
   double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
-  ! vector of ecosystem pools
   integer :: a, e, i, s, v, steps_per_year!, nos_years
   integer, dimension(nodays) :: pool_hak
+  ! vector of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
   ! vector of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: tmp &
-                                        ,lai & ! leaf area index
-                                        ,GPP & ! Gross primary productivity
-                                        ,NEE   ! net ecosystem exchange of CO2
+  ! vector of ecosystem diagnostics
+  double precision, dimension(nodays,nodiags) :: DIAGS
+  ! Something useful
+  double precision, dimension(nodays) :: tmp
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
+  POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
 
   ! update soil parameters
@@ -109,8 +105,8 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
-                      ,lat,lai,NEE,FLUXES,POOLS &
-                      ,nopars,nomet,nopools,nofluxes,GPP)
+                      ,lat,FLUXES,POOLS,DIAGS &
+                      ,nopars,nomet,nopools,nofluxes,nodiags)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
@@ -180,30 +176,30 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,48)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,52) = FLUXES(1:nodays,49)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,53) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
-     out_var1(i,1:nodays,54) = wSWP_time(1:nodays)         ! Weighted Soil Water Potential (MPa)
-     out_var1(i,1:nodays,55) = snow_storage_time(1:nodays) ! Snow storage (kgH2O/m2)
+     out_var1(i,1:nodays,54) = DIAGS(1:nodays,10)          ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,55) = DIAGS(1:nodays,2)           ! Snow storage (kgH2O/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,56) = lai                         ! LAI (m2/m2)
+     out_var1(i,1:nodays,56) = DIAGS(1:nodays,1)           ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,57) = gs_demand_supply_ratio      ! ratio of evaporative demand over supply
-     out_var1(i,1:nodays,58) = gs_total_canopy             ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
-     out_var1(i,1:nodays,59) = canopy_par_MJday_time       ! Canopy absorbed PAR (MJ/m2ground/day)
-     out_var1(i,1:nodays,60) = gb_total_canopy             ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
-     out_var1(i,1:nodays,61) = cica_time                   ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,57) = DIAGS(1:nodays,7)           ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,58) = DIAGS(1:nodays,5)           ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,59) = DIAGS(1:nodays,3)           ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,60) = DIAGS(1:nodays,6)           ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,61) = DIAGS(1:nodays,4)           ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,62) = root_depth_time             ! rooting depth (m)
-     out_var1(i,1:nodays,63) = leafT_time                  ! day time mean canopy temperature (oC)
-     out_var1(i,1:nodays,64) = soilT_time                  ! day time mean soil temperature (oC)
+     out_var1(i,1:nodays,62) = DIAGS(1:nodays,8)           ! rooting depth (m)
+     out_var1(i,1:nodays,63) = DIAGS(1:nodays,13)          ! day time mean canopy temperature (oC)
+     out_var1(i,1:nodays,64) = DIAGS(1:nodays,14)          ! day time mean soil temperature (oC)
      ! mean Leaf Water Potential
-     out_var1(i,1:nodays,65) = LWP_time                    ! mean LWP (MPa)
+     out_var1(i,1:nodays,65) = DIAGS(1:nodays,9)           ! mean LWP (MPa)
      ! C allocation diagnositics
-     out_var1(i,1:nodays,66) = FLUXES(1:nodays,50)           ! Labile:biomass ratio limitation (0-1)
-     out_var1(i,1:nodays,67) = FLUXES(1:nodays,51)           ! Temperature limitation on foliage growth (0-1)
-     out_var1(i,1:nodays,68) = FLUXES(1:nodays,52)           ! Temperature limitation on fine root growth (0-1)
-     out_var1(i,1:nodays,69) = FLUXES(1:nodays,53)           ! Temperature limitation on wood growth (0-1)
-     out_var1(i,1:nodays,70) = FLUXES(1:nodays,54)           ! wSWP limitation on foliage growth (0-1)
-     out_var1(i,1:nodays,71) = FLUXES(1:nodays,55)           ! wSWP limitation on fine root growth (0-1)
-     out_var1(i,1:nodays,72) = FLUXES(1:nodays,56)           ! wSWP limitation on wood growth (0-1)
+     out_var1(i,1:nodays,66) = FLUXES(1:nodays,50)         ! Labile:biomass ratio limitation (0-1)
+     out_var1(i,1:nodays,67) = FLUXES(1:nodays,51)         ! Temperature limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,68) = FLUXES(1:nodays,52)         ! Temperature limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,69) = FLUXES(1:nodays,53)         ! Temperature limitation on wood growth (0-1)
+     out_var1(i,1:nodays,70) = FLUXES(1:nodays,54)         ! wSWP limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,71) = FLUXES(1:nodays,55)         ! wSWP limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,72) = FLUXES(1:nodays,56)         ! wSWP limitation on wood growth (0-1)
 
      !
      ! Calculate long-term mean of out_var1

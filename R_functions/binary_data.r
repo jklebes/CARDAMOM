@@ -59,128 +59,125 @@ met_array_names <<- c("Total number of days ran (starts = 31 for January if mont
                        "Wind speed (m/s)",
                        "Daily vapour pressure deficit (Pa)")
 
-obs_array_names <<- c("GPP (gC/m2/day)",
-                      "GPP variance (gC/m2/day)",
-                      "Leaf area index (m2/m2)",
-                      "Leaf area index variance",
-                      "Net Ecosystem Exchange of CO2 (gC/m2/day)",
-                      "Net Ecosystem Exchange of CO2 variance",
-                      "Fire C emission (gC/m2/day)",
-                      "Fire C emission variance",
-                      "Ecosystem respiration (Ra + Rh gC/m2/day)",
-                      "Ecosystem respiration (Ra + Rh) variance",
-                      "Foliar stock (gC/m2)",
-                      "Foliar stock variance",
-                      "Wood stock (above + below gC/m2)",
-                      "Wood stock (above + below) variance",
-                      "Fine root stock (gC/m2)",
-                      "Fine root stock variance",
-                      "Foliar + fine root litter stock (gC/m2)",
-                      "Foliar + fine root litter stock variance",
-                      "Soil organic matter stock (gC/m2)",
-                      "Soil organic matter stock variance",
-                      "Above ground biomass stock (gC/m2)",
-                      "Above ground biomass stock variance",
-                      "Fraction absorbed PAR",
-                      "Fraction absorbed PAR variance",
-                      "Empty",
-                      "Empty",
-                      "Coarse root stock (gC/m2)",
-                      "Coarse root stock variance",
-                      "Annual foliar maximum (gC/m2)",
-                      "Annual foliar maximum variance",
-                      "Evapotranspiration (kgH2O/m2/day)",
-                      "Evapotranspiration variance",
-                      "Snow water equivalent (kgH2O/m2)",
-                      "Snow water equivalent variance",
-                      "Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)",
-                      "Net Biome Exchange variance",
-                      "Mean woody productivity over lag period (gC/m2/day)",
-                      "Mean woody productivity varince",
-                      "Lag period over which to average (steps)",
-                      "Mean woody natural mortality over lag period (gC/m2/day)",
-                      "Mean woody natural mortality varince",
-                      "Lag period over which to average (steps)",
-                      "Mean litter flux over lag period (gC/m2/day)",
-                      "Mean litter flux varince",
-                      "Lag period over which to average (steps)",
-                      "Mean woody net increment over lag period (gC/m2/day)",
-                      "Mean woody net increment varince",
-                      "Lag period over which to average (steps)",
-                      "Extracted C due to harvest over lag period (gC/m2/day)",
-                      "Extracted C due to harvest varince",
-                      "Lag period over which to average (steps)")
-
 #obs_array_names <<- c("GPP (gC/m2/day)",
 #                      "GPP variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
 #                      "Leaf area index (m2/m2)",
-#                      "Leaf area index variance (m2/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Leaf area index variance",
 #                      "Net Ecosystem Exchange of CO2 (gC/m2/day)",
-#                      "Net Ecosystem Exchange of CO2 variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Net Ecosystem Exchange of CO2 variance",
 #                      "Fire C emission (gC/m2/day)",
-#                      "Fire C emission variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Fire C emission variance",
 #                      "Ecosystem respiration (Ra + Rh gC/m2/day)",
-#                      "Ecosystem respiration (Ra + Rh) variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Ecosystem respiration (Ra + Rh) variance",
 #                      "Foliar stock (gC/m2)",
-#                      "Foliar stock variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Foliar stock variance",
 #                      "Wood stock (above + below gC/m2)",
-#                      "Wood stock (above + below) variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Wood stock (above + below) variance",
 #                      "Fine root stock (gC/m2)",
-#                      "Fine root stock variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Fine root stock variance",
 #                      "Foliar + fine root litter stock (gC/m2)",
-#                      "Foliar + fine root litter stock variance (gC/m2)" ,
-#                      "Lag period over which to average (steps)",
+#                      "Foliar + fine root litter stock variance",
 #                      "Soil organic matter stock (gC/m2)",
-#                      "Soil organic matter stock variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Soil organic matter stock variance",
 #                      "Above ground biomass stock (gC/m2)",
-#                      "Above ground biomass stock variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
-#                      "Fraction absorbed PAR (0-1)",
-#                      "Fraction absorbed PAR variance (0-1)",
-#                      "Lag period over which to average (steps)",
+#                      "Above ground biomass stock variance",
+#                      "Fraction absorbed PAR",
+#                      "Fraction absorbed PAR variance",
+#                      "Empty",
+#                      "Empty",
 #                      "Coarse root stock (gC/m2)",
-#                      "Coarse root stock variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Coarse root stock variance",
 #                      "Annual foliar maximum (gC/m2)",
-#                      "Annual foliar maximum variance (gC/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Annual foliar maximum variance",
 #                      "Evapotranspiration (kgH2O/m2/day)",
-#                      "Evapotranspiration variance (kgH2O/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Evapotranspiration variance",
 #                      "Snow water equivalent (kgH2O/m2)",
-#                      "Snow water equivalent variance (kgH2O/m2)",
-#                      "Lag period over which to average (steps)",
+#                      "Snow water equivalent variance",
 #                      "Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)",
-#                      "Net Biome Exchange variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Net Biome Exchange variance",
 #                      "Mean woody productivity over lag period (gC/m2/day)",
-#                      "Mean woody productivity variance (gC/m2/day)",
+#                      "Mean woody productivity varince",
 #                      "Lag period over which to average (steps)",
 #                      "Mean woody natural mortality over lag period (gC/m2/day)",
-#                      "Mean woody natural mortality variance (gC/m2/day)",
+#                      "Mean woody natural mortality varince",
 #                      "Lag period over which to average (steps)",
 #                      "Mean litter flux over lag period (gC/m2/day)",
-#                      "Mean litter flux variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
+#                      "Mean litter flux varince",
 #                      "Lag period over which to average (steps)",
 #                      "Mean woody net increment over lag period (gC/m2/day)",
-#                      "Mean woody net increment variance (gC/m2/day)",
+#                      "Mean woody net increment varince",
 #                      "Lag period over which to average (steps)",
 #                      "Extracted C due to harvest over lag period (gC/m2/day)",
-#                      "Extracted C due to harvest variance (gC/m2/day)",
-#                      "Lag period over which to average (steps)",
-#                      "Surface soil moisture (0-30cm m3/m3)",
-#                      "Surface soil moisture variance (m3/m3)",
+#                      "Extracted C due to harvest varince",
 #                      "Lag period over which to average (steps)")
+
+obs_array_names <<- c("GPP (gC/m2/day)",
+                      "GPP variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Leaf area index (m2/m2)",
+                      "Leaf area index variance (m2/m2)",
+                      "Lag period over which to average (steps)",
+                      "Net Ecosystem Exchange of CO2 (gC/m2/day)",
+                      "Net Ecosystem Exchange of CO2 variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Fire C emission (gC/m2/day)",
+                      "Fire C emission variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Ecosystem respiration (Ra + Rh gC/m2/day)",
+                      "Ecosystem respiration (Ra + Rh) variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Foliar stock (gC/m2)",
+                      "Foliar stock variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Wood stock (above + below gC/m2)",
+                      "Wood stock (above + below) variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Fine root stock (gC/m2)",
+                      "Fine root stock variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Foliar + fine root litter stock (gC/m2)",
+                      "Foliar + fine root litter stock variance (gC/m2)" ,
+                      "Lag period over which to average (steps)",
+                      "Soil organic matter stock (gC/m2)",
+                      "Soil organic matter stock variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Above ground biomass stock (gC/m2)",
+                      "Above ground biomass stock variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Fraction absorbed PAR (0-1)",
+                      "Fraction absorbed PAR variance (0-1)",
+                      "Lag period over which to average (steps)",
+                      "Coarse root stock (gC/m2)",
+                      "Coarse root stock variance (gC/m2)",
+                      "Lag period over which to average (steps)",
+                      "Evapotranspiration (kgH2O/m2/day)",
+                      "Evapotranspiration variance (kgH2O/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Snow water equivalent (kgH2O/m2)",
+                      "Snow water equivalent variance (kgH2O/m2)",
+                      "Lag period over which to average (steps)",
+                      "Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)",
+                      "Net Biome Exchange variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Mean woody productivity over lag period (gC/m2/day)",
+                      "Mean woody productivity variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Mean woody natural mortality over lag period (gC/m2/day)",
+                      "Mean woody natural mortality variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Mean litter flux over lag period (gC/m2/day)",
+                      "Mean litter flux variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Lag period over which to average (steps)",
+                      "Mean woody net increment over lag period (gC/m2/day)",
+                      "Mean woody net increment variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Extracted C due to harvest over lag period (gC/m2/day)",
+                      "Extracted C due to harvest variance (gC/m2/day)",
+                      "Lag period over which to average (steps)",
+                      "Surface soil moisture (0-30cm m3/m3)",
+                      "Surface soil moisture variance (m3/m3)",
+                      "Lag period over which to average (steps)")
 
 binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
@@ -330,132 +327,129 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       # Currently space for 18 time series of observation and its uncertainty.
       # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
       # NOTE: that not all models are currently coded to be compatible with all observation streams.
-      OBSMAT = array(-9999.0,dim=c(length(met$run_day),51))
-      # Line makes the correct array size but with -9999 in place of all
-      OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
-      OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
-      OBSMAT[,3] = OBS$LAI                    # Leaf area index (m2/m2)
-      OBSMAT[,4] = OBS$LAI_unc                # Leaf area index variance
-      OBSMAT[,5] = OBS$NEE                    # Net Ecosystem Exchange of CO2 (gC/m2/day)
-      OBSMAT[,6] = OBS$NEE_unc                # Net Ecosystem Exchange of CO2 variance
-      OBSMAT[,7] = OBS$Fire                   # Fire C emission (gC/m2day)
-      OBSMAT[,8] = OBS$Fire_unc               # Fire C emission variance
-      OBSMAT[,9] = OBS$Reco                   # Ecosystem respiration (Ra + Rh; gC/m2/day)
-      OBSMAT[,10] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
-      OBSMAT[,11] = OBS$Cfol_stock            # Foliar stock (gC/m2)
-      OBSMAT[,12] = OBS$Cfol_stock_unc        # Foliar stock variance
-      OBSMAT[,13] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
-      #OBSMAT[which(OBSMAT[,13] > 0),14] = 250
-      OBSMAT[,14] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
-      OBSMAT[,15] = OBS$Croots_stock          # Fine root stock (gC/m2)
-      OBSMAT[,16] = OBS$Croots_stock_unc      # Fine root stock variance
-      OBSMAT[,17] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
-      OBSMAT[,18] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
-      OBSMAT[,19] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
-      OBSMAT[,20] = OBS$Csom_stock_unc        # Soil organic matter stock variance
-      OBSMAT[,21] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
-      OBSMAT[,22] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
-      OBSMAT[,23] = OBS$fAPAR                 # Fraction absorbed PAR
-      OBSMAT[,24] = OBS$fAPAR_unc             # Fraction absorbed PAR variance
-      OBSMAT[,25] = -9999                     # Empty
-      OBSMAT[,26] = -9999                     # Empty
-      OBSMAT[,27] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
-      OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
-      OBSMAT[,29] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
-      OBSMAT[,30] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
-      OBSMAT[,31] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
-      OBSMAT[,32] = OBS$ET_unc                # Evapotranspiration variance
-      OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
-      OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
-      OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
-      OBSMAT[,36] = OBS$nbe_unc               # Net Biome Exchange variance
-      OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity over lag period (gC/m2/day)
-      OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity varince
-      OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
-      OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
-      OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
-      OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
-      OBSMAT[,43] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
-      OBSMAT[,44] = OBS$foliage_to_litter_unc # Mean litter flux varince
-      OBSMAT[,45] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
-      #OBSMAT[,46] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
-      #OBSMAT[,47] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
-      #OBSMAT[,48] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
-      OBSMAT[,49] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
-      OBSMAT[,50] = OBS$harvest_unc           # Extracted C due to harvest varince
-      OBSMAT[,51] = OBS$harvest_lag           # Lag period over which to average  (steps)
+#      OBSMAT = array(-9999.0,dim=c(length(met$run_day),51))
+#      # Line makes the correct array size but with -9999 in place of all
+#      OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
+#      OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
+#      OBSMAT[,3] = OBS$LAI                    # Leaf area index (m2/m2)
+#      OBSMAT[,4] = OBS$LAI_unc                # Leaf area index variance
+#      OBSMAT[,5] = OBS$NEE                    # Net Ecosystem Exchange of CO2 (gC/m2/day)
+#      OBSMAT[,6] = OBS$NEE_unc                # Net Ecosystem Exchange of CO2 variance
+#      OBSMAT[,7] = OBS$Fire                   # Fire C emission (gC/m2day)
+#      OBSMAT[,8] = OBS$Fire_unc               # Fire C emission variance
+#      OBSMAT[,9] = OBS$Reco                   # Ecosystem respiration (Ra + Rh; gC/m2/day)
+#      OBSMAT[,10] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
+#      OBSMAT[,11] = OBS$Cfol_stock            # Foliar stock (gC/m2)
+#      OBSMAT[,12] = OBS$Cfol_stock_unc        # Foliar stock variance
+#      OBSMAT[,13] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
+#      #OBSMAT[which(OBSMAT[,13] > 0),14] = 250
+#      OBSMAT[,14] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
+#      OBSMAT[,15] = OBS$Croots_stock          # Fine root stock (gC/m2)
+#      OBSMAT[,16] = OBS$Croots_stock_unc      # Fine root stock variance
+#      OBSMAT[,17] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
+#      OBSMAT[,18] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
+#      OBSMAT[,19] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
+#      OBSMAT[,20] = OBS$Csom_stock_unc        # Soil organic matter stock variance
+#      OBSMAT[,21] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
+#      OBSMAT[,22] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
+#      OBSMAT[,23] = OBS$fAPAR                 # Fraction absorbed PAR
+#      OBSMAT[,24] = OBS$fAPAR_unc             # Fraction absorbed PAR variance
+#      OBSMAT[,25] = -9999                     # Empty
+#      OBSMAT[,26] = -9999                     # Empty
+#      OBSMAT[,27] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
+#      OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
+#      OBSMAT[,29] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
+#      OBSMAT[,30] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
+#      OBSMAT[,31] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
+#      OBSMAT[,32] = OBS$ET_unc                # Evapotranspiration variance
+#      OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
+#      OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
+#      OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
+#      OBSMAT[,36] = OBS$nbe_unc               # Net Biome Exchange variance
+#      OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity over lag period (gC/m2/day)
+#      OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity varince
+#      OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
+#      OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
+#      OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
+#      OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
+#      OBSMAT[,43] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
+#      OBSMAT[,44] = OBS$foliage_to_litter_unc # Mean litter flux varince
+#      OBSMAT[,45] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
+#      #OBSMAT[,46] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
+#      #OBSMAT[,47] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
+#      #OBSMAT[,48] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
+#      OBSMAT[,49] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
+#      OBSMAT[,50] = OBS$harvest_unc           # Extracted C due to harvest varince
+#      OBSMAT[,51] = OBS$harvest_lag           # Lag period over which to average  (steps)
   
-      #OBSMAT = array(-9999.0,dim=c(length(met$run_day),69))
+      OBSMAT = array(-9999.0,dim=c(length(met$run_day),66))
       # Line makes the correct array size but with -9999 in place of all
-      #OBSMAT[,1]  = OBS$GPP                   # GPP (gC/m2/day)
-      #OBSMAT[,2]  = OBS$GPP_unc               # GPP variance (gC/m2/day)
-      #OBSMAT[,3]  = OBS$GPP_lag               # GPP lag (steps)
-      #OBSMAT[,4]  = OBS$LAI                   # Leaf area index (m2/m2)
-      #OBSMAT[,5]  = OBS$LAI_unc               # Leaf area index variance
-      #OBSMAT[,6]  = OBS$LAI_lag               # Leaf area index lag (steps)
-      #OBSMAT[,7]  = OBS$NEE                   # Net Ecosystem Exchange of CO2 (gC/m2/day)
-      #OBSMAT[,8]  = OBS$NEE_unc               # Net Ecosystem Exchange of CO2 variance
-      #OBSMAT[,9]  = OBS$NEE_lag               # Net Ecosystem Exchange of CO2 lag (steps)
-      #OBSMAT[,10] = OBS$Fire                  # Fire C emission (gC/m2day)
-      #OBSMAT[,11] = OBS$Fire_unc              # Fire C emission variance
-      #OBSMAT[,12] = OBS$Fire_step             # Fire C emission lag (steps)
-      #OBSMAT[,13] = OBS$Reco                  # Ecosystem respiration (Ra + Rh; gC/m2/day)
-      #OBSMAT[,14] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
-      #OBSMAT[,15] = OBS$Reco_lag              # Ecosystem respiration (Ra + Rh) lag
-      #OBSMAT[,16] = OBS$Cfol_stock            # Foliar stock (gC/m2)
-      #OBSMAT[,17] = OBS$Cfol_stock_unc        # Foliar stock variance
-      #OBSMAT[,18] = OBS$Cfol_stock_lag        # Foliar stock lag (steps)
-      #OBSMAT[,19] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
-      #OBSMAT[,20] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
-      #OBSMAT[,21] = OBS$Cwood_stock_lag       # Wood stock (above + below) lag (steps)
-      #OBSMAT[,22] = OBS$Croots_stock          # Fine root stock (gC/m2)
-      #OBSMAT[,23] = OBS$Croots_stock_unc      # Fine root stock variance
-      #OBSMAT[,24] = OBS$Croots_stock_lag      # Fine root stock lag (steps)
-      #OBSMAT[,25] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
-      #OBSMAT[,26] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
-      #OBSMAT[,27] = OBS$Clit_stock_lag        # Foliar + fine root litter stock lag (steps)
-      #OBSMAT[,28] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
-      #OBSMAT[,29] = OBS$Csom_stock_unc        # Soil organic matter stock variance
-      #OBSMAT[,30] = OBS$Csom_stock_lag        # Soil organic matter stock lag
-      #OBSMAT[,31] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
-      #OBSMAT[,32] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
-      #OBSMAT[,33] = OBS$Cagb_stock_lag        # Above ground biomass stock lag (steps)
-      #OBSMAT[,34] = OBS$fAPAR                 # Fraction absorbed PAR
-      #OBSMAT[,35] = OBS$fAPAR_unc             # Fraction absorbed PAR variance
-      #OBSMAT[,36] = OBS$fAPAR_lag             # Fraction absorbed PAR lag (steps)
-      #OBSMAT[,37] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
-      #OBSMAT[,38] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
-      #OBSMAT[,39] = OBS$Ccoarseroot_stock_unc # Coarse root stock lag (steps)
-      #OBSMAT[,40] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
-      #OBSMAT[,41] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
-      #OBSMAT[,42] = OBS$Cfolmax_stock_lag     # Annual foliar maximum lag (steps)
-      #OBSMAT[,43] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
-      #OBSMAT[,44] = OBS$ET_unc                # Evapotranspiration variance
-      #OBSMAT[,45] = OBS$ET_lag                # Evapotranspiration lag (steps)
-      #OBSMAT[,46] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
-      #OBSMAT[,47] = OBS$SWE_unc               # Snow water equivalent variance
-      #OBSMAT[,48] = OBS$SWE_lag               # Snow water equivalent lag (steps)
-      #OBSMAT[,49] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
-      #OBSMAT[,50] = OBS$nbe_unc               # Net Biome Exchange variance
-      #OBSMAT[,51] = OBS$nbe_lag               # Net Biome Exchange lag (steps)
-      #OBSMAT[,52] = OBS$Cwood_growth          # Mean woody productivity over lag period (gC/m2/day)
-      #OBSMAT[,53] = OBS$Cwood_growth_unc      # Mean woody productivity varince
-      #OBSMAT[,54] = OBS$Cwood_growth_lag      # Lag period over which to average  (steps)
-      #OBSMAT[,55] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
-      #OBSMAT[,56] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
-      #OBSMAT[,57] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
-      #OBSMAT[,58] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
-      #OBSMAT[,59] = OBS$foliage_to_litter_unc # Mean litter flux varince
-      #OBSMAT[,60] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
-      #OBSMAT[,61] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
-      #OBSMAT[,62] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
-      #OBSMAT[,63] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
-      #OBSMAT[,64] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
-      #OBSMAT[,65] = OBS$harvest_unc           # Extracted C due to harvest varince
-      #OBSMAT[,66] = OBS$harvest_lag           # Lag period over which to average (steps)
-      #OBSMAT[,67] = OBS$soilwater             # Surface (0-30cm) soil water content (m3/m3)
-      #OBSMAT[,68] = OBS$soilwater_unc         # Surface (0-30cm) soil water content variance (m3/m3)
-      #OBSMAT[,69] = OBS$soilwater_lag         # Surface (0-30cm) soil water content lag (step)
+      OBSMAT[,1]  = OBS$GPP                   # GPP (gC/m2/day)
+      OBSMAT[,2]  = OBS$GPP_unc               # GPP variance (gC/m2/day)
+      OBSMAT[,3]  = OBS$GPP_lag               # GPP lag (steps)
+      OBSMAT[,4]  = OBS$LAI                   # Leaf area index (m2/m2)
+      OBSMAT[,5]  = OBS$LAI_unc               # Leaf area index variance
+      OBSMAT[,6]  = OBS$LAI_lag               # Leaf area index lag (steps)
+      OBSMAT[,7]  = OBS$NEE                   # Net Ecosystem Exchange of CO2 (gC/m2/day)
+      OBSMAT[,8]  = OBS$NEE_unc               # Net Ecosystem Exchange of CO2 variance
+      OBSMAT[,9]  = OBS$NEE_lag               # Net Ecosystem Exchange of CO2 lag (steps)
+      OBSMAT[,10] = OBS$Fire                  # Fire C emission (gC/m2day)
+      OBSMAT[,11] = OBS$Fire_unc              # Fire C emission variance
+      OBSMAT[,12] = OBS$Fire_lag              # Fire C emission lag (steps)
+      OBSMAT[,13] = OBS$Reco                  # Ecosystem respiration (Ra + Rh; gC/m2/day)
+      OBSMAT[,14] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
+      OBSMAT[,15] = OBS$Reco_lag              # Ecosystem respiration (Ra + Rh) lag
+      OBSMAT[,16] = OBS$Cfol_stock            # Foliar stock (gC/m2)
+      OBSMAT[,17] = OBS$Cfol_stock_unc        # Foliar stock variance
+      OBSMAT[,18] = OBS$Cfol_stock_lag        # Foliar stock lag (steps)
+      OBSMAT[,19] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
+      OBSMAT[,20] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
+      OBSMAT[,21] = OBS$Cwood_stock_lag       # Wood stock (above + below) lag (steps)
+      OBSMAT[,22] = OBS$Croots_stock          # Fine root stock (gC/m2)
+      OBSMAT[,23] = OBS$Croots_stock_unc      # Fine root stock variance
+      OBSMAT[,24] = OBS$Croots_stock_lag      # Fine root stock lag (steps)
+      OBSMAT[,25] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
+      OBSMAT[,26] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
+      OBSMAT[,27] = OBS$Clit_stock_lag        # Foliar + fine root litter stock lag (steps)
+      OBSMAT[,28] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
+      OBSMAT[,29] = OBS$Csom_stock_unc        # Soil organic matter stock variance
+      OBSMAT[,30] = OBS$Csom_stock_lag        # Soil organic matter stock lag
+      OBSMAT[,31] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
+      OBSMAT[,32] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
+      OBSMAT[,33] = OBS$Cagb_stock_lag        # Above ground biomass stock lag (steps)
+      OBSMAT[,34] = OBS$fAPAR                 # Fraction absorbed PAR
+      OBSMAT[,35] = OBS$fAPAR_unc             # Fraction absorbed PAR variance
+      OBSMAT[,36] = OBS$fAPAR_lag             # Fraction absorbed PAR lag (steps)
+      OBSMAT[,37] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
+      OBSMAT[,38] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
+      OBSMAT[,39] = OBS$Ccoarseroot_stock_unc # Coarse root stock lag (steps)
+      OBSMAT[,40] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
+      OBSMAT[,41] = OBS$ET_unc                # Evapotranspiration variance
+      OBSMAT[,42] = OBS$ET_lag                # Evapotranspiration lag (steps)
+      OBSMAT[,43] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
+      OBSMAT[,44] = OBS$SWE_unc               # Snow water equivalent variance
+      OBSMAT[,45] = OBS$SWE_lag               # Snow water equivalent lag (steps)
+      OBSMAT[,46] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
+      OBSMAT[,47] = OBS$nbe_unc               # Net Biome Exchange variance
+      OBSMAT[,48] = OBS$nbe_lag               # Net Biome Exchange lag (steps)
+      OBSMAT[,49] = OBS$Cwood_growth          # Mean woody productivity over lag period (gC/m2/day)
+      OBSMAT[,50] = OBS$Cwood_growth_unc      # Mean woody productivity varince
+      OBSMAT[,51] = OBS$Cwood_growth_lag      # Lag period over which to average  (steps)
+      OBSMAT[,52] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
+      OBSMAT[,53] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
+      OBSMAT[,54] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
+      OBSMAT[,55] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
+      OBSMAT[,56] = OBS$foliage_to_litter_unc # Mean litter flux varince
+      OBSMAT[,57] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
+      OBSMAT[,58] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
+      OBSMAT[,59] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
+      OBSMAT[,60] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
+      OBSMAT[,61] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
+      OBSMAT[,62] = OBS$harvest_unc           # Extracted C due to harvest varince
+      OBSMAT[,63] = OBS$harvest_lag           # Lag period over which to average (steps)
+      OBSMAT[,64] = OBS$soilwater             # Surface (0-30cm) soil water content (m3/m3)
+      OBSMAT[,65] = OBS$soilwater_unc         # Surface (0-30cm) soil water content variance (m3/m3)
+      OBSMAT[,66] = OBS$soilwater_lag         # Surface (0-30cm) soil water content lag (step)
 
       # STATIC DATA (1-50)
       # Model ID      = static_data[1]; DALEC_CDEA, DALEC.A1.C2.D2.F2.H2.P4.R2. etc

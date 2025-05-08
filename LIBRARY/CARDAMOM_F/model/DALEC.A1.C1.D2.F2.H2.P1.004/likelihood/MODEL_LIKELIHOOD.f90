@@ -1625,7 +1625,7 @@ module model_likelihood_module
        mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
                  * 0.5d0
        ! Estimate the above ground component using 
-       mid_state = mid_state * (1d0-pars(28))
+       mid_state = mid_state * (1d0-pars(25))
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)) &
                        -DATAin%Cagb_stock(DATAin%Cagb_stockpts(1:DATAin%nCagb_stock)))&
