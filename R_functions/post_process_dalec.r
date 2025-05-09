@@ -283,7 +283,6 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   ## GPP (gC/m2/day)
   obs_id = 1 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
-  #if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$gpp_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
@@ -309,7 +308,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## LAI (m2/m2)
-  obs_id = 3 ; unc_id = obs_id+1
+  obs_id = 4 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$lai_assim_data_overlap_fraction = 0
@@ -336,7 +335,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## NEE (gC/m2/day)
-  obs_id = 5 ; unc_id = obs_id+1
+  obs_id = 7 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nee_assim_data_overlap_fraction = 0
@@ -363,7 +362,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Reco (gC/m2/day)
-  obs_id = 9 ; unc_id = obs_id+1
+  obs_id = 13 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$reco_assim_data_overlap_fraction = 0
@@ -390,7 +389,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Wood (gC/m2)
-  obs_id = 13 ; unc_id = obs_id+1
+  obs_id = 19 ; unc_id = obs_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[21] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[21] ; drivers$obs[1,unc_id] = drivers$parpriorunc[21] }
   if (any(drivers$obs[,obs_id] != -9999)) {
@@ -419,7 +418,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Soil (gC/m2)
-  obs_id = 19 ; unc_id = obs_id+1
+  obs_id = 28 ; unc_id = obs_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[23] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[23] ; drivers$obs[1,unc_id] = drivers$parpriorunc[23] }
   if (any(drivers$obs[,obs_id] != -9999)) {
@@ -448,7 +447,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## fAPAR (0-1)
-  obs_id = 23 ; unc_id = obs_id+1
+  obs_id = 34 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$fapar_assim_data_overlap_fraction = 0
@@ -476,7 +475,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## ET (kgH2O/m2/day)
-  obs_id = 31 ; unc_id = obs_id+1
+  obs_id = 40 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$et_assim_data_overlap_fraction = 0
@@ -503,7 +502,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## NBE (gC/m2/day)
-  obs_id = 35 ; unc_id = obs_id+1 
+  obs_id = 46 ; unc_id = obs_id+1 
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nbe_assim_data_overlap_fraction = 0
@@ -530,7 +529,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Fire (gC/m2/day)
-  obs_id = 7 ; unc_id = obs_id+1
+  obs_id = 10 ; unc_id = obs_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$fire_assim_data_overlap_fraction = 0

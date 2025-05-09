@@ -59,6 +59,7 @@ path_to_crop_management=" "
 path_to_sand_clay=" " #"/exports/csce/datastore/geos/groups/gcel/SoilGrids/version2/processed/global_5km/"
 path_to_Csom=" " #"/exports/csce/datastore/geos/groups/gcel/SoilGrids/version2/processed/global_5km/"
 path_to_Cwood_inc = ""
+path_to_Cwood_growth = " "
 path_to_Cwood_mortality = ""
 path_to_Cwood=" " #"/exports/csce/datastore/geos/groups/gcel/AGB/ESA_CCI_BIOMASS/ESA_CCI_AGB_0.125deg/"
 path_to_Cwood_initial=" "
@@ -82,8 +83,9 @@ fapar_source=" " # "COPERNICUS" or "MODIS" or "site_specific"
 Csom_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 sand_clay_source="site_specific" # "SoilGrids" or "SoilGrids_v2" or "HWSD" or "site_specific
 soilwater_source = " " # initial soil water fraction (m3/m3)
-Evap_source="site_specific"        # " " or "site_specific"
+et_source="site_specific"        # " " or "site_specific"
 Cwood_inc_source = " " # "site_specific" or " " or "Rainfor"
+Cwood_growth_source = " "
 Cwood_mortality_source = " " # "site_specific" or " " or "Rainfor"
 fire_source=" " # " " or "site_specific" or "Global_Combined"
 GPP_source=" " 	# " " or "site_specific" or "Global_Combined"
@@ -174,7 +176,7 @@ request_cost_function_scaling = 2 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=-1
+stage=4
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 

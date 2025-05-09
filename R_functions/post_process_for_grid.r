@@ -341,11 +341,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$mean_vpd_Pa = mean(drivers$met[,16])
   site_output$mean_precipitation_kgH2Om2yr = mean(drivers$met[,7])*86400*365.25
   # Assimilated LAI information
-  if (max(drivers$obs[,3]) > 0) {
-      filter = which(drivers$obs[,3] != -9999)
-      site_output$assimilated_lai_max_m2m2 = max(drivers$obs[filter,3])
-      site_output$assimilated_lai_mean_m2m2 = mean(drivers$obs[filter,3])
-      site_output$assimilated_lai_sd_m2m2 = sd(drivers$obs[filter,3])
+  if (max(drivers$obs[,4]) > 0) {
+      filter = which(drivers$obs[,4] != -9999)
+      site_output$assimilated_lai_max_m2m2 = max(drivers$obs[filter,4])
+      site_output$assimilated_lai_mean_m2m2 = mean(drivers$obs[filter,4])
+      site_output$assimilated_lai_sd_m2m2 = sd(drivers$obs[filter,4])
       site_output$assimilated_lai_unc_m2m2 = mean(drivers$obs[filter,4])
   } else {
       site_output$assimilated_lai_max_m2m2 = NA
@@ -356,16 +356,16 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Assimilated wood stock / prior information
   # Do we have one or both wood stock prior and time series inforamtion
   if (drivers$parpriors[21] > 0 ||
-      any(drivers$obs[,13] > -9999) > 0) {
+      any(drivers$obs[,19] > -9999) > 0) {
       # Initialise the variable with zero to allow averaging
       site_output$assimilated_wood_mean_gCm2 = 0
       site_output$assimilated_wood_mean_unc_gCm2 = 0
       # Do we have time series information?
-      if (any(drivers$obs[,13] > -9999) > 0) { # Does time series info exist
+      if (any(drivers$obs[,19] > -9999) > 0) { # Does time series info exist
           site_output$assimilated_wood_mean_gCm2 = append(site_output$assimilated_wood_mean_gCm2,
-                                                          drivers$obs[which(drivers$obs[,13] != -9999),13])
+                                                          drivers$obs[which(drivers$obs[,19] != -9999),19])
           site_output$assimilated_wood_mean_unc_gCm2 = append(site_output$assimilated_wood_mean_unc_gCm2,
-                                                              drivers$obs[which(drivers$obs[,14] != -9999),14])
+                                                              drivers$obs[which(drivers$obs[,20] != -9999),20])
       }
       # Do we have a prior estimate on initial wood stocks?
       if (drivers$parpriors[21] > 0) { # Does a prior exist
@@ -387,16 +387,16 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # Assimilated som stock / prior information
   # Do we have one or both som stock prior and time series inforamtion
   if (drivers$parpriors[23] > 0 ||
-      any(drivers$obs[,19] > -9999) > 0) {
+      any(drivers$obs[,28] > -9999) > 0) {
       # Initialise the variable with zero to allow averaging
       site_output$assimilated_som_mean_gCm2 = 0
       site_output$assimilated_som_mean_unc_gCm2 = 0
       # Do we have time series information?
-      if (any(drivers$obs[,19] > -9999) > 0) { # Does time series info exist
+      if (any(drivers$obs[,28] > -9999) > 0) { # Does time series info exist
           site_output$assimilated_som_mean_gCm2 = append(site_output$assimilated_som_mean_gCm2,
-                                                         drivers$obs[which(drivers$obs[,19] != -9999),19])
+                                                         drivers$obs[which(drivers$obs[,28] != -9999),28])
           site_output$assimilated_som_mean_unc_gCm2 = append(site_output$assimilated_som_mean_unc_gCm2,
-                                                             drivers$obs[which(drivers$obs[,20] != -9999),20])
+                                                             drivers$obs[which(drivers$obs[,29] != -9999),29])
       }
       # Do we have a prior estimate on initial wood stocks?
       if (drivers$parpriors[23] > 0) { # Does a prior exist

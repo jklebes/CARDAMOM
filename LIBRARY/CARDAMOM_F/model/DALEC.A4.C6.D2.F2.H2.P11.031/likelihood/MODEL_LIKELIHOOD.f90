@@ -1111,7 +1111,7 @@ module model_likelihood_module
     ! Arguements
     double precision, intent(inout) :: ML_obs_out
     ! local variable
-    double precision (DATAin%nodays) :: mod
+    double precision, dimension(DATAin%nodays) :: mod
 
     !
     ! Do diagnostics (DIAGS)
@@ -1119,15 +1119,15 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
-        mod = DATAin%M_DIAGS(:,3) & ! APAR
-            / (DATAin%met(4,:)*sw_par_fraction)
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag,
+        mod = DATAin%M_DIAGS(1:DATAin%nodays,3) & ! APAR
+            / (DATAin%met(4,1:DATAin%nodays)*sw_par_fraction)
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag, &
                                              1d0,mod)
     endif ! nfAPAR > 0
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag,
-                                             1d0,DATAin%M_DIAGS(1:nodays,1))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
+                                             1d0,DATAin%M_DIAGS(1:DATAin%nodays,1))
     end if
 
     !
@@ -1137,42 +1137,42 @@ module model_likelihood_module
     ! Calculate log-likelihood for foliage stocks
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
-                                             DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag,
-                                             1d0,DATAin%M_POOLS(1:nodays,2))
+                                             DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
-                                             DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag,
-                                             1d0,DATAin%M_POOLS(1:nodays,3))
+                                             DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for total wood stocks
     if (DATAin%nCwood_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_stock,DATAin%Cwood_stockpts, &
-                                             DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag,
-                                             1d0,DATAin%M_POOLS(1:nodays,4))
+                                             DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag, &
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,4))
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) & 
-                 * DATAin%M_POOLS(:,5)
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
+                 * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
-                                             DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag,
+                                             DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
                                              1d0,mod)
     endif ! nClit_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
-                                             DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag,
-                                             1d0,DATAin%M_POOLS(1:nodays,6))
+                                             DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
-                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag,
+                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              1d0,mod)
     endif ! nsoilwater > 0
 
@@ -1182,69 +1182,69 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for evapotranspiration
     if (DATAin%nEvap > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nEvap,DATAin%Evappts,DATAin%Evap,DATAin%Evap_unc,DATAin%Evap_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,29))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nEvap,DATAin%Evappts,DATAin%Evap,DATAin%Evap_unc,DATAin%Evap_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,29))
     endif ! nEvap > 0
     ! Calculate log-likelihood for fire
     if (DATAin%nFire > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nFire,DATAin%Firepts,DATAin%Fire,DATAin%Fire_unc,DATAin%Fire_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,17))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nFire,DATAin%Firepts,DATAin%Fire,DATAin%Fire_unc,DATAin%Fire_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,17))
     endif ! nFire > 0
     ! Calculate log-likelihood for gross primary production
     if (DATAin%ngpp > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,1))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,1))
     endif ! ngpp > 0
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,30))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,30))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net biome productivity 
     if (DATAin%nnbe > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-            + DATAin%M_FLUXES(1:nodays,17) & ! Fire
-            - DATAin%M_FLUXES(1:nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
                                              1d0,mod)
     endif ! nnbe > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-            - DATAin%M_FLUXES(1:nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              1d0,mod)    
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              1d0,mod)
     endif ! nreco > 0
     ! Calculate log-likelihood for total wood net increment
     if (DATAin%nCwood_inc > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,7) - DATAin%M_FLUXES(1:nodays,11)
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,7) - DATAin%M_FLUXES(1:DATAin%nodays,11)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_inc,DATAin%Cwood_incpts, &
-                                             DATAin%Cwood_inc,DATAin%Cwood_inc_unc,DATAin%Cwood_inc_lag,
+                                             DATAin%Cwood_inc,DATAin%Cwood_inc_unc,DATAin%Cwood_inc_lag, &
                                              1d0,mod)
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,7))
+                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,
-                                             1d0,DATAin%M_FLUXES(1:nodays,11))
+                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1263,7 +1263,7 @@ module model_likelihood_module
     ! Arguements
     double precision, intent(inout) :: ML_obs_out
     ! local variable
-    double precision (DATAin%nodays) :: mod
+    double precision, dimension(DATAin%nodays) :: mod
 
     !
     ! Do diagnostics (DIAGS)
@@ -1271,15 +1271,15 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
-        mod = DATAin%M_DIAGS(:,3) & ! APAR
-            / (DATAin%met(4,:)*sw_par_fraction)
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag,
+        mod = DATAin%M_DIAGS(1:DATAin%nodays,3) & ! APAR
+            / (DATAin%met(4,1:DATAin%nodays)*sw_par_fraction)
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag, &
                                              DATAin%fAPAR_scaling,mod)
     endif ! nfAPAR > 0
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag,
-                                             DATAin%LAI_scaling,DATAin%M_DIAGS(1:nodays,1))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
+                                             DATAin%LAI_scaling,DATAin%M_DIAGS(1:DATAin%nodays,1))
     end if ! nlai > 0
 
     !
@@ -1289,42 +1289,42 @@ module model_likelihood_module
     ! Calculate log-likelihood for foliage stocks
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
-                                             DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag,
-                                             DATAin%Cfol_stock_scaling,DATAin%M_POOLS(1:nodays,2))
+                                             DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
+                                             DATAin%Cfol_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
-                                             DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag,
-                                             DATAin%Croots_stock_scaling,DATAin%M_POOLS(1:nodays,3))
+                                             DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
+                                             DATAin%Croots_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for total wood stocks
     if (DATAin%nCwood_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_stock,DATAin%Cwood_stockpts, &
-                                             DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag,
-                                             DATAin%Cwood_stock_scaling,DATAin%M_POOLS(1:nodays,4))
+                                             DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag, &
+                                             DATAin%Cwood_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,4))
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) & 
-                 * DATAin%M_POOLS(:,5)
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
+                 * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
-                                             DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag,
+                                             DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
                                              DATAin%Clit_stock_scaling,mod)
     endif ! nClit_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
-                                             DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag,
-                                             DATAin%Csom_stock_scaling,DATAin%M_POOLS(1:nodays,6))
+                                             DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
+                                             DATAin%Csom_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
-                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag,
+                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              DATAin%soilwater_scaling,mod)
     endif ! nsoilwater > 0
 
@@ -1335,69 +1335,69 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for evapotranspiration
     if (DATAin%nEvap > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nEvap,DATAin%Evappts,DATAin%Evap,DATAin%Evap_unc,DATAin%Evap_lag,
-                                             DATAin%Evap_scaling,DATAin%M_FLUXES(1:nodays,29))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nEvap,DATAin%Evappts,DATAin%Evap,DATAin%Evap_unc,DATAin%Evap_lag, &
+                                             DATAin%Evap_scaling,DATAin%M_FLUXES(1:DATAin%nodays,29))
     endif ! nEvap > 0
     ! Calculate log-likelihood for fire
     if (DATAin%nFire > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nFire,DATAin%Firepts,DATAin%Fire,DATAin%Fire_unc,DATAin%Fire_lag,
-                                             DATAin%Fire_scaling,DATAin%M_FLUXES(1:nodays,17))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nFire,DATAin%Firepts,DATAin%Fire,DATAin%Fire_unc,DATAin%Fire_lag, &
+                                             DATAin%Fire_scaling,DATAin%M_FLUXES(1:DATAin%nodays,17))
     endif ! nFire > 0
     ! Calculate log-likelihood for gross primary production
     if (DATAin%ngpp > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag,
-                                             DATAin%GPP_scaling,DATAin%M_FLUXES(1:nodays,1))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag, &
+                                             DATAin%GPP_scaling,DATAin%M_FLUXES(1:DATAin%nodays,1))
     endif ! ngpp > 0
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag,
-                                             DATAin%harvest_scaling,DATAin%M_FLUXES(1:nodays,30))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
+                                             DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,30))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net biome productivity 
     if (DATAin%nnbe > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-            + DATAin%M_FLUXES(1:nodays,17) & ! Fire
-            - DATAin%M_FLUXES(1:nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
                                              DATAin%NBE_scaling,mod)
     endif ! nnbe > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-            - DATAin%M_FLUXES(1:nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              DATAin%NEE_scaling,mod)    
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:nodays,14) & ! Rhet som
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag,
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3)  & ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              DATAin%Reco_scaling,mod)
     endif ! nreco > 0
     ! Calculate log-likelihood for total wood net increment
     if (DATAin%nCwood_inc > 0) then
-        mod = DATAin%M_FLUXES(1:nodays,7) - DATAin%M_FLUXES(1:nodays,11)
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,7) - DATAin%M_FLUXES(1:DATAin%nodays,11)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_inc,DATAin%Cwood_incpts, &
-                                             DATAin%Cwood_inc,DATAin%Cwood_inc_unc,DATAin%Cwood_inc_lag,
+                                             DATAin%Cwood_inc,DATAin%Cwood_inc_unc,DATAin%Cwood_inc_lag, &
                                              DATAin%Cwood_inc_scaling,mod)
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag,
-                                             DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:nodays,7))
+                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                             DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,
-                                             DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:nodays,11))
+                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
+                                             DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1417,21 +1417,26 @@ module model_likelihood_module
     ! Arguements
     double precision, intent(inout) :: ML_obs_out
     ! local variable
-    double precision :: mod
+    integer :: dummy_nodays = 1, dummy_noobs = 1
+    integer, dimension(1) :: dummy_pts = 1, dummy_lag = 0
+    double precision, dimension(1) :: mod
+    double precision :: dummy_scaling = 1d0
 
     ! Initial soil water condition
     if (DATAin%otherpriors(1) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
         mod = (DATAin%M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
-        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(1,1,1,DATAin%otherpriors(1),DATAin%otherpriorunc(1),0,1,mod))
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(2) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1)) ! sum(Rauto) / sum(GPP)
-        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(2)*likelihood(1,1,1,DATAin%otherpriors(2),DATAin%otherpriorunc(2),0,1,mod))
+        mod = sum(DATAin%M_FLUXES(1:DATAin%nodays,3)) / sum(DATAin%M_FLUXES(1:DATAin%nodays,1)) ! sum(Rauto) / sum(GPP)
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(2)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(2),DATAin%otherpriorunc(2),dummy_lag,dummy_scaling,mod))
     end if
 
     ! ...OTHERPRIOR(3)...
@@ -1441,8 +1446,9 @@ module model_likelihood_module
     if (DATAin%otherpriors(4) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = sum(DATAin%M_FLUXES(:,29)) / sum(DATAin%MET(7,:) * 86400d0)
-        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(4)*likelihood(1,1,1,DATAin%otherpriors(4),DATAin%otherpriorunc(4),0,1,mod))
+        mod = sum(DATAin%M_FLUXES(1:DATAin%nodays,29)) / sum(DATAin%MET(7,1:DATAin%nodays) * 86400d0)
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(4)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(4),DATAin%otherpriorunc(4),dummy_lag,dummy_scaling,mod))
     end if
 
     ! Estimate the biological steady state attractor on the wood pool.
@@ -1451,9 +1457,10 @@ module model_likelihood_module
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(:,7))/dble(DATAin%nodays)) & 
-            * ( (sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+DATAin%M_FLUXES(:,25)))) / dble(DATAin%nodays))
-        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(1,1,1,DATAin%otherpriors(5),DATAin%otherpriorunc(5),0,1,mod))
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
+            * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) / dble(DATAin%nodays))
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
 
     return
@@ -1468,13 +1475,13 @@ module model_likelihood_module
 
     ! Arguments
     integer, intent(in) :: nodays, & ! number of time steps
-                             nobs, & ! number of observed estimates
-                           obspts    ! location of observations in time series
-    double precision, intent(in) :: obs, & ! observation time series
-                                    unc, & ! observation uncertainty
-                                    lag, & ! observation lag period
-                                scaling, & ! scaling factor to account for differing number of observations
-                                    mod    ! model equivalent of the obs
+                             nobs    ! number of observed estimates
+    integer, dimension(nobs), intent(in) :: obspts ! location of observations in time series
+    integer, dimension(nodays), intent(in) :: lag    ! observation lag period
+    double precision, intent(in) :: scaling ! scaling factor to account for differing number of observations
+    double precision, dimension(nodays), intent(in) :: obs, & ! observation time series
+                                                       unc, & ! observation uncertainty
+                                                       mod    ! model equivalent of the obs
 
     ! local variables
     integer :: dn, n, s
@@ -1489,7 +1496,7 @@ module model_likelihood_module
     ! Begin looping through observations
     do n = 1, nobs
        ! Extract the time location of the current observation
-       dn = DATAin%obspts(n)
+       dn = obspts(n)
        ! Determine the lag period starting point
        s = max(1,dn-lag(dn))
        ! Estimate the mean over the lag period and accumulate the log-likelihood score

@@ -51,6 +51,10 @@ module cardamom_io
            ,write_variances                 &
            ,write_covariance_matrix         &
            ,write_covariance_info           &
+           ,update_obs_scaling_normal       &
+           ,update_obs_scaling_nsamples     &
+           ,update_obs_scaling_sqrt_nsamples&
+           ,update_obs_scaling_log_nsamples &
            ,update_for_restart_simulation   &
            ,check_for_existing_output_files &
            ,open_output_files               &

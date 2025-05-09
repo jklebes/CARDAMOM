@@ -339,7 +339,7 @@ program cardamom_framework
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          call update_obs_scaling_nsamples
-         call MHMCMC(1d0,model_likelihood,scale_model_likelihood)
+         call MHMCMC(1d0,model_likelihood,scaled_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          MCO%fixedpars  = .true.
@@ -379,17 +379,14 @@ program cardamom_framework
      if (cost_func_scaling_dble == 0) then
          call update_obs_scaling_normal
      else if (cost_func_scaling_dble == 1) then
-         (tot_exp/dble(DATAin%nnbe))   
          call update_obs_scaling_nsamples
      else if (cost_func_scaling_dble == 2) then
-         (tot_exp/sqrt(dble(DATAin%nnbe)))
          call update_obs_scaling_sqrt_nsamples
-     else if (cost_func_scaling_dble == 3) then
-         (tot_exp/(1d0+log(dble(DATAin%nnbe))))         
+     else if (cost_func_scaling_dble == 3) then        
          call update_obs_scaling_log_nsamples
      end if ! cost_func_scaling_dble == 
      ! Run the mcmc analysis
-     call MHMCMC(1d0,model_likelihood,scale_model_likelihood)
+     call MHMCMC(1d0,model_likelihood,scaled_model_likelihood)
 
      ! Let the user know we are done
      write(*,*)"AP-MCMC done now, moving on ..."

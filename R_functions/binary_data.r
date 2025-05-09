@@ -324,64 +324,6 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       } # acm or not
 
       # Create time series observation matrix, i.e. things with uncertainty associated.
-      # Currently space for 18 time series of observation and its uncertainty.
-      # Uncertainty is assumed to be the Gaussian variance in same units as the observation itself.
-      # NOTE: that not all models are currently coded to be compatible with all observation streams.
-#      OBSMAT = array(-9999.0,dim=c(length(met$run_day),51))
-#      # Line makes the correct array size but with -9999 in place of all
-#      OBSMAT[,1] = OBS$GPP                    # GPP (gC/m2/day)
-#      OBSMAT[,2] = OBS$GPP_unc                # GPP variance (gC/m2/day)
-#      OBSMAT[,3] = OBS$LAI                    # Leaf area index (m2/m2)
-#      OBSMAT[,4] = OBS$LAI_unc                # Leaf area index variance
-#      OBSMAT[,5] = OBS$NEE                    # Net Ecosystem Exchange of CO2 (gC/m2/day)
-#      OBSMAT[,6] = OBS$NEE_unc                # Net Ecosystem Exchange of CO2 variance
-#      OBSMAT[,7] = OBS$Fire                   # Fire C emission (gC/m2day)
-#      OBSMAT[,8] = OBS$Fire_unc               # Fire C emission variance
-#      OBSMAT[,9] = OBS$Reco                   # Ecosystem respiration (Ra + Rh; gC/m2/day)
-#      OBSMAT[,10] = OBS$Reco_unc              # Ecosystem respiration (Ra + Rh) variance
-#      OBSMAT[,11] = OBS$Cfol_stock            # Foliar stock (gC/m2)
-#      OBSMAT[,12] = OBS$Cfol_stock_unc        # Foliar stock variance
-#      OBSMAT[,13] = OBS$Cwood_stock           # Wood stock (above + below; gC/m2)
-#      #OBSMAT[which(OBSMAT[,13] > 0),14] = 250
-#      OBSMAT[,14] = OBS$Cwood_stock_unc       # Wood stock (above + below) variance
-#      OBSMAT[,15] = OBS$Croots_stock          # Fine root stock (gC/m2)
-#      OBSMAT[,16] = OBS$Croots_stock_unc      # Fine root stock variance
-#      OBSMAT[,17] = OBS$Clit_stock            # Foliar + fine root litter stock (gC/m2)
-#      OBSMAT[,18] = OBS$Clit_stock_unc        # Foliar + fine root litter stock variance
-#      OBSMAT[,19] = OBS$Csom_stock            # Soil organic matter stock (gC/m2)
-#      OBSMAT[,20] = OBS$Csom_stock_unc        # Soil organic matter stock variance
-#      OBSMAT[,21] = OBS$Cagb_stock            # Above ground biomass stock (gC/m2)
-#      OBSMAT[,22] = OBS$Cagb_stock_unc        # Above ground biomass stock variance
-#      OBSMAT[,23] = OBS$fAPAR                 # Fraction absorbed PAR
-#      OBSMAT[,24] = OBS$fAPAR_unc             # Fraction absorbed PAR variance
-#      OBSMAT[,25] = -9999                     # Empty
-#      OBSMAT[,26] = -9999                     # Empty
-#      OBSMAT[,27] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
-#      OBSMAT[,28] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
-#      OBSMAT[,29] = OBS$Cfolmax_stock         # Annual foliar maximum (gC/m2)
-#      OBSMAT[,30] = OBS$Cfolmax_stock_unc     # Annual foliar maximum variance
-#      OBSMAT[,31] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
-#      OBSMAT[,32] = OBS$ET_unc                # Evapotranspiration variance
-#      OBSMAT[,33] = OBS$SWE                   # Snow water equivalent (kgH2O/m2)
-#      OBSMAT[,34] = OBS$SWE_unc               # Snow water equivalent variance
-#      OBSMAT[,35] = OBS$nbe                   # Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)
-#      OBSMAT[,36] = OBS$nbe_unc               # Net Biome Exchange variance
-#      OBSMAT[,37] = OBS$Cwood_inc             # Mean woody productivity over lag period (gC/m2/day)
-#      OBSMAT[,38] = OBS$Cwood_inc_unc         # Mean woody productivity varince
-#      OBSMAT[,39] = OBS$Cwood_inc_lag         # Lag period over which to average  (steps)
-#      OBSMAT[,40] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
-#      OBSMAT[,41] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
-#      OBSMAT[,42] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
-#      OBSMAT[,43] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
-#      OBSMAT[,44] = OBS$foliage_to_litter_unc # Mean litter flux varince
-#      OBSMAT[,45] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
-#      #OBSMAT[,46] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
-#      #OBSMAT[,47] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
-#      #OBSMAT[,48] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
-#      OBSMAT[,49] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
-#      OBSMAT[,50] = OBS$harvest_unc           # Extracted C due to harvest varince
-#      OBSMAT[,51] = OBS$harvest_lag           # Lag period over which to average  (steps)
-  
       OBSMAT = array(-9999.0,dim=c(length(met$run_day),66))
       # Line makes the correct array size but with -9999 in place of all
       OBSMAT[,1]  = OBS$GPP                   # GPP (gC/m2/day)
@@ -441,9 +383,9 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       OBSMAT[,55] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
       OBSMAT[,56] = OBS$foliage_to_litter_unc # Mean litter flux varince
       OBSMAT[,57] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
-      OBSMAT[,58] = OBS$Cwood_net_inc         # Mean woody net increment over lag period (gC/m2/day)
-      OBSMAT[,59] = OBS$Cwood_net_inc_unc     # Mean woody net increment varince
-      OBSMAT[,60] = OBS$Cwood_net_inc_lag     # Lag period over which to average  (steps)
+      OBSMAT[,58] = OBS$Cwood_inc         # Mean woody net increment over lag period (gC/m2/day)
+      OBSMAT[,59] = OBS$Cwood_inc_unc     # Mean woody net increment varince
+      OBSMAT[,60] = OBS$Cwood_inc_lag     # Lag period over which to average  (steps)
       OBSMAT[,61] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
       OBSMAT[,62] = OBS$harvest_unc           # Extracted C due to harvest varince
       OBSMAT[,63] = OBS$harvest_lag           # Lag period over which to average (steps)

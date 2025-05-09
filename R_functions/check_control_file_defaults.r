@@ -55,6 +55,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_crop_management") == FALSE)       {path_to_crop_management <<- " "}
   if (exists("path_to_Csom") == FALSE)                  {path_to_Csom <<- " "}
   if (exists("path_to_Cwood_inc") == FALSE)             {path_to_Cwood_inc <<- " "}
+  if (exists("path_to_Cwood_growth") == FALSE)          {path_to_Cwood_growth <<- " "}
   if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- "v"}
   if (exists("path_to_Cwood") == FALSE)                 {path_to_Cwood <<- " "}
   if (exists("path_to_Cwood_initial") == FALSE)         {path_to_Cwood_initial <<- " "}
@@ -77,6 +78,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("soilwater_source") == FALSE)              {soilwater_source <<- " "}
   if (exists("et_source") == FALSE)                     {et_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
+  if (exists("Cwood_growth_source") == FALSE)           {Cwood_growth_source <<- " "}
   if (exists("Cwood_mortality_source") == FALSE)        {Cwood_mortality_source <<- " "}
   if (exists("gpp_source") == FALSE)                    {gpp_source <<- " "}
   if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
@@ -151,6 +153,7 @@ check_control_file_defaults<-function(paths) {
   if (crop_management_source != "site_specific" & crop_management_source != " " & path_to_crop_management == " "){stop(paste("specified 'crop_management_source' and 'path_to_crop_management' incompatible"))}
   if (Csom_source != "site_specific" & Csom_source != " " & path_to_Csom == " ")                                 {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
   if (Cwood_inc_source != "site_specific" & Cwood_inc_source != " " & path_to_Cwood_inc == " ")                  {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
+  if (Cwood_growth_source != "site_specific" & Cwood_growth_source != " " & path_to_Cwood_growth == " ")         {stop(paste("specified 'Cwood_growth_source' and 'path_to_Cwood_growth' incompatible"))}
   if (Cwood_mortality_source != "site_specific" & Cwood_mortality_source != " " & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
   if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
   if (Cwood_initial_source != "site_specific" & Cwood_initial_source != " " & path_to_Cwood_initial == " ")      {stop(paste("specified 'Cwood_initial_source' and 'path_to_Cwood_initial' incompatible"))}
