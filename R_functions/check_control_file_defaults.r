@@ -83,7 +83,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("gpp_source") == FALSE)                    {gpp_source <<- " "}
   if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
   if (exists("Reco_source") == FALSE)                   {Reco_source <<- " "}
-  if (exists("NEE_source") == FALSE)                    {NEE_source <<- " "}
+  if (exists("nee_source") == FALSE)                    {nee_source <<- " "}
   if (exists("nbe_source") == FALSE)                    {nbe_source <<- " "}
   if (exists("harvest_source") == FALSE)                {harvest_source <<- " "}
   if (exists("foliage_to_litter_source") == FALSE)      {foliage_to_litter_source <<- " "}
@@ -168,7 +168,7 @@ check_control_file_defaults<-function(paths) {
 #  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
 #  if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
 #  if (exists("Reco_source") == FALSE)                   {Reco_source <<- " "}
-#  if (exists("NEE_source") == FALSE)                    {NEE_source <<- " "}
+#  if (exists("nee_source") == FALSE)                    {nee_source <<- " "}
 #  if (exists("harvest_source") == FALSE)                {harvest_source <<- " "}
 #  if (exists("foliage_to_litter_source") == FALSE)      {foliage_to_litter_source <<- " "}
 #  if (exists("Cfol_initial_source") == FALSE)           {Cfol_initial_source <<- " "}

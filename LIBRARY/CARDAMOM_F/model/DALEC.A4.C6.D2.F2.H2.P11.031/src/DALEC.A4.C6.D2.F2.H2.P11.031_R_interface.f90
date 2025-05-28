@@ -193,13 +193,17 @@ subroutine rdalec31(output_dim,MTT_dim,SS_dim &
      ! mean Leaf Water Potential
      out_var1(i,1:nodays,65) = DIAGS(1:nodays,9)           ! mean LWP (MPa)
      ! C allocation diagnositics
-     out_var1(i,1:nodays,66) = FLUXES(1:nodays,50)         ! Labile:biomass ratio limitation (0-1)
-     out_var1(i,1:nodays,67) = FLUXES(1:nodays,51)         ! Temperature limitation on foliage growth (0-1)
-     out_var1(i,1:nodays,68) = FLUXES(1:nodays,52)         ! Temperature limitation on fine root growth (0-1)
-     out_var1(i,1:nodays,69) = FLUXES(1:nodays,53)         ! Temperature limitation on wood growth (0-1)
-     out_var1(i,1:nodays,70) = FLUXES(1:nodays,54)         ! wSWP limitation on foliage growth (0-1)
-     out_var1(i,1:nodays,71) = FLUXES(1:nodays,55)         ! wSWP limitation on fine root growth (0-1)
-     out_var1(i,1:nodays,72) = FLUXES(1:nodays,56)         ! wSWP limitation on wood growth (0-1)
+     out_var1(i,1:nodays,66) = DIAGS(1:nodays,15)          ! Labile:biomass ratio limitation (0-1)
+     out_var1(i,1:nodays,67) = DIAGS(1:nodays,16)          ! Temperature limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,68) = DIAGS(1:nodays,17)          ! Temperature limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,69) = DIAGS(1:nodays,18)          ! Temperature limitation on wood growth (0-1)
+     out_var1(i,1:nodays,70) = DIAGS(1:nodays,19)          ! wSWP limitation on foliage growth (0-1)
+     out_var1(i,1:nodays,71) = DIAGS(1:nodays,20)          ! NOT IN USE wSWP limitation on fine root growth (0-1)
+     out_var1(i,1:nodays,72) = DIAGS(1:nodays,21)          ! wSWP limitation on wood growth (0-1)
+     out_var1(i,1:nodays,73) = DIAGS(1:nodays,22)          ! Canopy photosynthetic return (i.e. GPP(dayl) - Rm_leaf(24hr))
+     ! Canopy aerodynamic diagnostics
+     out_var1(i,1:nodays,74) = DIAGS(1:nodays,23)          ! Canopy area scaling as a function of light
+     out_var1(i,1:nodays,75) = DIAGS(1:nodays,24)          ! Canopy area scaking as a function of wind
 
      !
      ! Calculate long-term mean of out_var1

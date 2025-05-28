@@ -97,157 +97,157 @@ module cardamom_io
         DATAin%nofluxes = 4
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 1) then
-        ! ID = 1 - DALEC.D1.F2.#
+        ! ID = 1 - DALEC.D1.F2.001
         DATAin%nopools = 5
         DATAin%nopars = 22
         DATAin%nofluxes = 35
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC.C1.D1.F2.P1.#
+        ! ID = 2 - DALEC.C1.D1.F2.P1.002
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.#
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.003
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 4) then
-        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.#
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.004
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 49
-        DATAin%nodiags = 20 ! Initial value, will need updating
+        DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 5) then
-        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.#
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.005
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 6) then
-        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.#
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.006
         DATAin%nopools = 8
         DATAin%nopars = 35
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 7) then
-        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.#
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.007
         DATAin%nopools = 8
         DATAin%nopars = 36
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 8) then
-        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.#
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.008
         DATAin%nopools = 7
         DATAin%nopars = 43
         DATAin%nofluxes = 25
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 9) then
-        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.#
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.009
         DATAin%nopools = 8
         DATAin%nopars = 46
         DATAin%nofluxes = 34
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 10) then
-        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.#
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.010
         DATAin%nopools = 7
         DATAin%nopars = 48
         DATAin%nofluxes = 25
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 11) then
-        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.#
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.011
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 34
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 12) then
-        ! ID = 12 - DALEC.C4.D1.F2.#
+        ! ID = 12 - DALEC.C4.D1.F2.012
         DATAin%nopools = 3
         DATAin%nopars = 15
         DATAin%nofluxes = 28
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 13) then
-        ! ID = 13 - DALEC.C5.D1.F2.P1.#
+        ! ID = 13 - DALEC.C5.D1.F2.P1.013
         DATAin%nopools = 4
         DATAin%nopars = 21
         DATAin%nofluxes = 32
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 14) then
-        ! ID = 14 - DALEC.C3.M1.#
+        ! ID = 14 - DALEC.C3.M1.014
         DATAin%nopools = 9
         DATAin%nopars = 37
         DATAin%nofluxes = 42
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 15) then
-        ! ID = 15 - DALEC.A3.C3.H2.M1.# i.e. the CROP model
+        ! ID = 15 - DALEC.A3.C3.H2.M1.015 i.e. the CROP model
         DATAin%nopools = 10
         DATAin%nopars = 38
         DATAin%nofluxes = 46
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 16) then
-        ! ID = 16 - DALEC.M2.#
+        ! ID = 16 - DALEC.M2.016
         DATAin%nopools = 5
         DATAin%nopars = 34
         DATAin%nofluxes = 45
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 17) then
-        ! ID = 17 - DALEC.A3.H2.M2.#
+        ! ID = 17 - DALEC.A3.H2.M2.017
         DATAin%nopools = 6
         DATAin%nopars = 37
         DATAin%nofluxes = 55
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 18) then
-        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.#
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.018
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 19) then
-        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.#
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.019
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 20) then
-        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.#
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.020
         DATAin%nopools = 7
         DATAin%nopars = 32
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 21) then
-        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.#
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.021
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 22) then
-        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.#
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.022
         DATAin%nopools = 7
         DATAin%nopars = 34
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 23) then
-        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.#
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.023
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.#
+        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.024
         DATAin%nopools = 8
         DATAin%nopars = 51
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 25) then
-        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.#
+        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.025
         DATAin%nopools = 8
         DATAin%nopars = 49
         DATAin%nofluxes = 54
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 26) then
-        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.#
+        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.026
         DATAin%nopools = 8
         DATAin%nopars = 48
         DATAin%nofluxes = 34
@@ -265,27 +265,31 @@ module cardamom_io
         DATAin%nofluxes = 43
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 29) then
-        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.#
+        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.029
         DATAin%nopools = 7
         DATAin%nopars = 33
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 30) then
-        ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.#
+        ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.030
         DATAin%nopools = 7
         DATAin%nopars = 38
         DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 31) then
-        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.#
+        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.031
         DATAin%nopools = 7
-        DATAin%nopars = 42+1
-        DATAin%nofluxes = 56
-        DATAin%nodiags = 20 ! Initial value, will need updating
+        DATAin%nopars = 43
+        DATAin%nofluxes = 49
+        DATAin%nodiags = 24
     else if (DATAin%ID == 32) then
         ! ID = 32 -
     else if (DATAin%ID == 33) then
-        ! ID = 33 -
+        ! ID = 33 - DALEC.A4.C6.D2.F2.H3.P12.033
+        DATAin%nopools = 7
+        DATAin%nopars = 45
+        DATAin%nofluxes = 49
+        DATAin%nodiags = 25       
     else if (DATAin%ID == 34) then
         ! ID = 34 -
     else if (DATAin%ID == 35) then
@@ -1156,12 +1160,10 @@ module cardamom_io
     call read_binary_data(infile)
 
     ! need to allocate memory to the model output variables
-    allocate(DATAin%M_LAI(DATAin%nodays),DATAin%M_GPP(DATAin%nodays) &
-            ,DATAin%M_NEE(DATAin%nodays),DATAin%M_FLUXES(DATAin%nodays,DATAin%nofluxes)&
+    allocate(DATAin%M_FLUXES(DATAin%nodays,DATAin%nofluxes)&
             ,DATAin%M_POOLS((DATAin%nodays+1),DATAin%nopools),DATAin%M_DIAGS(DATAin%nodays,DATAin%nodiags))
 
     ! force zero in states and fluxes
-    DATAin%M_LAI(:) = 0d0 ; DATAin%M_GPP(:) = 0d0 ; DATAin%M_NEE(:) = 0d0
     DATAin%M_FLUXES(:,:) = 0d0 ; DATAin%M_POOLS(:,:) = 0d0 ; DATAin%M_DIAGS(:,:) = 0d0
 
     ! alert the user

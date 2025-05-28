@@ -505,8 +505,9 @@ generate_parameter_maps<-function(PROJECT) {
   # Generate generic maps of spatial aggregates of drivers$met
   for (m in seq(1, length(met_array_names))) {
        zrange = c(min(as.vector(grid_output$met_array_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$met_array_averages[,,m]),na.rm=TRUE))
-       zrange = zrange + (c(-0.01,0.01) * zrange)
-       if (diff(zrange) == 0) {zrange = c(-0.01,0.01)}
+       zrange = zrange + (c(-0.05,0.05) * zrange)
+       if (diff(zrange) == 0) {zrange = c(-0.05,0.05)}
+       zrange = sort(zrange)
        fig_name = paste("mean_met_array_maps_",gsub(" ","_",met_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
        fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
        fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
@@ -515,7 +516,7 @@ generate_parameter_maps<-function(PROJECT) {
        image.plot(x = grid_long, y = grid_lat, z = grid_output$met_array_averages[,,m], col=rev(colour_choices)
                  ,main=met_array_names[m],axes=FALSE, cex.main=1.1,legend.width=3.0
                  ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
-                 ,zlim= zrange)
+                 ,zlim=zrange)
        map(add=TRUE, lwd = 2)
        #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
        dev.off()
@@ -526,9 +527,9 @@ generate_parameter_maps<-function(PROJECT) {
 
   # Generate generic maps of spatial aggregates of drivers$obs
   for (m in seq(1, length(obs_array_names))) {
-       if (length(which(is.na(grid_output$obs_array_averages[,,m]) != TRUE)) > 0) {
+       if (any(is.na(grid_output$obs_array_averages[,,m]) == FALSE)) {
            zrange = c(min(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE))
-           zrange = zrange + (c(-0.01,0.01) * zrange)
+           zrange = zrange + (c(-0.05,0.05) * zrange)     
            fig_name = paste("mean_obs_array_maps_",gsub(" ","_",obs_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
            fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
            fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)
@@ -543,46 +544,6 @@ generate_parameter_maps<-function(PROJECT) {
            dev.off()
        }
   }
-
-  # mean temperature
-  jpeg(file=paste("mean_temperature_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-  par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_temperature_C, col=rev(colour_choices)
-            ,main="Mean air temperature (oC)",axes=FALSE, cex.main=1.1,legend.width=3.0
-            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1)
-            ,zlim=c(min(as.vector(grid_output$mean_temperature_C),na.rm=TRUE),max(as.vector(grid_output$mean_temperature_C),na.rm=TRUE)))
-  map(add=TRUE, lwd = 2)
-  #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-  dev.off()
-  # mean radiation
-  jpeg(file=paste("mean_radiation_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-  par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_radiation_MJm2day, col=rev(colour_choices)
-            ,main="Mean radiation (MJ/m2/day)"
-            ,axes=FALSE, cex.main=1.1,legend.width=3.0
-            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,36))
-  map(add=TRUE, lwd = 2)
-  #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-  dev.off()
-  # mean vpd
-  jpeg(file=paste("mean_vpd_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-  par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_vpd_Pa, col=rev(colour_choices)
-            ,main="Mean VPD (Pa)"
-            ,axes=FALSE, cex.main=1.1, legend.width=3.0, cex=1.5
-            ,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_output$mean_vpd_Pa),na.rm=TRUE)))
-  map(add=TRUE, lwd = 2)
-  #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-  dev.off()
-  # mean precipitation
-  jpeg(file=paste("mean_precipitation_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
-  par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
-  image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_precipitation_kgH2Om2yr, col=colour_choices,
-             main="Mean precipitation (kgH2O/m2/yr)",axes=FALSE, cex.main=1.1,legend.width=3.0
-            ,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1),zlim=c(0,max(as.vector(grid_output$mean_precipitation_kgH2Om2yr),na.rm=TRUE)))
-  map(add=TRUE, lwd = 2)
-  #contour(grid_output$landmask, add = TRUE, lwd=1.0, nlevels=1,axes=FALSE,drawlabels=FALSE,col="black")
-  dev.off()
 
   # tidy before leaving
   gc(reset=TRUE, verbose=FALSE)

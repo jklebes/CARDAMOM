@@ -120,8 +120,8 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
-                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
@@ -129,8 +129,8 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
                 # Take the mean first to allow for weighting based on the lags
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
-                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
                 # Then reaccumulate based on the total number of lags
                 obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
@@ -158,7 +158,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
    # Create output object
    output = list(obs_out, obs_unc_out, obs_lag_out)
    # Update with the correct variable names
-   names(output)[1:2]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
+   names(output)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
    # Return function
    return(output)
 
@@ -233,14 +233,14 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
                 # Then reaccumulate based on the total number of lags
                 obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
@@ -267,7 +267,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
    # Create output object
    output = list(obs_out,obs_lag_out)
    # Update with the correct variable names
-   names(output)[1]<-c(est_var_name_out,lag_var_name_out)
+   names(output)[1:2]<-c(est_var_name_out,lag_var_name_out)
    # Return function
    return(output)
 

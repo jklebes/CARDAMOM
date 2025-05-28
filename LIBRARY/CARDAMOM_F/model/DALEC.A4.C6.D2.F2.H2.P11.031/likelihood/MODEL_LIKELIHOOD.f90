@@ -179,8 +179,7 @@ module model_likelihood_module
     use carbon_model_mod, only: carbon_model
 
     ! Model likelihood function specifically intended for the determination of
-    ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
-    ! DALEC_GSI
+    ! appropriate initial parameter choices, consistent with EDCs for this DALEC
 
     implicit none
 
@@ -232,7 +231,6 @@ module model_likelihood_module
 !    endif
 
     ! convert to a probability
-!    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
@@ -486,7 +484,7 @@ module model_likelihood_module
                                    ,met(nomet,nodays)           & ! array of met drivers
                                    ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
                                    ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
-                                   ,M_DIAGS(nodays,nodiags)    & ! time varying diagnostics from current model simulation model
+                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model
                                    ,meantemp                      ! site mean temperature (oC)
 
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs

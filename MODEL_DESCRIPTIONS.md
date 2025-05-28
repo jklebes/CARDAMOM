@@ -49,7 +49,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
 | 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
-| 33 | DALEC.A4.C6.D2.F2.H2.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | Orci-Fernandez               | Unpublished |
+| 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -117,12 +117,12 @@ M = Managed Grassland / arable crops (Table 10)
 | P4         | As P3 but with canopy growth dependent on a positive net canopy carbon export being estimated on the new leaf area. | Published (Famiglietti et al., 2021) |
 | P5         | As P1 except labile life span can now be >1 year                           | Unpublished               |
 | P6         | As P2 except labile life span can now be >1 year                           | Unpublished               |
-| P7         | As P4 but canopy growth simulated by non-linear version of GSI, the canopy growth index (CGI). Canopy mortality a Michaelis-Menten function of NCCE, the canopy mortality index (CMP) | Unpublished |
+| P7         | As P4 but canopy growth simulated by non-linear version of GSI, the canopy growth index (CGI). Canopy mortality a Michaelis-Menten function of NCCE, the canopy mortality index (CMI) | Unpublished |
 | P8         | As P7 but CMI a non-linear function of temperature and Michaelis-Menten function of available labile C | Unpublished |
 | P9         | As P7 but CMI is now 1-CGI. The rolling average NCCE is used to co-determine canopy mortality via a Michaelis-Menten function. | Unpublished |
 | P10        | As P4 but GSI is now a non-linear function of temperature alone. Canopy age is explicitly tracked from point of growth. The canopy photosynthetic efficiency declines on a per-age-class basis as a function of temperature, soil water potential and time. Canopy loss occures when an age class no-longer has a positive NCCE. | Unpublished |
-| P11        | As P1 but allocation to tissues from labile are based on potential growth rates modeified by temperature, water and available labile. | Unpublished |
-| P12        | P11 modified to implement canopy growth and mortality within a P7 style CMP and CGI | Unpublished |
+| P11        | As P1 but allocation to tissues from labile are based on potential growth rates modified by temperature, water and available labile. | Unpublished |
+| P12        | P11 modified to implement canopy growth and mortality within a P7 inspired CMP and CGI | Unpublished |
 
 #### TABLE 9. Respiration (either autotrophic or heterotrophic) sub-models
 

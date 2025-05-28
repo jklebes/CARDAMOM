@@ -94,7 +94,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         nbe = read_site_specific_obs("NBE_gCm2day",infile) 
         nbe_unc = read_site_specific_obs("NBE_unc_gCm2day",infile)
-        nbe_lag = read_site_specific_obs("NBE_lag",infile)
+        nbe_lag = read_site_specific_obs("NBE_lag_step",infile)
         if (max(nbe_unc) == -9999) {
             nbe_unc = rep(-9999,times = length(nbe))
             # apply default uncertainty consistent with Eddy covariance estimates of NEE, 
@@ -141,7 +141,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         lai = read_site_specific_obs("LAI_m2m2",infile) 
         lai_unc = read_site_specific_obs("LAI_unc_m2m2",infile)
-        lai_lag = read_site_specific_obs("LAI_lag",infile)
+        lai_lag = read_site_specific_obs("LAI_lag_step",infile)
         if (max(lai_unc) == -9999) {
             lai_unc = rep(-9999,times = length(lai))
             # apply default uncertainty
@@ -175,7 +175,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                                                                       fapar_all,agg_func = "mean",
                                                                       est_var_name_in = "fapar",
                                                                       unc_var_name_in = "fapar_unc",
-                                                                      lag_var_name_in = "fapar_lag",
+                                                                      lag_var_name_in = "fapar_lag_day",
                                                                       est_var_name_out = "fapar",
                                                                       unc_var_name_out = "fapar_unc",
                                                                       lag_var_name_out = "fapar_lag")
@@ -190,7 +190,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         fapar = read_site_specific_obs("fAPAR_fraction",infile) 
         fapar_unc = read_site_specific_obs("fAPAR_unc_fraction",infile)
-        fapar_lag = read_site_specific_obs("fAPAR_lag",infile)
+        fapar_lag = read_site_specific_obs("fAPAR_lag_step",infile)
         if (max(fapar_unc) == -9999) {
             fapar_unc = rep(-9999,times = length(fapar))
             # apply default uncertainty
@@ -218,7 +218,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Cfol_stock = read_site_specific_obs("Cfol_stock_gCm2",infile)
         Cfol_stock_unc = read_site_specific_obs("Cfol_stock_unc_gCm2",infile)
-        Cfol_stock_lag = read_site_specific_obs("Cfol_stock_lag",infile)
+        Cfol_stock_lag = read_site_specific_obs("Cfol_stock_lag_step",infile)
         if (length(Cfol_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Cfol_stock_unc = rep(-9999,times = length(Cfol_stock))
@@ -454,7 +454,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         GPP = read_site_specific_obs("GPP_gCm2day",infile)
         GPP_unc = read_site_specific_obs("GPP_unc_gCm2day",infile)
-        GPP_lag = read_site_specific_obs("GPP_lag",infile)
+        GPP_lag = read_site_specific_obs("GPP_lag_step",infile)
         if (length(GPP_unc) == 1) {
             GPP_unc = rep(-9999,times = length(GPP))
             # Composed of NEE 0.58 gC/m2/day (Hill et al., 2012) plus mass balance mismatch of
@@ -506,7 +506,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Fire = read_site_specific_obs("fire_gCm2day",infile)
         Fire_unc = read_site_specific_obs("fire_unc_gCm2day",infile)
-        Fire_lag = read_site_specific_obs("fire_lag",infile)
+        Fire_lag = read_site_specific_obs("fire_lag_step",infile)
         if (length(Fire_unc) == 1) {
             Fire_unc = rep(-9999,times = length(Fire))
             # Ill defined assumption
@@ -558,7 +558,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         if (modelname == "ACM") {infile=paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")}
         ET = read_site_specific_obs("Evap_kgH2Om2day",infile)
         ET_unc = read_site_specific_obs("Evap_unc_kgH2Om2day",infile)
-        ET_lag = read_site_specific_obs("Evap_lag",infile)
+        ET_lag = read_site_specific_obs("Evap_lag_step",infile)
         if (length(ET_unc) == 1) {
             ET_unc = rep(-9999,times = length(ET))
             ET_unc[which(ET > -9999)] = 0.77 # Assuming Hollinger & Richardson (2005) Tree Physiology, 25, 873-885
@@ -603,7 +603,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Reco = read_site_specific_obs("Reco_gCm2day",infile)
         Reco_unc = read_site_specific_obs("Reco_unc_gCm2day",infile)
-        Reco_lag = read_site_specific_obs("Reco_lag",infile)
+        Reco_lag = read_site_specific_obs("Reco_lag_step",infile)
         if (length(Reco_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Reco_unc = rep(-9999,times = length(Reco))
@@ -624,11 +624,11 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     ###
     ## Get some NEE information (time series; gC/m2/day)
 
-    if (NEE_source == "site_specific") {
+    if (nee_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         NEE = read_site_specific_obs("NEE_gCm2day",infile)
         NEE_unc = read_site_specific_obs("NEE_unc_gCm2day",infile)
-        NEE_lag = read_site_specific_obs("NEE_lag",infile)
+        NEE_lag = read_site_specific_obs("NEE_lag_step",infile)
         if (length(NEE_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             NEE_unc = rep(-9999,times = length(NEE))
@@ -654,7 +654,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Cwood_stock = read_site_specific_obs("Cwood_stock_gCm2",infile)
         Cwood_stock_unc = read_site_specific_obs("Cwood_stock_unc_gCm2",infile)
-        Cwood_stock_lag = read_site_specific_obs("Cwood_stock_lag",infile)
+        Cwood_stock_lag = read_site_specific_obs("Cwood_stock_lag_step",infile)
         if (length(Cwood_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Cwood_stock_unc = rep(-9999,times = length(Cwood_stock))
@@ -711,7 +711,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Cagb_stock = read_site_specific_obs("Cagb_stock_gCm2",infile)
         Cagb_stock_unc = read_site_specific_obs("Cagb_stock_unc_gCm2",infile)
-        Cagb_stock_lag = read_site_specific_obs("Cagb_stock_lag",infile)        
+        Cagb_stock_lag = read_site_specific_obs("Cagb_stock_lag_step",infile)        
         if (length(Cagb_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Cagb_stock_unc = rep(-9999,times = length(Cagb_stock))
@@ -736,7 +736,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Croots_stock = read_site_specific_obs("Croots_stock_gCm2",infile)
         Croots_stock_unc = read_site_specific_obs("Croots_stock_unc_gCm2",infile)
-        Croots_stock_lag = read_site_specific_obs("Croots_stock_lag",infile)
+        Croots_stock_lag = read_site_specific_obs("Croots_stock_lag_step",infile)
         if (length(Croots_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
             Croots_stock_unc = rep(-9999,times = length(Croots_stock))
@@ -758,7 +758,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Clit_stock = read_site_specific_obs("Clit_stock_gCm2",infile)
         Clit_stock_unc = read_site_specific_obs("Clit_stock_unc_gCm2",infile)
-        Clit_stock_lag = read_site_specific_obs("Clit_stock_lag",infile)
+        Clit_stock_lag = read_site_specific_obs("Clit_stock_lag_step",infile)
         if (length(Clit_stock_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
            Clit_stock_unc = rep(-9999,times = length(Clit_stock))
@@ -780,7 +780,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
       infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
       Csom_stock = read_site_specific_obs("Csom_stock_gCm2",infile)
       Csom_stock_unc = read_site_specific_obs("Csom_stock_unc_gCm2",infile)
-      Csom_stock_lag = read_site_specific_obs("Csom_stock_lag",infile)
+      Csom_stock_lag = read_site_specific_obs("Csom_stock_lag_step",infile)
       if (length(Csom_stock_unc) == 1) {
         # on the other hand if not then we have no uncertainty info, so use default
         Csom_stock_unc = rep(-9999,times = length(Csom_stock))
@@ -808,7 +808,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         Ccoarseroot_stock = read_site_specific_obs("Ccoarseroot_stock_gCm2",infile)
         Ccoarseroot_stock_unc = read_site_specific_obs("Ccoarseroot_stock_unc_gCm2",infile)
-        Ccoarseroot_stock_lag = read_site_specific_obs("Ccoarseroot_stock_lag",infile)
+        Ccoarseroot_stock_lag = read_site_specific_obs("Ccoarseroot_stock_lag_step",infile)
       if (length(Ccoarseroot_stock_unc) == 1) {
           # on the other hand if not then we have no uncertainty info, so use default
           Ccoarseroot_stock_unc = rep(-9999,times = length(Ccoarseroot_stock))
@@ -824,30 +824,13 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
-    ## Get some Cfolmax information (stock)
-
-    if (Cfolmax_stock_source == "site_specific") {
-        infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        Cfolmax_stock = read_site_specific_obs("Cfolmax_stock_gCm2",infile)
-        Cfolmax_stock_unc = read_site_specific_obs("Cfolmax_stock_unc_gCm2",infile)
-        if (length(Cfolmax_stock_unc) == 1) {
-            # on the other hand if not then we have no uncertainty info, so use default
-            Cfolmax_stock_unc = rep(-9999,times = length(Cfolmax_stock))
-            Cfolmax_stock_unc[which(Cfolmax_stock != -9999)] = abs(0.24 * Cfolmax_stock[which(Cfolmax_stock != -9999)])
-        }
-    } else {
-        # assume no data available
-        Cfolmax_stock = -9999 ; Cfolmax_stock_unc = -9999
-    }
-
-    ###
     ## Get some snow water equivalent (kgH2O/m2 or mm)
 
     if (snow_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         SWE = read_site_specific_obs("snow_water_kgH2Om2",infile)
         SWE_unc = read_site_specific_obs("snow_water_unc_kgH2Om2",infile)
-        SWE_lag = read_site_specific_obs("snow_water_lag",infile)
+        SWE_lag = read_site_specific_obs("snow_water_lag_step",infile)
         if (length(which(SWE_unc != -9999)) == 0) {
             # on the other hand if not then we have no uncertainty info, so use default
            SWE_unc=rep(sd(SWE[which(SWE != -9999)],na.rm=TRUE),length.out=length(SWE))
@@ -1047,7 +1030,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
         soilwater = read_site_specific_obs("soil_water_m3m3",infile)
         soilwater_unc = read_site_specific_obs("soil_water_unc_m3m3",infile)
-        soilwater_lag = read_site_specific_obs("soil_water_lag",infile)
+        soilwater_lag = read_site_specific_obs("soil_water_lag_step",infile)
         if (soilwater_unc == -9999 & soilwater > 0) {
           # on the other hand if not then we have no uncertainty info, so use default
           soilwater_unc = 0.10 * soilwater
@@ -1108,7 +1091,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         if (length(deforestation) == 1 && deforestation == -9999) {
             deforestation = read_site_specific_obs("lai_loss",infile)
         }
-        deforestation_lag = read_site_specific_obs("deforestation_fraction_lag",infile)
+        deforestation_lag = read_site_specific_obs("deforestation_fraction_lag_step",infile)
         if (length(deforestation_lag) == 1) {deforestation_lag = rep(0, times = length(deforestation))}
         forest_management = read_site_specific_obs("management_type",infile)
         if (length(forest_management) == 1) {forest_management = rep(2, times = length(deforestation))}
@@ -1139,7 +1122,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (burnt_area_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_met.csv",sep="")
         burnt_area = read_site_specific_obs("burnt_area_fraction",infile)
-        burnt_area_lag = read_site_specific_obs("burnt_area_fraction_lag",infile)
+        burnt_area_lag = read_site_specific_obs("burnt_area_fraction_lag_step",infile)
     } else if (burnt_area_source == " "){
         # assume no data available
         burnt_area = 0 ; burnt_area_lag = 0
@@ -1232,7 +1215,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 ET = ET, ET_unc = ET_unc, ET_lag = ET_lag, 
                 NEE = NEE, NEE_unc = NEE_unc, NEE_lag = NEE_lag, 
                 Reco = Reco, Reco_unc = Reco_unc, Reco_lag = Reco_lag,
-                fAPAR = fapar, fAPAR_unc = fapar_unc, fAPAR_lag = fapar_unc,
+                fAPAR = fapar, fAPAR_unc = fapar_unc, fAPAR_lag = fapar_lag,
                 Cfol_stock = Cfol_stock, Cfol_stock_unc = Cfol_stock_unc, Cfol_stock_lag = Cfol_stock_lag,
                 Cwood_stock = Cwood_stock, Cwood_stock_unc = Cwood_stock_unc, Cwood_stock_lag = Cwood_stock_lag, 
                 Cagb_stock = Cagb_stock, Cagb_stock_unc = Cagb_stock_unc, Cagb_stock_lag = Cagb_stock_lag,
@@ -1247,7 +1230,6 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 Cwood_growth = Cwood_growth, Cwood_growth_unc = Cwood_growth_unc, Cwood_growth_lag = Cwood_growth_lag,
                 Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag,
                 harvest = harvest, harvest_unc = harvest_unc, harvest_lag = harvest_lag,
-                Cfolmax_stock = Cfolmax_stock, Cfolmax_stock_unc = Cfolmax_stock_unc, 
                 Csom_initial = Csom_initial, Csom_initial_unc = Csom_initial_unc, 
                 Cfol_initial = Cfol_initial, Cfol_initial_unc = Cfol_initial_unc,
                 Cwood_initial = Cwood_initial, Cwood_initial_unc = Cwood_initial_unc, 

@@ -340,7 +340,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
           est_out[filter] = NA ; lag_out[filter] = NA
       }
       # Set dummy value for the output uncertainty if required
-      if (std_present == FALSE) {std_out = -9999} 
+      if (std_present == FALSE) {std_out = array(-9999, dim=c(xdim,ydim,length(doy_out)))} 
       # Set default value for the lag period if required, i.e. 0 day
       if (lag_present == FALSE) {lag_out = array(as.integer(default_lag), dim=c(xdim,ydim,length(doy_out)))} #  
       if (length(missing_years) == 0) {missing_years = -9999}
@@ -617,7 +617,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
         }
 
         # Set dummy value for the output uncertainty if required
-        if (std_present == FALSE) {std_out = -9999} 
+        if (std_present == FALSE) {std_out = array(-9999, dim=c(xdim,ydim,length(doy_out)))} 
         # Set a default value for the output lag if required, 0 day.
         if (lag_present == FALSE) {lag_out = array(as.integer(default_lag), dim=c(xdim,ydim,length(doy_out)))} #  
         if (length(missing_years) == 0) {missing_years = -9999}
@@ -630,6 +630,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
 
         # clean up variables
         rm(est_out,std_out,lag_out,doy_out,lat,long,missing_years) ; gc(reset=TRUE,verbose=FALSE)
+        # Return the output
         return(output_all)
 
     } else if (data_source == " " | data_source == "site_specific") {

@@ -200,10 +200,6 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nsoilwater             & ! number of surface soil water observations
                 ,nharvest                 ! number of harvest observations
 
-      ! saving computational speed by allocating memory to model output
-      double precision, allocatable, dimension(:) :: M_GPP    & !
-                                                    ,M_NEE    & !
-                                                    ,M_LAI      !
       ! timing variable
       integer :: nos_years, steps_per_year
       double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)

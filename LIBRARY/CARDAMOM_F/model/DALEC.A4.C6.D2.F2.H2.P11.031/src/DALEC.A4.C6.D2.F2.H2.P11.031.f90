@@ -137,7 +137,7 @@ module CARBON_MODEL_MOD
                     seconds_per_day = 86400d0,      & ! Number of seconds per day
                   seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
-  ! ACM-GPP-ET parameters
+  ! Photosynthesis / RTM / respiration parameters
   double precision, parameter :: &
                        Vc_minT = -6.991d0,     & ! Temperature at which all photosynthetic activity is shutdown
                        Vc_coef = 0.1408d0,     & ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs
@@ -164,7 +164,12 @@ module CARBON_MODEL_MOD
     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
    canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
-                         iWUE = 4.6875d-4 !1.5d-2 ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                         iWUE = 4.6875d-4,     & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                  Rg_fraction = 0.21875d0,     & ! fraction of C allocation towards each pool
+                                                 ! lost as growth respiration
+                                                 ! (i.e. 0.28 .eq. xNPP)
+              one_Rg_fraction = 1d0 - Rg_fraction
+
   ! Canopy scale minimum leaf water potential default assignment
   double precision :: minlwp = minlwp_default
 
@@ -389,7 +394,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,lat                 ! site latitude (degrees)
 
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
     double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
@@ -571,7 +575,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
         allocate(deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
-                 daylength_seconds_1(nodays),rainfall_time(nodays))
+                 daylength_seconds_1(nodays),rainfall_time(nodays),airt_zero_fraction_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -597,7 +601,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! calculate inverse for each time step in seconds
         daylength_seconds_1 = daylength_seconds ** (-1d0)
         ! fraction of temperture period above freezing
-        airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+        airt_zero_fraction_time = 0d0
+        where (met(2,:) > 0d0) airt_zero_fraction_time = 1d0 
+        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
@@ -858,6 +864,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayT = leafT ! Initially, assume day time canopy and air temperatures are the same
        wind_spd = met(15,n) ! wind speed (m/s)
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
+       airt_zero_fraction = airt_zero_fraction_time(n) ! fraction of above / below freezing temperature
 
        ! calculate LAI value
        lai = POOLS(n,2)/pars(17)
@@ -922,6 +929,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Units converted from canopy top m/s to canopy scale (mmolH2O/m2ground/s)
        DIAGS(n,6) = aerodynamic_conductance * convert_ms1_mmol_1 * &
                     leaf_canopy_wind_scaling
+       DIAGS(n,23) = leaf_canopy_wind_scaling ! canopy area scaling as a function of wind profiles
 
        !!!!!!!!!!
        ! Determine net shortwave and isothermal longwave energy balance
@@ -929,6 +937,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        call calculate_radiation_balance
        DIAGS(n,3) = canopy_par_MJday ! Absorbed PAR by canopy (MJ/m2ground/day)
+       DIAGS(n,24) = leaf_canopy_light_scaling ! canopy area scaling as a function of light profiles
        ! Update steady state soil temperature (oC)
        ! NOTE: Commented out due to lack of ground heat flux term, 
        !       resulting in extreme warming and cooling
@@ -978,23 +987,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (umolC/m2/s -> gC/m2/day)
            ! Assumes acm_gpp_stage_1 has already been ran as part of stomatal
-           ! conductance calculation
+           ! conductance calculation. 
            FLUXES(n,1) = (acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
                        * umol_to_gC * dayl_seconds
+           ! Estimate the ratio of leaf internal to ambient CO2 concentrations
            DIAGS(n,4) = ci / co2
+           ! Determine the daily photosynthetic C return.
+           ! i.e. GPP(dayl)-leaf Rm(24hrs)
+           DIAGS(n,22) = FLUXES(n,1) - (dark_respiration * umol_to_gC * seconds_per_day)
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
            ! Autotrophic respiration (gC.m-2.day-1)
-           ! Combine the fixed fraction assumption for growth respiration and maintenance of
+           ! Combine the fixed fraction assumption for maintenance of
            ! fine root and wood with the maintenance respiration associated with leaves
-           FLUXES(n,3) = pars(2)*FLUXES(n,1)
-           !FLUXES(n,3) = dark_respiration * umol_to_gC * dayl_seconds
-           !FLUXES(n,3) = pars(2)*(FLUXES(n,1)-FLUXES(n,3))            
+           FLUXES(n,3) =  pars(2)*FLUXES(n,1)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0 ; FLUXES(n,3) = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0
+           ! Autotrophic respiration will continue to be assumed 
+           ! to include the explicitly calculated leaf maintenance respiration
+           FLUXES(n,3) = 0d0
+           ! Determine the daily photosynthetic C return.
+           ! i.e. GPP(dayl)-leaf Rm(24hrs)
+           DIAGS(n,22) = 0d0
        endif
 
        ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
@@ -1013,7 +1030,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,16) = exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2) ! modified to scale 0-1
 
        ! Accumulate this time steps labile C (gC.m-2.day-1)
-       FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))
+       FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)
        available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
        ! Do plant phenology
        call plant_allocation(nopools,deltat(n), &
@@ -1025,8 +1042,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                              FLUXES(n,16),                          & ! CDEA
                              FLUXES(n,4),FLUXES(n,6),FLUXES(n,7),   & ! tissue specific allocated C 
                              FLUXES(n,8),                           & ! 
-                             FLUXES(n,50),FLUXES(n,51),FLUXES(n,52),& ! lab:bio, temperature and water limters
-                             FLUXES(n,53),FLUXES(n,54),FLUXES(n,56))
+                             DIAGS(n,15),DIAGS(n,16),DIAGS(n,17),   & ! lab:bio, temperature and water limters
+                             DIAGS(n,18),DIAGS(n,19),DIAGS(n,21))
 
        !
        ! Biomass turnovers (gC/m2/day)
@@ -1301,6 +1318,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
     !dark_respiration = 0.002d0 * Vcmax_ref * airt_adj * leaf_canopy_light_scaling
     dark_respiration = 0.01d0 * Vcmax_ref * (2d0**((leafT - 25d0)*0.1d0)) * leaf_canopy_light_scaling
+ 
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! TO BE REPLACED WITH EQUATIONS FROM TABLE 2?
     ! R2 of fit 0.22
@@ -3857,7 +3875,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
   end function calculate_declination  
   !
-  !----------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   !
   double precision function opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
 

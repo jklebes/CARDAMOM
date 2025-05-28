@@ -69,7 +69,6 @@ module MODEL_PARAMETERS
 
     ! Fraction of GPP respired as autotrophic
     ! Currently fraction as Ra for root + wood + foliage growth
-    !PI%parmin(2) = 0.1d0
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 

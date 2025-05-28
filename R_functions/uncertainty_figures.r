@@ -663,7 +663,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(obs, pch=16,xaxt="n", ylim=yrange,
+       plot(rep(-9999,dim(var)[1]), pch=16,xaxt="n", ylim=yrange,
             cex=0.8,ylab="NPP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -1460,7 +1460,9 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day","LWP_MPa",
                       "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction",
                       "LabBio_limitation","foliage_leafT_limitation","roots_leafT_limitation","wood_leafT_limitation",
-                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation")
+                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation","gpp_return_gCm2day",
+                      "canopy_area_scaling_wind","canopy_area_scaling_light","rgrow_gCm2day",
+                      "rmain_from_labile_gCm2day")
 
 
    for (p in seq(1, length(list_variables))) {
