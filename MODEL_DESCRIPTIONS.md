@@ -50,6 +50,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
 | 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
+| 34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -80,6 +81,7 @@ M = Managed Grassland / arable crops (Table 10)
 | D0         | No disturbance model | Published (Bloom & Williams 2015)  |
 | D1         | Foliage and wood removed as determined by input fractional loss, no litter residues | Published (Bloom & Williams 2016)  |
 | D2         | All C pools undergo removal and litter residues based on a fixed number of scenarios but driven by fractional cover loss | Published (Smallman et al., 2021)  |
+| D3         | As D2, with additional driver accounting for removal flux from degradation/wood extraction | Unpublished (D. T. Milodowski)  |
 
 #### TABLE 5. Fire sub-models
 
