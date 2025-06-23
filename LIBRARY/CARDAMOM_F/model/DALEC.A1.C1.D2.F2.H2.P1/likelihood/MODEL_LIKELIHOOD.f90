@@ -28,7 +28,6 @@ module model_likelihood_module
     integer:: PASSFAIL(100)  ! allow space for 100 possible checks
     integer:: nedc  ! number of edcs being assessed
   end type
-  type (EDCDIAGNOSTICS), save:: EDCD
 
   ! Has the model sanity check been conducted yet?
   logical:: sanity_check = .false.
@@ -61,6 +60,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     integer ::  n
     double precision:: tot_exp, ML, EDC1, EDC2, infini
 
+    ! TODO move into here in all model likelihood files
+  type (EDCDIAGNOSTICS):: EDCD
+
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
@@ -72,7 +74,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (.not.sanity_check) call model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES, thread_id)
 
     ! call EDCs which can be evaluated prior to running the model
-    call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+    call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
 
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
@@ -86,7 +88,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                     ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year   &
                     ,PI%parmax, PARS, DATAin%MET &
                     ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                    ,M_FLUXES, DATAin%meantemp, EDC2)
+                    ,M_FLUXES, DATAin%meantemp, EDC2, EDCD)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -131,6 +133,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
+    ! TODO move into here in all model likelihood files
+  type (EDCDIAGNOSTICS):: EDCD
 
 !    ! Debugging print statements
 !    print*,"sub_model_likelihood:"
@@ -144,7 +148,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -167,7 +171,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
                         ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                        ,M_FLUXES, DATAin%meantemp, EDC2)
+                        ,M_FLUXES, DATAin%meantemp, EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out+log(EDC2)
@@ -210,6 +214,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
+    ! TODO move into here in all model likelihood files
+  type (EDCDIAGNOSTICS):: EDCD
+
 
 !    ! Debugging print statements
 !    print*,"sub_model_likelihood:"
@@ -223,7 +230,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -246,7 +253,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
                         ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                        ,M_FLUXES, DATAin%meantemp, EDC2)
+                        ,M_FLUXES, DATAin%meantemp, EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out+log(EDC2)
@@ -289,6 +296,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
+    ! TODO move into here in all model likelihood files
+  type (EDCDIAGNOSTICS):: EDCD
 
 !    ! Debugging print statements
 !    print*,"sub_model_likelihood:"
@@ -302,7 +311,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -325,7 +334,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
                         ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                        ,M_FLUXES, DATAin%meantemp, EDC2)
+                        ,M_FLUXES, DATAin%meantemp, EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out+log(EDC2)
@@ -416,7 +425,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
+  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1, EDCD)
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom et al., 2015).
@@ -429,6 +438,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision, dimension(npars), intent(in):: PARS  ! current parameter set
     double precision, intent(in):: meantemp & ! mean temperature (k)
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
+  type (EDCDIAGNOSTICS), intent(inout):: EDCD
 
     ! declare local variables
     integer:: n, DIAG
@@ -512,7 +522,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
   !
   subroutine assess_EDC2(npars, nomet, nofluxes, nopools, nodays, deltat, steps_per_year &
                         ,parmax, pars, met, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES &
-                        ,meantemp, EDC2)
+                        ,meantemp, EDC2, EDCD)
     use cardamom_structures, only: DATAin
 
     ! Determines whether the dynamical contraints for the search of the initial
@@ -541,6 +551,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                                    ,meantemp                      ! site mean temperature (oC)
 
     double precision, intent(out):: EDC2  ! the response flag for the dynamical set of EDCs
+  type (EDCDIAGNOSTICS), intent(inout):: EDCD
 
     ! declare local variables
     integer:: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
@@ -1046,6 +1057,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     integer, intent(in), optional:: thread_id
     ! declare local variables
     double precision:: EDC1, EDC2
+  type (EDCDIAGNOSTICS):: EDCD
 
 !    ! Debugging print statements
 !    print*,"model_likelihood:"
@@ -1059,7 +1071,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
@@ -1081,7 +1093,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
                         ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
                         ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                        ,M_FLUXES, DATAin%meantemp, EDC2)
+                        ,M_FLUXES, DATAin%meantemp, EDC2, EDCD)
 !print*,"model_likelihood: EDC2 done"
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out+log(EDC2)

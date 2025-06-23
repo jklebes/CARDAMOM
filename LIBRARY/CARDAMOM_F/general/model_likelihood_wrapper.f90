@@ -29,12 +29,6 @@ subroutine model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="
 
   real(c_double):: ML_obs_out, ML_prior_out
   integer(c_int), intent(in), optional:: id
-  !TODO can we use an expected_npars from model files?
-  !if (npars .neq. expected_npars) then
-    !write(*,*) "Error : Passed ", npars, "from R (as indicated by second argument to modellikelihood), but this model takes a vector
-    !of " , expected_npars, "values."
-    ! TODO force exit ?
-!else:
 
   ! call the function to write to ML_obs_out and ML_prior_out
   call model_likelihood(params, ML_obs_out, ML_prior_out, id)
@@ -42,7 +36,6 @@ subroutine model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="
   ! for the purpose of running samplers we are only interested in the sum
   loglikelihood = ML_obs_out+ML_prior_out
 
-!endif 
 end subroutine
 
 ! variants

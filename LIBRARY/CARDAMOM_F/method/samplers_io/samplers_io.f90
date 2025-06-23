@@ -68,7 +68,7 @@ module samplers_io
   !------------------------------------------------------------------
   !
   subroutine check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-                                            ,parname, stepname, covname, covinfoname)
+                                            ,parname, stepname, covname, covinfoname, chainid)
 
     ! subroutine checks whether both the parameter and step files exist for this
     ! job. If they do we will assume that this is a restart job that we want to
@@ -79,6 +79,7 @@ module samplers_io
     integer, intent(in):: npars, nOUT, nWRITE
     double precision, intent(in):: sub_fraction
     character(350), intent(in):: parname, stepname, covname, covinfoname
+    integer, intent(in):: chainid
     ! local variables
     logical:: par_exists, step_exists, cov_exists, covinfo_exists
     double precision:: dummy
@@ -97,7 +98,7 @@ module samplers_io
         ! lets see if there is anything in the files that we might use
         ! count the number of remaining lines in the file..
         ! open the relevant output files
-        call open_output_files(parname, stepname, covname, covinfoname)
+        call open_output_files(parname, stepname, covname, covinfoname, chainid)
         status = 0; num_lines = 0
         do
           read(pfile_unit, iostat = status) dummy
@@ -120,7 +121,7 @@ module samplers_io
             print*,"Output files are present, however they are too small for a restart"
         endif
         ! Either way we open the file up later on so now we need to close them
-        call close_output_files
+        call close_output_files(chainid)
 
     else  ! par_exists .and. step_exists
 
@@ -136,23 +137,26 @@ module samplers_io
   !
   !------------------------------------------------------------------
   !
-  subroutine close_output_files
+  subroutine close_output_files(chainid)
 
     ! where you open a file you've got to make sure that you close them too. It
     ! just tidy
 
     implicit none
+    integer, intent(in):: chainid
+    integer  :: offset
 
+    offset = (chainid-1) * 5
     ! close the files we have in memory
-    close(pfile_unit)
-    close(sfile_unit)
-    close(cfile_unit)
-    close(cifile_unit)
+    close(pfile_unit+offset)
+    close(sfile_unit+offset )
+    close(cfile_unit+offset )
+    close(cifile_unit+offset)
 
   end subroutine close_output_files
   
   
-  subroutine open_output_files(parname, stepname, covname, covinfoname)
+  subroutine open_output_files(parname, stepname, covname, covinfoname, chainid)
 
     ! Subroutine opens the needed output files and destroys any previously
     ! existing files with the same name, just in case mind!
@@ -168,19 +172,24 @@ module samplers_io
     integer:: ios, reclen
     double precision:: a = 1d0
 
+    integer, intent(in):: chainid
+    integer  :: offset
+
+    offset = (chainid-1) * 5
+
     ! open files now
     ! most of these will require new information to be appended to the end at
     ! all times-therefore we use the unformatted stream access
-    open(pfile_unit, file = trim(parname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
+    open(pfile_unit+offset, file = trim(parname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(parname)
-    open(sfile_unit, file = trim(stepname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
+    open(sfile_unit+offset, file = trim(stepname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(stepname)
-    open(cifile_unit, file = trim(covinfoname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
+    open(cifile_unit+offset, file = trim(covinfoname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(covinfoname)
     ! for the covariance matrix we have a fixed size containing two matrices, 
     ! the initial and the current output-therefore we use
     inquire(iolength = reclen) a !; print*,reclen
-    open(cfile_unit, file = trim(covname), form="UNFORMATTED",access="direct",recl = reclen, iostat = ios)
+    open(cfile_unit+offset, file = trim(covname), form="UNFORMATTED",access="direct",recl = reclen, iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(covname)
 
 
@@ -214,7 +223,7 @@ module samplers_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_covariance_matrix(covariance, npars, initial_cov)
+  subroutine write_covariance_matrix(covariance, npars, initial_cov, chainid)
 
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
@@ -227,6 +236,11 @@ module samplers_io
 
     ! declare local variables
     integer:: i, j, irec
+
+    integer, intent(in):: chainid
+    integer  :: offset
+
+    offset = (chainid-1) * 5
 
     ! If we have already written the initial covariance matrix we want to keep
     ! over-writing the current matrix. We do this to avoid large files form
@@ -243,7 +257,7 @@ module samplers_io
     do i = 1, npars
        do j = 1, npars
           irec = irec+1
-          write(cfile_unit, rec = irec) covariance(i, j)
+          write(cfile_unit+offset, rec = irec) covariance(i, j)
        end do
     end do
 
@@ -253,7 +267,7 @@ module samplers_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_covariance_info(meanpars, nsample, npars)
+  subroutine write_covariance_info(meanpars, nsample, npars, chainid)
 
     ! subroutine writes MCMC accepted parameters and step values to binary files
 
@@ -267,14 +281,19 @@ module samplers_io
     ! declare local variables
     integer:: i, j
 
+    integer, intent(in):: chainid
+    integer  :: offset
+
+    offset = (chainid-1) * 5
+
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
 
     do i = 1, npars
-       write(cifile_unit) meanpars(i)
+       write(cifile_unit+offset) meanpars(i)
     end do
 
-    write(cifile_unit) nsample
+    write(cifile_unit+offset) nsample
 
     return
 
@@ -282,7 +301,7 @@ module samplers_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_variances(variance, npars, accept_rate)
+  subroutine write_variances(variance, npars, accept_rate, chainid)
 
     ! subroutine writes parameter variance for corresponding parameter values
 
@@ -296,15 +315,20 @@ module samplers_io
     ! declare local variables
     integer:: n
 
+    integer, intent(in):: chainid
+    integer  :: offset
+
+    offset = (chainid-1) * 5
+
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
 
     do n = 1, npars
-       write(sfile_unit) variance(n)
+       write(sfile_unit+offset) variance(n)
     end do
 
     ! we will need to know the current acceptance rate for restarts
-    write(sfile_unit) accept_rate
+    write(sfile_unit+offset) accept_rate
 
     return
 
@@ -312,7 +336,7 @@ module samplers_io
   !
   !------------------------------------------------------------------
   !
-  subroutine write_parameters(pars, prob, npars)
+  subroutine write_parameters(pars, prob, npars, chainid)
 
     ! subroutine writes parameter values to binary file`
 
@@ -326,15 +350,20 @@ module samplers_io
     ! declare local variables
     integer:: n
 
+    integer, intent(in):: chainid
+    integer  :: offset
+
+    offset = (chainid-1) * 5
+
     ! write out the file. Its binary format has already been determined at the
     ! openning of the file
 
     do n = 1, npars
-       write(pfile_unit) pars(n)
+       write(pfile_unit+offset) pars(n)
     end do
 
     ! now add the probability
-    write(pfile_unit) prob
+    write(pfile_unit+offset) prob
 
     ! close will occur at the end of the MCMC
 
@@ -347,7 +376,7 @@ module samplers_io
   !
   subroutine write_mcmc_output(variance, accept_rate, &
                                covariance, meanpars, nsample, &
-                               pars, prob, npars, dump_now, io_space)
+                               pars, prob, npars, dump_now, io_space, chainid)
 
     ! Arguments
     integer, intent(in):: npars
@@ -358,6 +387,7 @@ module samplers_io
     double precision, intent(in):: nsample, accept_rate, prob
     logical, intent(in):: dump_now
     type(io_buffer_space), intent(inout):: io_space
+    integer, intent(in):: chainid
 
     ! Local variables
     integer:: i
@@ -380,12 +410,12 @@ module samplers_io
 
         ! Then we are writing out to file
         ! Only write the most current covariance matrix as this would be an overwrite anyway
-        call write_covariance_matrix(covariance, npars, .false.)
+        call write_covariance_matrix(covariance, npars, .false., chainid)
         ! Everything else loop through the buffered output to write out
         do i = 1, io_space%io_buffer_count
-           call write_covariance_info(io_space%meanpars_buffer(:,i), io_space%nsample_buffer(i), npars)
-           call write_variances(io_space%variance_buffer(:,i), npars, io_space%accept_rate_buffer(i))
-           call write_parameters(io_space%pars_buffer(:,i), io_space%prob_buffer(i), npars)
+           call write_covariance_info(io_space%meanpars_buffer(:,i), io_space%nsample_buffer(i), npars, chainid)
+           call write_variances(io_space%variance_buffer(:,i), npars, io_space%accept_rate_buffer(i), chainid)
+           call write_parameters(io_space%pars_buffer(:,i), io_space%prob_buffer(i), npars, chainid)
         end do
 
         ! Reset buffer increment

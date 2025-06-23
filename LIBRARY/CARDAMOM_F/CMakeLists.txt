@@ -13,7 +13,7 @@ set(FILES2
                   general/wrappers_for_R.f90
                   general/cardamom_main_utils.f90
                   general/MHMCMC_StressTests.f90
-                  general/stresstest_wrappers_for_R.f90
+                  #general/stresstest_wrappers_for_R.f90
                 )
 set(MODELLIKELIHOODFILE
                   model/DALEC.A1.C1.D2.F2.H2.P1/likelihood/MODEL_LIKELIHOOD.f90

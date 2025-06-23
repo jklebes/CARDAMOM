@@ -113,7 +113,7 @@ contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine run_parallel_mcmc( model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart_in, nchains)
+  subroutine run_parallel_mcmc( model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
 
     implicit none
 
@@ -153,15 +153,14 @@ contains
       ! output, one for each chain
       type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
 
-      logical, optional, intent(in):: restart_in  ! is it a restart ? (i.e. start from data in MCOUT instead of initializing new)
-      logical:: restart
-      !type(MCMC_OUTPUT), optional, intent(in):: MCOUT_prev  ! TODO array ? ! process
+      logical, optional, intent(in):: restart  ! is it a restart ? (i.e. start from data in MCOUT instead of initializing new)
+      logical:: restart_
       integer, optional:: nchains
       integer:: nchains_
       integer:: i
 
       ! the function to minimize  ! TODO change name to loglikelihood everywhere
-      ! Completely agnostic, samples any functions pars -> loglikelihood
+      ! Completely agnostic, samples any functions vector -> double
       interface
     subroutine model_likelihood(param_vector, n, ML, id)
          implicit none
@@ -170,7 +169,8 @@ contains
          double precision, intent(out):: ML
          integer, intent(in), optional:: id
     end subroutine model_likelihood
-    end interface! 
+    end interface 
+
     !optionally  give a second function with same shape as model_likelihood, 
       ! for writing to file; 
     procedure(model_likelihood), optional:: model_likelihood_write_in
@@ -180,15 +180,17 @@ contains
 
       ! Argument processing  !!!!!!!!!!!!!!!
 
-      if (.not. present(restart_in)) then 
-        restart = .false.
+      if (.not. present(restart)) then 
+        restart_ = .false.
       else
-        restart = restart_in
+        restart_ = restart
       endif
+
+      write(*,*) "with restart", restart_
 
       if (.not. present(nchains)) then
         nchains_ = 1 
-        ! or try to infer from OMP_THREADS or columns in MCOUT_PREV ...
+        ! or try to infer from OMP_THREADS or columns in MCOUT ...?
       else
         nchains_ = nchains
       endif 
@@ -214,23 +216,21 @@ contains
     ! trivial.  It exists mainly as template for samplers with more crossover and more complex
     ! structure in this loop.
     !$OMP parallel do
-    do i = 1, nchains_  ! TODO where the user can input this
+    do i = 1, nchains_
         ! saves best loglikelihood and associated parameters to MCOUT(i)
         ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
         ! possible entire history and stats from previous run, possible empty new MCOUT object
-        call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart, i)
+        write(*,*) "with restart", restart_
+        call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
     end do
     !$OMP end parallel do
 
-    !! compare chains
-
-    !! Write files, write to output struct
 
   end subroutine run_parallel_mcmc
 
   ! Main function for a single adaptive MCMC simulation
   ! Global settings of the sampler taken from MCO 
-  subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart_in, chainid)
+  subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart, chainid)
     use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
     use samplers_shared, only : init_pars_random, bounds_check, is_infinity, metropolis_choice
     use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
@@ -238,15 +238,14 @@ contains
     use random_uniform, ONLY: UNIF_VECTOR, initialize
     ! declare any local variables
     !! all variables in here are local to the single chain and the duration of its run
-          !! input and output structs
+    !! input and output structs
     type(PARINFO), intent(in):: PI
     type(MCMC_OPTIONS), intent(in):: MCO
-    !type(MCMC_OUTPUT), intent(in), optional:: MCOUT_prev
     type(MCMC_OUTPUT), intent(inout):: MCOUT
-    !type(MCMC_OUTPUT), optional, intent(in):: prev_MCOUT  ! output of previous run, for restart  ! read from module data
-    logical, intent(in), optional:: restart_in
+    logical, intent(in), optional:: restart
     integer, intent(in), optional:: chainid
-    logical:: restart
+    logical:: restart_
+    integer:: chainid_
 
     type(io_buffer_space):: io_space  ! this chain has its own io buffers
     character(350):: outfile, stepfile, covfile, covifile
@@ -322,6 +321,7 @@ contains
          ! default, if no argument given: use same function for calculation and printing
          model_likelihood_write => model_likelihood
       end if
+
     ! read settings from input struct ...
     npars = PI%npars
     nchains = MCO%N_chains
@@ -339,8 +339,13 @@ contains
     allocate(MCOUT%parvar(npars))
     allocate(MCOUT%meanpar(npars))
     allocate(MCOUT%covariance(npars, npars))
-    ! TODO call reset_stats ?
     endif
+
+    if (present(chainid)) then
+      chainid_ = chainid
+    else
+      chainid_ = 1 
+    endif 
 
     ! process file names 
     outfile = MCO%outfile
@@ -366,16 +371,18 @@ contains
     ! NOTE 2: 2.381204**2 = 5.670132
     opt_scaling = MCO%opt_scaling_const/dble(PI%npars)
   
-    if (.not. present(restart_in)) then 
-      restart = .false.
+    write(*,*) "restart in present, ", present(restart)
+    if (.not. present(restart)) then 
+      restart_ = .false.
     else
-      restart = restart_in
+      write(*,*) "value", restart
+      restart_ = restart
     endif
 
-    if (restart) then
+    if (restart_) then
       ! keep MCOUT
     else
-      ! init MCOUT-could be a function
+      ! init MCOUT
       MCOUT%complete = .false.
       MCOUT%nos_iterations = 0
       if (.not. allocated(MCOUT%pars)) allocate(MCOUT%pars(npars))
@@ -405,16 +412,17 @@ contains
     !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
     !, parname, stepname, covname, covinfoname)
     !TODO open separate output file for each chain !
-    call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
+    write(*,*) "chainid" , chainid_
+    call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile, chainid_)
   else
     write(*,*) "No output files will be created because nwrite == 0 "
     endif 
 
-
-
     !!!! init params
     ! TODO implement reading in PI%fix_pars
-    if (.not. restart) then
+    write(*,*) "restart2", restart_
+    ! initalize bestpars to current pars
+    if (.not. restart_) then
     call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
     ! Inform the user
     write(*,*) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
@@ -423,18 +431,29 @@ contains
     ! calculate the initial probability/log likelihood.
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
-    call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid)
+    call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
 
     if (.false. .and. is_infinity(loglikelihood_previous)) then  
         write(*,*) "WARNING  ! loglikelihood = ",loglikelihood_previous, " - &
         & AP-MCMC will get stuck, if so please check initial conditions"
         error stop
     endif
-    endif 
 
     ! initalize bestpars to current pars
     BESTPARS = PARS_previous
     llmax = loglikelihood_previous
+    write(*,*) chainid_, "initial", loglikelihood_previous
+    write(*,*) chainid_, "initial", PARS_previous
+
+    else  ! restart case
+    write(*,*) chainid_, "initial", loglikelihood_previous
+    write(*,*) chainid_, "initial", PARS_previous
+      PARS_previous = MCOUT%PARS
+      loglikelihood_previous = MCOUT%ll
+      BESTPARS = MCOUT%bestpars
+      llmax = MCOUT%bestll
+
+    endif 
 
 
     ! Begin the main AP-MCMC loop
@@ -451,7 +470,7 @@ contains
        if (bounds_check(PI, PARS_proposed)) then
            ! calculate the model likelihood
            ! TODO ideally output just one likelihood value
-           call model_likelihood(PARS_proposed, npars, loglikelihood_proposed, chainid)
+           call model_likelihood(PARS_proposed, npars, loglikelihood_proposed, chainid_)
            accept = metropolis_choice(loglikelihood_proposed, loglikelihood_previous)
        else
            accept = .false.
@@ -459,7 +478,9 @@ contains
            ! TODO LATER should we count the out-of-boundary in adaptation?
            ! Keep equivalent for now !  Change after checking the whole sample for equivalence to previous
        end if  ! in bound
-
+       if (ITER < 5) then
+         write(*,*) chainid_, loglikelihood_proposed, loglikelihood_previous, accept
+      endif 
        if (accept) then
 
            ! Store accepted parameter proposals (unnormalized values)
@@ -497,12 +518,13 @@ contains
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
-               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood, chainid)
+               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood, chainid_)
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
                                       MCOUT%covariance, &
                                       MCOUT%meanpar, MCOUT%Nparvar, &
-                                      PARS_previous, output_loglikelihood, npars, ITER == MCO%nOUT, io_space)
+                                      PARS_previous, output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                      io_space, chainid_)
            end if 
        end if  ! write or not to write
 
@@ -572,7 +594,7 @@ contains
     !!!  Finalize 
 
     ! write out final covariance matrix for the analysis
-    if (MCO%nwrite > 0) call write_covariance_matrix(MCOUT%covariance, npars, .false.)
+    if (MCO%nwrite > 0) call write_covariance_matrix(MCOUT%covariance, npars, .false., chainid_)
 
     ! record the best single set of parameters
     MCOUT%bestpars = BESTPARS

@@ -115,7 +115,11 @@ program cardamom_framework
  type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
  type(MCMC_OPTIONS):: MCO
 
+ ! TODO not to hardcode, from command line argument
  integer:: nchains = 4
+ integer:: i
+
+ allocate(MCOUT_list(nchains))
 
  ! user update
  write(*,*)"Beginning read of the command line"
@@ -193,8 +197,10 @@ program cardamom_framework
  ! check whether this is a restart?
  ! PI lives in model_shared and its info can be read after call to initiialize_model
  ! TODO not sure about MCO at this point
+ do i = 1, nchains
  call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, sub_fraction, &
-                                      MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
+                                      MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile, i)
+ end do
  ! Initialise MCMC output, possibly a bit of a redundent subroutine...
  !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
  ! Open the relevant output files TODO now happens in run_mcmc
@@ -306,17 +312,18 @@ program cardamom_framework
      ! Begin search for initial conditions
      write(*,*) "Beginning search for initial parameter conditions"
      ! Determine initial values, this requires using the AP-MCMC
-     call find_edc_initial_values(MCO, MCOUT, nchains) 
+     call find_edc_initial_values(MCO, MCOUT_list, nchains) 
 
      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
-     MCOUT%nos_iterations = 0
+     do i = 1, nchains
+     MCOUT_list(i)%nos_iterations = 0
 
      ! Reset the MCMC parameters for the next stage
-     call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+     call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT_list(i))
 
      ! Reset stepsize and covariance for main DRAM-MCMC
      ! TODO same, make function init_stats
-     call reset_stats(MCOUT, PI%npars)
+     call reset_stats(MCOUT_list(i), PI%npars)
 
      if (restart_flag) then
          ! Restarting an old one
@@ -324,18 +331,19 @@ program cardamom_framework
          ! now begin update of model timing variables and parameter values if this is a
          ! restart. NOTE that this include information determining the number of
          ! iterations already completed...
-         call update_for_restart_simulation(MCO, MCOUT)
+         call update_for_restart_simulation(MCO, MCOUT_list(i))
      else
          ! Brand new analysis
          print*,"writing initial covariance matrix"
          ! write out first covariance matrix, this will be compared with the final covariance matrix
          if (MCO%nWRITE > 0) then
-             call write_covariance_matrix(mcout%covariance, PI%npars, .true.)
-             call write_covariance_info(mcout%meanpar, mcout%Nparvar, PI%npars)
+             call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
+             call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
          endif
          !...so the reset for nos_iterations must only occur when not a restart run
-         MCOUT%nos_iterations = 0
+         MCOUT_list(i)%nos_iterations = 0
      endif  ! restart run or not
+     end do
 
      ! Do we do the initial MCMC period where we normalise the likelihood by number of observations
      ! This process allows for very bad starting points to more easily move towards the general area of the observatons.
@@ -425,7 +433,9 @@ program cardamom_framework
  end if  ! stress test or not
 
  ! tidy up by closing all files
- call close_output_files
+ do i = 1, nchains
+ call close_output_files(i)
+ end do
 
  ! Final message to the user
  write(*,*)"==========================================================="
@@ -438,7 +448,7 @@ program cardamom_framework
   !
   !------------------------------------------------------------------
   !
-  subroutine find_edc_initial_values(MCO, MCOUT, nchains)
+  subroutine find_edc_initial_values(MCO, MCOUT_list, nchains)
     !! subroutine deals with the determination of initial parameter and initial
     !! conditions which are consistent with EDCs
     !! pre-loop, Run MCMC sampler with modified likelihood fct  
@@ -454,22 +464,25 @@ program cardamom_framework
 
     ! declare local variables
     integer, intent(in):: nchains
-    type(MCMC_OUTPUT), intent(inout):: MCOUT
-    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
+    type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list
+    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list_tmp
     type(MCMC_OPTIONS), intent(out):: MCO
-    integer:: n, i, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
+    integer:: n, i, counter_local(nchains), EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
+    integer:: success_count
     logical:: append_save
-    double precision:: PEDC, PEDC_prev, ML, ML_prior, P_target
+    logical:: restart(nchains)
+    double precision:: PEDC(nchains), PEDC_prev(nchains), ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
     double precision, dimension(PI%npars):: parini  ! local variable, or array
 
-    allocate(MCOUT_list(nchains))
+    allocate(MCOUT_list_tmp(nchains))
 
     ! Hold for later
     nOUT_save = MCO%nOUT; nWRITE_save = MCO%nWRITE; nADAPT_save = MCO%nADAPT
     append_save = MCO%append
 
     ! set MCMC options needed for EDC run
+    ! same for all chains
     MCO%APPEND = .false.
     MCO%nADAPT = 500
     MCO%fADAPT = 1d0
@@ -495,68 +508,71 @@ program cardamom_framework
 !       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
 !    end do  ! parameter loop
 
-    ! set the parameter step size at the beginning
-    MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-    MCOUT%use_multivariate = .false.
-    ! Covariance matrix cannot be set to zero therefore set initial value to a
-    ! small positive value along to variance access
-    MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-    do n = 1, PI%npars
-       MCOUT%covariance(n, n) = 1d0
+    do i = 1, nchains
+    MCOUT_list_tmp(i)%PARS = parini
+    call initialize_stats(MCOUT_list_tmp(i), PI%npars)
     end do
 
    ! TODO sort out omp loop over this 
     ! if this is not a restart run, i.e. we do not already have a starting
     ! position we must being the EDC search procedure to find an ecologically
     ! consistent initial parameter set
+    restart = .false.
     if (.not. restart_flag) then  ! TODO outside-only run this fct if not restart
 
         ! set up edc log likelihood for MHMCMC initial run
         PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
-        do while (PEDC < 0d0)
+        success_count = 0
+        do while (success_count < nchains)!(PEDC < 0d0)
 
-           write(*,*)"Beginning EDC search attempt"
+           write(*,*)"Beginning EDC search attempt "
+           write(*,*)  nchains, "chains working ... "
+        !$omp parallel do
+           do i = 1, nchains
            ! call the MHMCMC directing to the appropriate likelihood function
-           MCOUT_list(1) = MCOUT
-           write(*,*) "nchains", nchains
-           call run_parallel_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
-           MCOUT = MCOUT_list(1)
+           call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, restart = restart(i), chainid = i)
+           restart(i) = .true.
 
-           ! store the best parameters from that loop
-           parini(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
            ! turn off random selection for initial values
            MCO%randparini = .false.
            write(*,*)"...intermediate EDC search progress check"
-           ! call edc likelihood function to get final edc probability
-           !$omp parallel do
-           do i = 1, nchains
-           call edc_model_likelihood(parini, PEDC, ML_prior, i)  ! TODO
-           end do
-           !$omp end parallel do
+
+           ! store the best parameters from that loop
+           PEDC(i) = MCOUT_list_tmp(i)%bestll 
+           write(*,*) "Found best loglikelihood", PEDC(i)
 
            ! keep track of attempts
-           counter_local = counter_local+1
+           counter_local(i) = counter_local(i) +1 
            ! periodically reset the initial conditions
-           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
+           if (PEDC(i) < 0d0 .and. PEDC(i) <= PEDC_prev(i) .and. counter_local(i) > 5) then
                ! Reset the previous EDC likelihood score
-               PEDC_prev = -1000d0
+               PEDC_prev(i) = -1000d0
                ! Reset parameters back to default
-               parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+               MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
                ! reset to select random starting point
-               MCO%randparini = .true.
+               MCO%randparini = .true. ! TODO problem
                ! reset the parameter step size at the beginning of each attempt
-               ! TODO make fct initialize stats
-               MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-               ! Covariance matrix cannot be set to zero therefore set initial value to a
-               ! small positive value along to variance access
-               MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-               MCOUT%use_multivariate = .false.
-               do n = 1, PI%npars
-                  MCOUT%covariance(n, n) = 1d0
-               end do
+               call reset_stats(MCOUT_list_tmp(i), PI%npars)
+               restart(i) = .false.
+               write(*,*) "resetting to initial"
            else
-               PEDC_prev = PEDC
+               PEDC_prev(i) = PEDC(i)
            endif
+
+           ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
+           ! copy it to MCOUT_list
+              if (MCOUT_list_tmp(i)%ll >= 0d0) then
+                  !omp critical
+                  success_count = success_count+1
+                  write(*,*) "Found ", success_count, "EDC-compatible starting points"
+                  MCOUT_list(success_count) = MCOUT_list_tmp(i)
+                  !omp end critical
+                  call reset_stats(MCOUT_list_tmp(i), PI%npars)
+                  restart(i) = .false.
+                  counter_local(i) = 0
+              endif 
+        end do
+        !$omp end parallel do
 
         end do  ! for while condition
 
@@ -565,7 +581,7 @@ program cardamom_framework
     ! reset so that currently saved parameters will be used
     ! starting point in main MCMC
     ! PI%parfix(1:PI%npars) = 0  ! TODO
-    MCOUT%bestpars = 0d0
+    !MCOUT%bestpars = 0d0
 
   end subroutine find_edc_initial_values
 
