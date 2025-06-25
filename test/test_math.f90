@@ -176,8 +176,8 @@ subroutine test_running_covariance(error)
   write(*,*) covariance
   write(*,*) covariance_10
   write(*,*) covariance_running 
-  call check(error, covariance(1, 1), covariance_running(1, 1))
-  call check(error, covariance(2, 1), covariance_running(2, 1))
+  call check(error, approx(covariance(1, 1), covariance_running(1, 1)))
+  call check(error, approx(covariance(2, 1), covariance_running(2, 1)))
 end subroutine 
 
 subroutine test_zero_variance(error)
@@ -209,8 +209,8 @@ subroutine test_zero_variance(error)
   write(*,*) covariance_running 
   call check(error,  covariance(2, 2) < .000001d0)
   call check(error,  covariance_running(1, 1) < .000001d0)
-  call check(error, covariance(1, 1), covariance_running(1, 1))
-  call check(error, covariance(2, 1), covariance_running(2, 1))
+  call check(error, approx(covariance(1, 1), covariance_running(1, 1)))
+  call check(error, approx(covariance(2, 1), covariance_running(2, 1)))
 end subroutine 
 
 

@@ -6,7 +6,7 @@ module test_random
 
   public:: collect_randomtests
 
-  integer, parameter :: dp = kind(0.0d0)
+  integer, parameter:: dp = kind(0.0d0)
 
 contains
 
@@ -19,18 +19,26 @@ subroutine collect_randomtests(testsuite)
     new_unittest("fill random_uniform", test_fill_random_uniform),  &
     new_unittest("initialize random uniform", test_initialize),  &
     new_unittest("get_random_uniform", test_get_random_uniform),  &
-    new_unittest("next_random_uniform", test_next_random_uniform) &
+    new_unittest("next_random_uniform", test_next_random_uniform), &
+    new_unittest("set seed", test_set_seed), &
+    new_unittest("seed consistency", test_set_seed_consistency), &
+    new_unittest("seed independence", test_set_threadsafe_seed), &
+    new_unittest("refill independence", test_threadsafe_refill) &
     ]
 
 end subroutine collect_randomtests
 
 subroutine test_fill_random_uniform(error)
+  !! Run fill_random_uniform and check that the array
+  !! on the object contains values in range 0 to 1
   implicit none
   type(error_type), allocatable, intent(out):: error
-  type(UNIF_VECTOR) :: random_uniform
-  integer :: n 
-  double precision, dimension(:), allocatable :: arr
-  call random_uniform%initialize
+  type(UNIF_VECTOR):: random_uniform
+  integer:: n 
+  double precision, dimension(:), allocatable:: arr
+  integer:: seed 
+  seed = rand()
+  call random_uniform%initialize(seed)
   n = random_uniform%length
   allocate(arr(n))
   arr = 0d0
@@ -43,11 +51,14 @@ subroutine test_fill_random_uniform(error)
 end subroutine 
 
 subroutine test_initialize(error)
+  !! Call type bound initialize() of UNIF_VECTOR 
   implicit none
   type(error_type), allocatable, intent(out):: error
-  type(UNIF_VECTOR) :: random_uniform
-  call random_uniform%initialize
-  call check(error, random_uniform%index , 1 )
+  type(UNIF_VECTOR):: random_uniform
+  integer:: seed 
+  seed = rand()
+  call random_uniform%initialize(seed)
+  call check(error, random_uniform%index, 1 )
   call check(error, allocated(random_uniform%u))
   call check(error, random_uniform%u(2) > 0d0 .and. random_uniform%u(2) <= 1.0 )
   call check(error, random_uniform%u(2) /= random_uniform%u(1) )
@@ -55,12 +66,15 @@ subroutine test_initialize(error)
 end subroutine
 
 subroutine test_get_random_uniform(error)
+  !! Get array of random values from UNIF_VECTOR object
   implicit none
   type(error_type), allocatable, intent(out):: error
-  type(UNIF_VECTOR) :: random_uniform
+  type(UNIF_VECTOR):: random_uniform
   integer:: n
-  double precision , dimension(:), allocatable :: x 
-  call random_uniform%initialize
+  double precision, dimension(:), allocatable:: x 
+  integer:: seed 
+  seed = rand()
+  call random_uniform%initialize(seed)
   n = 1
   x = random_uniform%get_random_uniform(n)
   call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
@@ -68,24 +82,123 @@ subroutine test_get_random_uniform(error)
   x = random_uniform%get_random_uniform(n)
   call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
   call check(error, x(n) > 0d0 .and. x(n) <= 1.0 )
-  !n = random_uniform%length +1 
-  !x = random_uniform%get_random_uniform(n) ! TODO not handled,  error / crash expected
+  !n = random_uniform%length+1 
+  !x = random_uniform%get_random_uniform(n)  ! TODO not handled,  error/crash expected
 end subroutine
 
 subroutine test_next_random_uniform(error)
+  !! Get single value from UNIF_VECTOR object
   implicit none
   type(error_type), allocatable, intent(out):: error
   double precision  :: x 
   integer ::  index
-  type(UNIF_VECTOR) :: random_uniform
-  call random_uniform%initialize
+  type(UNIF_VECTOR):: random_uniform
+  integer:: seed 
+  seed = rand()
+  call random_uniform%initialize(seed)
   index = random_uniform%index
   x = random_uniform%next_random_uniform()
   call check(error, x > 0d0 .and. x <= 1.0 )
-  call check(error, random_uniform%index , index + 1)
+  call check(error, random_uniform%index, index+1)
+end subroutine
+
+subroutine test_set_seed(error)
+  !! initialize UNIF_VECTOR object with a seed
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(UNIF_VECTOR):: random_uniform
+  integer:: n
+  double precision, dimension(:), allocatable:: x 
+  integer:: seed = 155
+  call random_uniform%initialize(seed)
+  call check(error, random_uniform%seed, seed)
+  n = 110
+  x = random_uniform%get_random_uniform(n)
+  call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
+  call check(error, x(103) > 0d0 .and. x(103) <= 1.0 )
+end subroutine
+
+subroutine test_set_seed_consistency(error)
+  !! Check that same explicit seed leads to same random values
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(UNIF_VECTOR):: random_uniform
+  integer:: seed1 = 155
+  integer:: seed2 = 80
+  double precision:: value1
+  double precision, dimension(11):: values
+  double precision:: value12
+  call random_uniform%initialize(seed1)
+  value1 = random_uniform%next_random_uniform()
+  values = random_uniform%get_random_uniform(11)
+  value12 = values(11)
+  call random_uniform%initialize(seed2)
+  ! check values are different with different seed
+  call check(error, value1 /= random_uniform%next_random_uniform())
+  values = random_uniform%get_random_uniform(11)
+  call check(error, value12 /= values(11))
+  call random_uniform%initialize(seed1)
+  ! check values are the same as previously from the same seed 155
+  call check(error, value1, random_uniform%next_random_uniform())
+  values = random_uniform%get_random_uniform(11)
+  call check(error, value12, values(11))
+end subroutine
+
+subroutine test_set_threadsafe_seed(error)
+  !! Initialize multiple UNIF_VECTOR objects with different explicit seeds
+  !! and check that they received different seeds, values.
+  type(error_type), allocatable, intent(out):: error
+  type(UNIF_VECTOR):: random_uniform1
+  type(UNIF_VECTOR):: random_uniform2
+  integer:: seed1 = 155
+  integer:: seed2 = 298
+  call random_uniform1%initialize(seed1)
+  call random_uniform2%initialize(seed2)
+  call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
+  call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
+  call check(error, random_uniform1%seed /= random_uniform2%seed)
+end subroutine
+
+
+subroutine test_threadsafe_refill(error)
+  !! Initialize multiple UNIF_VECTOR objects with different explicit seeds
+  !! and check that they received different seeds, values.
+  type(error_type), allocatable, intent(out):: error
+  type(UNIF_VECTOR):: random_uniform1
+  type(UNIF_VECTOR):: random_uniform2
+  type(UNIF_VECTOR):: random_uniform3
+  double precision:: value1, value2, value3
+  integer:: seed1 
+  integer:: seed2 
+  seed1 = rand()
+  seed2 = rand()
+
+  call random_uniform1%initialize(seed1)
+
+  ! possible, this sets some shared values like ranx to 'wrong' values
+  ! matching seed 2
+  call random_uniform2%initialize(seed2)
+
+  ! simulate internally-triggered refill-possibly from ranx influenced by seed2
+  call fill_random_uniform(random_uniform1%u, random_uniform1%length)
+
+  value1 = random_uniform1%next_random_uniform()
+  value2 = random_uniform1%next_random_uniform()
+  value3 = random_uniform1%next_random_uniform()
+
+  !vs same sequence from seed 1 without possible seed2 contamination
+  call random_uniform3%initialize(seed1)
+  call fill_random_uniform(random_uniform3%u, random_uniform3%length)
+
+  call check(error, value1, random_uniform3%next_random_uniform())
+  call check(error, value2, random_uniform3%next_random_uniform())
+  call check(error, value3, random_uniform3%next_random_uniform())
+  call check(error, random_uniform1%seed, random_uniform3%seed)
+  call check(error, random_uniform1%seed /= random_uniform2%seed)
 end subroutine
 
 subroutine test_random_multivariate(error)
+  !! TODO
   implicit none
   type(error_type), allocatable, intent(out):: error
   ! make covariance matrix
@@ -97,6 +210,7 @@ end subroutine test_random_multivariate
 
 
 subroutine test_random_normal(error)
+  !! TODO
   implicit none
   type(error_type), allocatable, intent(out):: error
   ! make covariance matrix

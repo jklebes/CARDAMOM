@@ -246,6 +246,7 @@ contains
     integer, intent(in), optional:: chainid
     logical:: restart_
     integer:: chainid_
+    integer:: seed = 100  ! TODO
 
     type(io_buffer_space):: io_space  ! this chain has its own io buffers
     character(350):: outfile, stepfile, covfile, covifile
@@ -400,7 +401,7 @@ contains
     ACCRATE_GLOBAL = 0d0
 
     ! Initialize pregenerated random numbers, if using-local to this chain
-    call uniform_random_vector%initialize() 
+    call uniform_random_vector%initialize(seed)
     
     !TODO opt scaling scalin by n
 

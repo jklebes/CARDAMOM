@@ -45,7 +45,9 @@ subroutine test_step_pars(error)
   double precision:: opt_scaling = 5.67/dble(npars)  ! recommended constant 
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
-  call random_uniform%initialize()
+  integer:: seed
+  seed = rand()  ! this test with a  different seed each time
+  call random_uniform%initialize(seed)
   call init_PI()
   pars0 = (/0d0, 0d0/)
   covariance = reshape(source = [1d0, 0d0, 0d0, 1d0], shape = [2, 2])  ! uncorellated with large variance
@@ -70,8 +72,10 @@ subroutine test_step_pars_real(error)
   double precision:: opt_scaling  ! recommended constant 
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
+  integer:: seed
+  seed = rand()  ! this test with a  different seed each time
   opt_scaling = 5.67/dble(PI_xy%npars)
-  call random_uniform%initialize()
+  call random_uniform%initialize(seed)
   call init_PI()
   pars0 = (/0d0, 3.0d0/)  ! within bounds of PI_xy
   covariance = reshape(source = [1d0, 0d0, 0d0, 1d0], shape = [2, 2])  ! uncorellated with large variance
@@ -203,6 +207,7 @@ subroutine test_run_parallel_mcmc_nchains4_len0(error)
   ! all on defaults, without optional arguments
   call init_pi()
   mcopt%nout = 0
+  write(*,*) "calling"
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout, nchains = nchains)
   ! expect values in mcout : a random initial state (within given parameter bounds) 
   ! and its loglikelihood

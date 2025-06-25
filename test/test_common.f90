@@ -40,7 +40,9 @@ subroutine test_init_pars_random(error)
   logical, dimension(:), allocatable:: fix_pars_flag 
   double precision, dimension(:), allocatable:: pars0
   type(UNIF_VECTOR):: random_uniform
-  call random_uniform%initialize
+  integer:: seed
+  seed = rand()  ! this test with a different seed each time
+  call random_uniform%initialize(seed)
 
   if (.not. allocated(pars0)) allocate(pars0(PI_xy%npars))
   ! with no fix_pars_flag

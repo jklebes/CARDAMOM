@@ -5,7 +5,13 @@ project(CARDAMOM VERSION 1.0 #TODO
   LANGUAGES Fortran)
 enable_language(Fortran)
 
+include(CTest)
+
 add_compile_options(-ffree-line-length-0 -g -pg -Wuninitialized -Wmaybe-uninitialized)
+
+## Code coverage analysis
+add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
+add_link_options(-lgcov --coverage) 
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 

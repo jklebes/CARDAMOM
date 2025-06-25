@@ -4,16 +4,25 @@ module random_uniform
    !! Checking for need to re-fill and re-filling in a getter seems neater than checking 
    !! and potentially refilling in each place it's used
   
-   ! rand(), narray(), rnstrt() related
-  integer, parameter  :: kk = 100, ll = 37, mm = 2**30, tt = 70, kkk = kk+kk-1
+  implicit none 
+  integer, parameter  :: kk = 100, ll = 37, mm = 2**30, tt = 70, kkk = kk+kk-1 
+    !!constants for rand(), narray(), rnstr()
   integer, save       :: ranx(kk)
+    !! TODO problem for thread safety? put into a function ?
 
 
   public UNIF_VECTOR, get_random_uniform, next_random_uniform
+
     type UNIF_VECTOR
-        integer :: length = 1000 !TODO get default from orig cardamom
-        double precision, dimension(:), allocatable :: u
+      !! Type holding an array of pre-generate random uniform numbers [0, 1]
+        integer:: seed 
+        !! random seed, set from initialize 
+        integer:: length = 1000  ! TODO get default from orig cardamom
+        !! length of the array
+        double precision, dimension(:), allocatable:: u
+        !! array of random uniform numbers [0, 1] !TODO doc : bounds inclusive/exclusive?
         integer:: index
+        !! current position in getting numbers from the array
         contains 
         procedure:: initialize
         procedure:: get_random_uniform
@@ -22,11 +31,11 @@ module random_uniform
 
     contains
 
-  subroutine initialize(this)
+  subroutine initialize(this, seed)
     class(UNIF_VECTOR):: this
-    integer :: seed = 100
-    call rnstrt(seed) ! TODO no longer necessary to do from outside take out of main
-    ! TODO pass seed down
+    integer, intent(in):: seed
+    this%seed = seed
+    call rnstrt(seed) 
     if (.not.allocated(this%u)) then
       allocate(this%u(this%length))
     end if
@@ -36,8 +45,10 @@ module random_uniform
 
 
   function get_random_uniform(this, n) result(x)
-    !! getter from array of pre-generated random values, 
-    !! handling re-filling of the array when needed
+    !! Getter to get array of n values 
+    !! from UNIF_VECTOR's array of pre-generated random numbers, 
+    !! triggering re-filling of the array when needed.
+    !! Type-bound procedure.
     class(UNIF_VECTOR):: this
     integer, intent(in)  :: n 
         !! number of random values to get
@@ -58,10 +69,11 @@ module random_uniform
   end function
 
   double precision function next_random_uniform(this) result(x)
-    !! getter for one (scalar) pre-generated random value, 
-    !! handling re-filling of the array when needed
+    !! Getter for one (scalar) random value
+    !! from UNIF_VECTOR's array of pre-generated random numbers, 
+    !! triggering re-filling of the array when needed.
+    !! Type-bound procedure.
     class(UNIF_VECTOR):: this
-        !! random value out
 
     if (this%index+1  > this%length) then  ! refill if running out of random values
         call fill_random_uniform(this%u, this%length)
@@ -75,6 +87,7 @@ module random_uniform
   end function
 
   subroutine fill_random_uniform(u, n)
+    !#
     ! Generate an array of n double precision values between 0 and 1.
     ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
     !       including the MODIFICATIONS made in the 9th printing (2002)
@@ -88,12 +101,15 @@ module random_uniform
     ! Date: 2000-09-10, last update 16 January 2003
     ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
     ! 03/05/2019
+    !#
 
-    integer, intent(in)  :: n  ! number of random values wanted
-    double precision, intent(out):: u(n)  ! output vector
+    integer, intent(in)  :: n  
+      !! number of random values wanted
+    double precision, intent(out):: u(n)  
+      !! output vector
 
-    ! Local array
     integer, allocatable, dimension(:)  :: aa
+      !! Local array
 
     ! allocate memory
     allocate(aa(n))
@@ -111,7 +127,7 @@ module random_uniform
   !--------------------------------------------------------------------
   !
   subroutine rnarry(aa, n)
-
+    !#
     ! Generate an array of n integers between 0 and 2^30-1.
     ! Part of process to an array of n double precision values between 0 and 1.
     ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
@@ -125,12 +141,15 @@ module random_uniform
     ! Date: 2000-09-10, last update 16 January 2003
     ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
     ! 03/05/2019
+    !#
 
     integer, intent(in)   :: n
+      !! number of random values wanted
     integer, intent(out)  :: aa(n)
+      !! output vector
 
-    ! Local variables
     integer  :: j
+      !! loop index
 
     aa(1:kk) = ranx(1:kk)
     do j = kk+1, n
@@ -154,6 +173,7 @@ module random_uniform
   !
   subroutine rnstrt(seed)
 
+    !#
     ! Initialize integer array ranx using the input seed.
     ! Part of process to an array of n double precision values between 0 and 1.
     ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
@@ -167,6 +187,7 @@ module random_uniform
     ! Date: 2000-09-10, last update 16 January 2003
     ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
     ! 03/05/2019
+    !#
 
     integer, intent(in)  :: seed
 
