@@ -7,6 +7,8 @@
 # CARDAMOM stresstest, which unlike cardamom main model is not stateful.  For
 # Cardamom main model different parallelism will be required.
 
+# very slow version - lots of communication overhead
+
 library(BayesianTools) # if not found install.packages("BayesianTools")
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
@@ -60,35 +62,46 @@ print(ll)
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-ncores <- 4
-bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
+nchains <- 4
+
+cl <- parallel::makeCluster(nchains)
+parallel::clusterEvalQ(cl, library(BayesianTools))
+parallel::clusterExport(cl, "cardamom_dll" )
+parallel::clusterExport(cl, "model_npars" )
+parallel::clusterExport(cl, "model_parmax" )
+parallel::clusterExport(cl, "model_parmin" )
+parallel::clusterExport(cl, "filename" )
+parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
+parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
+parallel::clusterExport(cl, "get_initial")
+parallel::clusterEvalQ(cl,  initial <- get_initial())
+
+
+# see also parLapply etc for different-shaped parallelization mappings
+# here we run the exact same function over a list of different parameter vectors 
+# , because unlike cardamom main model stresstest evaluation is not stateful
+plikelihood <- function(paramArr) {
+    if (! is.matrix(paramArr)){
+        paramArr = t(as.matrix(paramArr))
+    }
+    parallel::parApply(cl= cl, X=paramArr, MARGIN = 1, FUN = cardamom_stresstestcirclelikelihood)
+}
+
+
+
+initialMatrix = rbind(get_initial(), get_initial(), get_initial(), get_initial())
+bayesianSetup <- createBayesianSetup(likelihood = plikelihood, 
                                      lower = model_parmin,
                                      upper = model_parmax, 
-                                     parallel=ncores, #auto parallelism - works with DEzs
-                                     # make same fortran/C function available on all cores
-                                     parallelOptions = list(variables = "all", packages = "all", dlls = cardamom_dll),
+                                     parallel='external', # use the cluster
                                      )
-iter = 5000
+iter = 10000
 
-settings = list(iterations = 20, startValue=4 , message = TRUE) # hacky: short run to have runMCMC start a cluster
-out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings) 
-# so that we can initialize cardamom stresstest (i.e. fill DATAin, PI) on each core
-parallel::clusterEvalQ(out_parallel[["setup"]][["likelihood"]][["cl"]], out_ <- .C("C_initialize_stresstest_circle") )
+settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
+#test
+plikelihood(initialMatrix)
+plikelihood(bayesianSetup$prior$sampler(nchains))
 
-settings = list(iterations = iter, startValue=4, message = TRUE)
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-# Result : 60x slower with 4 cores than with parallel=FALSE.  
-# There is syncronizing and information sharing between chains
-# Not faster because the circle stresstest likleihood function is trivial
-
-# compare 
-bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikelihood, 
-                                     lower = model_parmin,
-                                     upper = model_parmax, 
-                                     parallel=FALSE
-)
-out_serial <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
-
-summary(out_parallel)
-plot(out_parallel)

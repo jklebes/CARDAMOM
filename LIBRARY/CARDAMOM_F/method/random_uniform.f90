@@ -6,9 +6,6 @@ module random_uniform
   
   implicit none 
   integer, parameter  :: kk = 100, ll = 37, mm = 2**30, tt = 70, kkk = kk+kk-1 
-    !!constants for rand(), narray(), rnstr()
-  integer, save       :: ranx(kk)
-    !! TODO problem for thread safety? put into a function ?
 
 
   public UNIF_VECTOR, get_random_uniform, next_random_uniform
@@ -19,6 +16,8 @@ module random_uniform
         !! random seed, set from initialize 
         integer:: length = 1000  ! TODO get default from orig cardamom
         !! length of the array
+        integer, dimension(kk):: ranx
+        !! internal array of CARDAMOM-native random number generation
         double precision, dimension(:), allocatable:: u
         !! array of random uniform numbers [0, 1] !TODO doc : bounds inclusive/exclusive?
         integer:: index
@@ -35,11 +34,11 @@ module random_uniform
     class(UNIF_VECTOR):: this
     integer, intent(in):: seed
     this%seed = seed
-    call rnstrt(seed) 
+    call rnstrt(seed, this%ranx) 
     if (.not.allocated(this%u)) then
       allocate(this%u(this%length))
     end if
-    call fill_random_uniform(this%u, this%length)
+    call fill_random_uniform(this%u, this%length, this%ranx)
     this%index = 1
   end subroutine
 
@@ -56,7 +55,7 @@ module random_uniform
         !! array of n values out
 
     if (this%index+n  > this%length) then  ! refill if running out of random values
-        call fill_random_uniform(this%u, this%length)
+        call fill_random_uniform(this%u, this%length, this%ranx)
         this%index = 1
     endif
     ! TODO not handled, will get stuck in infinite loop:  n > this%length   
@@ -76,7 +75,7 @@ module random_uniform
     class(UNIF_VECTOR):: this
 
     if (this%index+1  > this%length) then  ! refill if running out of random values
-        call fill_random_uniform(this%u, this%length)
+        call fill_random_uniform(this%u, this%length, this%ranx)
         this%index = 1
     endif
     x = this%u(this%index)
@@ -86,7 +85,7 @@ module random_uniform
 
   end function
 
-  subroutine fill_random_uniform(u, n)
+  subroutine fill_random_uniform(u, n, ranx)
     !#
     ! Generate an array of n double precision values between 0 and 1.
     ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
@@ -107,6 +106,7 @@ module random_uniform
       !! number of random values wanted
     double precision, intent(out):: u(n)  
       !! output vector
+    integer, dimension(kk), intent(inout)   :: ranx
 
     integer, allocatable, dimension(:)  :: aa
       !! Local array
@@ -114,7 +114,7 @@ module random_uniform
     ! allocate memory
     allocate(aa(n))
 
-    call rnarry(aa, n)
+    call rnarry(aa, n, ranx)
     u(1:n) = scale( dble(aa), -30)
 
     ! tidy
@@ -126,7 +126,7 @@ module random_uniform
   !
   !--------------------------------------------------------------------
   !
-  subroutine rnarry(aa, n)
+  subroutine rnarry(aa, n, ranx)
     !#
     ! Generate an array of n integers between 0 and 2^30-1.
     ! Part of process to an array of n double precision values between 0 and 1.
@@ -147,6 +147,7 @@ module random_uniform
       !! number of random values wanted
     integer, intent(out)  :: aa(n)
       !! output vector
+    integer, dimension(kk), intent(inout)   :: ranx
 
     integer  :: j
       !! loop index
@@ -171,7 +172,7 @@ module random_uniform
   !
   !--------------------------------------------------------------------
   !
-  subroutine rnstrt(seed)
+  subroutine rnstrt(seed, ranx)
 
     !#
     ! Initialize integer array ranx using the input seed.
@@ -190,6 +191,7 @@ module random_uniform
     !#
 
     integer, intent(in)  :: seed
+    integer, dimension(kk), intent(out)   :: ranx
 
     ! Local variables
     integer  :: x(kkk), j, ss, sseed, t
@@ -241,7 +243,7 @@ module random_uniform
     end do
 
     do j = 1, 10
-       call rnarry(x, kkk)
+       call rnarry(x, kkk, ranx)
     end do
 
     return

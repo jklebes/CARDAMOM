@@ -37,12 +37,12 @@ subroutine test_fill_random_uniform(error)
   integer:: n 
   double precision, dimension(:), allocatable:: arr
   integer:: seed 
-  seed = rand()
+  seed = irand()
   call random_uniform%initialize(seed)
   n = random_uniform%length
   allocate(arr(n))
   arr = 0d0
-  call fill_random_uniform(arr, n)
+  call fill_random_uniform(arr, n, random_uniform%ranx)
   !write(*,*) arr
   call check(error, arr(1) > 0d0 .and. arr(1) <= 1.0 )
   call check(error, arr(5) > 0d0 .and. arr(5) <= 1.0 )
@@ -56,7 +56,7 @@ subroutine test_initialize(error)
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
   integer:: seed 
-  seed = rand()
+  seed = irand()
   call random_uniform%initialize(seed)
   call check(error, random_uniform%index, 1 )
   call check(error, allocated(random_uniform%u))
@@ -73,7 +73,7 @@ subroutine test_get_random_uniform(error)
   integer:: n
   double precision, dimension(:), allocatable:: x 
   integer:: seed 
-  seed = rand()
+  seed = irand()
   call random_uniform%initialize(seed)
   n = 1
   x = random_uniform%get_random_uniform(n)
@@ -94,7 +94,7 @@ subroutine test_next_random_uniform(error)
   integer ::  index
   type(UNIF_VECTOR):: random_uniform
   integer:: seed 
-  seed = rand()
+  seed = irand()
   call random_uniform%initialize(seed)
   index = random_uniform%index
   x = random_uniform%next_random_uniform()
@@ -170,8 +170,8 @@ subroutine test_threadsafe_refill(error)
   double precision:: value1, value2, value3
   integer:: seed1 
   integer:: seed2 
-  seed1 = rand()
-  seed2 = rand()
+  seed1 = irand()
+  seed2 = irand()
 
   call random_uniform1%initialize(seed1)
 
@@ -180,7 +180,7 @@ subroutine test_threadsafe_refill(error)
   call random_uniform2%initialize(seed2)
 
   ! simulate internally-triggered refill-possibly from ranx influenced by seed2
-  call fill_random_uniform(random_uniform1%u, random_uniform1%length)
+  call fill_random_uniform(random_uniform1%u, random_uniform1%length, random_uniform1%ranx)
 
   value1 = random_uniform1%next_random_uniform()
   value2 = random_uniform1%next_random_uniform()
@@ -188,7 +188,7 @@ subroutine test_threadsafe_refill(error)
 
   !vs same sequence from seed 1 without possible seed2 contamination
   call random_uniform3%initialize(seed1)
-  call fill_random_uniform(random_uniform3%u, random_uniform3%length)
+  call fill_random_uniform(random_uniform3%u, random_uniform3%length, random_uniform3%ranx)
 
   call check(error, value1, random_uniform3%next_random_uniform())
   call check(error, value2, random_uniform3%next_random_uniform())

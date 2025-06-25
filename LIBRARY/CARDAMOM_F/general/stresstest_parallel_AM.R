@@ -35,10 +35,10 @@ out <- as.integer(0)
 model_npars <- .C("C_getmodelnpars", out)[[1]]
 
 out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getstresstestparmin", npars=model_npars, out)[[2]]
+model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
 print("Fetched model parmin")
 print(model_parmin)
-model_parmax <- .C("C_getstresstestparmax", npars=model_npars, out)[[2]]
+model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
 print("Fetched model parmax")
 print(model_parmax)
 

@@ -15,12 +15,12 @@
 # - The Roberts and Rosenthal adaptive method with beta is not implemented in R
 #   ; this is not exactly the same as cardamom-samplers adaptive MCMC
 #
-# This script runs parallel adaptive MCMC with parallelism implemented 
-# at R script level rather than by fortran and ompenmp .  
-# It demonstrates that the cardamom dalec model loglikelihood calculation 
-# can be queried in parallel, i.e. is thread safe,
-# and what the performance is like with a standard sampler.
-
+# This script runs samplers from BayesianTools such as adaptive MCMC
+# - single thread.  Not samplers requiring concurrency such as DEcz cannot 
+# be run from this script.
+# see _parallel_AM script for MCMC with multiple chains in parallel
+# currently not sure if differential evolution family DEzs samplers
+# can be called from R at all.
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
 library(assert)
@@ -51,8 +51,6 @@ dyn.load(cardamom_dll)
 # ~~open_output_files~~
 # ~~ buffering to prepare output streams~~ ... all to be outsourced to R mcmc data collection
 
-nchains <- as.integer(4)
-# TODO take from command line arg of Rscript
 # changing filename here currently has no effect :(
 filename <- "/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin"
 print("File exists:")
@@ -64,7 +62,7 @@ print(file.exists(filename))
 # type objects.  Plus initialize model_working_variables type objects x nchains 
 # in the model module.
 # WARNING filename ignored currently, hard-coded inside
- out_ <- .C("C_initialize_model", nchains)
+out_ <- .C("C_initialize_model")
 
 # TODO keep R wrappers in a different file
 #model_name <- .C("getmodelname")
@@ -89,12 +87,15 @@ get_initial <- function(){
 print("random initial:")
 initial <- get_initial()
 print(initial)
+#print(ll0)
 
 
 #wrap that .C function to a more usual R function
 cardamom_edc_modellikelihood <- function(pars){
     out_ <- 0.0
     ll <- .C("C_edcmodellikelihood", pars, model_npars, out_, as.integer(1))[[3]]
+    print(ll)
+    return(ll)
 }
 
 
@@ -115,30 +116,17 @@ bayesianSetup <- createBayesianSetup(likelihood = cardamom_edc_modellikelihood,
                                      parallel=F
                                      )
 
-# sampler AM works with this outer-level parallelization only.  We run N
-# separate single-chain samplers on N cores.
-
-parallel::clusterEvalQ(cl, library(BayesianTools))
-parallel::clusterExport(cl, "cardamom_dll" )
-parallel::clusterExport(cl, "model_npars" )
-parallel::clusterExport(cl, "model_parmax" )
-parallel::clusterExport(cl, "model_parmin" )
-parallel::clusterExport(cl, "filename" )
-parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
-parallel::clusterExport(cl, "cardamom_edc_modellikelihood")
-parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model") )
-parallel::clusterExport(cl, "get_initial")
-parallel::clusterEvalQ(cl,  intial <- get_initial())
-iter = 100000
+iter = 10000
 
 settings = list(iterations = iter, nrChains=1, message = TRUE)
-parallel::clusterExport(cl, "bayesianSetup")
-parallel::clusterExport(cl, "settings")
-# This will be useful for when you want to pass chainId X to function:
-out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
-    bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
+out <- runMCMC(bayesianSetup, settings, sampler = "DRAM") 
+# DRAM seems to work best from Metropolis family; others have no movement in 
+# some parameters
 
 
-out <- createMcmcSamplerList(out)
 summary(out)
 
+# TODO emulate cardamom main loop of restarting edc phase a few times
+
+# TODO after edc success, wrap, run main / modified likelihood function
+# pass outputs (final/best state) of edc phase as starting points of main run

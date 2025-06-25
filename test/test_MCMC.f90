@@ -46,7 +46,7 @@ subroutine test_step_pars(error)
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
-  seed = rand()  ! this test with a  different seed each time
+  seed = irand()  ! this test with a  different seed each time
   call random_uniform%initialize(seed)
   call init_PI()
   pars0 = (/0d0, 0d0/)
@@ -73,7 +73,7 @@ subroutine test_step_pars_real(error)
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
-  seed = rand()  ! this test with a  different seed each time
+  seed = irand()  ! this test with a  different seed each time
   opt_scaling = 5.67/dble(PI_xy%npars)
   call random_uniform%initialize(seed)
   call init_PI()
