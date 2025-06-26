@@ -91,3 +91,6 @@ plikelihood(bayesianSetup$prior$sampler(nchains))
 
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
+summary(out_parallel)
+plot(out_parallel)
+

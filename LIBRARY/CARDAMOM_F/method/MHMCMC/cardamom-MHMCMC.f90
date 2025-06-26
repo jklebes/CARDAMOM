@@ -51,7 +51,7 @@ public
 !> contains default values 
 type MCMC_OPTIONS
 integer:: MAXITER = 10000  ! overall steps, if convergence not reached
-integer:: nadapt  =1000  ! steps per "local" sampling period, between adaptation steps
+integer:: nadapt  = 1000  ! steps per "local" sampling period, between adaptation steps
 integer:: N_chains = 1  ! consider setting OMP env to something compatible
 integer:: nwrite = 1000
 integer:: nprint = 1000
@@ -246,7 +246,7 @@ contains
     integer, intent(in), optional:: chainid
     logical:: restart_
     integer:: chainid_
-    integer:: seed = 100  ! TODO
+    integer:: seed 
 
     type(io_buffer_space):: io_space  ! this chain has its own io buffers
     character(350):: outfile, stepfile, covfile, covifile
@@ -401,6 +401,7 @@ contains
     ACCRATE_GLOBAL = 0d0
 
     ! Initialize pregenerated random numbers, if using-local to this chain
+    seed = irand()  ! TODO record later
     call uniform_random_vector%initialize(seed)
     
     !TODO opt scaling scalin by n
@@ -458,7 +459,7 @@ contains
 
 
     ! Begin the main AP-MCMC loop
-    do while (ITER < MAXITER)! .and. Pmax < P_target)
+    do while (ITER < MAXITER .and. loglikelihood_previous <= P_target)
 
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 

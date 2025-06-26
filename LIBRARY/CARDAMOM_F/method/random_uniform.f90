@@ -14,7 +14,7 @@ module random_uniform
       !! Type holding an array of pre-generate random uniform numbers [0, 1]
         integer:: seed 
         !! random seed, set from initialize 
-        integer:: length = 1000  ! TODO get default from orig cardamom
+        integer:: length = 5000
         !! length of the array
         integer, dimension(kk):: ranx
         !! internal array of CARDAMOM-native random number generation
@@ -30,10 +30,12 @@ module random_uniform
 
     contains
 
-  subroutine initialize(this, seed)
+  subroutine initialize(this, seed, length)
     class(UNIF_VECTOR):: this
     integer, intent(in):: seed
+    integer, intent(in), optional:: length
     this%seed = seed
+    if (present(length)) this%length = length
     call rnstrt(seed, this%ranx) 
     if (.not.allocated(this%u)) then
       allocate(this%u(this%length))
@@ -100,6 +102,10 @@ module random_uniform
     ! Date: 2000-09-10, last update 16 January 2003
     ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
     ! 03/05/2019
+    !
+    ! Code is a modified version of that found in the uniform distribution generator from Numerical receipes
+    ! Modified to give 0-1 unform on input of value 0 and normal distribution (mean = 0 sd = 1) on input of 1
+    ! Modified by TLS
     !#
 
     integer, intent(in)  :: n  

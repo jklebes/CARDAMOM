@@ -7,11 +7,12 @@ enable_language(Fortran)
 
 include(CTest)
 
-add_compile_options(-ffree-line-length-0 -g -pg -Wuninitialized -Wmaybe-uninitialized)
+#add_compile_options(-ffree-line-length-0 -g -pg -Wuninitialized -Wmaybe-uninitialized)
+add_compile_options(-ffree-line-length-0  -O3)
 
 ## Code coverage analysis
-add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
-add_link_options(-lgcov --coverage) 
+#add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
+#add_link_options(-lgcov --coverage) 
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 

@@ -60,7 +60,7 @@ print(ll)
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-nchains <- 4
+nchains <- 8
 
 cl <- parallel::makeCluster(nchains)
 parallel::clusterEvalQ(cl, library(BayesianTools))
@@ -103,3 +103,6 @@ plikelihood(bayesianSetup$prior$sampler(nchains))
 
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
+plot(out_parallel[["chain"]][[1]][,'LL'])
+
+out_parallel <- runMCMC(out_parallel, sampler="DEzs", settings=settings)

@@ -1,9 +1,41 @@
-
 module samplers_math
-
-  !!!!!!!!!!!
+  !#
   ! Module contains functions needed to mathematical calculations in CARDAMOM-samplers
-  !!!!!!!!!!!
+  !
+  ! Authorship contributions
+  
+  !
+  ! This code is based on the original C verion of the University of Edinburgh
+  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+  ! All code translation into Fortran, integration into the University of
+  ! Edinburgh CARDAMOM code and subsequent modifications by:
+  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+  ! J. F. Exbrayat (University of Edinburgh)
+  ! See function/subroutine specific comments for exceptions and contributors
+  !
+  ! Subroutines rand(), narray() and rnstrt() are from:
+  !
+  !
+  ! Code converted using TO_F90 by Alan Miller
+  ! Date: 2000-09-10  Time: 16:37:48
+  ! Latest revision-16 January 2003
+  !
+  ! FORTRAN 77 version of "ran_array"
+  ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
+  !       including the MODIFICATIONS made in the 9th printing (2002)
+  ! ********* see the book for explanations and caveats! *********
+  ! Author: Steve Kifowit
+  ! http://ourworld.compuserve.com/homepages/steve_kifowit
+  ! with modifications by Alan Miller to rnarry and rnstrt based upon
+  ! Knuth's code.
+  !
+  ! For Donald Knuth's Fortran 77 versions, go to:
+  ! http://www-cs-faculty.stanford.edu/~knuth/programs
+  ! Look for frng.f and frngdb.f
+  !
+  ! NOTE: that minimum number of values to be returned is 100
+  !#
+
 
   implicit none
 
@@ -18,62 +50,17 @@ module samplers_math
             log_par2nor_scalar, log_nor2par_scalar, &
             cholesky_factor, inverse_matrix, matrix_vector_func, &
             calculate_variance, increment_variance
-  
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function/subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
-  !!!!!!!!!!!
-  ! Subroutines rand(), narray() and rnstrt() are from:
-  !!!!!!!!!!!
 
-  ! Code converted using TO_F90 by Alan Miller
-  ! Date: 2000-09-10  Time: 16:37:48
-  ! Latest revision-16 January 2003
-
-  ! FORTRAN 77 version of "ran_array"
-  ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
-  !       including the MODIFICATIONS made in the 9th printing (2002)
-  ! ********* see the book for explanations and caveats! *********
-  ! Author: Steve Kifowit
-  ! http://ourworld.compuserve.com/homepages/steve_kifowit
-  ! with modifications by Alan Miller to rnarry and rnstrt based upon
-  ! Knuth's code.
-
-  ! For Donald Knuth's Fortran 77 versions, go to:
-  ! http://www-cs-faculty.stanford.edu/~knuth/programs
-  ! Look for frng.f and frngdb.f
-
-  ! NOTE: that minimum number of values to be returned is 100
-  !!!!!!!!!!!
-
-  !!!!!!!!!!!
-  ! Function randn()
-  !!!!!!!!!!!
-
-  ! Code is a modified version of that found in the uniform distribution generator from Numerical receipes
-  ! Modified to give 0-1 unform on input of value 0 and normal distribution (mean = 0 sd = 1) on input of 1
-  ! Modified by TLS
-
-  !!!!!!!!!!!
-
-  ! randn() related seed value
   double precision:: idum
+  !! randn() related seed value  ! TODO
 
   contains
   !
   !--------------------------------------------------------------------
   !
   subroutine calculate_variance(sample, meanpar, naccepted, variance)
-
+    !#
     ! Subroutine to estimate the sample variance
     ! Var = Σ ( Xi-X )*2 / (N-1)
     ! X = mean for parameter
@@ -82,6 +69,7 @@ module samplers_math
     ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
+    !#
 
     implicit none
 
@@ -115,7 +103,7 @@ module samplers_math
   !--------------------------------------------------------------------
   !
   subroutine increment_variance(sample, meanpar, cur1, new, variance)
-
+    !#
     ! Subroutine for incremental update of the variance
     ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
     ! M  = mean vector for parameters
@@ -127,6 +115,7 @@ module samplers_math
     ! (contact abloom@jpl.nasa.gov for access)
     ! Translation to fortran and subsequent modifications by T. L. Smallman
     ! University of Edinburgh, t.l.smallman@ed.ac.uk
+    !#
 
     implicit none
 
@@ -163,7 +152,7 @@ module samplers_math
   !--------------------------------------------------------------------
   !
   subroutine covariance_matrix(PARSALL, meanpar, npars, naccepted, covariance)
-
+    !#
     ! Subroutine to estimate the covariance matrix
     ! Cov(X, Y) = Σ ( Xi-X ) ( Yi-Y ) / (N-1)
     ! X = mean for parameter 1
@@ -175,6 +164,7 @@ module samplers_math
     ! (contact abloom@jpl.nasa.gov for access)
     ! Translation to fortran and subsequent modifications by T. L. Smallman
     ! University of Edinburgh, t.l.smallman@ed.ac.uk
+    !# 
 
     implicit none
 
@@ -212,24 +202,34 @@ module samplers_math
   !--------------------------------------------------------------------
   !
   subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur1, new, covariance)
-
+    !#
+    ! Running calculation of covariance matrix AND mean from a series of vectors.
+    ! 
     ! Subroutine for incremental update of a covariance matrix
-    ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
-    ! M  = mean vector for parameters
-    ! Mi = new mean vector for updated covariance_matrix
-    ! ar = number of new parameters to be added
-    ! N = number of parameters accepted so far
+    ! covariance = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
+    ! meanpar = new mean vector for updated covariance_matrix
+    ! new = number of new parameters to be added
+    ! npars = number of parameters accepted so far
     ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
     ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
     ! (contact abloom@jpl.nasa.gov for access)
+    !#
 
     implicit none
 
     ! Arguments
-    integer, intent(in):: npars, new
+    integer, intent(in):: npars
+      !! Length of vector of values
+    integer, intent(in):: new
+      !! number of new values 
     integer, intent(inout):: cur1
+      !! current position in list of parameters going into to the running calcualtions 
+      !!
+      !! warning : changed by this function, incrmented by+new 
     double precision, intent(in):: PARSALL(npars, new)
+      !! New vectors of values going into the running calculation, array npars x new 
     double precision, intent(inout):: meanpar(npars), covariance(npars, npars)
+      !! Updated mean vector and covariance matrix
 
     ! local variables
     integer:: n, i, j
@@ -264,15 +264,18 @@ module samplers_math
   !--------------------------------------------------------------------
   !
   subroutine inverse_matrix(n, a, c)
-
+     !#
      !============================================================
+     !
      ! Inverse for positive definite symmetric matrix
      ! Method: Based on Doolittle LU factorization for Ax = b
      ! Alex L. Godunov December 2009
      ! Modifed for CARDAMOM: T. Luke Smallman (June 2019)
      !                       t.l.smallman@ed.ac.uk
      ! Warning if matrix not positive definite this function will fail
+     !
      !-----------------------------------------------------------
+     !
      ! input ...
      ! a(n, n) - array of coefficients for matrix A
      ! n      - dimension
@@ -282,6 +285,7 @@ module samplers_math
      ! the original matrix a(n, n) will be destroyed
      ! during the calculation
      !===========================================================
+     !#
 
      implicit none
 
@@ -362,17 +366,20 @@ module samplers_math
   !--------------------------------------------------------------------
   !
   subroutine matrix_vector_func(uplo, n, alpha, A, lda, X, incx, beta, Y, incy)
-
+    !#
     ! Performs the matrix-vector operation
     ! y := alpha*A*x+beta*y, 
     ! where alpha and beta are scalars, x and y are n element vectors and
     ! A is an n by n symmetric matrix.
-
+    !
     !  Arguments:
+    !
     !  ==========
     !
     ! intent(in):: UPLO
+    !
     !          UPLO is CHARACTER*1
+    !
     !          On entry, UPLO specifies whether the upper or lower
     !          triangular part of the array A is to be referenced as
     !          follows:
@@ -384,48 +391,65 @@ module samplers_math
     !                                  is to be referenced.!
     !
     ! intent(in):: N
+    !
     !           N is INTEGER
+    !
     !           On entry, N specifies the order of the matrix A.
+    !
     !           N must be at least zero.
     !
     ! intent(in):: ALPHA
+    !
     !           ALPHA is DOUBLE PRECISION.
+    !
     !           On entry, ALPHA specifies the scalar alpha.
     !
     ! intent(in):: A
+    !
     !           A is DOUBLE PRECISION array, dimension ( LDA, N )
+    !
     !           Before entry with  UPLO = 'U' or 'u', the leading n by n
     !           upper triangular part of the array A must contain the upper
     !           triangular part of the symmetric matrix and the strictly
     !           lower triangular part of A is not referenced.
+    !
     !           Before entry with UPLO = 'L' or 'l', the leading n by n
     !           lower triangular part of the array A must contain the lower
     !           triangular part of the symmetric matrix and the strictly
     !           upper triangular part of A is not referenced.
     !
     ! intent(in):: LDA
+    !
     !           LDA is INTEGER
+    !
     !           On entry, LDA specifies the first dimension of A as declared
     !           in the calling (sub) program. LDA must be at least
     !           max( 1, n ).
     !
     ! intent(in):: X
+    !
     !           X is DOUBLE PRECISION array, dimension at least
+    !
     !           ( 1 + ( n-1 )*abs( INCX ) ).
+    !
     !           Before entry, the incremented array X must contain the n
     !           element vector x.
     !
     ! intent(in):: INCX
+    !
     !           INCX is INTEGER
+    !
     !           On entry, INCX specifies the increment for the elements of
     !           X. INCX must not be zero.
     !
     ! intent(in):: BETA
+    !
     !           BETA is DOUBLE PRECISION.
     !           On entry, BETA specifies the scalar beta. When BETA is
     !           supplied as zero then Y need not be set on input.
     !
     ! intent(inout):: Y
+    !
     !           Y is DOUBLE PRECISION array, dimension at least
     !           ( 1 + ( n-1 )*abs( INCY ) ).
     !           Before entry, the incremented array Y must contain the n
@@ -433,21 +457,27 @@ module samplers_math
     !           vector y.
     !
     ! intent(in):: INCY
+    !
     !           INCY is INTEGER
     !           On entry, INCY specifies the increment for the elements of
     !           Y. INCY must not be zero.
     !
     !  Authors:
+    !
     !  ========
     !
     ! author Univ. of Tennessee
+    !
     ! author Univ. of California Berkeley
+    !
     ! author Univ. of Colorado Denver
+    !
     ! author NAG Ltd.
     !
     ! Date: December 2016
     !
     ! Further Details:
+    !
     ! =====================
     !
     !  Level 2 Basic Linear Algebra Subprograms (BLAS) routines.
@@ -468,6 +498,7 @@ module samplers_math
     !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
     !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
     !     December 2016
+    !#
 
     ! Arguments
     double precision, intent(in):: alpha, beta
@@ -643,8 +674,10 @@ module samplers_math
   !
   double precision function std(a, n)
 
+    !#
     ! Function to determine the standard deviation
     ! inputs are the vector of values and number of values included
+    !#
 
     implicit none
 
@@ -679,9 +712,10 @@ module samplers_math
   !------------------------------------------------------------------
   !
   pure function par2nor(npars, initial_par, min_par, max_par)  result(out_par)
-
+    !#
     ! functions to normalised parameter values and return them back to
     ! un-normalised value.
+    !#
 
     ! converting parameters on log scale between 0-1 for min/max values
     implicit none
@@ -698,8 +732,9 @@ module samplers_math
   !---------------------and vice versa------------------------------
   !
   pure function nor2par(npars, initial_par, min_par, max_par) result(out_par)
-
+    !#
     ! Converting values back from normalised (0-1) to 'real' numbers
+    !#
 
     implicit none
     integer, intent(in):: npars    ! number of iterations in current vector
@@ -712,8 +747,9 @@ module samplers_math
   end function nor2par
 
   elemental function nor2par_scalar(initial_par, min_par, max_par) result(out_par)
-
+    !#
     ! Converting values back from normalised (0-1) to 'real' numbers
+    !#
 
     implicit none
     double precision, intent(in):: min_par, max_par
@@ -727,10 +763,13 @@ module samplers_math
   !
   !------------------------------------------------------------------
   !
-  ! log version-see Roberts and Rosenthal 2009 for discussion
+  ! 
   pure function log_par2nor_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
-
+    !#
     ! Functions to normalised-log parameter values.
+    !
+    ! log version : see Roberts and Rosenthal 2009 for discussion
+    !#
 
     ! Converting parameters on log scale between 0-1 for min/max values
     implicit none
@@ -753,7 +792,9 @@ end function log_par2nor_scalar
 
   pure function log_par2nor(npars, initial_par, min_par, max_par, par_adj) result(out_par)
 
+    !#
     ! Functions to normalised-log parameter values.
+    !#
 
     ! Converting parameters on log scale between 0-1 for min/max values
     implicit none
@@ -781,7 +822,9 @@ end function log_par2nor
   
   pure function log_nor2par_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
 
+    !#
     ! Converting values back from log-normalised (0-1) to 'real' numbers
+    !#
 
     implicit none
     double precision, intent(in):: min_par, max_par, par_adj  ! adjustment prevents negative values being fed into the analysis
@@ -802,7 +845,9 @@ end function log_nor2par_scalar
   
   pure function log_nor2par(npars, initial_par, min_par, max_par, par_adj) result(out_par)
 
+    !#
     ! Converting values back from log-normalised (0-1) to 'real' numbers
+    !#
 
     implicit none
     integer, intent(in):: npars     ! number of iterations in current vector
@@ -828,12 +873,14 @@ end function log_nor2par
   subroutine random_normal(uniform_random_vector, fn_val)
    use random_uniform, only: UNIF_VECTOR, next_random_uniform
 
+    !#
     ! Generate a random normal deviate using the polar method.
     ! Reference: Marsaglia, G. & Bray, T.A. 'A convenient method for
     ! generating normal variables',
     ! Siam Rev., vol.6, 260-264, 1964.
     ! Code modified from that created by Alan Miller
     ! (https://jblevins.org/mirror/amiller/rnorm.f90, last updated February 2004)
+    !#
 
     implicit none
 
@@ -880,6 +927,7 @@ end function log_nor2par
   !
   subroutine random_multivariate ( m, n, a, mu, x, uniform_random_vector)
    use random_uniform, only: UNIF_VECTOR 
+    !#
     !
     !  Discussion:
     !
@@ -893,7 +941,7 @@ end function log_nor2par
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Wed 16 Apr 2025 10:10:20 BST
+    !  Last Modified: Thu 26 Jun 2025 12:37:42 BST
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -912,6 +960,7 @@ end function log_nor2par
     !
     !    Output, X(M), the points.
     !
+    !#
 
     implicit none
 
@@ -978,7 +1027,7 @@ end function log_nor2par
   !--------------------------------------------------------------------
   !
   subroutine cholesky_factor ( n, a, info )
-
+    !#
     !
     !  Discussion:
     !
@@ -1002,7 +1051,7 @@ end function log_nor2par
     !
     !    This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Wed 16 Apr 2025 10:10:20 BST
+    !  Last Modified: Thu 26 Jun 2025 12:37:42 BST
     !
     !    03/05/2019
     !
@@ -1032,6 +1081,8 @@ end function log_nor2par
     !    K, error condition. The principal minor of order K is not
     !    positive definite, and the factorization was not completed.
     !
+    !#
+
 
     implicit none
 
