@@ -541,6 +541,20 @@ program cardamom_framework
            PEDC(i) = MCOUT_list_tmp(i)%bestll 
            write(*,*) "Found best loglikelihood", PEDC(i)
 
+           ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
+           ! copy it to MCOUT_list
+              if (MCOUT_list_tmp(i)%ll >= -0d0) then
+                  !$omp critical
+                  success_count = success_count+1
+                  write(*,*) "Found ", success_count, "EDC-compatible starting points"
+                  MCOUT_list(success_count) = MCOUT_list_tmp(i)
+                  !$omp end critical
+                  call reset_stats(MCOUT_list_tmp(i), PI%npars)
+                  restart(i) = .false.
+                  counter_local(i) = 0
+              endif 
+        end do
+
            ! keep track of attempts
            counter_local(i) = counter_local(i) +1 
            ! periodically reset the initial conditions
@@ -558,20 +572,6 @@ program cardamom_framework
            else
                PEDC_prev(i) = PEDC(i)
            endif
-
-           ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
-           ! copy it to MCOUT_list
-              if (MCOUT_list_tmp(i)%ll >= 0d0) then
-                  !omp critical
-                  success_count = success_count+1
-                  write(*,*) "Found ", success_count, "EDC-compatible starting points"
-                  MCOUT_list(success_count) = MCOUT_list_tmp(i)
-                  !omp end critical
-                  call reset_stats(MCOUT_list_tmp(i), PI%npars)
-                  restart(i) = .false.
-                  counter_local(i) = 0
-              endif 
-        end do
         !$omp end parallel do
 
         end do  ! for while condition

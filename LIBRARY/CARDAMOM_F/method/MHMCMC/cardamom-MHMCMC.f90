@@ -481,6 +481,7 @@ contains
            ! Keep equivalent for now !  Change after checking the whole sample for equivalence to previous
        end if  ! in bound
        if (ITER < 5) then
+         ! TODO debug print
          write(*,*) chainid_, loglikelihood_proposed, loglikelihood_previous, accept
       endif 
        if (accept) then
@@ -491,10 +492,6 @@ contains
            ! Because this history matrix is used for (normalized) statistics for adaptiveness, 
            ! store normalized version of pars
             PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
-           ! store the best parameter set
-           if (loglikelihood_proposed >= llmax) then
-               BESTPARS = PARS_proposed; llmax = loglikelihood_proposed
-           endif
            ! Keep count of the number of accepted proposals in this local period
            ACCLOC = ACCLOC+1
            ! Accepted first proposal from multivariate
@@ -504,6 +501,11 @@ contains
            PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save as previous pars
            !norPARS0(1:PI%npars) = norPARS(1:PI%npars)                    ! normalize
            loglikelihood_previous = loglikelihood_proposed;               ! save as previous loglikelihood
+           ! store the best parameter set
+           if (loglikelihood_previous >= llmax) then
+               BESTPARS = PARS_previous
+               llmax = loglikelihood_previous
+           endif
         else  
           ! write to history  ! not done in CARDAMOM-MHMCMC version to match original
        endif  ! accept or reject proposed pars

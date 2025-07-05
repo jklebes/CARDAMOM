@@ -26,7 +26,8 @@ subroutine collect_MCMCtests(testsuite)
     new_unittest("mcmc_nchains1_len0", test_run_parallel_mcmc_nchains1_len0), &
     new_unittest("mcmc_nchains4_len0", test_run_parallel_mcmc_nchains4_len0), &
     new_unittest("mcmc_nchains4omp_len0", test_run_parallel_mcmc_nchains4_enforceomp_len0), &
-    new_unittest("mcmc_nchains4omp_len100000", test_run_parallel_mcmc_nchains4_enforceomp_len100000) &
+    new_unittest("mcmc_nchains4omp_len100000", test_run_parallel_mcmc_nchains4_enforceomp_len100000), &
+    new_unittest("mcmc_stop_condition", test_mcmc_stop_condition) &
     ]
 
 end subroutine collect_MCMCtests
@@ -157,8 +158,6 @@ subroutine test_run_mcmc_len1000(error)
   type(error_type), allocatable, intent(out):: error
   type(mcmc_output):: mcout
   type(mcmc_options):: mcopt  ! filled with defaults only
-  ! zero length run : takes expected input arguments, setup works, 
-  ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call init_pi()
   mcopt%nout = 1000
@@ -293,5 +292,27 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
   end do 
 end subroutine 
 
+subroutine test_mcmc_stop_condition(error)
+  !! stops on MCMC stop criterion of reaching loglikelihood threshold
+  !! and %bestll is expected to be same as latest ll
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(mcmc_output):: mcout
+  type(mcmc_options):: mcopt  ! filled with defaults only
+  integer :: maxsteps
+  call init_pi()
+  maxsteps = 10000000
+  mcopt%nout = maxsteps 
+  mcopt% = 0.0 ! convergence criteria : loglikelood reached 0
+  call run_mcmc(ll_step, pi_xy, mcopt, mcout)
+  ! Expect we have optimized the values to the correct ranges
+  call check(error, mcout%pars(1) >= pi_xy%parmin(1) .and. mcout%pars(1) <= pi_xy%parmax(1))
+  call check(error, mcout%pars(2) >= pi_xy%parmin(2) .and. mcout%pars(2) <= pi_xy%parmax(2) )
+  ! Expect the optimization stopped early
+  call check(error, mcout%steps < maxsteps)
+  ! Expect bestll is exactly 0 and current ll is exactly zero
+  call check(error, mcout%bestll == 0d0)
+  call check(error, mcout%ll == 0d0)
+end subroutine 
 
 end module test_MCMC
