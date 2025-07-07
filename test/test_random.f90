@@ -182,6 +182,7 @@ subroutine test_threadsafe_refill(error)
   ! simulate internally-triggered refill-possibly from ranx influenced by seed2
   call fill_random_uniform(random_uniform1%u, random_uniform1%length, random_uniform1%ranx)
 
+  random_uniform1%index = 1
   value1 = random_uniform1%next_random_uniform()
   value2 = random_uniform1%next_random_uniform()
   value3 = random_uniform1%next_random_uniform()
@@ -190,6 +191,7 @@ subroutine test_threadsafe_refill(error)
   call random_uniform3%initialize(seed1)
   call fill_random_uniform(random_uniform3%u, random_uniform3%length, random_uniform3%ranx)
 
+  random_uniform3%index = 1
   call check(error, value1, random_uniform3%next_random_uniform())
   call check(error, value2, random_uniform3%next_random_uniform())
   call check(error, value3, random_uniform3%next_random_uniform())

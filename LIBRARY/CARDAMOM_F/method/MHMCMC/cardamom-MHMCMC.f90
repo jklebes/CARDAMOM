@@ -444,12 +444,8 @@ contains
     ! initalize bestpars to current pars
     BESTPARS = PARS_previous
     llmax = loglikelihood_previous
-    write(*,*) chainid_, "initial", loglikelihood_previous
-    write(*,*) chainid_, "initial", PARS_previous
 
     else  ! restart case
-    write(*,*) chainid_, "initial", loglikelihood_previous
-    write(*,*) chainid_, "initial", PARS_previous
       PARS_previous = MCOUT%PARS
       loglikelihood_previous = MCOUT%ll
       BESTPARS = MCOUT%bestpars
@@ -459,7 +455,7 @@ contains
 
 
     ! Begin the main AP-MCMC loop
-    do while (ITER < MAXITER .and. loglikelihood_previous <= P_target)
+    do while (ITER < MAXITER .and. loglikelihood_previous < (P_target-epsilon(1.0d0 ) ) )  ! TODO better approx comparison?
 
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 

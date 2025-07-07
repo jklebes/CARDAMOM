@@ -116,7 +116,7 @@ program cardamom_framework
  type(MCMC_OPTIONS):: MCO
 
  ! TODO not to hardcode, from command line argument
- integer:: nchains = 4
+ integer:: nchains = 8
  integer:: i
 
  allocate(MCOUT_list(nchains))
@@ -539,21 +539,19 @@ program cardamom_framework
 
            ! store the best parameters from that loop
            PEDC(i) = MCOUT_list_tmp(i)%bestll 
-           write(*,*) "Found best loglikelihood", PEDC(i)
-
+           write(*,*) "Found best loglikelihood",PEDC(i) 
            ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
            ! copy it to MCOUT_list
-              if (MCOUT_list_tmp(i)%ll >= -0d0) then
                   !$omp critical
+              if (MCOUT_list_tmp(i)%ll >= 0d0-epsilon(1.0d0) ) then
                   success_count = success_count+1
-                  write(*,*) "Found ", success_count, "EDC-compatible starting points"
+                  write(*,*) "Found ", success_count, "EDC-compatible starting points (", i, ")"
                   MCOUT_list(success_count) = MCOUT_list_tmp(i)
-                  !$omp end critical
                   call reset_stats(MCOUT_list_tmp(i), PI%npars)
                   restart(i) = .false.
                   counter_local(i) = 0
               endif 
-        end do
+                  !$omp end critical
 
            ! keep track of attempts
            counter_local(i) = counter_local(i) +1 
@@ -572,6 +570,7 @@ program cardamom_framework
            else
                PEDC_prev(i) = PEDC(i)
            endif
+        end do
         !$omp end parallel do
 
         end do  ! for while condition

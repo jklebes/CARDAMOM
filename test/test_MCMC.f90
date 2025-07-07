@@ -1,6 +1,7 @@
 module test_MCMC
   use testdrive, only : new_unittest, unittest_type, error_type, check
   use test_functions
+  use test_math, only: approx
   use random_uniform
   use MHMCMC
   use OMP_LIB
@@ -27,7 +28,9 @@ subroutine collect_MCMCtests(testsuite)
     new_unittest("mcmc_nchains4_len0", test_run_parallel_mcmc_nchains4_len0), &
     new_unittest("mcmc_nchains4omp_len0", test_run_parallel_mcmc_nchains4_enforceomp_len0), &
     new_unittest("mcmc_nchains4omp_len100000", test_run_parallel_mcmc_nchains4_enforceomp_len100000), &
-    new_unittest("mcmc_stop_condition", test_mcmc_stop_condition) &
+    new_unittest("mcmc_stop_condition", test_mcmc_stop_condition), &
+    new_unittest("mcmc_stop_condition_exact", test_mcmc_stop_condition_exact), &
+    new_unittest("mcmc_stop_condition_initial", test_mcmc_stop_condition_initial) &
     ]
 
 end subroutine collect_MCMCtests
@@ -299,20 +302,69 @@ subroutine test_mcmc_stop_condition(error)
   type(error_type), allocatable, intent(out):: error
   type(mcmc_output):: mcout
   type(mcmc_options):: mcopt  ! filled with defaults only
-  integer :: maxsteps
+  integer:: maxsteps
   call init_pi()
-  maxsteps = 10000000
+  maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
   mcopt%nout = maxsteps 
-  mcopt% = 0.0 ! convergence criteria : loglikelood reached 0
+  mcopt%P_target = -1.0d0  ! convergence criteria : loglikelood reached 0
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect we have optimized the values to the correct ranges
   call check(error, mcout%pars(1) >= pi_xy%parmin(1) .and. mcout%pars(1) <= pi_xy%parmax(1))
   call check(error, mcout%pars(2) >= pi_xy%parmin(2) .and. mcout%pars(2) <= pi_xy%parmax(2) )
   ! Expect the optimization stopped early
-  call check(error, mcout%steps < maxsteps)
+  call check(error, mcout%nos_iterations < maxsteps)
   ! Expect bestll is exactly 0 and current ll is exactly zero
-  call check(error, mcout%bestll == 0d0)
-  call check(error, mcout%ll == 0d0)
+  call check(error, approx(mcout%bestll, 0d0))
+  call check(error, approx(mcout%ll, 0d0))
+end subroutine 
+
+subroutine test_mcmc_stop_condition_exact(error)
+  !! stops on MCMC stop criterion of reaching loglikelihood threshold
+  !! with only exact equality to likelihood threshold, check 0d0 >= 0d0
+  !! and %bestll is expected to be same as latest ll
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(mcmc_output):: mcout
+  type(mcmc_options):: mcopt  ! filled with defaults only
+  integer:: maxsteps
+  call init_pi()
+  maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
+  mcopt%nout = maxsteps 
+  mcopt%P_target = -0.0d0  ! convergence criteria : loglikelood reached 0
+  call run_mcmc(ll_step, pi_xy, mcopt, mcout)
+  ! Expect we have optimized the values to the correct ranges
+  call check(error, mcout%pars(1) >= pi_xy%parmin(1) .and. mcout%pars(1) <= pi_xy%parmax(1))
+  call check(error, mcout%pars(2) >= pi_xy%parmin(2) .and. mcout%pars(2) <= pi_xy%parmax(2) )
+  ! Expect the optimization stopped early
+  call check(error, mcout%nos_iterations < maxsteps)
+  ! Expect bestll is exactly 0 and current ll is exactly zero
+  call check(error, approx(mcout%bestll, 0d0))
+  call check(error, approx(mcout%ll, 0d0))
+end subroutine 
+
+subroutine test_mcmc_stop_condition_initial(error)
+  !! stops on MCMC stop criterion of reaching loglikelihood threshold
+  !! with a threshold such that the initial state likely already fulfils
+  !! the criterion and no sampling iterationsare run.  Still have complete output
+  !! and %bestll is expected to be same as latest ll
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(mcmc_output):: mcout
+  type(mcmc_options):: mcopt  ! filled with defaults only
+  integer:: maxsteps
+  call init_pi()
+  maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
+  mcopt%nout = maxsteps 
+  mcopt%P_target = -10000.0d0  ! Extremely broad convergence criterion, already fulfilled
+  call run_mcmc(ll_step, pi_xy, mcopt, mcout)
+  ! Expect we have optimized the values to the correct ranges
+  call check(error, mcout%pars(1) >= pi_xy%parmin(1) .and. mcout%pars(1) <= pi_xy%parmax(1))
+  call check(error, mcout%pars(2) >= pi_xy%parmin(2) .and. mcout%pars(2) <= pi_xy%parmax(2) )
+  ! Expect the optimization stopped early, immediately
+  call check(error, mcout%nos_iterations < maxsteps)
+  call check(error, mcout%nos_iterations <= 0)
+  ! Expect bestll is current ll
+  call check(error, approx(mcout%bestll, mcout%ll, 0d0))
 end subroutine 
 
 end module test_MCMC

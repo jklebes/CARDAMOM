@@ -4,7 +4,7 @@ module test_math
   implicit none
   private
 
-  public:: collect_mathtests
+  public:: collect_mathtests, approx
 
   integer, parameter:: dp = kind(0.0d0)
 
@@ -61,7 +61,7 @@ end function
 
 
 subroutine test_approx(error)
-  !! test my approx equals testing utility
+  !! test my 'approx equals' testing utility
   implicit none
   type(error_type), allocatable, intent(out):: error
   call check(error, approx(1d0, 0d0), .false.)
@@ -146,7 +146,7 @@ subroutine test_running_avg_scalar(error)
   cur = 75  ! is also incremented by the call
   call increment_covariance_matrix(series(76:85), running_mean85, 1, cur, 10, covariance)
   call check(error, cur, 85)
-  call check(error, mean85(1), running_mean85(1))
+  call check(error, approx(mean85(1), running_mean85(1)))
 end subroutine 
 
 

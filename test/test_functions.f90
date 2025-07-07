@@ -28,15 +28,15 @@ end subroutine
 
 subroutine ll_step(pars, npars, res, id)
   !! A test function that is a stepped rectangular well
-  !! It's "correct" with value ll=0 for x=(0,5) and y=(1,9)
-  !! and has penalty of -5 in steps for values outside of the target domain
+  !! It's "correct" with value ll = 0 for x=(0, 5) and y=(1, 9)
+  !! and has penalty of-5 in steps for values outside of the target domain
   integer, intent(in):: npars 
 double precision, dimension(npars), intent(inout):: pars  
 double precision, intent(out):: res
   !! result : loglikelihood penalty
 integer, intent(in), optional:: id
-double precision:: x, y  ! x,y values recieved as pars vector
-double precision:: x_1, y_1, x_2, y_2 ! the bounds of the target domain
+double precision:: x, y  ! x, y values recieved as pars vector
+double precision:: x_1, y_1, x_2, y_2  ! the bounds of the target domain
 x_1 = 0d0
 x_2 = 5d0
 y_1 = 1d0
@@ -44,15 +44,15 @@ y_2 = 9d0
 x = pars(1)
 y = pars(2)
 res = 0d0
-if (x<x_1) then
-  res = res - 5 * (x_1-x)//5 !TODO make sure we have remainder divivision to int
-else if (x>x_2) then
-  res = res - 5 * (x-x_2)//5
+if (x < x_1) then
+  res = res-5 * ceiling((x_1-x)/5)
+else if (x > x_2) then
+  res = res-5 * ceiling((x-x_2)/5)
 endif
-if (y<y_1) then
-  res = res - 5 * (y_1-y)//5
-else if (y>y_2) then
-  res = res - 5 * (y-y_2)//5
+if (y < y_1) then
+  res = res-5 * ceiling((y_1-y)/5)
+else if (y > y_2) then
+  res = res-5 * ceiling((y-y_2)/5)
 endif
 end subroutine
 
