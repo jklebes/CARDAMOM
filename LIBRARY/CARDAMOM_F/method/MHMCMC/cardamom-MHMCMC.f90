@@ -235,7 +235,7 @@ contains
     use samplers_shared, only : init_pars_random, bounds_check, is_infinity, metropolis_choice
     use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
                           ,write_covariance_info, restart_flag, write_mcmc_output, open_output_files
-    use random_uniform, ONLY: UNIF_VECTOR, initialize
+    use random_uniform, ONLY: UNIF_VECTOR, initialize_random
     ! declare any local variables
     !! all variables in here are local to the single chain and the duration of its run
     !! input and output structs
@@ -402,7 +402,7 @@ contains
 
     ! Initialize pregenerated random numbers, if using-local to this chain
     seed = irand()  ! TODO record later
-    call uniform_random_vector%initialize(seed)
+    call uniform_random_vector%initialize_random(seed)
     
     !TODO opt scaling scalin by n
 
@@ -430,6 +430,7 @@ contains
     write(*,*) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
     ! initialize loglikelihood value of the given model with these pars
     !P = -1d0; Pprior = -1d0
+    
     ! calculate the initial probability/log likelihood.
     ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
     ! could read an EDC consistent parameter set in the first instance
@@ -438,7 +439,7 @@ contains
     if (.false. .and. is_infinity(loglikelihood_previous)) then  
         write(*,*) "WARNING  ! loglikelihood = ",loglikelihood_previous, " - &
         & AP-MCMC will get stuck, if so please check initial conditions"
-        error stop
+        error stop 1
     endif
 
     ! initalize bestpars to current pars
@@ -453,9 +454,29 @@ contains
 
     endif 
 
+    
+    ! calculate the initial probability/log likelihood.
+    ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
+    ! could read an EDC consistent parameter set in the first instance
+    call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
+    write(*,*) "EDC model likelihood", loglikelihood_previous, chainid_
+
+    if (.false. .and. is_infinity(loglikelihood_previous)) then  
+        write(*,*) "WARNING  ! loglikelihood = ",loglikelihood_previous, " - &
+        & AP-MCMC will get stuck, if so please check initial conditions"
+        error stop 1
+    endif
+
+    if (loglikelihood_previous < -9999999) then
+        write(*,*) "Infinity check 2"
+        write(*,*) PARS_previous
+        write(*,*) loglikelihood_previous
+        write(*,*) chainid_
+        error stop 1
+    end if
 
     ! Begin the main AP-MCMC loop
-    do while (ITER < MAXITER .and. loglikelihood_previous < (P_target-epsilon(1.0d0 ) ) )  ! TODO better approx comparison?
+    do while (ITER < MAXITER .and. loglikelihood_previous < (P_target-10*epsilon(1.0d0 ) ) )  ! TODO better approx comparison?
 
        ! take a step in parameter space: generate proposed 
        ! new parameters PARS 
@@ -470,6 +491,13 @@ contains
            ! TODO ideally output just one likelihood value
            call model_likelihood(PARS_proposed, npars, loglikelihood_proposed, chainid_)
            accept = metropolis_choice(loglikelihood_proposed, loglikelihood_previous)
+           if (loglikelihood_proposed < -9999999) then
+             !write(*,*) PARS_proposed
+             !write(*,*) loglikelihood_proposed
+             !write(*,*) chainid_
+             !stop 1
+             accept=.false.
+           endif
        else
            accept = .false.
           

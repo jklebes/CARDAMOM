@@ -38,7 +38,7 @@ subroutine test_fill_random_uniform(error)
   double precision, dimension(:), allocatable:: arr
   integer:: seed 
   seed = irand()
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
   n = random_uniform%length
   allocate(arr(n))
   arr = 0d0
@@ -57,7 +57,7 @@ subroutine test_initialize(error)
   type(UNIF_VECTOR):: random_uniform
   integer:: seed 
   seed = irand()
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
   call check(error, random_uniform%index, 1 )
   call check(error, allocated(random_uniform%u))
   call check(error, random_uniform%u(2) > 0d0 .and. random_uniform%u(2) <= 1.0 )
@@ -74,7 +74,7 @@ subroutine test_get_random_uniform(error)
   double precision, dimension(:), allocatable:: x 
   integer:: seed 
   seed = irand()
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
   n = 1
   x = random_uniform%get_random_uniform(n)
   call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
@@ -95,7 +95,7 @@ subroutine test_next_random_uniform(error)
   type(UNIF_VECTOR):: random_uniform
   integer:: seed 
   seed = irand()
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
   index = random_uniform%index
   x = random_uniform%next_random_uniform()
   call check(error, x > 0d0 .and. x <= 1.0 )
@@ -110,7 +110,7 @@ subroutine test_set_seed(error)
   integer:: n
   double precision, dimension(:), allocatable:: x 
   integer:: seed = 155
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
   call check(error, random_uniform%seed, seed)
   n = 110
   x = random_uniform%get_random_uniform(n)
@@ -128,16 +128,16 @@ subroutine test_set_seed_consistency(error)
   double precision:: value1
   double precision, dimension(11):: values
   double precision:: value12
-  call random_uniform%initialize(seed1)
+  call random_uniform%initialize_random(seed1)
   value1 = random_uniform%next_random_uniform()
   values = random_uniform%get_random_uniform(11)
   value12 = values(11)
-  call random_uniform%initialize(seed2)
+  call random_uniform%initialize_random(seed2)
   ! check values are different with different seed
   call check(error, value1 /= random_uniform%next_random_uniform())
   values = random_uniform%get_random_uniform(11)
   call check(error, value12 /= values(11))
-  call random_uniform%initialize(seed1)
+  call random_uniform%initialize_random(seed1)
   ! check values are the same as previously from the same seed 155
   call check(error, value1, random_uniform%next_random_uniform())
   values = random_uniform%get_random_uniform(11)
@@ -152,8 +152,8 @@ subroutine test_set_threadsafe_seed(error)
   type(UNIF_VECTOR):: random_uniform2
   integer:: seed1 = 155
   integer:: seed2 = 298
-  call random_uniform1%initialize(seed1)
-  call random_uniform2%initialize(seed2)
+  call random_uniform1%initialize_random(seed1)
+  call random_uniform2%initialize_random(seed2)
   call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
   call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
   call check(error, random_uniform1%seed /= random_uniform2%seed)
@@ -173,11 +173,11 @@ subroutine test_threadsafe_refill(error)
   seed1 = irand()
   seed2 = irand()
 
-  call random_uniform1%initialize(seed1)
+  call random_uniform1%initialize_random(seed1)
 
   ! possible, this sets some shared values like ranx to 'wrong' values
   ! matching seed 2
-  call random_uniform2%initialize(seed2)
+  call random_uniform2%initialize_random(seed2)
 
   ! simulate internally-triggered refill-possibly from ranx influenced by seed2
   call fill_random_uniform(random_uniform1%u, random_uniform1%length, random_uniform1%ranx)
@@ -188,7 +188,7 @@ subroutine test_threadsafe_refill(error)
   value3 = random_uniform1%next_random_uniform()
 
   !vs same sequence from seed 1 without possible seed2 contamination
-  call random_uniform3%initialize(seed1)
+  call random_uniform3%initialize_random(seed1)
   call fill_random_uniform(random_uniform3%u, random_uniform3%length, random_uniform3%ranx)
 
   random_uniform3%index = 1

@@ -57,7 +57,7 @@ program cardamom_framework
  !use model_likelihood_module, only: model_likelihood, &
  !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
  use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &
-     sub_model_likelihood_fct
+     sub_model_likelihood_fct, edc_model_likelihood_fct
  use CARBON_MODEL_MOD, only: initialize_carbon_model
  use cardamom_main_utils
 
@@ -110,13 +110,14 @@ program cardamom_framework
  logical:: do_inflate = .false.
  logical:: sub_sample_complete = .false.
  double precision:: sub_fraction = 0.2d0
+ double precision:: ll
  !double precision:: idum  ! TODO redo seeds
  type(MCMC_OUTPUT):: MCOUT
  type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
  type(MCMC_OPTIONS):: MCO
 
  ! TODO not to hardcode, from command line argument
- integer:: nchains = 8
+ integer:: nchains = 4
  integer:: i
 
  allocate(MCOUT_list(nchains))
@@ -316,14 +317,46 @@ program cardamom_framework
 
      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
      do i = 1, nchains
+     !MCOUT_list(i)%pars = (/8.2541992449544470E-004,  0.29269005698013606,       0.10918820581034874,       0.65410628727175912, &
+     !1.4116626415828890,        6.1425101753895630E-004,   3.2985120921817839E-003,   1.4904751343118651E-004, &
+     !3.1947208234022437E-005, &
+     !6.6555453603566697E-002,   62.881210637480095,        551.42881422649646,        3.8930261063292386E-002, 18.225050185374187, &
+     !1161.4281598899104,        32.225636460595346,        98.522275278559022,       3.6863718165541406, 38.956182582098513, &
+     !92.906961634604770,        240.14375534689168,        172.37962589728303  ,      5107.9915424005903,     0.17472418107258553, &
+     !0.22608381258586158,        2283.2151160970793,        9.7709099175705525,        4.1058161174047723E-002, &
+     !5.4968083425296944E-002,   4.8002121930932840E-002,   1.1374800014070333E-002,  0.17644136331124649/)
+     MCOUT_list(i)%bestpars = MCOUT_list(i)%pars
      MCOUT_list(i)%nos_iterations = 0
+                  write(*,*) "with sub_model_likelihood 2"
+                  call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 4"
+                      write(*,*) i, MCOUT_LIST(i)%pars 
+                      stop 1 
+                end if
 
      ! Reset the MCMC parameters for the next stage
      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT_list(i))
+                  write(*,*) "with sub_model_likelihood 3"
+                  call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 5"
+                      write(*,*) i, MCOUT_LIST(i)%pars 
+                      stop 1 
+                end if
 
      ! Reset stepsize and covariance for main DRAM-MCMC
-     ! TODO same, make function init_stats
      call reset_stats(MCOUT_list(i), PI%npars)
+                  write(*,*) "with sub_model_likelihood 4"
+                  call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 6"
+                      write(*,*) i, MCOUT_LIST(i)%pars 
+                      stop 1 
+                end if
 
      if (restart_flag) then
          ! Restarting an old one
@@ -334,12 +367,12 @@ program cardamom_framework
          call update_for_restart_simulation(MCO, MCOUT_list(i))
      else
          ! Brand new analysis
-         print*,"writing initial covariance matrix"
+         !print*,"writing initial covariance matrix"
          ! write out first covariance matrix, this will be compared with the final covariance matrix
-         if (MCO%nWRITE > 0) then
-             call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
-             call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
-         endif
+         !if (MCO%nWRITE > 0) then
+         !    call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
+         !    call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
+         !endif
          !...so the reset for nos_iterations must only occur when not a restart run
          MCOUT_list(i)%nos_iterations = 0
      endif  ! restart run or not
@@ -368,10 +401,20 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save) * sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         ! TODO model_likelihood function from model_likelihood_module (each model's) does not conform to specs, needs a wrapper 
-         MCOUT_list(1) = MCOUT
-         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
-         MCOUT = MCOUT_list(1) 
+         MCO%nwrite = 0
+         MCO%nprint = 1000
+         do i = 1, nchains
+         write(*,*) i, "MCOUT_list(i)%pars", MCOUT_list(i)%pars
+                  write(*,*) "with sub_model_likelihood 5"
+                  call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 7"
+                      write(*,*) i, MCOUT_LIST(i)%pars 
+                      stop 1 
+                end if
+         end do
+         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
@@ -411,21 +454,20 @@ program cardamom_framework
      ! But to avoid getting through the EDC do_inflate sections before finding
      ! out that the cost_function_scaling has not been set correctly, 
      ! ensure code after the command line read (above) has been correctly maintained
-     MCOUT_list(1) = MCOUT
      if (cost_func_scaling_dble == 0) then
         ! Caution: order of loglikelihood function arguments is being switched so that the first 
         ! function in the (maybe scaled) one to do the sampling calculation with, second optional 
         ! function argument is the one for writing only
+         call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
      else if (cost_func_scaling_dble == 1) then
-         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
      else if (cost_func_scaling_dble == 2) then
-         call run_parallel_mcmc(sqrt_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+         call run_parallel_mcmc(sqrt_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
      else if (cost_func_scaling_dble == 3) then
-         call run_parallel_mcmc(log_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+         call run_parallel_mcmc(log_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
      !else if (cost_func_scaling_dble == 4) then
      !    call MHMCMC(1d0, model_likelihood, log_model_likelihood_dtm)
      end if  ! cost_func_scaling_dble == 
-     MCOUT = MCOUT_list(1)
      
      ! Let the user know we are done
      write(*,*)"AP-MCMC done now, moving on ..."
@@ -457,7 +499,7 @@ program cardamom_framework
     !use model_likelihood_module, only: model_likelihood, &
     !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
     use model_likelihood_wrapper  ! TODO next refactoring step
-    use cardamom_structures, only: DATAin  ! will need to change due to circular dependance
+    use cardamom_structures, only: DATAin 
 
 
     implicit none
@@ -467,10 +509,11 @@ program cardamom_framework
     type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list
     type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list_tmp
     type(MCMC_OPTIONS), intent(out):: MCO
-    integer:: n, i, counter_local(nchains), EDC_iter, nOUT_save, nWRITE_save, nADAPT_save
+    integer:: n, i, counter_local(nchains), EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, j
     integer:: success_count
     logical:: append_save
     logical:: restart(nchains)
+    double precision:: ll
     double precision:: PEDC(nchains), PEDC_prev(nchains), ML, ML_prior, P_target
     double precision, dimension(PI%npars+1):: EDC_pars
     double precision, dimension(PI%npars):: parini  ! local variable, or array
@@ -527,14 +570,14 @@ program cardamom_framework
 
            write(*,*)"Beginning EDC search attempt "
            write(*,*)  nchains, "chains working ... "
-        !$omp parallel do
+           MCO%randparini = .false.
+        !$omp parallel do private(ll)
            do i = 1, nchains
            ! call the MHMCMC directing to the appropriate likelihood function
            call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, restart = restart(i), chainid = i)
            restart(i) = .true.
 
            ! turn off random selection for initial values
-           MCO%randparini = .false.
            write(*,*)"...intermediate EDC search progress check"
 
            ! store the best parameters from that loop
@@ -543,14 +586,40 @@ program cardamom_framework
            ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
            ! copy it to MCOUT_list
                   !$omp critical
-              if (MCOUT_list_tmp(i)%ll >= 0d0-epsilon(1.0d0) ) then
+              if (MCOUT_list_tmp(i)%ll >= (0d0-10*epsilon(1.0d0)) ) then
                   success_count = success_count+1
                   write(*,*) "Found ", success_count, "EDC-compatible starting points (", i, ")"
+                  write(*,*) "with sub_model_likelihood"
+                  call sub_model_likelihood_fct(MCOUT_LIST_tmp(i)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 8"
+                      write(*,*) i, MCOUT_LIST_tmp(i)%pars 
+                      stop 1 
+                end if
+                  if (success_count <= nchains) then  
                   MCOUT_list(success_count) = MCOUT_list_tmp(i)
+                  endif
                   call reset_stats(MCOUT_list_tmp(i), PI%npars)
+                  MCO%randparini = .true. ! TODO problem
+                  PEDC_prev(i) = -1000d0
+                  MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
                   restart(i) = .false.
                   counter_local(i) = 0
+
+                  write(*,*) "with edc_model_likelihood"
+                  write(*,*) MCOUT_LIST(success_count)%pars, PI%npars, ll, i
+                  call edc_model_likelihood_fct(MCOUT_LIST(success_count)%pars, PI%npars, ll, i)
+                  write(*,*) "with sub_model_likelihood"
+                  call sub_model_likelihood_fct(MCOUT_LIST(success_count)%pars, PI%npars, ll, i)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 10"
+                      write(*,*) i, MCOUT_LIST(success_count)%pars 
+                      stop 1 
               endif 
+
+          end if
                   !$omp end critical
 
            ! keep track of attempts
@@ -565,6 +634,7 @@ program cardamom_framework
                MCO%randparini = .true. ! TODO problem
                ! reset the parameter step size at the beginning of each attempt
                call reset_stats(MCOUT_list_tmp(i), PI%npars)
+               counter_local(i) = 0
                restart(i) = .false.
                write(*,*) "resetting to initial"
            else
@@ -573,7 +643,26 @@ program cardamom_framework
         end do
         !$omp end parallel do
 
+
         end do  ! for while condition
+
+        do i = 1, nchains
+        do j = 1, nchains
+
+                 write(*,*) "check", i, j
+                  write(*,*) "with edc_model_likelihood"
+                  write(*,*) MCOUT_LIST(i)%pars, PI%npars, ll, i
+                  call edc_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, j)
+                  write(*,*) ll
+                  write(*,*) "with sub_model_likelihood"
+                  call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, j)
+                  write(*,*) ll
+                  if (ll < -9999999) then
+                      write (*,*) "Infinity check 9"
+                      write(*,*) j, MCOUT_LIST(i)%pars 
+                end if
+                end do
+        end do
 
     endif  ! if for restart
 

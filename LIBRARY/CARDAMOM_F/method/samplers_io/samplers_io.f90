@@ -189,6 +189,7 @@ module samplers_io
     ! for the covariance matrix we have a fixed size containing two matrices, 
     ! the initial and the current output-therefore we use
     inquire(iolength = reclen) a !; print*,reclen
+    write(*,*) "covname", covname
     open(cfile_unit+offset, file = trim(covname), form="UNFORMATTED",access="direct",recl = reclen, iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(covname)
 
@@ -257,6 +258,7 @@ module samplers_io
     do i = 1, npars
        do j = 1, npars
           irec = irec+1
+          write(*,*)  "writing to file unit ", cfile_unit+offset
           write(cfile_unit+offset, rec = irec) covariance(i, j)
        end do
     end do

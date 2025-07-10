@@ -42,7 +42,7 @@ subroutine test_init_pars_random(error)
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
   seed = rand()  ! this test with a different seed each time
-  call random_uniform%initialize(seed)
+  call random_uniform%initialize_random(seed)
 
   if (.not. allocated(pars0)) allocate(pars0(PI_xy%npars))
   ! with no fix_pars_flag

@@ -22,7 +22,7 @@ module CARBON_MODEL_MOD
   private
 
   ! explicit publics: procedures and parameters only
-  public:: CARBON_MODEL, initialize_carbon_model, &
+  public:: CARBON_MODEL, initialize_carbon_model, destroy_carbon_model, &
     nos_soil_layers, top_soil_depth, mvs
 
   !!!!!!!!!
@@ -314,10 +314,29 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat, DATAin%met, DATAin%lat)
     end do
     end subroutine
+  
+    subroutine destroy_carbon_model(n_chains)
+    !! deallocate members of model_working_variables struct(s) Mvs
+    use cardamom_structures, only: DATAin
+    integer, intent(in), optional:: n_chains
+    integer:: n_chains_
+    integer:: i
+    if (present(n_chains)) then
+      n_chains_ = n_chains
+    else
+      n_chains_ = 1
+    endif 
+    do i = 1, n_chains_
+        call destroy_mv(Mvs(i))
+    end do
+    deallocate(mVs)
+    end subroutine
+
 
   subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, met, lat)
     !! For a single chain's model_working_varibles type object mV, allocate arrays
     !! and calculate initial values.  
+    implicit none
     type(model_working_variables):: mV
     integer, intent(in):: nodays, nomet, nopars
     double precision, intent(in):: deltat(nodays)     ! time step in decimal days
@@ -367,6 +386,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! zero variables not done elsewhere
         mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
+        mV%soil_frac_sand = 0.5d0  ! TODO this is a made up value to ensure determinism !!  Discuss !
+        mV%soil_frac_clay = 0.5d0  ! This was unitiailzied (random) so far !
         call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand, mV)
         call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand, mV)
         ! save the initial conditions for later
@@ -375,6 +396,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         mV%field_capacity_initial = mV%field_capacity
         mV%porosity_initial = mV%porosity
   end subroutine
+
+  subroutine destroy_mv(mV)
+    !! deallocate arrays in mV
+    type(model_working_variables):: mV
+    integer:: n
+        ! allocate variables dimension which are fixed per site only the once
+        deallocate(mV%deltat_1, mV%wSWP_time, mV%rSWP_time, mV%gs_demand_supply_ratio, &
+                 mV%gs_total_canopy, mV%gb_total_canopy, mV%canopy_par_MJday_time, &
+                 mV%soil_par_MJday_time, &
+                 mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
+                 mV%rainfall_time, mV%cica_time, mV%root_depth_time, mV%snow_storage_time)
+    end subroutine
 
   !
   !--------------------------------------------------------------------
@@ -3107,7 +3140,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       type(model_working_variables):: mV
 
     ! arguments
-    double precision, dimension(nos_soil_layers):: soil_frac_clay &
+    double precision, dimension(nos_soil_layers), intent(inout):: soil_frac_clay &
                                                    ,soil_frac_sand
 
     ! local variables

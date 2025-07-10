@@ -13,6 +13,7 @@ set(
   "common"
   "MCMC"
   "DEMCz"
+  "model"
   "wrappers_for_R"
 )
 set(

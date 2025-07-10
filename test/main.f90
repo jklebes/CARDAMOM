@@ -8,14 +8,22 @@ program tester
   use test_common, only : collect_commontests
   use test_MCMC, only : collect_MCMCtests
   use test_DEMCz, only : collect_DEMCztests
+  use test_model, only : collect_modeltests
   use test_wrappers_for_R, only : collect_test_wrappers_for_R
   implicit none
   integer:: stat, is
+  integer:: clock
   character(len=:), allocatable:: suite_name, test_name
   type(testsuite_type), allocatable:: testsuites(:)
   character(len=*), parameter:: fmt = '("#", *(1x, a))'
 
   stat = 0
+
+  ! set the seed for all the irand() calls in tests, which 
+  ! in turn seed the cardmom-native random number generator.
+  ! To not always have the same test behavior.
+    call SYSTEM_CLOCK(COUNT = clock)
+    call srand(clock)
 
   testsuites = [ &
     new_testsuite("random", collect_randomtests), &
@@ -23,6 +31,7 @@ program tester
     new_testsuite("common", collect_commontests), &
     new_testsuite("MCMC", collect_MCMCtests), &
     new_testsuite("DEMCz", collect_DEMCztests), &
+    new_testsuite("model", collect_modeltests), &
     new_testsuite("wrappers_for_R", collect_test_wrappers_for_R) &
      ]
 

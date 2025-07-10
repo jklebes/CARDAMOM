@@ -23,14 +23,14 @@ module random_uniform
         integer:: index
         !! current position in getting numbers from the array
         contains 
-        procedure:: initialize
+        procedure:: initialize_random
         procedure:: get_random_uniform
         procedure:: next_random_uniform
     end type
 
     contains
 
-  subroutine initialize(this, seed, length)
+  subroutine initialize_random(this, seed, length)
     class(UNIF_VECTOR):: this
     integer, intent(in):: seed
     integer, intent(in), optional:: length

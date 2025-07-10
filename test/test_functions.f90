@@ -2,8 +2,12 @@ module test_functions
   use samplers_shared, only: PARINFO
   ! A struct with parameter limits
   type(PARINFO):: PI_xy
-  real:: x_ideal = 5.1
-  real:: y_ideal = 5.0
+  double precision:: x_ideal = 5.1
+  double precision:: y_ideal = 5.0
+  double precision:: x_lower = 0d0
+  double precision:: x_upper = 6d0
+  double precision:: y_lower = 1d0
+  double precision:: y_upper = 9d0
 
 contains
 
@@ -38,7 +42,7 @@ integer, intent(in), optional:: id
 double precision:: x, y  ! x, y values recieved as pars vector
 double precision:: x_1, y_1, x_2, y_2  ! the bounds of the target domain
 x_1 = 0d0
-x_2 = 5d0
+x_2 = 6d0
 y_1 = 1d0
 y_2 = 9d0
 x = pars(1)
@@ -53,6 +57,34 @@ if (y < y_1) then
   res = res-5 * ceiling((y_1-y)/5)
 else if (y > y_2) then
   res = res-5 * ceiling((y-y_2)/5)
+endif
+end subroutine
+
+subroutine ll_bounded(pars, npars, res, id)
+  !! A test function that is quadratic potential, 
+  !! plus hard boundaries resticting it to the domain 
+  !! that can be found by ll_step
+  integer, intent(in):: npars 
+double precision, dimension(npars), intent(inout):: pars  
+double precision, intent(out):: res
+  !! result : loglikelihood penalty
+integer, intent(in), optional:: id
+double precision:: x, y  ! x, y values recieved as pars vector
+double precision:: x_1, y_1, x_2, y_2  ! the bounds of the target domain
+double precision:: P = 0d0
+x_1 = 0d0
+x_2 = 6d0
+y_1 = 1d0
+y_2 = 9d0
+x = pars(1)
+y = pars(2)
+res = 0d0
+A = 1.0
+B = 1.6  
+if (x >= x_1 .and. x <= x_2 .and. y >= y_1 .and. y <= y_2 ) then
+  res = -(A*(x-x_ideal)**2+B*(y-y_ideal)**2)
+else 
+  res = log(P)  ! loglikelihood = -Infinity as signal to always reject
 endif
 end subroutine
 

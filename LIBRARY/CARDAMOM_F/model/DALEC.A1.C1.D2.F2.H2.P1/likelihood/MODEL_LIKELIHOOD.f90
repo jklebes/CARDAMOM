@@ -185,7 +185,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ML_obs_out = ML_obs_out+scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
 
 !    ! Debugging print statements
-!    print*,"sub_model_likelihood: done"
+    !print*,"sub_model_likelihood: done"
 
   end subroutine sub_model_likelihood
   !
@@ -412,7 +412,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
            print*,"Sum abs error over time: pool = ",i
            print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))  ! TODO
         end do
-        !stop  ! TODO sanity check failing because of random uninitialized arrays SWP, field_capacity, porosity: discuss
+        stop 1  ! TODO sanity check failing for unknown reasons now
     end if
 
     ! Update the user
