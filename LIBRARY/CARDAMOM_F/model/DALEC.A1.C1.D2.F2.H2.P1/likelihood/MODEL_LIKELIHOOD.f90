@@ -412,7 +412,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
            print*,"Sum abs error over time: pool = ",i
            print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))  ! TODO
         end do
-        stop 1  ! TODO sanity check failing for unknown reasons now
+        stop 1  
     end if
 
     ! Update the user

@@ -311,7 +311,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     endif 
     allocate(mVs(n_chains))
     do i = 1, n_chains_
-        call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat, DATAin%met, DATAin%lat)
+        call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars)
     end do
     end subroutine
   
@@ -333,16 +333,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end subroutine
 
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, met, lat)
+  subroutine initialize_mv(mV, nodays, nomet, nopars)
     !! For a single chain's model_working_varibles type object mV, allocate arrays
     !! and calculate initial values.  
+    use cardamom_structures, only: DATAin
     implicit none
-    type(model_working_variables):: mV
+    type(model_working_variables), intent(out):: mV
     integer, intent(in):: nodays, nomet, nopars
-    double precision, intent(in):: deltat(nodays)     ! time step in decimal days
-    double precision, intent(in):: met(nomet, nodays)  ! met drivers
-    double precision, intent(in):: lat
+
+    ! copy these arrays from global, read-only DATAin struct :
+    double precision:: deltat(nodays)     ! time step in decimal days
+    double precision:: met(nomet, nodays)  ! met drivers
+    double precision:: lat
+
     integer:: n
+
+    deltat = DATAin%deltat
+    met = DATAin%met
+    lat = DATAin%lat
+        mV%soil_frac_sand = DATAin%soil_frac_sand 
+        mV%soil_frac_clay = DATAin%soil_frac_clay
+
         ! allocate variables dimension which are fixed per site only the once
         allocate(mV%deltat_1(nodays), mV%wSWP_time(nodays), mV%rSWP_time(nodays), mV%gs_demand_supply_ratio(nodays), &
                  mV%gs_total_canopy(nodays), mV%gb_total_canopy(nodays), mV%canopy_par_MJday_time(nodays), &
@@ -386,8 +397,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! zero variables not done elsewhere
         mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
-        mV%soil_frac_sand = 0.5d0  ! TODO this is a made up value to ensure determinism !!  Discuss !
-        mV%soil_frac_clay = 0.5d0  ! This was unitiailzied (random) so far !
         call saxton_parameters(mV%soil_frac_clay, mV%soil_frac_sand, mV)
         call initialise_soils(mV%soil_frac_clay, mV%soil_frac_sand, mV)
         ! save the initial conditions for later
