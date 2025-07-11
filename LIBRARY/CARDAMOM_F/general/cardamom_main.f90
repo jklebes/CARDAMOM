@@ -316,46 +316,12 @@ program cardamom_framework
 
       ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
       do i = 1, nchains
-         !MCOUT_list(i)%pars = (/8.2541992449544470E-004,  0.29269005698013606,       0.10918820581034874,       0.65410628727175912, &
-         !1.4116626415828890,        6.1425101753895630E-004,   3.2985120921817839E-003,   1.4904751343118651E-004, &
-         !3.1947208234022437E-005, &
-         !6.6555453603566697E-002,   62.881210637480095,        551.42881422649646,        3.8930261063292386E-002, 18.225050185374187, &
-         !1161.4281598899104,        32.225636460595346,        98.522275278559022,       3.6863718165541406, 38.956182582098513, &
-         !92.906961634604770,        240.14375534689168,        172.37962589728303  ,      5107.9915424005903,     0.17472418107258553, &
-         !0.22608381258586158,        2283.2151160970793,        9.7709099175705525,        4.1058161174047723E-002, &
-         !5.4968083425296944E-002,   4.8002121930932840E-002,   1.1374800014070333E-002,  0.17644136331124649/)
-         MCOUT_list(i)%bestpars = MCOUT_list(i)%pars
-         MCOUT_list(i)%nos_iterations = 0
-         write (*, *) "with sub_model_likelihood 2"
-         call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
-         write (*, *) ll
-         if (ll < -9999999) then
-            write (*, *) "Infinity check 4"
-            write (*, *) i, MCOUT_LIST(i)%pars
-            stop 1
-         end if
 
          ! Reset the MCMC parameters for the next stage
          call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT_list(i))
-         write (*, *) "with sub_model_likelihood 3"
-         call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
-         write (*, *) ll
-         if (ll < -9999999) then
-            write (*, *) "Infinity check 5"
-            write (*, *) i, MCOUT_LIST(i)%pars
-            stop 1
-         end if
 
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
-         write (*, *) "with sub_model_likelihood 4"
-         call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
-         write (*, *) ll
-         if (ll < -9999999) then
-            write (*, *) "Infinity check 6"
-            write (*, *) i, MCOUT_LIST(i)%pars
-            stop 1
-         end if
 
          if (restart_flag) then
             ! Restarting an old one
@@ -400,42 +366,26 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
          write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         MCO%nwrite = 0
+         MCO%nwrite = 1000
          MCO%nprint = 1000
-         do i = 1, nchains
-            write (*, *) i, "MCOUT_list(i)%pars", MCOUT_list(i)%pars
-            write (*, *) "with sub_model_likelihood 5"
-            call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, i)
-            write (*, *) ll
-            if (ll < -9999999) then
-               write (*, *) "Infinity check 7"
-               write (*, *) i, MCOUT_LIST(i)%pars
-               stop 1
-            end if
-         end do
-        call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+         call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
-         MCOUT%pars(1:PI%npars) = MCOUT%bestpars(1:PI%npars)
          MCO%fixedpars = .true.
+         do i = 1, nchains
+         MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
+
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
-         if (MCOUT%cov .and. MCOUT%use_multivariate) then
-            MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
+         if (MCOUT_list(i)%cov .and. MCOUT_list(i)%use_multivariate) then
+            MCOUT_list(i)%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
          else
             ! reset the parameter step size at the beginning of each attempt
-            ! TODO fct for this
-            MCOUT%parvar = 1d0; MCOUT%Nparvar = 0d0
-            ! Covariance matrix cannot be set to zero therefore set initial
-            ! value to a small positive value along to variance access
-            MCOUT%covariance = 0d0; MCOUT%meanpar = 0d0; MCOUT%cov = .false.
-            MCOUT%use_multivariate = .false.
-            do n = 1, PI%npars
-               MCOUT%covariance(n, n) = 1d0
-            end do
+            call reset_stats(MCOUT_list(i), PI%npars)
          end if  ! do we need a new covariance matrix or can we use the existing one?
+         end do
 
       end if  ! restart flag
 
@@ -493,7 +443,7 @@ contains
     !! conditions which are consistent with EDCs
     !! pre-loop, Run MCMC sampler with modified likelihood fct
       use model_shared, only: PI
-      use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, MCSTATS, run_mcmc, run_parallel_mcmc
+      use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
       !use model_likelihood_module, only: model_likelihood, &
       !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
       use model_likelihood_wrapper  ! TODO next refactoring step
@@ -586,14 +536,6 @@ contains
                if (MCOUT_list_tmp(i)%ll >= (0d0-10*epsilon(1.0d0))) then
                   success_count = success_count+1
                   write (*, *) "Found ", success_count, "EDC-compatible starting points (", i, ")"
-                  write (*, *) "with sub_model_likelihood"
-                  call sub_model_likelihood_fct(MCOUT_LIST_tmp(i)%pars, PI%npars, ll, i)
-                  write (*, *) ll
-                  if (ll < -9999999) then
-                     write (*, *) "Infinity check 8"
-                     write (*, *) i, MCOUT_LIST_tmp(i)%pars
-                     stop 1
-                  end if
                   if (success_count <= nchains) then
                      MCOUT_list(success_count) = MCOUT_list_tmp(i)
                   end if
@@ -603,18 +545,6 @@ contains
                   MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
                   restart(i) = .false.
                   counter_local(i) = 0
-
-                  write (*, *) "with edc_model_likelihood"
-                  write (*, *) MCOUT_LIST(success_count)%pars, PI%npars, ll, i
-                  call edc_model_likelihood_fct(MCOUT_LIST(success_count)%pars, PI%npars, ll, i)
-                  write (*, *) "with sub_model_likelihood"
-                  call sub_model_likelihood_fct(MCOUT_LIST(success_count)%pars, PI%npars, ll, i)
-                  write (*, *) ll
-                  if (ll < -9999999) then
-                     write (*, *) "Infinity check 10"
-                     write (*, *) i, MCOUT_LIST(success_count)%pars
-                     stop 1
-                  end if
 
                end if
                !$omp end critical
@@ -641,24 +571,6 @@ contains
             !$omp end parallel do
 
          end do  ! for while condition
-
-         do i = 1, nchains
-         do j = 1, nchains
-
-            write (*, *) "check", i, j
-            write (*, *) "with edc_model_likelihood"
-            write (*, *) MCOUT_LIST(i)%pars, PI%npars, ll, i
-            call edc_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, j)
-            write (*, *) ll
-            write (*, *) "with sub_model_likelihood"
-            call sub_model_likelihood_fct(MCOUT_LIST(i)%pars, PI%npars, ll, j)
-            write (*, *) ll
-            if (ll < -9999999) then
-               write (*, *) "Infinity check 9"
-               write (*, *) j, MCOUT_LIST(i)%pars
-            end if
-         end do
-         end do
 
       end if  ! if for restart
 
