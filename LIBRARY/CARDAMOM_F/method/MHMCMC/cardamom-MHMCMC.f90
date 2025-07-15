@@ -53,7 +53,7 @@ module MHMCMC
    type MCMC_OPTIONS
       integer:: MAXITER = 10000  ! overall steps, if convergence not reached
       integer:: nadapt = 1000  ! steps per "local" sampling period, between adaptation steps
-      integer:: N_chains = 1  ! consider setting OMP env to something compatible
+      integer:: Nchains = 1  ! consider setting OMP env to something compatible
       integer:: nwrite = 1000
       integer:: nprint = 1000
       real:: P_target  ! termination criteria
@@ -147,7 +147,7 @@ contains
       ! read-only, shared beteen chains:
       type(PARINFO), intent(in):: PI
       !!PARINFO struct from model giving number, bounds of parameters
-      type(MCMC_OPTIONS), intent(in):: MCO
+      type(MCMC_OPTIONS), intent(inout):: MCO
       !! struct of options for the run, shared between all threads
       type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
       !! Array of MCMC_OUTPUT structs for each thread's results
@@ -158,8 +158,6 @@ contains
       !! internal restart flag, equal to optional input flag 'restart' or .false.
       integer, optional:: nchains
       !! number chains optional, default 1
-      integer:: nchains_
-      !! internal nchains_, equal to optional input arg or 1
       integer:: i
       !! internal loop index
 
@@ -193,13 +191,11 @@ contains
          restart_ = restart
       end if
 
-      write (*, *) "with restart", restart_
-
       if (.not. present(nchains)) then
-         nchains_ = 1
+         MCO%nchains = 1
          ! or try to infer from OMP_THREADS or columns in MCOUT ...?
       else
-         nchains_ = nchains
+         MCO%nchains = nchains
       end if
 
       ! process function arguments
@@ -213,14 +209,14 @@ contains
 
       ! Outputs
       ! each one an MCOUT struct with unitialized output data fields
-      if (.not. allocated(MCOUT_list)) allocate (MCOUT_list(nchains_))
+      if (.not. allocated(MCOUT_list)) allocate (MCOUT_list(MCO%nchains))
 
       ! This adaptive MCMC is "parallelized" to do N chains at the same time, but they
       ! each do a complete independent run.  The parallelization structure of this module is
       ! trivial.  It exists mainly as template for samplers with more crossover and more complex
       ! structure in this loop.
       !$OMP parallel do
-      do i = 1, nchains_
+      do i = 1, MCO%nchains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
@@ -252,6 +248,7 @@ contains
 
       type(io_buffer_space):: io_space  ! this chain has its own io buffers
       character(350):: outfile, stepfile, covfile, covifile
+      character(4):: chainid_str
       double precision, dimension(PI%npars):: PARS_previous & ! parameter values for current state
          , PARS_proposed & ! parameter values for current proposal
          , BESTPARS        ! best set of parameters so far
@@ -324,7 +321,7 @@ contains
 
       ! read settings from input struct ...
       npars = PI%npars
-      nchains = MCO%N_chains
+      nchains = MCO%Nchains
       MAXITER = MCO%nout
       P_target = MCO%P_target
       MCOUT%use_multivariate = MCO%use_multivariate
@@ -348,15 +345,19 @@ contains
       end if
 
       ! process file names
-      outfile = MCO%outfile
-      stepfile = MCO%stepfile
-      covfile = MCO%covfile
-      covifile = MCO%covifile
-      if (MCO%n_chains > 1 .and. present(chainid)) then
-         write (outfile, '(a, i3)') MCO%outfile, chainid
-         write (stepfile, '(a, i3)') MCO%stepfile, chainid
-         write (covfile, '(a, i3)') MCO%covfile, chainid
-         write (covifile, '(a, i3)') MCO%covifile, chainid
+      if (MCO%nchains > 1 .and. present(chainid)) then
+         ! internal write to convert int -> str
+         write (chainid_str, '(i0)') chainid_
+         ! append number to file names
+         outfile = trim(MCO%outfile)//"_"//trim(chainid_str)
+         stepfile =  trim(MCO%stepfile)//"_"//trim(chainid_str)
+         covfile =  trim(MCO%covfile)//"_"//trim(chainid_str)
+         covifile =  trim(MCO%covifile)//"_"//trim(chainid_str)
+      else
+         outfile = MCO%outfile
+         stepfile = MCO%stepfile
+         covfile = MCO%covfile
+         covifile = MCO%covifile
       end if
 
     !! Calculate derived  settings of the run...
@@ -397,10 +398,8 @@ contains
       ACCRATE_GLOBAL = 0d0
 
       ! Initialize pregenerated random numbers, if using-local to this chain
-      seed = irand()  ! TODO record later
+      seed = irand()  ! TODO record later  ! TODO always the same ?
       call uniform_random_vector%initialize_random(seed)
-
-      !TODO opt scaling scalin by n
 
     !!! prepare file writing
       if (MCO%nwrite > 0) then
@@ -410,7 +409,7 @@ contains
          !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
          !, parname, stepname, covname, covinfoname)
          !TODO open separate output file for each chain !
-         call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile, chainid_)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
     !!!! init params
@@ -459,25 +458,23 @@ contains
       end if
 
       ! Begin the main AP-MCMC loop
-      do while (ITER < MAXITER .and. loglikelihood_previous < (P_target-10*epsilon(1.0d0)))  ! TODO better approx comparison?
+      do while (ITER < MAXITER .and. loglikelihood_previous < (P_target-10*epsilon(1.0d0)))
 
          ! take a step in parameter space: generate proposed
          ! new parameters PARS
-         ! should include reflectivenedd/redrawing
+
          multivariate = MCOUT%use_multivariate .and. (MCOUT%Nparvar > N_before_mv_target)
+
          call step_pars_real(PARS_previous, PARS_proposed, PI, multivariate, MCOUT%covariance, beta, opt_scaling, par_minstepsize, &
                              uniform_random_vector)
+
          ! if parameter proposal in bounds check the model
-         ! TODO LATER if we get a reflective gaussian kernel, no need to check
          if (bounds_check(PI, PARS_proposed)) then
             ! calculate the model likelihood
-            ! TODO ideally output just one likelihood value
             call model_likelihood(PARS_proposed, npars, loglikelihood_proposed, chainid_)
             accept = metropolis_choice(loglikelihood_proposed, loglikelihood_previous)
          else
             accept = .false.
-            ! TODO LATER should we count the out-of-boundary in adaptation?
-            ! Keep equivalent for now !  Change after checking the whole sample for equivalence to previous
          end if  ! in bound
 
          if (accept) then
@@ -490,8 +487,7 @@ contains
             ! Keep count of the number of accepted proposals in this local period
             ACCLOC = ACCLOC+1
             ! Accepted first proposal from multivariate
-            if (MCOUT%multivariate_proposal) ACC_first = ACC_first+1 !!TODO what is this counter ?
-            ! TODO may have to do with whether to calc covariance matrix
+            if (MCOUT%multivariate_proposal) ACC_first = ACC_first+1 
 
             PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save as previous pars
             !norPARS0(1:PI%npars) = norPARS(1:PI%npars)                    ! normalize
@@ -511,9 +507,8 @@ contains
          ITER = ITER+1
 
          if (MCO%nwrite > 0) then
-            ! TODO fct
             if (mod(ITER, MCO%nwrite) == 0) then
-               ! calculate the likelhood for the actual uncertainties-this avoid
+               ! calculate the likelihood for the actual uncertainties-this avoid
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
@@ -529,26 +524,24 @@ contains
 
          ! time to adapt?
          if (mod(ITER, MCO%nadapt) == 0) then
-            ! TODO fct
-!           ! Debugging print statements
-!           print*,"mcmc: time to adapt"
 
            !! update the acceptance counters and acceptance ratios
             ! Total accepted values
             ACC = ACC+ACCLOC
             ! Calculate global acceptance rate
             ACCRATE_GLOBAL = ACC/ITER
-
             ! Calculate local acceptance rate (i.e. since last adapt)
             ACCRATE = ACCLOC/dble(MCO%nadapt)
 
             ! Second, are we still in the adaption phase?
-            ! TODO how does fortran integer division work
             if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not. MCOUT%use_multivariate) then
 
                ! Once covariance matrix has been created just update based on a
                ! single parameter set from each period.
-               ! TODO ??
+               ! Cardamom quirk : only last 1 or first, middle, and last 3 states out of the last 
+               ! period of nadapt steps are used to
+               ! calculate running covariances.  
+               ! This results in innacurate covariance estimates.
                if (MCOUT%cov) then
                   ACCLOC = 1  ! TODO this is really a different variable than ACCLOC
                   PARSALL(1:npars, ACCLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
@@ -588,7 +581,7 @@ contains
             end if
          end if  ! write(*,*) to screen or not
 
-      end do  ! while conditions
+         end do  ! end MHMCMC sampling loop conditions
 
     !!!  Finalize
 
@@ -606,14 +599,11 @@ contains
       ! set flag MCMC completed
       MCOUT%complete = .true.
       ! tidy up
-      !deallocate(uniform_random_vector)
-      ! deallocate this chain's history-but should be fine on subroutine exit
 
       ! completed AP-MCMC loop
       write (*, *) "AP-MCMC loop completed"
       write (*, *) "Overall acceptance rate     = ", dble(ACC)/dble(ITER)
       write (*, *) "Final local acceptance rate = ", ACCRATE
-      ! TODO function to output these two
       write (*, *) "Best log-likelihood = ", llmax
       write (*, *) "Best parameters = ", MCOUT%bestpars
 
@@ -660,12 +650,12 @@ contains
 
 !        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
 !                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
-         ! Have started hardcoding a maximum number of observations to be 100.
+         ! Have started hardcoding a maximum number of observations to be 100 (N_before_mv_target).
          ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
          ! this allows for the covariance matrix to be more responsive to its local environment.
         !! TODO discuss  - in fact this is having the effect of extremely downweighting the entire history equally in new covariance
-         !matrix, not dropping all
-         !but the last Nparvar_local steps
+         ! matrix, not dropping all
+         ! but the last Nparvar_local steps
          Nparvar_local = min(N_before_mv_target, Nparvar_backup)
          call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                           , Nparvar_local, ACCLOC, MCOUT%covariance)
@@ -710,7 +700,7 @@ contains
             ! Calculate the cholesky factor as this includes a determination of
             ! whether the covariance matrix is positive definite.
             call cholesky_factor(npars, MCOUT%covariance, info)
-            ! If not positive definite then we should not use the multivariat
+            
 
             ! step at this time.
             if (info /= 0) then
@@ -725,6 +715,10 @@ contains
          end if  ! N%ACCLOC > 2
 
       end if  ! PI%cov == .true.
+
+      do p = 1, npars
+         MCOUT%parvar(p) = MCOUT%covariance(p, p)
+      end do
 
       return
 

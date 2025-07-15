@@ -4,8 +4,8 @@
 ! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently.
-! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk),
+! Copyright (C) 2024  University of Edinburgh, 
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -14,7 +14,7 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
@@ -37,7 +37,7 @@
 
 module cardamom_io
 
-   ! Module contains subroutines and variables needed to output parameter,
+   ! Module contains subroutines and variables needed to output parameter, 
    ! likelihood and step size information from the MCMC algorithms.
 
    implicit none
@@ -237,7 +237,7 @@ contains
       else if (DATAin%ID == 31) then
          ! ID = 31-DALEC.A4.C6.D2.F2.H2.P11.#
          DATAin%nopools = 7
-         DATAin%nopars = 42 + 1
+         DATAin%nopars = 42+1
          DATAin%nofluxes = 56
       else if (DATAin%ID == 32) then
          ! ID = 32 -
@@ -481,7 +481,7 @@ contains
 
       ! open the binary file, with direct access for binary (unformatted) at
       ! double precision (double precision = 64 bytes)
-      open (unit=ifile_unit, file=trim(infile), form="UNFORMATTED", access="stream", status="old")
+      open (unit = ifile_unit, file = trim(infile), form="UNFORMATTED", access="stream", status="old")
       rewind (ifile_unit)
 
       ! allocate memory
@@ -530,42 +530,42 @@ contains
       a = 1
       do i = 51, 150
          read (ifile_unit) DATAin%parpriors(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! read in parameter uncertainty (100 elements)
       a = 1
       do i = 151, 250
          read (ifile_unit) DATAin%parpriorunc(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! read in parameter effect period (100 elements)
       a = 1
       do i = 251, 350
          read (ifile_unit) DATAin%parpriorweight(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! read in 'other' parameter priors (50 elements)
       a = 1
       do i = 351, 400
          read (ifile_unit) DATAin%otherpriors(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! read in 'other' parameter priors uncertainties (50 elements)
       a = 1
       do i = 401, 450
          read (ifile_unit) DATAin%otherpriorunc(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! read in 'other' parameter priors weighting (50 elements)
       a = 1
       do i = 451, 500
          read (ifile_unit) DATAin%otherpriorweight(a)
-         a = a + 1
+         a = a+1
       end do
 
       ! Add a sensible limit on the weighting value
@@ -658,22 +658,22 @@ contains
       ! work out some key variables
       ! DATAin%noobs corresponds to observations and uncertainties
       totcol = DATAin%nomet*DATAin%noobs
-      totread = 500 + 1
+      totread = 500+1
 
       ! start looping through days and allocate the correct met drivers/obs into
       ! the correct arrays
       do day = 1, DATAin%nodays
-         start = ((day - 1)*(totcol)) + totread
-         finish = start + DATAin%nomet - 1
+         start = ((day-1)*(totcol)) + totread
+         finish = start+DATAin%nomet-1
          b = 1
          do i = start, finish
-            read (ifile_unit) mettemp(b); b = b + 1
+            read (ifile_unit) mettemp(b); b = b+1
          end do  ! met bit
-         start = ((day - 1)*(totcol)) + totread + finish + 1
-         finish = start + DATAin%noobs - 1
+         start = ((day-1)*(totcol)) + totread+finish+1
+         finish = start+DATAin%noobs-1
          b = 1
          do i = start, finish
-            read (ifile_unit) obstemp(b); b = b + 1
+            read (ifile_unit) obstemp(b); b = b+1
          end do  ! obs bit
 
          ! assign the extracted met/obs to their type and keep count of how many
@@ -686,63 +686,63 @@ contains
 !if (obstemp(3) > 0d0) obstemp(4) = 0.5
          ! Gross Primary Productivity (GPP, gC/m2/day)
          DATAin%GPP(day) = obstemp(1)
-         if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp + 1
+         if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1
          DATAin%GPP_unc(day) = obstemp(2)
 
          ! Leaf Area Index (LAI, m2/m2)
          DATAin%LAI(day) = obstemp(3)
-         if (obstemp(3) > -9998d0) DATAin%nlai = DATAin%nlai + 1
+         if (obstemp(3) > -9998d0) DATAin%nlai = DATAin%nlai+1
          DATAin%LAI_unc(day) = obstemp(4)
 
          ! Net Ecosystem Exchange (NEE) of CO2 (gC/m2/day)
          DATAin%NEE(day) = obstemp(5)
-         if (obstemp(5) > -9998d0) DATAin%nnee = DATAin%nnee + 1
+         if (obstemp(5) > -9998d0) DATAin%nnee = DATAin%nnee+1
          DATAin%NEE_unc(day) = obstemp(6)
 
          ! Fire emissions of C (gC/m2day)
          DATAin%Fire(day) = obstemp(7)
-         if (obstemp(7) > -9998d0) DATAin%nFire = DATAin%nFire + 1
+         if (obstemp(7) > -9998d0) DATAin%nFire = DATAin%nFire+1
          DATAin%Fire_unc(day) = obstemp(8)
 
          ! Ecosystem respiration (Reco, gC/m2/day)
          DATAin%Reco(day) = obstemp(9)
-         if (obstemp(9) > -9998d0) DATAin%nreco = DATAin%nreco + 1
+         if (obstemp(9) > -9998d0) DATAin%nreco = DATAin%nreco+1
          DATAin%Reco_unc(day) = obstemp(10)
 
          ! C storage in foliage (gC/m2)
          DATAin%Cfol_stock(day) = obstemp(11)
-         if (obstemp(11) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock + 1
+         if (obstemp(11) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock+1
          DATAin%Cfol_stock_unc(day) = obstemp(12)
 
          ! C storage in wood (above+below) (gC/m2)
          DATAin%Cwood_stock(day) = obstemp(13)
-         if (obstemp(13) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock + 1
+         if (obstemp(13) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock+1
          DATAin%Cwood_stock_unc(day) = obstemp(14)
 
          ! C storage in fine roots (gC/m2)
          DATAin%Croots_stock(day) = obstemp(15)
-         if (obstemp(15) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock + 1
+         if (obstemp(15) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock+1
          DATAin%Croots_stock_unc(day) = obstemp(16)
 
          ! C storage in fine litter (foliar+fine root, gC/m2)
          DATAin%Clit_stock(day) = obstemp(17)
-         if (obstemp(17) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock + 1
+         if (obstemp(17) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock+1
          DATAin%Clit_stock_unc(day) = obstemp(18)
 
          ! C storage in soil organic matter (gC/m2)
          DATAin%Csom_stock(day) = obstemp(19)
-         if (obstemp(19) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock + 1
+         if (obstemp(19) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock+1
          DATAin%Csom_stock_unc(day) = obstemp(20)
 
          ! C storage in above gound woody biomass (gC/m2)
          DATAin%Cagb_stock(day) = obstemp(21)
-         if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock + 1
+         if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
          DATAin%Cagb_stock_unc(day) = obstemp(22)
 
          ! Fraction of absorbed photosynthetically active radiation
          ! by green vegetation (0-1)
          DATAin%fAPAR(day) = obstemp(23)
-         if (obstemp(23) > -9998d0) DATAin%nfAPAR = DATAin%nfAPAR + 1
+         if (obstemp(23) > -9998d0) DATAin%nfAPAR = DATAin%nfAPAR+1
          DATAin%fAPAR_unc(day) = obstemp(24)
 ! POSITION 25-26 no longer have matching points in code.
 ! These can be re-allocated at a future point
@@ -753,48 +753,48 @@ contains
 
          ! C storage in coarse root, i.e. below ground wood (gC/m2)
          DATAin%Ccoarseroot_stock(day) = obstemp(27)
-         if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock + 1
+         if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
          DATAin%Ccoarseroot_stock_unc(day) = obstemp(28)
 
          ! Annual maximum C storage in foliage (gC/m2)
          DATAin%Cfolmax_stock(day) = obstemp(29)
-         if (obstemp(29) > -9998d0) DATAin%nCfolmax_stock = DATAin%nCfolmax_stock + 1
+         if (obstemp(29) > -9998d0) DATAin%nCfolmax_stock = DATAin%nCfolmax_stock+1
          DATAin%Cfolmax_stock_unc(day) = obstemp(30)
 
          ! Evapotranspiration (kgH2O/m2/day)
          DATAin%Evap(day) = obstemp(31)
-         if (obstemp(31) > -9998d0) DATAin%nEvap = DATAin%nEvap + 1
+         if (obstemp(31) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
          DATAin%Evap_unc(day) = obstemp(32)
 
          ! Snow water equivalent-added for future use, not currently coded
          DATAin%SWE(day) = obstemp(33)
-         if (obstemp(33) > -9998d0) DATAin%nSWE = DATAin%nSWE + 1
+         if (obstemp(33) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
          DATAin%SWE_unc(day) = obstemp(34)
 
          ! Net Biome Exchange (NBE, gC/m2/day)
          ! NBE = Reco+Fire-GPP
          DATAin%NBE(day) = obstemp(35)
-         if (obstemp(35) > -9998d0) DATAin%nNBE = DATAin%nNBE + 1
+         if (obstemp(35) > -9998d0) DATAin%nNBE = DATAin%nNBE+1
          DATAin%NBE_unc(day) = obstemp(36)
 
          ! Woody production/increment (gC/m2/day)
          ! Represents the average across the lagged period
          DATAin%Cwood_inc(day) = obstemp(37)
-         if (obstemp(37) > -9998d0) DATAin%nCwood_inc = DATAin%nCwood_inc + 1
+         if (obstemp(37) > -9998d0) DATAin%nCwood_inc = DATAin%nCwood_inc+1
          DATAin%Cwood_inc_unc(day) = obstemp(38)
          DATAin%Cwood_inc_lag(day) = obstemp(39)
 
          ! Woody natural mortality (gC/m2/day)
          ! Represents the average across the lagged period
          DATAin%Cwood_mortality(day) = obstemp(40)
-         if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality + 1
+         if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
          DATAin%Cwood_mortality_unc(day) = obstemp(41)
          DATAin%Cwood_mortality_lag(day) = obstemp(42)
 
          ! Flux from foliage to litter (gC/m2/day)
          ! Represents the average across the lagged period
          DATAin%foliage_to_litter(day) = obstemp(43)
-         if (obstemp(43) > -9998d0) DATAin%nfoliage_to_litter = DATAin%nfoliage_to_litter + 1
+         if (obstemp(43) > -9998d0) DATAin%nfoliage_to_litter = DATAin%nfoliage_to_litter+1
          DATAin%foliage_to_litter_unc(day) = obstemp(44)
          DATAin%foliage_to_litter_lag(day) = obstemp(45)
 
@@ -803,7 +803,7 @@ contains
          ! C extracted due to harvest (gC/m2/day)
          ! Represents the average across the lagged period
          DATAin%harvest(day) = obstemp(49)
-         if (obstemp(49) > -9998d0) DATAin%nharvest = DATAin%nharvest + 1
+         if (obstemp(49) > -9998d0) DATAin%nharvest = DATAin%nharvest+1
          DATAin%harvest_unc(day) = obstemp(50)
          DATAin%harvest_lag(day) = obstemp(51)
 
@@ -811,20 +811,20 @@ contains
 
       ! Count the total number of observations which are to be used.
       ! This total in some models may be used to inform on a dynamic weighting of the EDCs
-      DATAin%total_obs = DATAin%ngpp + DATAin%nlai + DATAin%nnee &
-                         + DATAin%nCwood_inc + DATAin%nreco + DATAin%nCfol_stock &
-                         + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
-                         + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
-                         + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                         + DATAin%nCwood_mortality + DATAin%nfoliage_to_litter + DATAin%nFire &
-                         + DATAin%nfAPAR + DATAin%nharvest
+      DATAin%total_obs = DATAin%ngpp+DATAin%nlai+DATAin%nnee &
+                         + DATAin%nCwood_inc+DATAin%nreco+DATAin%nCfol_stock &
+                         + DATAin%nCwood_stock+DATAin%nCroots_stock+DATAin%nCsom_stock &
+                         + DATAin%nClit_stock+DATAin%nCagb_stock+DATAin%nCcoarseroot_stock &
+                         + DATAin%nCfolmax_stock+DATAin%nEvap+DATAin%nSWE+DATAin%nNBE &
+                         + DATAin%nCwood_mortality+DATAin%nfoliage_to_litter+DATAin%nFire &
+                         + DATAin%nfAPAR+DATAin%nharvest
 
       ! allocate to time step
       allocate (DATAin%deltat(DATAin%nodays)); DATAin%deltat = 0d0
       ! work out interval in decimal days
       DATAin%deltat(1) = DATAin%met(1, 1)
       do i = 2, DATAin%nodays
-         DATAin%deltat(i) = DATAin%met(1, i) - DATAin%met(1, (i - 1))
+         DATAin%deltat(i) = DATAin%met(1, i) - DATAin%met(1, (i-1))
       end do
       ! Calculate the number of years being simulated
       DATAin%nos_years = nint(sum(DATAin%deltat)/365.25d0)
@@ -871,67 +871,67 @@ contains
 
       do day = 1, DATAin%nodays
          if (DATAin%GPP(day) > -9998d0) then
-            DATAin%gpppts(b) = day; b = b + 1
+            DATAin%gpppts(b) = day; b = b+1
          end if
          if (DATAin%LAI(day) > -9998d0) then
-            DATAin%laipts(x) = day; x = x + 1
+            DATAin%laipts(x) = day; x = x+1
          end if
          if (DATAin%NEE(day) > -9998d0) then
-            DATAin%neepts(y) = day; y = y + 1
+            DATAin%neepts(y) = day; y = y+1
          end if
          if (DATAin%Cwood_inc(day) > -9998d0) then
-            DATAin%Cwood_incpts(z) = day; z = z + 1
+            DATAin%Cwood_incpts(z) = day; z = z+1
          end if  ! data present condition
          if (DATAin%Cwood_mortality(day) > -9998d0) then
-            DATAin%Cwood_mortalitypts(w) = day; w = w + 1
+            DATAin%Cwood_mortalitypts(w) = day; w = w+1
          end if  ! data present condition
          if (DATAin%foliage_to_litter(day) > -9998d0) then
-            DATAin%foliage_to_litterpts(aa) = day; aa = aa + 1
+            DATAin%foliage_to_litterpts(aa) = day; aa = aa+1
          end if  ! data present condition
          if (DATAin%Reco(day) > -9998d0) then
-            DATAin%recopts(c) = day; c = c + 1
+            DATAin%recopts(c) = day; c = c+1
          end if  ! data present condition
          if (DATAin%Cfol_stock(day) > -9998d0) then
-            DATAin%Cfol_stockpts(d) = day; d = d + 1
+            DATAin%Cfol_stockpts(d) = day; d = d+1
          end if  ! data present condition
          if (DATAin%Cwood_stock(day) > -9998d0) then
-            DATAin%Cwood_stockpts(e) = day; e = e + 1
+            DATAin%Cwood_stockpts(e) = day; e = e+1
          end if  ! data present condition
          if (DATAin%Croots_stock(day) > -9998d0) then
-            DATAin%Croots_stockpts(f) = day; f = f + 1
+            DATAin%Croots_stockpts(f) = day; f = f+1
          end if  ! data present condition
          if (DATAin%Clit_stock(day) > -9998d0) then
-            DATAin%Clit_stockpts(j) = day; j = j + 1
+            DATAin%Clit_stockpts(j) = day; j = j+1
          end if  ! data present condition
          if (DATAin%Csom_stock(day) > -9998d0) then
-            DATAin%Csom_stockpts(k) = day; k = k + 1
+            DATAin%Csom_stockpts(k) = day; k = k+1
          end if  ! data present condition
          if (DATAin%Ccoarseroot_stock(day) > -9998d0) then
-            DATAin%Ccoarseroot_stockpts(i) = day; i = i + 1
+            DATAin%Ccoarseroot_stockpts(i) = day; i = i+1
          end if  ! data present condition
          if (DATAin%Cfolmax_stock(day) > -9998d0) then
-            DATAin%Cfolmax_stockpts(l) = day; l = l + 1
+            DATAin%Cfolmax_stockpts(l) = day; l = l+1
          end if  ! data present condition
          if (DATAin%Cagb_stock(day) > -9998d0) then
-            DATAin%Cagb_stockpts(l) = day; l = l + 1
+            DATAin%Cagb_stockpts(l) = day; l = l+1
          end if  ! data present condition
          if (DATAin%Evap(day) > -9998d0) then
-            DATAin%Evappts(o) = day; o = o + 1
+            DATAin%Evappts(o) = day; o = o+1
          end if  ! data present condition
          if (DATAin%SWE(day) > -9998d0) then
-            DATAin%SWEpts(s) = day; s = s + 1
+            DATAin%SWEpts(s) = day; s = s+1
          end if  ! data present condition
          if (DATAin%NBE(day) > -9998d0) then
-            DATAin%NBEpts(t) = day; t = t + 1
+            DATAin%NBEpts(t) = day; t = t+1
          end if
          if (DATAin%Fire(day) > -9998d0) then
-            DATAin%Firepts(v) = day; v = v + 1
+            DATAin%Firepts(v) = day; v = v+1
          end if  ! data present condition
          if (DATAin%fAPAR(day) > -9998d0) then
-            DATAin%fAPARpts(u) = day; u = u + 1
+            DATAin%fAPARpts(u) = day; u = u+1
          end if  ! data present condition
          if (DATAin%harvest(day) > -9998d0) then
-            DATAin%harvestpts(q) = day; q = q + 1
+            DATAin%harvestpts(q) = day; q = q+1
          end if  ! data present condition
       end do  ! day loop
 
@@ -1032,7 +1032,7 @@ contains
       ! need to allocate memory to the model output variables
       allocate (DATAin%M_LAI(DATAin%nodays), DATAin%M_GPP(DATAin%nodays) &
                 , DATAin%M_NEE(DATAin%nodays), DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes) &
-                , DATAin%M_POOLS((DATAin%nodays + 1), DATAin%nopools))
+                , DATAin%M_POOLS((DATAin%nodays+1), DATAin%nopools))
 
       ! force zero in states and fluxes
       !M_LAI(:) = 0d0; DATAin%M_GPP(:) = 0d0; DATAin%M_NEE(:) = 0d0
@@ -1093,7 +1093,7 @@ contains
       ! simulation time therefore we want to adjust the output frequency to
       ! correct for this
       ! TODO outside of this function
-      MCO%nOUT = max(1, MCO%nOUT - MCOUT%nos_iterations)
+      MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
       ! construct file names
       write (MCO%outfile, fmt='(A)') trim(outfile)//"PARS"
@@ -1141,23 +1141,23 @@ contains
       ! count the number of lines in the file..
       status = 0; num_lines = 0
       do
-         read (pfile_unit, iostat=status) dummy
+         read (pfile_unit, iostat = status) dummy
          if (status .ne. 0) exit
-         num_lines = num_lines + 1
+         num_lines = num_lines+1
       end do
       ! Determine the number of complete parameter vectors stored. Note that the +
       ! 1 is due to the log-likelihood score being saved as well.
-      num_lines = num_lines/(DATAin%nopars + 1)
+      num_lines = num_lines/(DATAin%nopars+1)
 
       ! Allocate memory to our temperary variable and the normalised parameter
       ! vector equivalent.
-      allocate (tmp(num_lines, (DATAin%nopars + 1)))
+      allocate (tmp(num_lines, (DATAin%nopars+1)))
       ! rewind so that we can read the contents now correctly
       rewind (pfile_unit)
 
       ! Read the data for real
       do i = 1, num_lines
-         do j = 1, (DATAin%nopars + 1)
+         do j = 1, (DATAin%nopars+1)
             read (pfile_unit) tmp(i, j)
          end do  ! j for parameter
       end do  ! i for combinations
@@ -1179,22 +1179,22 @@ contains
       ! count the number of remaining lines in the file..
       status = 0; num_lines = 0
       do
-         read (sfile_unit, iostat=status) dummy
+         read (sfile_unit, iostat = status) dummy
          if (status .ne. 0.) exit
-         num_lines = num_lines + 1
+         num_lines = num_lines+1
       end do
 
       ! Determine the number of actual stepsize vectors present.
       ! The+1 is due to the local acceptance rate being provided too.
-      num_lines = num_lines/(DATAin%nopars + 1)
+      num_lines = num_lines/(DATAin%nopars+1)
       ! allocate memory
-      allocate (tmp(num_lines, (DATAin%nopars + 1)))
+      allocate (tmp(num_lines, (DATAin%nopars+1)))
       ! rewind, for actual reading
       rewind (sfile_unit)
 
       ! now read the data for real
       do i = 1, num_lines
-         do j = 1, (DATAin%nopars + 1)
+         do j = 1, (DATAin%nopars+1)
             read (sfile_unit) tmp(i, j)
          end do  ! j for parameter
       end do  ! i for combinations
@@ -1214,9 +1214,9 @@ contains
       ! count the number of remaining lines in the file..
       status = 0; num_lines = 1
       do
-         read (cfile_unit, iostat=status, rec=num_lines) dummy
+         read (cfile_unit, iostat = status, rec = num_lines) dummy
          if (status .ne. 0.) exit
-         num_lines = num_lines + 1
+         num_lines = num_lines+1
       end do
 
       ! Determine whether there is 1 or more matrice here
@@ -1239,8 +1239,8 @@ contains
       do b = 1, a
          do i = 1, DATAin%nopars
             do j = 1, DATAin%nopars
-               read (cfile_unit, rec=c) MCOUT%covariance(i, j)
-               c = c + 1
+               read (cfile_unit, rec = c) MCOUT%covariance(i, j)
+               c = c+1
             end do  ! j for parameter
          end do  ! i for combinations
       end do
@@ -1263,29 +1263,29 @@ contains
       ! count the number of remaining lines in the file..
       status = 0; num_lines = 0
       do
-         read (cifile_unit, iostat=status) dummy
+         read (cifile_unit, iostat = status) dummy
          if (status .ne. 0.) exit
-         num_lines = num_lines + 1
+         num_lines = num_lines+1
       end do
 
       ! how many parameter vectors have been output. Note the+1 is accounting
       ! for the number of samples underlying the mean
-      num_lines = num_lines/(PI%npars + 1)
+      num_lines = num_lines/(PI%npars+1)
       ! allocate memory
-      allocate (tmp(num_lines, (DATAin%nopars + 1)))
+      allocate (tmp(num_lines, (DATAin%nopars+1)))
       ! rewind, for actual reading
       rewind (cifile_unit)
 
       ! now read the data for real
       do i = 1, num_lines
-         do j = 1, (DATAin%nopars + 1)
+         do j = 1, (DATAin%nopars+1)
             read (cifile_unit) tmp(i, j)
          end do  ! j for parameter
       end do  ! i for combinations
       ! Store the most recent step size, which corresponds with the saved
       ! parmeters (above) and covariance matrix (below)
       MCOUT%meanpar = tmp(num_lines, 1:DATAin%nopars)
-      MCOUT%Nparvar = tmp(num_lines, DATAin%nopars + 1)
+      MCOUT%Nparvar = tmp(num_lines, DATAin%nopars+1)
 
       return
 

@@ -334,9 +334,9 @@ program cardamom_framework
             ! Brand new analysis
             !print*,"writing initial covariance matrix"
             ! write out first covariance matrix, this will be compared with the final covariance matrix
-            !if (MCO%nWRITE > 0) then
-            !    call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
-            !    call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
+            !if (MCO%nWRITE > 0) then %TODO problem because files not opened yet?
+                !call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
+                !call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
             !endif
             !...so the reset for nos_iterations must only occur when not a restart run
             MCOUT_list(i)%nos_iterations = 0
@@ -366,8 +366,9 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
          write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         MCO%nwrite = 1000
-         MCO%nprint = 1000
+         !MCO%nwrite = 1000
+         !MCO%nprint = 1000
+         write(*,*) "MCO%outfile", MCO%outfile
          call run_parallel_mcmc(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)

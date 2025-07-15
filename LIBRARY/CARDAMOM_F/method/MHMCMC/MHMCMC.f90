@@ -604,12 +604,8 @@ contains
 
          cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar
 
-!        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
-!                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
-         ! Have started hardcoding a maximum number of observations to be 100.
-         ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
-         ! this allows for the covariance matrix to be more responsive to its local environment.
-         !write(*,*) "incrementing with", PARSALL(1:npars, 1:nadapt)
+         ! here we have length of history (weighting of history in running avg and cov calculation)
+         ! = ITER-nadapt instead of being artificially capped at 100
          call increment_covariance_matrix(PARSALL(1:npars, 1:nadapt), MCOUT%meanpar, npars &
                                           , ITER-nadapt, nadapt, MCOUT%covariance)
          !write(*,*) "incrementing to", MCOUT%covariance

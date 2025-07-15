@@ -64,7 +64,7 @@ contains
       ! X = mean for parameter
       ! Xi = ith member of the vector
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       !#
@@ -85,10 +85,10 @@ contains
       ! calculate components needed for variance
       meanpar = sum(sample)/dble(naccepted)
       ! estimate deviance
-      deviances = sample - meanpar
+      deviances = sample-meanpar
       ! estimate the variance
       ! NOTE: that naccepted-1 makes this the sample variance
-      variance = sum(deviances*deviances)*dble(naccepted - 1)**(-1)
+      variance = sum(deviances*deviances)*dble(naccepted-1)**(-1)
 
       ! tidy up
       deallocate (deviances)
@@ -108,7 +108,7 @@ contains
       ! Mi = new mean vector for updated variance_matrix
       ! ar = number of new parameters to be added
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       ! Translation to fortran and subsequent modifications by T. L. Smallman
@@ -132,14 +132,14 @@ contains
       do n = 1, new
          ! ...estimate the new mean value for each parameter...
          new_meanpar = ((meanpar*cur) + (sample(n)*nnew)) &
-                       /(cur + nnew)
+                       /(cur+nnew)
          ! ...update the variance with each new parameter vector in turn
-         variance = variance*(cur - 1d0)/(cur - 1d0 + nnew) &
+         variance = variance*(cur-1d0)/(cur-1d0+nnew) &
                     + (cur*meanpar*meanpar - &
-                       (cur + nnew)*new_meanpar*new_meanpar + &
-                       nnew*sample(n)*sample(n))/(cur - 1d0 + nnew)
+                       (cur+nnew)*new_meanpar*new_meanpar + &
+                       nnew*sample(n)*sample(n))/(cur-1d0+nnew)
          ! update running totals and mean for the next iteration
-         cur = cur + 1; meanpar = new_meanpar
+         cur = cur+1; meanpar = new_meanpar
       end do  ! new_accepted
       cur1 = nint(cur)
       ! return to user
@@ -157,7 +157,7 @@ contains
       ! Y = mean parameter 2
       ! Xi = ith member of the vector
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       ! Translation to fortran and subsequent modifications by T. L. Smallman
@@ -187,7 +187,7 @@ contains
 
       ! use matrix multiplication to estimate covariance
       ! NOTE: that naccepted-1 makes this the sample covariance
-      covariance = matmul(deviances, transpose(deviances))*dble(naccepted - 1)**(-1)
+      covariance = matmul(deviances, transpose(deviances))*dble(naccepted-1)**(-1)
 
       ! tidy up
       deallocate (deviances)
@@ -208,7 +208,7 @@ contains
       ! meanpar = new mean vector for updated covariance_matrix
       ! new = number of new parameters to be added
       ! npars = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       !#
@@ -240,18 +240,18 @@ contains
       do n = 1, new
          ! ...estimate the new mean value for each parameter...
          new_meanpar = ((meanpar*cur) + (PARSALL(:, n)*nnew)) &
-                       /(cur + nnew)
+                       /(cur+nnew)
          ! ...update the covariance matrix with each new parameter vector in turn
          do i = 1, npars
             do j = 1, npars
-               covariance(i, j) = covariance(i, j)*(cur - 1d0)/(cur - 1d0 + nnew) &
+               covariance(i, j) = covariance(i, j)*(cur-1d0)/(cur-1d0+nnew) &
                                   + (cur*meanpar(i)*meanpar(j) - &
-                                     (cur + nnew)*new_meanpar(i)*new_meanpar(j) + &
-                                     nnew*PARSALL(i, n)*PARSALL(j, n))/(cur - 1d0 + nnew)
+                                     (cur+nnew)*new_meanpar(i)*new_meanpar(j) + &
+                                     nnew*PARSALL(i, n)*PARSALL(j, n))/(cur-1d0+nnew)
             end do  ! j = 1, npars
          end do  ! i = 1, npars
          ! update running totals and mean for the next iteration
-         cur = cur + 1; meanpar = new_meanpar
+         cur = cur+1; meanpar = new_meanpar
       end do  ! new_accepted
       cur1 = nint(cur)
       ! return to user
@@ -303,11 +303,11 @@ contains
       L = 0d0; U = 0d0; b = 0d0; a_local = a
 
       ! Step 1: forward elimination
-      do k = 1, n - 1
-         do i = k + 1, n
+      do k = 1, n-1
+         do i = k+1, n
             coeff = a_local(i, k)/a_local(k, k)
             L(i, k) = coeff
-            do j = k + 1, n
+            do j = k+1, n
                a_local(i, j) = a_local(i, j) - coeff*a_local(k, j)
             end do
          end do
@@ -336,15 +336,15 @@ contains
          ! Step 3a: Solve Ld = b using the forward substitution
          do i = 2, n
             d(i) = b(i)
-            do j = 1, i - 1
+            do j = 1, i-1
                d(i) = d(i) - L(i, j)*d(j)
             end do
          end do
          ! Step 3b: Solve Ux = d using the back substitution
          x(n) = d(n)/U(n, n)
-         do i = n - 1, 1, -1
+         do i = n-1, 1, -1
             x(i) = d(i)
-            do j = n, i + 1, -1
+            do j = n, i+1, -1
                x(i) = x(i) - U(i, j)*x(j)
             end do
             x(i) = x(i)/U(i, i)
@@ -366,7 +366,7 @@ contains
    subroutine matrix_vector_func(uplo, n, alpha, A, lda, X, incx, beta, Y, incy)
       !#
       ! Performs the matrix-vector operation
-      ! y := alpha*A*x+beta*y,
+      ! y := alpha*A*x+beta*y, 
       ! where alpha and beta are scalars, x and y are n element vectors and
       ! A is an n by n symmetric matrix.
       !
@@ -543,12 +543,12 @@ contains
       if (incx > 0) then
          kx = 1
       else
-         kx = 1 - (n - 1)*incx
+         kx = 1 - (n-1)*incx
       end if
       if (incy > 0) then
          ky = 1
       else
-         ky = 1 - (n - 1)*incy
+         ky = 1 - (n-1)*incy
       end if
 
       !     Start the operations. In this version the elements of A are
@@ -573,12 +573,12 @@ contains
             if (beta == zero) then
                do i = 1, n
                   y(iy) = zero
-                  iy = iy + incy
+                  iy = iy+incy
                end do
             else
                do i = 1, n
                   y(iy) = beta*y(iy)
-                  iy = iy + incy
+                  iy = iy+incy
                end do
             end if
          end if
@@ -597,9 +597,9 @@ contains
             do j = 1, n
                tmp1 = alpha*x(j)
                tmp2 = zero
-               do i = 1, j - 1
+               do i = 1, j-1
                   y(i) = y(i) + tmp1*A(i, j)
-                  tmp2 = tmp2 + a(i, j)*x(i)
+                  tmp2 = tmp2+a(i, j)*x(i)
                end do
                y(j) = y(j) + tmp1*A(j, j) + alpha*tmp2
             end do
@@ -612,15 +612,15 @@ contains
                tmp2 = zero
                ix = kx
                iy = ky
-               do i = 1, j - 1
+               do i = 1, j-1
                   y(iy) = y(iy) + tmp1*a(i, j)
-                  tmp2 = tmp2 + A(i, j)*x(ix)
-                  ix = ix + incx
-                  iy = iy + incy
+                  tmp2 = tmp2+A(i, j)*x(ix)
+                  ix = ix+incx
+                  iy = iy+incy
                end do
                y(jy) = y(jy) + tmp1*A(j, j) + alpha*tmp2
-               jx = jx + incx
-               jy = jy + incy
+               jx = jx+incx
+               jy = jy+incy
             end do
          end if
 
@@ -633,9 +633,9 @@ contains
                tmp1 = alpha*x(j)
                tmp2 = zero
                y(j) = y(j) + tmp1*A(j, j)
-               do i = j + 1, n
+               do i = j+1, n
                   y(i) = y(i) + tmp1*A(i, j)
-                  tmp2 = tmp2 + A(i, j)*x(i)
+                  tmp2 = tmp2+A(i, j)*x(i)
                end do
                y(j) = y(j) + alpha*tmp2
             end do
@@ -648,15 +648,15 @@ contains
                y(jy) = y(jy) + tmp1*A(j, j)
                ix = jx
                iy = jy
-               do i = j + 1, n
-                  ix = ix + incx
-                  iy = iy + incy
+               do i = j+1, n
+                  ix = ix+incx
+                  iy = iy+incy
                   y(iy) = y(iy) + tmp1*A(i, j)
-                  tmp2 = tmp2 + A(i, j)*x(ix)
+                  tmp2 = tmp2+A(i, j)*x(ix)
                end do
                y(jy) = y(jy) + alpha*tmp2
-               jx = jx + incx
-               jy = jy + incy
+               jx = jx+incx
+               jy = jy+incy
             end do
 
          end if  ! incx .eq. 1 .and. incy .eq. 1
@@ -699,7 +699,7 @@ contains
          sq_diff_sum = sq_diff_sum + (diff*diff)
       end do
       ! calculate the variance
-      variance = sq_diff_sum/(sample - 1d0)
+      variance = sq_diff_sum/(sample-1d0)
       ! return the standard deviation
       std = sqrt(variance)
 
@@ -723,7 +723,7 @@ contains
       double precision, dimension(npars):: out_par
 
       ! then normalise
-      out_par = (initial_par - min_par)/(max_par - min_par)
+      out_par = (initial_par-min_par)/(max_par-min_par)
 
    end function par2nor
    !
@@ -741,7 +741,7 @@ contains
       double precision, dimension(npars):: out_par
 
       ! ...then un-normalise without logs as we cross zero and logs wont work
-      out_par = min_par + (max_par - min_par)*initial_par
+      out_par = min_par + (max_par-min_par)*initial_par
    end function nor2par
 
    elemental function nor2par_scalar(initial_par, min_par, max_par) result(out_par)
@@ -755,7 +755,7 @@ contains
       double precision:: out_par
 
       ! ...then un-normalise without logs as we cross zero and logs wont work
-      out_par = min_par + (max_par - min_par)*initial_par
+      out_par = min_par + (max_par-min_par)*initial_par
 
    end function nor2par_scalar
    !
@@ -778,9 +778,9 @@ contains
       double precision:: invar, minvar, maxvar
 
       ! Assign inputs to the local variables
-      invar = initial_par + par_adj
-      minvar = min_par + par_adj
-      maxvar = max_par + par_adj
+      invar = initial_par+par_adj
+      minvar = min_par+par_adj
+      maxvar = max_par+par_adj
 
       ! Then normalise
       !out_par = log(initial_par/min_par)/log(max_par/min_par)
@@ -804,9 +804,9 @@ contains
       double precision, dimension(npars):: invar, minvar, maxvar
 
       ! Assign inputs to the local variables
-      invar = initial_par + par_adj
-      minvar = min_par + par_adj
-      maxvar = max_par + par_adj
+      invar = initial_par+par_adj
+      minvar = min_par+par_adj
+      maxvar = max_par+par_adj
 
       ! Then normalise
       !out_par = log(initial_par/min_par)/log(max_par/min_par)
@@ -831,8 +831,8 @@ contains
       double precision:: minvar, maxvar
 
       ! Assign inputs to the local variables
-      minvar = min_par + par_adj
-      maxvar = max_par + par_adj
+      minvar = min_par+par_adj
+      maxvar = max_par+par_adj
 
       ! ...then un-normalise without logs as we cross zero and logs wont work
       !out_par = min_par*(max_par/min_par)**initial_par
@@ -855,8 +855,8 @@ contains
       double precision, dimension(npars):: minvar, maxvar
 
       ! Assign inputs to the local variables
-      minvar = min_par + par_adj
-      maxvar = max_par + par_adj
+      minvar = min_par+par_adj
+      maxvar = max_par+par_adj
 
       ! ...then un-normalise without logs as we cross zero and logs wont work
       !out_par = min_par*(max_par/min_par)**initial_par
@@ -898,7 +898,7 @@ contains
 
          ! If second, use the second random number generated on last call
          second = .false.
-         fn_val = sample_mean + sample_std*v*sln
+         fn_val = sample_mean+sample_std*v*sln
 
       else
 
@@ -907,12 +907,12 @@ contains
          do while (sumsq > one .or. sumsq == 0d0)
             u = uniform_random_vector%next_random_uniform()
             v = uniform_random_vector%next_random_uniform()
-            u = u*2d0 - one
-            v = v*2d0 - one
+            u = u*2d0-one
+            v = v*2d0-one
             sumsq = u*u + v*v
          end do
          sln = sqrt(-2d0*log(sumsq)/sumsq)
-         fn_val = sample_mean + sample_std*u*sln
+         fn_val = sample_mean+sample_std*u*sln
       end if
 
       return
@@ -938,7 +938,7 @@ contains
       !
       !  Licensing: This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Thu 26 Jun 2025 12:37:42 BST
+      !  Last Modified: Mon 14 Jul 2025 16:56:56 BST
       !
       !  Original Author: John Burkardt (07 December 2009)
       !
@@ -983,7 +983,7 @@ contains
          end do  ! j
       end do  ! i
 
-      ! Requires variance-covariance matrix, however as the matrix is over written,
+      ! Requires variance-covariance matrix, however as the matrix is over written, 
       ! make a duplicate
       r(1:m, 1:m) = a(1:m, 1:m)
       call cholesky_factor(m, r, info)
@@ -1046,7 +1046,7 @@ contains
       !
       !    This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Thu 26 Jun 2025 12:37:42 BST
+      !  Last Modified: Mon 14 Jul 2025 16:56:56 BST
       !
       !    03/05/2019
       !
@@ -1058,10 +1058,10 @@ contains
       !
       !  Reference:
       !
-      !    Jack Dongarra, Jim Bunch, Cleve Moler, Pete Stewart,
-      !    LINPACK User's Guide,
-      !    SIAM, 1979,
-      !    ISBN13: 978-0-898711-72-1,
+      !    Jack Dongarra, Jim Bunch, Cleve Moler, Pete Stewart, 
+      !    LINPACK User's Guide, 
+      !    SIAM, 1979, 
+      !    ISBN13: 978-0-898711-72-1, 
       !    LC: QA214.L56.
       !
       !  Parameters:
@@ -1093,11 +1093,11 @@ contains
       do j = 1, n
 
          ! doing the upper triangle only
-         do k = 1, j - 1
-            a(k, j) = (a(k, j) - sum(a(1:k - 1, k)*a(1:k - 1, j)))/a(k, k)
+         do k = 1, j-1
+            a(k, j) = (a(k, j) - sum(a(1:k-1, k)*a(1:k-1, j)))/a(k, k)
          end do
 
-         s = a(j, j) - sum(a(1:j - 1, j)**2)
+         s = a(j, j) - sum(a(1:j-1, j)**2)
 
          ! error checking
          if (s <= 0.0D+00) then
@@ -1118,7 +1118,7 @@ contains
       !
 
       do i = 1, n
-         do j = 1, i - 1
+         do j = 1, i-1
             a(i, j) = 0.0D+00
          end do
       end do

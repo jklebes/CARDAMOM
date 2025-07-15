@@ -16,7 +16,7 @@ module samplers_io
    ! See function/subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
-   ! Module contains subroutines and variables needed to output parameter,
+   ! Module contains subroutines and variables needed to output parameter, 
    ! likelihood and step size information from the MHMCMC.
 
    implicit none
@@ -85,10 +85,10 @@ contains
       integer:: num_lines, status
 
       ! Check that all files exist
-      inquire (file=trim(parname), exist=par_exists)
-      inquire (file=trim(stepname), exist=step_exists)
-      inquire (file=trim(covname), exist=cov_exists)
-      inquire (file=trim(covinfoname), exist=covinfo_exists)
+      inquire (file = trim(parname), exist = par_exists)
+      inquire (file = trim(stepname), exist = step_exists)
+      inquire (file = trim(covname), exist = cov_exists)
+      inquire (file = trim(covinfoname), exist = covinfo_exists)
 
       ! now determine the correct response
       if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
@@ -100,13 +100,13 @@ contains
          call open_output_files(parname, stepname, covname, covinfoname, chainid)
          status = 0; num_lines = 0
          do
-            read (pfile_unit, iostat=status) dummy
+            read (pfile_unit, iostat = status) dummy
             if (status .ne. 0) exit
-            num_lines = num_lines + 1
+            num_lines = num_lines+1
          end do
          ! Re-use dummy to calculate the target file size to be considered for
          ! restart
-         dummy = ((dble(nOUT)/dble(nWRITE))*sub_fraction)*dble(npars + 1)
+         dummy = ((dble(nOUT)/dble(nWRITE))*sub_fraction)*dble(npars+1)
          if (num_lines > dummy) then
             ! Then there is something in the file we we can use it
             restart_flag = .true.
@@ -145,12 +145,12 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
       ! close the files we have in memory
-      close (pfile_unit + offset)
-      close (sfile_unit + offset)
-      close (cfile_unit + offset)
-      close (cifile_unit + offset)
+      close (pfile_unit+offset)
+      close (sfile_unit+offset)
+      close (cfile_unit+offset)
+      close (cifile_unit+offset)
 
    end subroutine close_output_files
 
@@ -173,22 +173,22 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
 
       ! open files now
       ! most of these will require new information to be appended to the end at
       ! all times-therefore we use the unformatted stream access
-      open (pfile_unit + offset, file=trim(parname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
+      open (pfile_unit+offset, file = trim(parname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat = ios)
       if (ios /= 0) print *, "error ", ios, " opening file", trim(parname)
-      open (sfile_unit + offset, file=trim(stepname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
+      open (sfile_unit+offset, file = trim(stepname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat = ios)
       if (ios /= 0) print *, "error ", ios, " opening file", trim(stepname)
-      open (cifile_unit + offset, file=trim(covinfoname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
+      open (cifile_unit+offset, file = trim(covinfoname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat = ios)
       if (ios /= 0) print *, "error ", ios, " opening file", trim(covinfoname)
-      ! for the covariance matrix we have a fixed size containing two matrices,
+      ! for the covariance matrix we have a fixed size containing two matrices, 
       ! the initial and the current output-therefore we use
-      inquire (iolength=reclen) a !; print*,reclen
+      inquire (iolength = reclen) a !; print*,reclen
       write (*, *) "covname", covname
-      open (cfile_unit + offset, file=trim(covname), form="UNFORMATTED", access="direct", recl=reclen, iostat=ios)
+      open (cfile_unit+offset, file = trim(covname), form="UNFORMATTED", access="direct", recl = reclen, iostat = ios)
       if (ios /= 0) print *, "error ", ios, " opening file", trim(covname)
 
    end subroutine open_output_files
@@ -203,7 +203,7 @@ contains
       io_space%io_buffer_count = 0
       io_space%io_buffer = min(1000, max(10, nwrite_events/10))
 
-      ! Allocate variables used in io buffering,
+      ! Allocate variables used in io buffering, 
       ! these could probably be moved to a more sensible place within cardamom_io.f90
       allocate (io_space%variance_buffer(npars, io_space%io_buffer), &
                 io_space%meanpars_buffer(npars, io_space%io_buffer), &
@@ -236,7 +236,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
 
       ! If we have already written the initial covariance matrix we want to keep
       ! over-writing the current matrix. We do this to avoid large files form
@@ -252,9 +252,9 @@ contains
 
       do i = 1, npars
          do j = 1, npars
-            irec = irec + 1
-            write (*, *) "writing to file unit ", cfile_unit + offset
-            write (cfile_unit + offset, rec=irec) covariance(i, j)
+            irec = irec+1
+            write (*, *) "writing to file unit ", cfile_unit+offset
+            write (cfile_unit+offset, rec = irec) covariance(i, j)
          end do
       end do
 
@@ -281,16 +281,16 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
 
       do i = 1, npars
-         write (cifile_unit + offset) meanpars(i)
+         write (cifile_unit+offset) meanpars(i)
       end do
 
-      write (cifile_unit + offset) nsample
+      write (cifile_unit+offset) nsample
 
       return
 
@@ -315,17 +315,17 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
 
       do n = 1, npars
-         write (sfile_unit + offset) variance(n)
+         write (sfile_unit+offset) variance(n)
       end do
 
       ! we will need to know the current acceptance rate for restarts
-      write (sfile_unit + offset) accept_rate
+      write (sfile_unit+offset) accept_rate
 
       return
 
@@ -350,17 +350,17 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid - 1)*5
+      offset = (chainid-1)*5
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
 
       do n = 1, npars
-         write (pfile_unit + offset) pars(n)
+         write (pfile_unit+offset) pars(n)
       end do
 
       ! now add the probability
-      write (pfile_unit + offset) prob
+      write (pfile_unit+offset) prob
 
       ! close will occur at the end of the MCMC
 
@@ -393,7 +393,7 @@ contains
 !    print*,"write_mcmc_output:"
 
       ! Increment buffer
-      io_space%io_buffer_count = io_space%io_buffer_count + 1
+      io_space%io_buffer_count = io_space%io_buffer_count+1
       ! Store information in buffer for later writing
       io_space%variance_buffer(1:npars, io_space%io_buffer_count) = variance
       io_space%meanpars_buffer(1:npars, io_space%io_buffer_count) = meanpars
