@@ -117,7 +117,7 @@ program cardamom_framework
    type(MCMC_OPTIONS):: MCO
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 4
+   integer:: nchains = 3
    integer:: i
 
    allocate (MCOUT_list(nchains))
@@ -206,20 +206,6 @@ program cardamom_framework
    !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
    ! Open the relevant output files TODO now happens in run_mcmc
    !call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
-
-   ! Initialise counters used to track the output of parameter sets
-   !TODO now each chain has its own
-   !io_space%io_buffer_count = 0
-   ! io_space%io_buffer = min(1000, max(10, (MCO%nOUT/MCO%nWRITE) / 10))
-
-   ! Allocate variables used in io buffering, 
-   ! these could probably be moved to a more sensible place within cardamom_io.f90 DONE
-   !allocate(io_space%variance_buffer(PI%npars, io_space%io_buffer), &
-   !         io_space%meanpars_buffer(PI%npars, io_space%io_buffer), &
-   !         io_space%pars_buffer(PI%npars, io_space%io_buffer), &
-   !         io_space%prob_buffer(io_space%io_buffer), &
-   !         io_space%nsample_buffer(io_space%io_buffer), &
-   !         io_space%accept_rate_buffer(io_space%io_buffer))
 
    ! Report which model ID we are using
    write (*, *) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
@@ -364,7 +350,6 @@ program cardamom_framework
          write (*, *) "Beginning parameter search on sample size normalised likelihoods"
 
          MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
-         write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          !MCO%nwrite = 1000
          !MCO%nprint = 1000
@@ -376,6 +361,7 @@ program cardamom_framework
          MCO%fixedpars = .true.
          do i = 1, nchains
          MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
+         ! subtract number iterations done by sub_model phase from total to do
 
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
@@ -394,10 +380,13 @@ program cardamom_framework
       ! into two subroutines to avoid double calling of file name creation
       ! components.
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+      ! Since they all get the same nout setting, assume all sub_model phase simulation 
+      ! were same length  ! TODO
+      MCO%nOUT = max(1, MCO%nOUT-MCOUT_list(1)%nos_iterations)
 
       ! Update the user
       write (*, *) "Beginning parameter search in real likelihoods"
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
+      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
 
       ! Call the main MCMC
       ! The specific normalisation of the cost function is determined here.

@@ -1093,7 +1093,7 @@ contains
       ! simulation time therefore we want to adjust the output frequency to
       ! correct for this
       ! TODO outside of this function
-      MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
+      !MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
       ! construct file names
       write (MCO%outfile, fmt='(A)') trim(outfile)//"PARS"

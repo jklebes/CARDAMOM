@@ -222,6 +222,7 @@ contains
       !! number of new values
       integer, intent(inout):: cur1
       !! current position in list of parameters going into to the running calcualtions
+      !! = number of values in history 
       !!
       !! warning : changed by this function, incrmented by+new
       double precision, intent(in):: PARSALL(npars, new)
@@ -938,7 +939,7 @@ contains
       !
       !  Licensing: This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Mon 14 Jul 2025 16:56:56 BST
+      !  Last Modified: Tue 15 Jul 2025 10:19:41 BST
       !
       !  Original Author: John Burkardt (07 December 2009)
       !
@@ -1046,7 +1047,7 @@ contains
       !
       !    This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Mon 14 Jul 2025 16:56:56 BST
+      !  Last Modified: Tue 15 Jul 2025 10:19:41 BST
       !
       !    03/05/2019
       !

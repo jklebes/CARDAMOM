@@ -220,6 +220,9 @@ contains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
+         write(*,*) "parallel with restart", restart_ 
+         write(*,*) "MCOUT_list(i)", MCOUT_list(i)%pars
+         write(*,*) "nos_iterations done", MCOut_list(i)%nos_iterations 
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
       end do
       !$OMP end parallel do
@@ -379,6 +382,8 @@ contains
 
       if (restart_) then
          ! keep MCOUT
+         write(*,*) "keeping MCOUT " , MCOUT%pars
+         write(*,*) MCOUT%nos_iterations
       else
          ! init MCOUT
          MCOUT%complete = .false.
@@ -439,6 +444,7 @@ contains
 
       else  ! restart case
          PARS_previous = MCOUT%PARS
+         write(*,*) "starting at", pars_previous, iter 
          loglikelihood_previous = MCOUT%ll
          BESTPARS = MCOUT%bestpars
          llmax = MCOUT%bestll
@@ -596,6 +602,7 @@ contains
       MCOUT%ll = loglikelihood_previous
       ! record how many iterations were taken to complete
       MCOUT%nos_iterations = MCOUT%nos_iterations+ITER
+      write(*,*) "MCOUT%nos_iterations", MCOUT%nos_iterations
       ! set flag MCMC completed
       MCOUT%complete = .true.
       ! tidy up
@@ -637,6 +644,7 @@ contains
       ! declare local variables
       integer p, i, info  ! counters
       double precision, dimension(npars, npars):: cov_backup
+      double precision, dimension(npars, npars):: cholesky
       double precision, dimension(npars):: meanpar_backup
       integer:: Nparvar_backup, Nparvar_local
       integer:: N_before_mv_target
@@ -661,7 +669,8 @@ contains
                                           , Nparvar_local, ACCLOC, MCOUT%covariance)
          ! Calculate the cholesky factor as this includes a determination of
          ! whether the covariance matrix is positive definite.
-         call cholesky_factor(npars, MCOUT%covariance, info)
+         cholesky = MCOUT%covariance
+         call cholesky_factor(npars, cholesky, info)
          ! If the updated covariance matrix is not positive definite we should
          ! reject the update in favour of the existing matrix
          ! TODO ??
@@ -699,8 +708,10 @@ contains
 
             ! Calculate the cholesky factor as this includes a determination of
             ! whether the covariance matrix is positive definite.
-            call cholesky_factor(npars, MCOUT%covariance, info)
-            
+            ! Caution: cholesky_factor alters its second argument
+            ! that's why we only input a copy of the matrix
+            cholesky = MCOUT%covariance
+            call cholesky_factor(npars, cholesky, info)
 
             ! step at this time.
             if (info /= 0) then

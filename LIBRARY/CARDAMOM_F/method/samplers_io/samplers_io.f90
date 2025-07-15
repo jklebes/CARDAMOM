@@ -253,7 +253,6 @@ contains
       do i = 1, npars
          do j = 1, npars
             irec = irec+1
-            write (*, *) "writing to file unit ", cfile_unit+offset
             write (cfile_unit+offset, rec = irec) covariance(i, j)
          end do
       end do
