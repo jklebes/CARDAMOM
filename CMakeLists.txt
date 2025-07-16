@@ -7,7 +7,7 @@ enable_language(Fortran)
 
 include(CTest)
 
-#add_compile_options(-ffree-line-length-0 -O1 -g -pg -Wuninitialized -Wmaybe-uninitialized)
+#add_compile_options(-ffree-line-length-0 -O0 -g -pg -Wall)
 add_compile_options(-ffree-line-length-0  -O3)
 
 ## Code coverage analysis
