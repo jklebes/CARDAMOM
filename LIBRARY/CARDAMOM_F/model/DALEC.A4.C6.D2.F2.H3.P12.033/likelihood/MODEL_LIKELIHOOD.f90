@@ -300,6 +300,10 @@ module model_likelihood_module
            print*,"Sum abs error over time: diags = ",i
            print*,sum(abs(DATAin%M_DIAGS(:,i) - local_diags(:,i)))
         end do
+        print*,"First time step for all pools in run 1"
+        print*,local_pools(1,:)
+        print*,"First time step for all pools in run 2"
+        print*,DATAin%M_POOLS(1,:)        
         print*,"First time step for all fluxes in run 1"
         print*,local_fluxes(1,:)
         print*,"First time step for all fluxes in run 2"
@@ -379,10 +383,10 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-    ! wSWP at which full turnover (p15) occurs must be more negative than its beginnning (p16)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(16)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-    end if
+!    ! wSWP at which full turnover (p15) occurs must be more negative than its beginnning (p16)
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(16)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+!    end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
@@ -421,41 +425,43 @@ module model_likelihood_module
 
 !    ! Temperature threshold values for wood should be greater than their corresponding fine root value
 !    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
 !    endif
 
     ! Initial leaf area index should not be larger than ~10 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif    
 
-    ! Full turnover due to wSWP (p15) should be more negative than full growth suppression (p41)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-    endif
-!    ! Beginning turnover due to wSWP (p16) should be more negative than beginning of growth suppression (p42)
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(16) > pars(42)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
-!    endif
-    ! Full turnover due to wSWP (p15) should be more negative than minimum LWP for photosynthesis (p43)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(43)) then
+    ! Temperature at which cold foliar loss is 50 % (p12) should not be larger than the mean air temperature.
+    ! + 1 degree for safety
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(12) > meantemp + 1d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
+    ! Temperature at which heat foliar loss is 50 % (p13) should not be lower than the mean air temperature.
+    ! + 1 degree for safety
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(13) < meantemp - 1d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
+    endif
+!    ! Full turnover due to wSWP (p15) should be more negative than minimum LWP for photosynthesis (p43)
+!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(43)) then
+!        EDC1 = 0d0 ; EDCD%PASSFAIL(16) = 0
+!    endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(17) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(16) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(18) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(19) = 0
     endif
 
     ! could always add more / remove some
@@ -500,7 +506,7 @@ module model_likelihood_module
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
     double precision :: infi, tmp, tmp1, tmp2 !, EQF, etol
-    double precision, dimension(nodays) :: lab_ratio
+    double precision, dimension(nodays) :: lab_ratio, pool_hak, tmp_vec
     double precision, dimension(nopools) :: mean_pools, Fin, Fout, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
@@ -514,7 +520,7 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                   C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.10d0       !
+                                H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -625,32 +631,32 @@ module model_likelihood_module
      if ((EDC2 == 1 .or. DIAG == 1)) then
          ! Foliage
          if (maxval(M_FLUXES(:,4)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
          end if
          ! Fine roots
          if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
          end if
          ! Wood
          if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
          end if
      end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. FT(4) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
     endif
 
     ! While it is possible for the CiCa, the ratio of internal to external leaf
     ! CO2 concentrations it should not on average be greater than 1
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_DIAGS(:,4))/dble(nodays) > 1d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
     endif
 
     ! Iterate through C pools to determine whether they have their ratio of
@@ -772,14 +778,28 @@ module model_likelihood_module
             EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
-    ! The lab:bio ratio is not expected to change radically over time. Thus we quantify it's gradient
-    ! and disallow gradients (Delta lab:bio per day) which deviate signficantly
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        ! Assume the mean value can't be greater than largest observed value
+!        if (sum(lab_ratio)/dble(nodays) < 0.01d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
+!        endif        
+!    endif ! EDC2 == 1 .or. DIAG == 1    
     if (EDC2 == 1 .or. DIAG == 1) then
-        ! Assume the mean value can't be greater than largest observed value
-        if (abs(linear_model_gradient(met(1,1:nodays),lab_ratio,nodays)) > 1.5d-5) then
+        ! Mean transit time for labile from natural processes, 
+        ! i.e. not including any disturbance should be greater than 1 day
+        pool_hak = 1d0 ; tmp_vec = 0d0 ; tmp = 0d0
+        where (M_POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
+               pool_hak = 0d0 
+               ! Vector of fractional losses
+               tmp_vec = ((M_FLUXES(1:nodays,4)  + M_FLUXES(1:nodays,6) + &
+                           M_FLUXES(1:nodays,7)  + M_FLUXES(1:nodays,9)) / M_POOLS(1:nodays,1))                    
+        end where
+        ! Mean fractional removals, invert to the day residence time
+        tmp = (sum(tmp_vec) / (dble(nodays)-sum(pool_hak)))**(-1d0)
+        if (tmp < 1d0) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
         endif        
-    endif ! EDC2 == 1 .or. DIAG == 1
+    endif ! EDC2 == 1 .or. DIAG == 1    
 
     ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
     ! leaf economic spectrum (LES).
@@ -800,11 +820,11 @@ module model_likelihood_module
         tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
             ! The current leaf lifespan is shorter than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 

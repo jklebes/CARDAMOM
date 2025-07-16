@@ -192,6 +192,10 @@ SOM_global_PgC = rep(0, nos_years)
 SOM_north_PgC = rep(0, nos_years)
 SOM_tropics_PgC = rep(0, nos_years)
 SOM_south_PgC = rep(0, nos_years)
+wSWP_global_MPa = rep(0, nos_years)
+wSWP_north_MPa = rep(0, nos_years)
+wSWP_tropics_MPa = rep(0, nos_years)
+wSWP_south_MPa = rep(0, nos_years)
 # Minimum CI
 NBP_global_PgCyr_minCI = rep(0, nos_years)
 NBP_north_PgCyr_minCI = rep(0, nos_years)
@@ -281,6 +285,10 @@ SOM_global_PgC_minCI = rep(0, nos_years)
 SOM_north_PgC_minCI = rep(0, nos_years)
 SOM_tropics_PgC_minCI = rep(0, nos_years)
 SOM_south_PgC_minCI = rep(0, nos_years)
+wSWP_global_MPa_minCI = rep(0, nos_years)
+wSWP_north_MPa_minCI = rep(0, nos_years)
+wSWP_tropics_MPa_minCI = rep(0, nos_years)
+wSWP_south_MPa_minCI = rep(0, nos_years)
 # Lower CI
 NBP_global_PgCyr_lowCI = rep(0, nos_years)
 NBP_north_PgCyr_lowCI = rep(0, nos_years)
@@ -370,6 +378,10 @@ SOM_global_PgC_lowCI = rep(0, nos_years)
 SOM_north_PgC_lowCI = rep(0, nos_years)
 SOM_tropics_PgC_lowCI = rep(0, nos_years)
 SOM_south_PgC_lowCI = rep(0, nos_years)
+wSWP_global_MPa_lowCI = rep(0, nos_years)
+wSWP_north_MPa_lowCI = rep(0, nos_years)
+wSWP_tropics_MPa_lowCI = rep(0, nos_years)
+wSWP_south_MPa_lowCI = rep(0, nos_years)
 # Upper CI
 NBP_global_PgCyr_highCI = rep(0, nos_years)
 NBP_north_PgCyr_highCI = rep(0, nos_years)
@@ -459,6 +471,10 @@ SOM_global_PgC_highCI = rep(0, nos_years)
 SOM_north_PgC_highCI = rep(0, nos_years)
 SOM_tropics_PgC_highCI = rep(0, nos_years)
 SOM_south_PgC_highCI = rep(0, nos_years)
+wSWP_global_MPa_highCI = rep(0, nos_years)
+wSWP_north_MPa_highCI = rep(0, nos_years)
+wSWP_tropics_MPa_highCI = rep(0, nos_years)
+wSWP_south_MPa_highCI = rep(0, nos_years)
 # Maximum CI
 NBP_global_PgCyr_maxCI = rep(0, nos_years)
 NBP_north_PgCyr_maxCI = rep(0, nos_years)
@@ -548,6 +564,10 @@ SOM_global_PgC_maxCI = rep(0, nos_years)
 SOM_north_PgC_maxCI = rep(0, nos_years)
 SOM_tropics_PgC_maxCI = rep(0, nos_years)
 SOM_south_PgC_maxCI = rep(0, nos_years)
+wSWP_global_MPa_maxCI = rep(0, nos_years)
+wSWP_north_MPa_maxCI = rep(0, nos_years)
+wSWP_tropics_MPa_maxCI = rep(0, nos_years)
+wSWP_south_MPa_maxCI = rep(0, nos_years)
 
 # Counters
 nos_global = 0
@@ -637,6 +657,11 @@ for (n in seq(1, length(PROJECT$sites))) {
          LAI_global_m2m2_lowCI = LAI_global_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
          LAI_global_m2m2_highCI = LAI_global_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
          LAI_global_m2m2_maxCI = LAI_global_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])
+         wSWP_global_MPa        = wSWP_global_MPa        + (grid_output$mean_annual_wSWP_MPa[n,mid_quant,])
+         wSWP_global_MPa_minCI  = wSWP_global_MPa_minCI  + (grid_output$mean_annual_wSWP_MPa[n,min_quant,])
+         wSWP_global_MPa_lowCI  = wSWP_global_MPa_lowCI  + (grid_output$mean_annual_wSWP_MPa[n,low_quant,])
+         wSWP_global_MPa_highCI = wSWP_global_MPa_highCI + (grid_output$mean_annual_wSWP_MPa[n,high_quant,])
+         wSWP_global_MPa_maxCI  = wSWP_global_MPa_maxCI  + (grid_output$mean_annual_wSWP_MPa[n,max_quant,])
          BIO_global_PgC = BIO_global_PgC + (grid_output$mean_annual_biomass_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          BIO_global_PgC_minCI = BIO_global_PgC_minCI + (grid_output$mean_annual_biomass_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
          BIO_global_PgC_lowCI = BIO_global_PgC_lowCI + (grid_output$mean_annual_biomass_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -754,6 +779,11 @@ for (n in seq(1, length(PROJECT$sites))) {
              LAI_tropics_m2m2_lowCI = LAI_tropics_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
              LAI_tropics_m2m2_highCI = LAI_tropics_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
              LAI_tropics_m2m2_maxCI = LAI_tropics_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])
+             wSWP_tropics_MPa        = wSWP_tropics_MPa        + (grid_output$mean_annual_wSWP_MPa[n,mid_quant,])
+             wSWP_tropics_MPa_minCI  = wSWP_tropics_MPa_minCI  + (grid_output$mean_annual_wSWP_MPa[n,min_quant,])
+             wSWP_tropics_MPa_lowCI  = wSWP_tropics_MPa_lowCI  + (grid_output$mean_annual_wSWP_MPa[n,low_quant,])
+             wSWP_tropics_MPa_highCI = wSWP_tropics_MPa_highCI + (grid_output$mean_annual_wSWP_MPa[n,high_quant,])
+             wSWP_tropics_MPa_maxCI  = wSWP_tropics_MPa_maxCI  + (grid_output$mean_annual_wSWP_MPa[n,max_quant,])                      
              BIO_tropics_PgC = BIO_tropics_PgC + (grid_output$mean_annual_biomass_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_tropics_PgC_minCI = BIO_tropics_PgC_minCI + (grid_output$mean_annual_biomass_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_tropics_PgC_lowCI = BIO_tropics_PgC_lowCI + (grid_output$mean_annual_biomass_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -901,7 +931,12 @@ for (n in seq(1, length(PROJECT$sites))) {
              LAI_north_m2m2_minCI = LAI_north_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,min_quant,])
              LAI_north_m2m2_lowCI = LAI_north_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,low_quant,])
              LAI_north_m2m2_highCI = LAI_north_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,high_quant,])
-             LAI_north_m2m2_maxCI = LAI_north_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])        
+             LAI_north_m2m2_maxCI = LAI_north_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])       
+             wSWP_north_MPa        = wSWP_north_MPa        + (grid_output$mean_annual_wSWP_MPa[n,mid_quant,])
+             wSWP_north_MPa_minCI  = wSWP_north_MPa_minCI  + (grid_output$mean_annual_wSWP_MPa[n,min_quant,])
+             wSWP_north_MPa_lowCI  = wSWP_north_MPa_lowCI  + (grid_output$mean_annual_wSWP_MPa[n,low_quant,])
+             wSWP_north_MPa_highCI = wSWP_north_MPa_highCI + (grid_output$mean_annual_wSWP_MPa[n,high_quant,])
+             wSWP_north_MPa_maxCI  = wSWP_north_MPa_maxCI  + (grid_output$mean_annual_wSWP_MPa[n,max_quant,])                           
              BIO_north_PgC = BIO_north_PgC + (grid_output$mean_annual_biomass_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_north_PgC_minCI = BIO_north_PgC_minCI + (grid_output$mean_annual_biomass_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_north_PgC_lowCI = BIO_north_PgC_lowCI + (grid_output$mean_annual_biomass_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -1019,7 +1054,12 @@ for (n in seq(1, length(PROJECT$sites))) {
              LAI_south_m2m2_minCI = LAI_south_m2m2_minCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
              LAI_south_m2m2_lowCI = LAI_south_m2m2_lowCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
              LAI_south_m2m2_highCI = LAI_south_m2m2_highCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
-             LAI_south_m2m2_maxCI = LAI_south_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])         
+             LAI_south_m2m2_maxCI = LAI_south_m2m2_maxCI + (grid_output$mean_annual_lai_m2m2[n,max_quant,])       
+             wSWP_south_MPa        = wSWP_south_MPa        + (grid_output$mean_annual_wSWP_MPa[n,mid_quant,])
+             wSWP_south_MPa_minCI  = wSWP_south_MPa_minCI  + (grid_output$mean_annual_wSWP_MPa[n,min_quant,])
+             wSWP_south_MPa_lowCI  = wSWP_south_MPa_lowCI  + (grid_output$mean_annual_wSWP_MPa[n,low_quant,])
+             wSWP_south_MPa_highCI = wSWP_south_MPa_highCI + (grid_output$mean_annual_wSWP_MPa[n,high_quant,])
+             wSWP_south_MPa_maxCI  = wSWP_south_MPa_maxCI  + (grid_output$mean_annual_wSWP_MPa[n,max_quant,])       
              BIO_south_PgC = BIO_south_PgC + (grid_output$mean_annual_biomass_gCm2[n,mid_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_south_PgC_minCI = BIO_south_PgC_minCI + (grid_output$mean_annual_biomass_gCm2[n,min_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
              BIO_south_PgC_lowCI = BIO_south_PgC_lowCI + (grid_output$mean_annual_biomass_gCm2[n,low_quant,]*grid_output$area_m2[i,j]*grid_output$land_fraction[i,j]*1e-15)
@@ -1076,26 +1116,46 @@ LAI_global_m2m2 = LAI_global_m2m2 / nos_global
 LAI_north_m2m2 = LAI_north_m2m2 / nos_north
 LAI_tropics_m2m2 = LAI_tropics_m2m2 / nos_tropics
 LAI_south_m2m2 = LAI_south_m2m2 / nos_south
+wSWP_global_MPa = wSWP_global_MPa / nos_global
+wSWP_north_MPa = wSWP_north_MPa / nos_north
+wSWP_tropics_MPa = wSWP_tropics_MPa / nos_tropics
+wSWP_south_MPa = wSWP_south_MPa / nos_south
 # Minimum CI
 LAI_global_m2m2_minCI = LAI_global_m2m2_minCI / nos_global
 LAI_north_m2m2_minCI = LAI_north_m2m2_minCI / nos_north
 LAI_tropics_m2m2_minCI = LAI_tropics_m2m2_minCI / nos_tropics
 LAI_south_m2m2_minCI = LAI_south_m2m2_minCI / nos_south
+wSWP_global_MPa_minCI = wSWP_global_MPa_minCI / nos_global
+wSWP_north_MPa_minCI = wSWP_north_MPa_minCI / nos_north
+wSWP_tropics_MPa_minCI = wSWP_tropics_MPa_minCI / nos_tropics
+wSWP_south_MPa_minCI = wSWP_south_MPa_minCI / nos_south
 # Lower CI
 LAI_global_m2m2_lowCI = LAI_global_m2m2_lowCI / nos_global
 LAI_north_m2m2_lowCI = LAI_north_m2m2_lowCI / nos_north
 LAI_tropics_m2m2_lowCI = LAI_tropics_m2m2_lowCI / nos_tropics
 LAI_south_m2m2_lowCI = LAI_south_m2m2_lowCI / nos_south
+wSWP_global_MPa_lowCI = wSWP_global_MPa_lowCI / nos_global
+wSWP_north_MPa_lowCI = wSWP_north_MPa_lowCI / nos_north
+wSWP_tropics_MPa_lowCI = wSWP_tropics_MPa_lowCI / nos_tropics
+wSWP_south_MPa_lowCI = wSWP_south_MPa_lowCI / nos_south
 # Upper CI
 LAI_global_m2m2_highCI = LAI_global_m2m2_highCI / nos_global
 LAI_north_m2m2_highCI = LAI_north_m2m2_highCI / nos_north
 LAI_tropics_m2m2_highCI = LAI_tropics_m2m2_highCI / nos_tropics
 LAI_south_m2m2_highCI = LAI_south_m2m2_highCI / nos_south
+wSWP_global_MPa_highCI = wSWP_global_MPa_highCI / nos_global
+wSWP_north_MPa_highCI = wSWP_north_MPa_highCI / nos_north
+wSWP_tropics_MPa_highCI = wSWP_tropics_MPa_highCI / nos_tropics
+wSWP_south_MPa_highCI = wSWP_south_MPa_highCI / nos_south
 # Maximum CI
 LAI_global_m2m2_maxCI = LAI_global_m2m2_maxCI / nos_global
 LAI_north_m2m2_maxCI = LAI_north_m2m2_maxCI / nos_north
 LAI_tropics_m2m2_maxCI = LAI_tropics_m2m2_maxCI / nos_tropics
 LAI_south_m2m2_maxCI = LAI_south_m2m2_maxCI / nos_south
+wSWP_global_MPa_maxCI = wSWP_global_MPa_maxCI / nos_global
+wSWP_north_MPa_maxCI = wSWP_north_MPa_maxCI / nos_north
+wSWP_tropics_MPa_maxCI = wSWP_tropics_MPa_maxCI / nos_tropics
+wSWP_south_MPa_maxCI = wSWP_south_MPa_maxCI / nos_south
 
 ###
 ## Combine NBP together the data into an output variable
@@ -1404,4 +1464,18 @@ output = data.frame(Year = years, Global = SOM_global_PgC, North = SOM_north_PgC
 ## Begin writing out SOM to file
 
 write.table(output,file = paste(out_dir,"/",output_prefix,"SOM",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+###
+## Combine wSWP together the data into an output variable
+
+output = data.frame(Year = years, Global = wSWP_global_MPa, North = wSWP_north_MPa, Tropics = wSWP_tropics_MPa, South = wSWP_south_MPa,
+                                  Global_2.5pc = wSWP_global_MPa_minCI, North_2.5pc = wSWP_north_MPa_minCI, Tropics_2.5pc = wSWP_tropics_MPa_minCI, South_2.5pc = wSWP_south_MPa_minCI,
+                                  Global_25pc = wSWP_global_MPa_lowCI, North_25pc = wSWP_north_MPa_lowCI, Tropics_25pc = wSWP_tropics_MPa_lowCI, South_25pc = wSWP_south_MPa_lowCI,
+                                  Global_75pc = wSWP_global_MPa_highCI, North_75pc = wSWP_north_MPa_highCI, Tropics_75pc = wSWP_tropics_MPa_highCI, South_75pc = wSWP_south_MPa_highCI,
+                                  Global_97.5pc = wSWP_global_MPa_maxCI, North_97.5pc = wSWP_north_MPa_maxCI, Tropics_97.5pc = wSWP_tropics_MPa_maxCI, South_97.5pc = wSWP_south_MPa_maxCI)
+                                  
+###
+## Begin writing out wSWP to file
+
+write.table(output,file = paste(out_dir,"/",output_prefix,"wSWP",output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
 

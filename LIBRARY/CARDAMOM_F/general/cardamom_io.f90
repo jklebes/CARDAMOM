@@ -287,9 +287,9 @@ module cardamom_io
     else if (DATAin%ID == 33) then
         ! ID = 33 - DALEC.A4.C6.D2.F2.H3.P12.033
         DATAin%nopools = 7
-        DATAin%nopars = 45
+        DATAin%nopars = 46
         DATAin%nofluxes = 49
-        DATAin%nodiags = 25       
+        DATAin%nodiags = 30       
     else if (DATAin%ID == 34) then
         ! ID = 34 -
     else if (DATAin%ID == 35) then
@@ -607,7 +607,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-    subroutine read_binary_data(infile)
+  subroutine read_binary_data(infile)
       use cardamom_structures, only: DATAin
       use CARBON_MODEL_MOD, only: soil_frac_clay,soil_frac_sand &
                                  ,nos_soil_layers

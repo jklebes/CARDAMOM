@@ -72,23 +72,23 @@ module MODEL_PARAMETERS
     PI%parmin(2) = 0.1d0
     PI%parmax(2) = 0.6d0
 
-    ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
-    PI%parmin(3) = 0.001d0
-    PI%parmax(3) = 20d0
+    ! Potential rate of labile to foliage (gC/m2/day)
+    PI%parmin(3) = 0.01d0
+    PI%parmax(3) = 10d0
 
-    ! Potential rate of direct labile to fine root (gC/m2/day)
+    ! Potential rate of labile to fine root (gC/m2/day)
     PI%parmin(4) = 0.01d0
     PI%parmax(4) = 20d0
 
-    ! foliage Michaelis-Menten loss limiter gC/m2
-    PI%parmin(5) = 0.001d0  ! 0.1 %
-    PI%parmax(5) = 500d0   ! 10 %
+    ! Minimum foliar loss proposal gC/m2/day
+    PI%parmin(5) = 0.01d0   
+    PI%parmax(5) = 4d0     
 
-    ! TOR wood* - 1% loss per year value
+    ! Turnover of wood (fraction / day)
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
+    ! Turnover of fine roots (fraction / day)
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
     PI%parmax(7) = 0.02d0        ! 0.13 years
 
@@ -112,24 +112,21 @@ module MODEL_PARAMETERS
     PI%parmax(11) = 100d0
 
     ! Temperature (oC) at which cold induced loss is at 50 %
-    PI%parmin(12) =-20d0
+    PI%parmin(12) =-40d0
     PI%parmax(12) = 20d0
-
     ! Temperature at which heat induced loss is at 50 %
     PI%parmin(13) = 30d0
     PI%parmax(13) = 50d0
-
-    !! Temperature range from threshold for 50 % of potential foliar fall
-    ! Gradient for logistic function, i.e. over how many degrees does 50 % change occur 
-    PI%parmin(14) = 0.01d0 
+    ! Gradient for logistic function, i.e. function change per degree 
+    PI%parmin(14) = 0.1d0 
     PI%parmax(14) = 10d0 
 
-    ! wSWP water potential (MPa) at which leaf fall is at maximum
-    PI%parmin(15) = -5d0
-    PI%parmax(15) =  0d0
-    ! wSWP water potential (MPa) at which leaf fall begins
-    PI%parmin(16) = -5d0
-    PI%parmax(16) =  0d0
+    ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
+    PI%parmin(15) = 0d0
+    PI%parmax(15) = 0.1d0
+    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
+    PI%parmin(16) = 0d0
+    PI%parmax(16) = 0.1d0
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -143,7 +140,7 @@ module MODEL_PARAMETERS
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 100d0
-    PI%parmax(26) = 2500d0 !500d0
+    PI%parmax(26) = 1000d0 !500d0
 
     ! BUCKET - maximum rooting depth
     PI%parmin(27) = 0.35d0
@@ -166,8 +163,8 @@ module MODEL_PARAMETERS
     PI%parmax(32) = 0.99d0
 
     ! labile:biomass at which growth is limited by 50 %
-    PI%parmin(33) = 0.001d0  ! 0.1 %
-    PI%parmax(33) = 0.10d0   ! 10 %
+    PI%parmin(33) = 0.0001d0 ! 0.01 %
+    PI%parmax(33) = 0.02d0   ! 2 %
 
     ! Temperature (oC) above p36 at which foliage and fine root growth is limited by 50 %
     PI%parmin(34) = 0.1d0
@@ -176,7 +173,7 @@ module MODEL_PARAMETERS
     PI%parmin(35) = 0.1d0
     PI%parmax(35) = 10d0
     ! Temperature (oC) at which foliage and fine root growth is prevented
-    PI%parmin(36) = 0d0 
+    PI%parmin(36) =-8d0 
     PI%parmax(36) = 8d0
     ! Temperature (oC) at which wood growth is prevented
     PI%parmin(37) = 0d0
@@ -184,7 +181,7 @@ module MODEL_PARAMETERS
 
     ! Potential growth rate of wood (gC/m2/day)
     PI%parmin(38) = 0.01d0
-    PI%parmax(38) = 20d0
+    PI%parmax(38) = 10d0
 
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0
@@ -209,9 +206,18 @@ module MODEL_PARAMETERS
     PI%parmin(44) = -4.4d0
     PI%parmax(44) = -0.6d0
 
-    ! Potential loss rate for foliage to litter (gC/m2/day)
-    PI%parmin(45) = 0.001d0
-    PI%parmax(45) = 20d0
+!    ! Potential loss rate for foliage to litter (gC/m2/day)
+!    PI%parmin(45) = 0.01d0
+!    PI%parmax(45) = 20d0
+    ! Potential loss rate for foliage to litter (fraction/day)
+    PI%parmin(45) = 0.0003424658 ! 8 years
+    PI%parmax(45) = 0.0333333333 ! 30 days
+ 
+    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
+    ! This is a hack to account for the model representing whole ecosystem,
+    ! within which competing leaf stratagies will be at play.
+    PI%parmin(46) = 0.1d0
+    PI%parmax(46) = 1d0
 
     !
     ! INITIAL VALUES DECLARED HERE

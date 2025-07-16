@@ -480,7 +480,8 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi, tmp, tmp1, tmp2 !, EQF, etol
+    double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
+                        jan_sd_lai, jan_mean_lai, jan_first_lai
     !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
@@ -501,7 +502,7 @@ module model_likelihood_module
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
                                   C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
-                                H2O_etol = 0.10d0        !
+                                H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -605,6 +606,7 @@ module model_likelihood_module
 !      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
 !    end do
 
+
     !
     ! Begin EDCs here
     !
@@ -614,7 +616,28 @@ module model_likelihood_module
 !        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
 !    end if
-!
+
+    ! Determine the mean and standard deviation of January LAIs 
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    jan_first_lai = M_DIAGS(1,1) ! First January LAI
+    ! Initially sum each January from each year
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
+    end do
+    ! Calculate the mean
+    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+    ! Calculate the standard deviation now
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
+    end do
+    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    end if
+
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then

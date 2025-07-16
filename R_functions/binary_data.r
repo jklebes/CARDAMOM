@@ -59,58 +59,6 @@ met_array_names <<- c("Total number of days ran (starts = 31 for January if mont
                        "Wind speed (m/s)",
                        "Daily vapour pressure deficit (Pa)")
 
-#obs_array_names <<- c("GPP (gC/m2/day)",
-#                      "GPP variance (gC/m2/day)",
-#                      "Leaf area index (m2/m2)",
-#                      "Leaf area index variance",
-#                      "Net Ecosystem Exchange of CO2 (gC/m2/day)",
-#                      "Net Ecosystem Exchange of CO2 variance",
-#                      "Fire C emission (gC/m2/day)",
-#                      "Fire C emission variance",
-#                      "Ecosystem respiration (Ra + Rh gC/m2/day)",
-#                      "Ecosystem respiration (Ra + Rh) variance",
-#                      "Foliar stock (gC/m2)",
-#                      "Foliar stock variance",
-#                      "Wood stock (above + below gC/m2)",
-#                      "Wood stock (above + below) variance",
-#                      "Fine root stock (gC/m2)",
-#                      "Fine root stock variance",
-#                      "Foliar + fine root litter stock (gC/m2)",
-#                      "Foliar + fine root litter stock variance",
-#                      "Soil organic matter stock (gC/m2)",
-#                      "Soil organic matter stock variance",
-#                      "Above ground biomass stock (gC/m2)",
-#                      "Above ground biomass stock variance",
-#                      "Fraction absorbed PAR",
-#                      "Fraction absorbed PAR variance",
-#                      "Empty",
-#                      "Empty",
-#                      "Coarse root stock (gC/m2)",
-#                      "Coarse root stock variance",
-#                      "Annual foliar maximum (gC/m2)",
-#                      "Annual foliar maximum variance",
-#                      "Evapotranspiration (kgH2O/m2/day)",
-#                      "Evapotranspiration variance",
-#                      "Snow water equivalent (kgH2O/m2)",
-#                      "Snow water equivalent variance",
-#                      "Net Biome Exchange (Reco + Fire - GPP) of CO2 (gC/m2/day)",
-#                      "Net Biome Exchange variance",
-#                      "Mean woody productivity over lag period (gC/m2/day)",
-#                      "Mean woody productivity varince",
-#                      "Lag period over which to average (steps)",
-#                      "Mean woody natural mortality over lag period (gC/m2/day)",
-#                      "Mean woody natural mortality varince",
-#                      "Lag period over which to average (steps)",
-#                      "Mean litter flux over lag period (gC/m2/day)",
-#                      "Mean litter flux varince",
-#                      "Lag period over which to average (steps)",
-#                      "Mean woody net increment over lag period (gC/m2/day)",
-#                      "Mean woody net increment varince",
-#                      "Lag period over which to average (steps)",
-#                      "Extracted C due to harvest over lag period (gC/m2/day)",
-#                      "Extracted C due to harvest varince",
-#                      "Lag period over which to average (steps)")
-
 obs_array_names <<- c("GPP (gC/m2/day)",
                       "GPP variance (gC/m2/day)",
                       "Lag period over which to average (steps)",
@@ -269,6 +217,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
   pass = TRUE
   if (min(met$mint) < -200) {pass = FALSE ; print(summary(met$mint)) ; print('mint error in binary_data')} # Celcius
   if (min(met$maxt) < -200) {pass = FALSE ; print(summary(met$maxt)) ; print('maxt error in binary_data')} # Celcius
+  if (min(met$vpd) < 0) {pass = FALSE ; print(summary(met$vpd)) ; print('VPD error in binary_data')} # Pa
   if (min(met$swrad) < 0 | max(met$swrad) > 36) { pass = FALSE ; print(summary(met$swrad)) ; print('RAD error in binary_data')} # MJ/m2/day
   if (lat_degrees < -90 | lat_degrees > 90) { pass = FALSE ; print(lat_degrees) ; stop('Latitude passed to binary_data is not -90/90 degrees')} # degrees only
 
@@ -293,10 +242,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 
       # Assign forcings into the array for saving
       MET[,1]  = met$run_day
-      MET[,2]  = met$mint  #; if (min(met$mint) < -200) {print(summary(met$mint)) ; stop('mint error in binary_data')} # Celcius
-      MET[,3]  = met$maxt  #; if (min(met$maxt) < -200) {print(summary(met$maxt)) ; stop('maxt error in binary_data')} # Celcius
-      MET[,4]  = met$swrad #; if (min(met$swrad) < 0 | max(met$swrad) > 36) {print(summary(met$swrad)) ; stop('RAD error in binary_data')} # MJ/m2/day
-      MET[,5]  = met$co2#+200 # ppm
+      MET[,2]  = met$mint           # (Average) daily minimum temperature (oC) 
+      MET[,3]  = met$maxt           # (Average) daily maximum temperature (oC)
+      MET[,4]  = met$swrad          # Average daily sum shortwave radiation (MJ/m2/d)
+      MET[,5]  = met$co2#+200       # CO2 ppm
       MET[,6]  = met$doy
       MET[,7]  = pmax(0,met$precip) # kgH2O/m2/s
       MET[,8]  = OBS$deforestation  # fraction
@@ -682,9 +631,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           if (PARPRIORS[17] > 100) {
               if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
-                  OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
-              } # lat_degrees > 50
-          } # PARPRIORS[17] > 100
+                  OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+              }
+          }                    
   } else if (modelname == "DALEC.A1.C1.D2.F2.H3.P1.029") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2] = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
 #          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
@@ -785,9 +735,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           if (PARPRIORS[17] > 100) {
               if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
-                  OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
+                  OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
               }
-          }          
+          }                    
       } else if (modelname == "DALEC.A4.C6.D2.F2.H3.P12.033") {
 #          PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
 #          PARPRIORS[11] = 60.0               ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
@@ -809,7 +760,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
 #          PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
-#          PARPRIORS[33] = 0.05                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
+#          PARPRIORS[33] = 0.01                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
           PARPRIORS[36] = 5.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which foliage and root growth totally suppressed (oC)
           PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 1.0 # temperature at which wood growth totally suppressed (oC)
           PARPRIORS[43] = -2.0                ; PARPRIORUNC[43] = 0.5 # minimum leaf water potential (MPa)
@@ -818,20 +769,12 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 #; OTHERPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
-          #if (PARPRIORS[17] != -9999) { 
-          #    # LL (months) ~ LMA (gm2) R2 = 0.42 from 
-          #    # Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
-          #    # Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496
-          #    OTHERPRIORS[6]   = (0.0031*(PARPRIORS[17]/0.48)**c(1.71))/12  #  Mean estimate
-          #    tmp1 = (0.0031*(PARPRIORS[17]-PARPRIORUNC[17]/0.48)**c(1.62))/12 # Lower 95 % CI estimate
-          #    tmp2 = (0.0031*(PARPRIORS[17]+PARPRIORUNC[17]/0.48)**c(1.82))/12 # Upper 95 % CI estimate
-          #    OTHERPRIORUNC[6] = (tmp2-tmp1) * 0.5
-          #}
           # Hack to remove LAI observations out of growing season for high LCA areas
           if (PARPRIORS[17] > 100) {
               if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
-                  OBSMAT[filter,3] = -9999 ; OBSMAT[filter,4] = -9999
+                  OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
               }
           }                    
       } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.030") {

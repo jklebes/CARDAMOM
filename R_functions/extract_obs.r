@@ -74,7 +74,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      nbe_all,agg_func = "mean",
+                                                                      nbe_all,agg_func = "mean",na_flag = -9999,
                                                                       est_var_name_in = "nbe_gCm2day",
                                                                       unc_var_name_in = "nbe_unc_gCm2day",
                                                                       lag_var_name_in = "nbe_lag_day",
@@ -123,7 +123,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      lai_all,agg_func = "mean",
+                                                                      lai_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "lai_m2m2",
                                                                       unc_var_name_in = "lai_unc_m2m2",
                                                                       lag_var_name_in = "lai_lag_day",
@@ -172,7 +172,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      fapar_all,agg_func = "mean",
+                                                                      fapar_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "fapar",
                                                                       unc_var_name_in = "fapar_unc",
                                                                       lag_var_name_in = "fapar_lag_day",
@@ -294,7 +294,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_inc_all,agg_func = "mean",
+                                                                      Cwood_inc_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "Cwood_increment_gCm2day",
                                                                       unc_var_name_in = "Cwood_increment_uncertainty_gCm2day",
                                                                       lag_var_name_in = "Cwood_increment_lag",
@@ -343,7 +343,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_growth_all,agg_func = "mean",
+                                                                      Cwood_growth_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "Cwood_growth_gCm2day",
                                                                       unc_var_name_in = "Cwood_growth_uncertainty_gCm2day",
                                                                       lag_var_name_in = "Cwood_growth_lag",
@@ -393,7 +393,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_mortality_all,agg_func = "mean",
+                                                                      Cwood_mortality_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "Cwood_mortality_gCm2day",
                                                                       unc_var_name_in = "Cwood_mortality_uncertainty_gCm2day",
                                                                       lag_var_name_in = "Cwood_mortality_lag",
@@ -471,7 +471,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      gpp_all,agg_func = "mean",
+                                                                      gpp_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "gpp_gCm2day",
                                                                       unc_var_name_in = "gpp_unc_gCm2day",
                                                                       lag_var_name_in = "gpp_lag_day",
@@ -521,7 +521,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      fire_all,agg_func = "mean",
+                                                                      fire_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "fire_gCm2day",
                                                                       unc_var_name_in = "fire_unc_gCm2day",
                                                                       lag_var_name_in = "fire_lag_day",
@@ -573,7 +573,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      et_all,agg_func = "mean",
+                                                                      et_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "et_kgH2Om2day",
                                                                       unc_var_name_in = "et_unc_kgH2Om2day",
                                                                       lag_var_name_in = "et_lag_day",
@@ -668,7 +668,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         if (Cwood_stock_all$data_available) {
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_stock_all,agg_func = "mean",
+                                                                      Cwood_stock_all,agg_func = "mean", na_flag = -9999,
                                                                       est_var_name_in = "biomass_gCm2",
                                                                       unc_var_name_in = "biomass_uncertainty_gCm2",
                                                                       lag_var_name_in = "biomass_lag_day",
@@ -855,7 +855,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (Csom_source == "Gridded_nc" | Csom_source == "Gridded_tif") {
         # Get an initial estimate for soil C
         output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,Csom_all,
-                                                              est_var_name_in="Csom",
+                                                              na_flag = -9999,
+                                                              est_var_name_in="Csom", 
                                                               unc_var_name_in="Csom_unc",
                                                               est_var_name_out="Csom_initial",
                                                               unc_var_name_out="Csom_initial_unc") 
@@ -927,6 +928,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else if (Cwood_initial_source == "Gridded_nc" | Cwood_initial_source == "Gridded_tif") {
         # Extract the initial wood stock estimate
         output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,Cwood_initial_all,
+                                                              na_flag = -9999,
                                                               est_var_name_in="biomass_gCm2",
                                                               unc_var_name_in="biomass_uncertainty_gCm2",
                                                               est_var_name_out="Cwood_stock",
@@ -983,6 +985,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else if (lca_source == "Gridded_nc" | lca_source == "Gridded_tif") {
         # get leaf carbon per unit leaf area from gridded dataset  
         output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,lca_all,
+                                                              na_flag = -9999,
                                                               est_var_name_in="lca_gCm2",
                                                               unc_var_name_in="lca_uncertainty_gCm2",
                                                               est_var_name_out="lca_gCm2",
@@ -1054,6 +1057,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else if (Cwood_potential_source == "Gridded_nc" | Cwood_potential_source == "Gridded_tif") {
         # Extract potential wood stock information
         output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,Cwood_potential_all,
+                                                              na_flag = -9999,
                                                               est_var_name_in="biomass_gCm2",
                                                               unc_var_name_in="biomass_uncertainty_gCm2",
                                                               est_var_name_out="Cwood_stock",
@@ -1101,7 +1105,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else if (deforestation_source == "Gridded_nc" | deforestation_source == "Gridded_tif") {
         # Extract from the gridded array
         output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                     forest_all,agg_func = "sum",
+                                                                     forest_all,agg_func = "sum", na_flag = 0,
                                                                      est_var_name_in="loss_fraction",lag_var_name_in="loss_fraction_lag",
                                                                      est_var_name_out="deforestation",lag_var_name_out="deforestation_lag")      
         deforestation = output$deforestation ; deforestation_lag = output$deforestation_lag
@@ -1129,7 +1133,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else {
         # Extract from the gridded array
         output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                     burnt_all,agg_func = "sum",
+                                                                     burnt_all,agg_func = "sum",na_flag = 0,
                                                                      est_var_name_in="burnt_area",lag_var_name_in="burnt_area_lag",
                                                                      est_var_name_out="burnt_area",lag_var_name_out="burnt_area_lag")
         # Extract out of the output object
@@ -1148,21 +1152,25 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         ## Extract each layer and type in turn
         # Extract local sand content (top soil, 0-30cm)
         output = extract_static_observations_without_uncertainty(grid_long_loc,grid_lat_loc,sand_clay_all,
+                                                                 na_flag = NA,
                                                                  est_var_name_in="top_sand",
                                                                  est_var_name_out="top_sand") 
         top_sand = output$top_sand 
         # Extract local sand content (bottom soil, 31-100cm)
         output = extract_static_observations_without_uncertainty(grid_long_loc,grid_lat_loc,sand_clay_all,
+                                                                 na_flag = NA,
                                                                  est_var_name_in="bot_sand",
                                                                  est_var_name_out="bot_sand")           
         bot_sand = output$bot_sand
         # Extract local clay content (top soil, 0-30cm)
         output = extract_static_observations_without_uncertainty(grid_long_loc,grid_lat_loc,sand_clay_all,
+                                                                 na_flag = NA,
                                                                  est_var_name_in="top_clay",
                                                                  est_var_name_out="top_clay")     
         top_clay = output$top_clay 
         # Extract local clay content (bottom soil, 31-100cm)
         output = extract_static_observations_without_uncertainty(grid_long_loc,grid_lat_loc,sand_clay_all,
+                                                                 na_flag = NA,
                                                                  est_var_name_in="bot_clay",
                                                                  est_var_name_out="bot_clay")     
         bot_clay = output$bot_clay

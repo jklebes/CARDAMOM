@@ -114,7 +114,7 @@ generate_parameter_maps<-function(PROJECT) {
           # maxits  = maximum number of iteration to perform regardless or clustering still changing
           # frac    = if set, clustering is done on a randomly selected sub-sample of pixels. The sub-sample is the fraction specified.
           # sweeps  = if frac set, how many times to repeat the subsampling processes
-          grid_output$cluster_analysis = apclusterL(negDistMat(r=2), par_array_tmp, frac = subsample_frac, sweeps = 3, p = preference_input, maxits=250, convits=20)
+          grid_output$cluster_analysis = apclusterL(negDistMat(r=2), par_array_tmp, frac = subsample_frac, sweeps = 5, p = preference_input, maxits=250, convits=50)
           #grid_output$cluster_analysis=apclusterL(negDistMat(r=2),par_array_tmp,frac=0.1, sweeps=10, q=0.05, maxits=1000, convits=100)
           grid_output$nos_clusters = length(grid_output$cluster_analysis@clusters) ; grid_output$clusters_exemplars=grid_output$cluster_analysis@exemplars
           grid_output$clusters = array(NA,dim=c(dim(par_array_median_normalised)[1:2]))
@@ -530,6 +530,7 @@ generate_parameter_maps<-function(PROJECT) {
        if (any(is.na(grid_output$obs_array_averages[,,m]) == FALSE)) {
            zrange = c(min(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE),max(as.vector(grid_output$obs_array_averages[,,m]),na.rm=TRUE))
            zrange = zrange + (c(-0.05,0.05) * zrange)     
+           if (diff(zrange) == 0) {zrange = c(-0.05,0.05)}           
            fig_name = paste("mean_obs_array_maps_",gsub(" ","_",obs_array_names[m]),"_",gsub("%","_",PROJECT$name),".jpeg",sep="")
            fig_name = gsub("\\(","", fig_name) ; fig_name = gsub("\\)","", fig_name)
            fig_name = gsub("/","", fig_name) ; fig_name = gsub("/","", fig_name)

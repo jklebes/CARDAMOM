@@ -175,26 +175,26 @@ cardamom_stage_1<-function(PROJECT) {
            met_all = load_met_fields_for_extraction(latlon,met_source,PROJECT$model$name,PROJECT$start_year,PROJECT$end_year,PROJECT$spatial_type,cardamom_ext)
            # Mechanical disturbance (e.g., deforestation, 0-1)
            forest_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                               deforestation_source,path_to_forestry,prefix = "forest_loss_",
-                                                               as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                               est_var_name_in = "forest_loss",
-                                                               unc_var_name_in = "",
-                                                               lag_var_name_in = "forest_loss_lag", 
-                                                               est_var_name_out = "loss_fraction",
-                                                               unc_var_name_out = "",
-                                                               lag_var_name_out = "loss_fraction_lag",
-                                                               default_lag = 0)
+                                                                deforestation_source,path_to_forestry,prefix = "forest_loss_",
+                                                                as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+                                                                est_var_name_in = "forest_loss",
+                                                                unc_var_name_in = "",
+                                                                lag_var_name_in = "forest_loss_lag", 
+                                                                est_var_name_out = "loss_fraction",
+                                                                unc_var_name_out = "",
+                                                                lag_var_name_out = "loss_fraction_lag",
+                                                                default_lag = 0)
            # Burned area (0-1)
            burnt_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                             burnt_area_source,path_to_burnt_area,prefix = "BurnedFraction_",
-                                                             as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "BurnedFraction",
-                                                             unc_var_name_in = "",
-                                                             lag_var_name_in = "BurnedFraction_lag",
-                                                             est_var_name_out = "burnt_area",
-                                                             unc_var_name_out = "",
-                                                             lag_var_name_out = "burnt_area_lag",
-                                                             default_lag = 0)
+                                                               burnt_area_source,path_to_burnt_area,prefix = "BurnedFraction_",
+                                                               as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+                                                               est_var_name_in = "BurnedFraction",
+                                                               unc_var_name_in = "",
+                                                               lag_var_name_in = "BurnedFraction_lag",
+                                                               est_var_name_out = "burnt_area",
+                                                               unc_var_name_out = "",
+                                                               lag_var_name_out = "burnt_area_lag",
+                                                               default_lag = 0)
 
            ## Load all time varying spatial observations
            # Leaf area index (m2/m2)

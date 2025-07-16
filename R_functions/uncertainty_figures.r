@@ -1148,7 +1148,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    }  # biomass_gCm2
 
-   # Canopy growth index (CGI; 0-1)
+   # Net Canopy Carbon Export
    if (exists(x = "ncce_gCm2day", where = states_all)) {
 
        # structure needed by function is dim=c(time,iter)
@@ -1460,10 +1460,12 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day","LWP_MPa",
                       "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction",
                       "LabBio_limitation","foliage_leafT_limitation","roots_leafT_limitation","wood_leafT_limitation",
-                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation","gpp_return_gCm2day",
+                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation",
                       "canopy_area_scaling_wind","canopy_area_scaling_light","rgrow_gCm2day",
-                      "rmain_from_labile_gCm2day")
-
+                      "rmain_from_labile_gCm2day", "foliar_growth_limitation", "ncce_grow_gCgC",
+                      "ncce_loss_gCgC","foliage_feedback_turnover_limitation", 
+                      "foliage_leafT_turnover_limitation", "foliage_wSWP_turnover_limitation",
+                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days")
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

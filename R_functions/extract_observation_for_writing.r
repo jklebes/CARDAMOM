@@ -48,7 +48,7 @@
 #########################################################################################
 
 extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,years_to_load,doy_obs,
-                                                            data_all,agg_func,
+                                                            data_all,agg_func, na_flag,
                                                             est_var_name_in,unc_var_name_in,
                                                             lag_var_name_in,est_var_name_out,
                                                             unc_var_name_out,lag_var_name_out) {
@@ -120,8 +120,8 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
-                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
@@ -129,18 +129,21 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
                 # Take the mean first to allow for weighting based on the lags
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
-                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
-                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)
+                obs_unc_agg[y] = weighted.mean(x = obs_unc_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)
+                obs_lag_agg[y] = sum(obs_lag_out[pick]+1, na.rm=TRUE)
                 # Then reaccumulate based on the total number of lags
                 obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
                 obs_unc_agg[y] = obs_unc_agg[y] * obs_lag_agg[y]
+                # Correct the lag calculation
+                obs_lag_agg[y] = obs_lag_agg[y] - length(pick)                
            }       
        } else {
             stop("A non-valid function has been specified for the extract_timeseries_observations_with_uncertainty()")
        }
        # Convert the lag periods into model time steps
        obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))
+
        # update with new output information
        obs_out = obs_agg ; obs_unc_out = obs_unc_agg ; obs_lag_out = obs_lag_agg
        # clean up
@@ -150,13 +153,13 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
 
    # convert missing data to -9999
    na_loc = which(is.na(obs_out) | is.na(obs_unc_out) | is.na(obs_lag_out))
-   obs_out[na_loc] = -9999 ; obs_unc_out[na_loc] = -9999 ; obs_lag_out[na_loc] = -9999
+   obs_out[na_loc] = na_flag ; obs_unc_out[na_loc] = na_flag ; obs_lag_out[na_loc] = na_flag
 
    # clean up
-   rm(i1,j1,obs,unc,i,a) ; gc(reset=TRUE,verbose=FALSE)
+   rm(i1,j1,obs,unc,lag,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # Create output object
-   output = list(obs_out, obs_unc_out, obs_lag_out)
+   output = list(obs_out, obs_unc_out, obs_lag_out,na_loc = na_loc)
    # Update with the correct variable names
    names(output)[1:3]<-c(est_var_name_out,unc_var_name_out,lag_var_name_out)
    # Return function
@@ -167,7 +170,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
 extract_timeseries_observations_with_uncertainty<-cmpfun(extract_timeseries_observations_with_uncertainty)
 
 extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_days,years_to_load,doy_obs,
-                                                               data_all,agg_func,
+                                                               data_all,agg_func, na_flag,
                                                                est_var_name_in,lag_var_name_in,
                                                                est_var_name_out,lag_var_name_out) {
 
@@ -233,23 +236,25 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)
                 obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
            }
        } else if (agg_func == "sum") {
            # Loop through timeseries and aggregate
            for (y in seq(1,length(run_day_selector))) {
                 pick = (run_day_selector[y]-timestep_days[y]+1):run_day_selector[y]
-                obs_agg[y] = weighted.mean(x = obs_out[pick], w = pmax(1,obs_lag_out[pick]), na.rm=TRUE)
-                obs_lag_agg[y] = sum(obs_lag_out[pick], na.rm=TRUE)
+                obs_agg[y] = weighted.mean(x = obs_out[pick], w = obs_lag_out[pick]+1, na.rm=TRUE)                          
+                obs_lag_agg[y] = sum(obs_lag_out[pick]+1, na.rm=TRUE)
                 # Then reaccumulate based on the total number of lags
                 obs_agg[y] = obs_agg[y] * obs_lag_agg[y]
-           }       
+                # Correct the lag calculation
+                obs_lag_agg[y] = obs_lag_agg[y] - length(pick)
+           }    
        } else {
             stop("A non-valid function has been specified for the extract_timeseries_observations_without_uncertainty()")
        }
        # Convert the lag periods into model time steps
-       obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))       
+       obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))             
        # update with new output information
        obs_out = obs_agg ; obs_lag_out = obs_lag_agg
        # clean up
@@ -259,13 +264,13 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
 
    # convert missing data to -9999
    na_loc = which(is.na(obs_out) | is.na(obs_lag_out)) 
-   obs_out[na_loc] = -9999 ; obs_lag_out[na_loc] = -9999
+   obs_out[na_loc] = na_flag ; obs_lag_out[na_loc] = na_flag
 
    # clean up
    rm(i1,j1,obs,lag,i,a) ; gc(reset=TRUE,verbose=FALSE)
 
    # Create output object
-   output = list(obs_out,obs_lag_out)
+   output = list(obs_out,obs_lag_out,na_loc = na_loc)
    # Update with the correct variable names
    names(output)[1:2]<-c(est_var_name_out,lag_var_name_out)
    # Return function
@@ -275,7 +280,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
 ## Use byte compile
 extract_timeseries_observations_without_uncertainty<-cmpfun(extract_timeseries_observations_without_uncertainty)
 
-extract_static_observations_with_uncertainty<- function(i1,j1,data_all,
+extract_static_observations_with_uncertainty<- function(i1,j1,data_all,na_flag,
                                                         est_var_name_in,unc_var_name_in,
                                                         est_var_name_out,unc_var_name_out) {
 
@@ -286,8 +291,8 @@ extract_static_observations_with_uncertainty<- function(i1,j1,data_all,
    obs = data_all[[est_var_name_in]][i1,j1]
    unc = data_all[[unc_var_name_in]][i1,j1]
 
-   # convert missing data to -9999
-   obs[which(is.na(obs))] = -9999 ; unc[which(is.na(unc))] = -9999
+   # convert missing data to na_flag (typically -9999)
+   obs[which(is.na(obs))] = na_flag ; unc[which(is.na(unc))] = na_flag
 
    # Create output object
    output = list(obs, unc)
@@ -300,7 +305,7 @@ extract_static_observations_with_uncertainty<- function(i1,j1,data_all,
 ## Use byte compile
 extract_static_observations_with_uncertainty<-cmpfun(extract_static_observations_with_uncertainty)
 
-extract_static_observations_without_uncertainty<- function(i1,j1,data_all,
+extract_static_observations_without_uncertainty<- function(i1,j1,data_all,na_flag,
                                                            est_var_name_in,est_var_name_out) {
 
    # Update the user
@@ -310,7 +315,7 @@ extract_static_observations_without_uncertainty<- function(i1,j1,data_all,
    obs = data_all[[est_var_name_in]][i1,j1]
 
    # convert missing data to -9999
-   obs[which(is.na(obs))] = -9999 
+   obs[which(is.na(obs))] = na_flag 
 
    # Create output object
    output = list(obs)
