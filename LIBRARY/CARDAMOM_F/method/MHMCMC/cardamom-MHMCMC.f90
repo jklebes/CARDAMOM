@@ -1,4 +1,4 @@
-module MHMCMC
+module cardamom_MHMCMC
 
    !-
    ! Authorship contributions
@@ -854,4 +854,4 @@ contains
    !
    !------------------------------------------------------------------
    !
-end module MHMCMC
+end module cardamom_MHMCMC

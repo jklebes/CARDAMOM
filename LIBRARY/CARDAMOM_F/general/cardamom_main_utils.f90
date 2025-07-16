@@ -5,14 +5,14 @@ module cardamom_main_utils
 contains
 
    subroutine initialize_stats(MCOUT, npars)
-      use MHMCMC, only: MCMC_OUTPUT
+      use cardamom_MHMCMC, only: MCMC_OUTPUT
       integer, intent(in):: npars
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       allocate (MCOUT%covariance(npars, npars), MCOUT%parvar(npars), MCOUT%meanpar(npars))
       call reset_stats(MCOUT, npars)
    end subroutine
    subroutine reset_stats(MCOUT, npars)
-      use MHMCMC, only: MCMC_OUTPUT
+      use cardamom_MHMCMC, only: MCMC_OUTPUT
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       integer, intent(in):: npars
       integer:: n

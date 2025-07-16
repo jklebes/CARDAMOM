@@ -41,7 +41,7 @@
 
 program cardamom_framework
    use math_functions, only: rnstrt, idum  ! TODO redo random seeds
-   use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
+   use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
    use model_shared, only: PI
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
@@ -433,7 +433,7 @@ contains
     !! conditions which are consistent with EDCs
     !! pre-loop, Run MCMC sampler with modified likelihood fct
       use model_shared, only: PI
-      use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
+      use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
       !use model_likelihood_module, only: model_likelihood, &
       !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
       use model_likelihood_wrapper  ! TODO next refactoring step

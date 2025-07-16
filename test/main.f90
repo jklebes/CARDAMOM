@@ -7,6 +7,7 @@ program tester
   use test_math, only : collect_mathtests
   use test_common, only : collect_commontests
   use test_MCMC, only : collect_MCMCtests
+  use test_cardamom_MCMC, only : collect_cardamom_MCMCtests
   use test_DEMCz, only : collect_DEMCztests
   use test_model, only : collect_modeltests
   use test_wrappers_for_R, only : collect_test_wrappers_for_R
@@ -29,6 +30,7 @@ program tester
     new_testsuite("random", collect_randomtests), &
     new_testsuite("math", collect_mathtests), &
     new_testsuite("common", collect_commontests), &
+    new_testsuite("cardamom_MCMC", collect_cardamom_MCMCtests), &
     new_testsuite("MCMC", collect_MCMCtests), &
     new_testsuite("DEMCz", collect_DEMCztests), &
     new_testsuite("model", collect_modeltests), &

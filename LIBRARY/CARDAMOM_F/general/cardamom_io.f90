@@ -1045,7 +1045,7 @@ contains
    !------------------------------------------------------------------
    !
    subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
-      use MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
+      use cardamom_MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
     !! loads required options about the MHMCMC either form hardcoded sources or
     !! from variables which were read from the command line
 
@@ -1109,7 +1109,7 @@ contains
     !! subroutine is responsible for loading previous parameter and step size
     !! information into the current
     !! modifies: arg MCOUT%pars. To be used as starting point for next run.
-      use MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
+      use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
       use model_shared, only: PI
       use cardamom_structures, only: DATAin  ! read-only
       use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor

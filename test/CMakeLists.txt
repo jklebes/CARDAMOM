@@ -12,6 +12,7 @@ set(
   "math"
   "common"
   "MCMC"
+  "cardamom-MCMC"
   "DEMCz"
   "model"
   "wrappers_for_R"

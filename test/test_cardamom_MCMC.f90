@@ -1,19 +1,19 @@
-module test_MCMC
+module test_cardamom_MCMC
   use testdrive, only : new_unittest, unittest_type, error_type, check
   use test_functions
   use test_math, only: approx
   use random_uniform
-  use MHMCMC
+  use cardamom_MHMCMC
   use OMP_LIB
   implicit none
   private
 
-  public:: collect_MCMCtests
+  public:: collect_cardamom_MCMCtests
 
 contains
 
 !> Collect all exported unit tests
-subroutine collect_MCMCtests(testsuite)
+subroutine collect_cardamom_MCMCtests(testsuite)
   implicit none
   !> Collection of tests
   type(unittest_type), allocatable, intent(out):: testsuite(:)
@@ -35,7 +35,7 @@ subroutine collect_MCMCtests(testsuite)
     new_unittest("mcmc_two_phase_parallel", test_mcmc_two_phase_parallel) &
     ]
 
-end subroutine collect_MCMCtests
+end subroutine collect_cardamom_MCMCtests
 
 
 subroutine test_step_pars(error)
@@ -124,7 +124,7 @@ subroutine test_covariance_matrix(error)
 end subroutine
 
 subroutine test_mcmc_output_type(error)
-  use MHMCMC, only: MCMC_OUTPUT
+  use cardamom_MHMCMC, only: MCMC_OUTPUT
   implicit none
   type(error_type), allocatable, intent(out):: error
   ! test declare an object of type MCMC_OUTPUT
@@ -472,4 +472,4 @@ subroutine test_mcmc_two_phase_parallel(error)
   end do
 end subroutine 
 
-end module test_MCMC
+end module test_cardamom_MCMC

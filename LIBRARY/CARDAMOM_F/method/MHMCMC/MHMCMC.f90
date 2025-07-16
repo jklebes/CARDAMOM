@@ -531,7 +531,7 @@ contains
 	    endif
          else
             ! write to history  
-            PARSALL(1:npars, ITERLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
+            PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
          end if  ! accept or reject proposed pars
 
          ! count iteration
@@ -570,10 +570,10 @@ contains
             if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not. MCOUT%use_multivariate) then
 
                ! adapt the covariance matrix for multivariate proposal
-               ! PARSALL - all states in this phase, i.e. since last (mod(ITER, MCO%nadapt) == 0), 
+               ! PARSALL-all states in this phase, i.e. since last (mod(ITER, MCO%nadapt) == 0), 
                ! to be added to running statistacs calculations
 	       ! there should be MCO%nadapt new rows in this matrix
-               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, MCO%nadapt, N_before_mv_target)
+               call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, MCO%nadapt, ITER, N_before_mv_target)
             end if 
 
             ! resets the local acceptance counter
@@ -629,8 +629,8 @@ contains
    !
    !------------------------------------------------------------------
    !
-   subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, nadapt, N_before_mv_target)
-                               cholesky_factor, covariance_matrix, &
+   subroutine update_statistics(PARSALL, npars, MCOUT, use_multivariate, nadapt, ITER, N_before_mv_target)
+     use samplers_math, only: cholesky_factor, covariance_matrix, &
                                increment_covariance_matrix
 !! Calculate/update running mean, variance, and covariance with the nadapt new states in PARSALL.
       implicit none
@@ -640,7 +640,13 @@ contains
       logical, intent(inout):: use_multivariate
       ! declare inputs variables
       integer, intent(in):: npars
+      integer, intent(in):: ITER
+      !! total length of history of simulation (including the nadapt recent steps)
       integer, intent(in):: nadapt
+      !! number of recent states to be added
+      integer:: cur
+      !! number of states that went into running statistics previously, 
+      !! i.e. ITER-nadapt
       double precision, intent(in):: PARSALL(npars, nadapt)  
 	!! collection of recent normalised parameter vectors
       ! declare local variables
@@ -661,11 +667,12 @@ contains
 	! update statistics : increment_covariance matrix adjusts running mean and covariance
 ! with th nadapt new states in PARSALL   
 ! caution : it changes not just its last argument 'covariance', but also its second arguemtn 'mean' and its 
-! 5th arguement 'cur' .      
+! 4th arguement 'cur' .      
 	! here we have length of history (weighting of history in running avg and cov calculation)
          ! = ITER-nadapt instead of being artificially capped at 100
+         cur = ITER-nadapt
          call increment_covariance_matrix(PARSALL, MCOUT%meanpar, npars &
-                                          , ITER-nadapt, nadapt, MCOUT%covariance)
+                                          , cur, nadapt, MCOUT%covariance)
          ! Calculate the cholesky factor as this includes a determination of
          ! whether the covariance matrix is positive definite.
          cholesky = MCOUT%covariance
@@ -698,7 +705,7 @@ contains
 
          ! we have not yet created a covariance matrix based on accepted
          ! parameters. Assuming we have some then create one...
-         if (ACCLOC > 2) then
+         if (nadapt > 2) then
 
             ! estimate covariance matrix
             call covariance_matrix(PARSALL(1:npars, 1:nadapt), MCOUT%meanpar, &
