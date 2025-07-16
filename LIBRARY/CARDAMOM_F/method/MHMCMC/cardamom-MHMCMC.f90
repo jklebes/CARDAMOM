@@ -94,19 +94,38 @@ module MHMCMC
 !> , can also be passed to next run to continue from the last state
 !> Note output is mainly via file writing
    type MCMC_OUTPUT
-      double precision:: bestll, ll
-      double precision, allocatable, dimension(:):: bestpars, pars
+      double precision:: bestll
+      !! best (maximum) loglikelihood value found so far
+      double precision:: ll 
+      !! latest loglikelihood value
+      double precision, allocatable, dimension(:):: bestpars
+      !! best (loglikelihood-maximizing) parameter values found so far
+      double precision, allocatable, dimension(:):: pars
+      !! latest parameter values
       double precision:: acceptance_rate
+      !! acceptance rate
       logical:: complete
+      !! Did the main loop finish?
       integer:: nos_iterations
+      !! number main loop interations run so far
 !stats collection:
       double precision:: Nparvar, Nparvar_local
-      double precision, allocatable, dimension(:):: parvar, meanpar
+      !! Number of states in history that have gone into running 
+      !! mean, variance, and covariance calculation.  
+      double precision, allocatable, dimension(:):: parvar
+      !! variance 
+      double precision, allocatable, dimension(:):: meanpar
+      !! mean of parameters 
       double precision, allocatable, dimension(:, :):: covariance
+      !! covariance matrix measured during sampling
       logical:: cov = .false. 
       !! Does the covariance matrix exist yet?
       logical:: use_multivariate
+      !! Are we in the later simulation phase where step size depend 
+      !! on covariance matrix ?  i.e. after enough data has been observed
+      !! that a useful covariance matrix exists
       logical:: multivariate_proposal
+      !! TODO general setting to ever use multivariate or not?
    end type MCMC_OUTPUT
 
 contains
@@ -114,21 +133,18 @@ contains
    !--------------------------------------------------------------------
    !
    subroutine run_parallel_mcmc(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
-      !! Run multiple parallel MCMC simulations (adaptive MCMC algorithm with CARDAMOM-specific quirks)
-      implicit none
-
+      !- Run multiple parallel MCMC simulations (adaptive MCMC algorithm with CARDAMOM-specific quirks)
+      !
       !/* ***********INPUTS************
       ! *
-      ! * MODEL_LIKELYHOOD: A function wholly responsible for
+      ! * model_likelihood : A function wholly responsible for
       ! * (a) running the model given the DATA and parameters, 
       ! * (b) comparing it to observations, and
       ! * (c) returning  the (log) likelihood.
-      ! * The function will be run as MODEL_LIKELIHOOD(PARS)
-      ! * and returns a single log(!)likelihood value
+      ! * The subroutine will be run as MODEL_LIKELIHOOD(PARS, npars, loglikelihood, chainid)
+      ! * and outputs a single loglikelihood value
       ! *
-      ! * PARINFO: This structure contains information on
-      ! * (b) initpars:        parameter starting values (optional/recommended).
-      ! * (c) npars:           number of pars
+      ! * PI: This structure contains information on parameter number and bounds
       ! *
       ! * MCO: This structure contains option values for the MCMC run.
       ! * These will be set to default values if empty, restart, nchains . Options include:
@@ -145,6 +161,11 @@ contains
       ! *
       ! * */
       ! Write to MCMCOUT
+      !
+      !-
+
+      implicit none
+
 
       !! input and output structs
       ! read-only, shared beteen chains:
@@ -223,9 +244,6 @@ contains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
-         write (*, *) "parallel with restart", restart_
-         write (*, *) "MCOUT_list(i)", MCOUT_list(i)%pars
-         write (*, *) "nos_iterations done", MCOut_list(i)%nos_iterations
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
       end do
       !$OMP end parallel do
@@ -234,7 +252,6 @@ contains
 
    subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart, chainid)
    !! Main function for a single adaptive MCMC simulation
-   !! Global settings of the sampler taken from MCO
       use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
       use samplers_shared, only: init_pars_random, bounds_check, is_infinity, metropolis_choice
       use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
@@ -382,8 +399,6 @@ contains
 
       if (restart_) then
          ! keep MCOUT
-         write (*, *) "keeping MCOUT ", MCOUT%pars
-         write (*, *) MCOUT%nos_iterations
       else
          ! init MCOUT
          MCOUT%complete = .false.
@@ -500,7 +515,7 @@ contains
             if (loglikelihood_previous >= llmax) then
                BESTPARS = PARS_previous
                llmax = loglikelihood_previous
-            end if
+            endif
             !else
             ! here we would write the same state to history again, in a standard MCMC
             ! Cardamom quirk :  not done in CARDAMOM-MHMCMC version to match original
