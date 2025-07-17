@@ -359,7 +359,7 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, DIAG
 
-    double precision :: torfol ! yearly leaf loss fraction
+    double precision :: torfol, tmp ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1
@@ -383,70 +383,66 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
-!    ! wSWP at which full turnover (p15) occurs must be more negative than its beginnning (p16)
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(16)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-!    end if
-
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     endif
 
     ! Weighted soil water potential (MPa) at which suppression of wood growth begins 
     ! is smaller (i.e. more negative) than full suppression
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
     ! Weighted soil water potential (MPa) at which suppression of foliar growth
     ! begins is smaller (i.e. more negative) than full suppression
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) < pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif
     ! Weighted soil water potential (MPa) at which full suppression of foliar growth 
     ! is achieved must be greater than minlwp, i.e. growth should be more limited than photosynthesis
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) > pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
     ! Wood growth should be more sensitive than foliage growth.
     ! We impose this by assuming that the min/max parameters for wood 
     ! must be less negative than their corresponding one for foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) > pars(40)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
     ! Wood growth should be more sensitive than foliage growth.
     ! We impose this by assuming that the min/max parameters for wood 
     ! must be less negative than their corresponding one for foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(41) > pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
-
-!    ! Temperature threshold values for wood should be greater than their corresponding fine root value
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(36) > pars(37)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-!    endif
 
     ! Initial leaf area index should not be larger than ~10 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif    
 
     ! Temperature at which cold foliar loss is 50 % (p12) should not be larger than the mean air temperature.
     ! + 1 degree for safety
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(12) > meantemp + 1d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
     ! Temperature at which heat foliar loss is 50 % (p13) should not be lower than the mean air temperature.
     ! + 1 degree for safety
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(13) < meantemp - 1d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif
-!    ! Full turnover due to wSWP (p15) should be more negative than minimum LWP for photosynthesis (p43)
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(15) > pars(43)) then
-!        EDC1 = 0d0 ; EDCD%PASSFAIL(16) = 0
-!    endif
+    ! High temperature constraint should now have a significant value at mean temperature
+    tmp = 1d0 - (1d0+exp(pars(14)*(meantemp-pars(13))))**(-1d0)
+    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.1d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
+    endif
+    ! Low temperature constraint should now have a significant value at mean temperature
+    tmp = (1d0+exp(pars(14)*(meantemp-pars(12))))**(-1d0) 
+    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.1d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
+    endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil

@@ -905,8 +905,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            snow_melt = snow_melt / seconds_per_step
        elseif (maxt < 0d0) then
            snow_melt = 0d0
-           ! Add rainfall to the snowpack and clear rainfall variable
-           snow_storage = snow_storage + (snowfall*seconds_per_step)
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
            snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
