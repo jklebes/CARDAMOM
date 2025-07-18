@@ -5,7 +5,7 @@ module test_model
   use test_math, only: approx
   use random_uniform  
   use CARBON_MODEL_MOD, only: initialize_carbon_model, destroy_carbon_model
-  use MHMCMC
+  use cardamom_MHMCMC
   use model_shared, only: PI
   use cardamom_io, only: initialize
   use cardamom_main_utils

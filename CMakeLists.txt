@@ -7,14 +7,20 @@ enable_language(Fortran)
 
 include(CTest)
 
-#add_compile_options(-ffree-line-length-0 -O0 -g -pg -Wall)
-add_compile_options(-ffree-line-length-0  -O3)
+set (
+  CMAKE_Fortran_FLAGS
+  "${CMAKE_Fortran_FLAGS} -ffree-line-length-0 -O2 -g -pg -Wall -no-pie" 
+  #"${CMAKE_Fortran_FLAGS} -ffree-line-length-0 -O3" 
+)
+# I put a lot of extra flags here to try to make gprof work, but it turned out to be
+# related to shared libraries - gprof can't do shared libraries
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg -g")
 
 ## Code coverage analysis
 #add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
 #add_link_options(-lgcov --coverage) 
 
-option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF) #different needs for grpof and R
 
 add_subdirectory(LIBRARY/CARDAMOM_F)
 

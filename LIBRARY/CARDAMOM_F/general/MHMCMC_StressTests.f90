@@ -255,8 +255,8 @@ contains
 
       ! local variables
       integer:: i
-      type(MCMC_OUTPUT):: MCOUT
-      type(MCMC_OPTIONS):: MCO
+      type(MCMC_OUTPUT):: MCOUT  ! TODO no effect
+      type(MCMC_OPTIONS):: MCO  ! TODO no effect
 
       ! Set internal parameters in the absence of an input file
       ! allocate the default run information

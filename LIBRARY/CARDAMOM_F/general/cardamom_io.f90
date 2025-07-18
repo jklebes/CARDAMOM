@@ -1054,7 +1054,7 @@ contains
       ! declare input variables
       character(350), intent(in):: outfile
       integer, intent(in):: solutions_wanted, freq_print, freq_write
-      type(MCMC_OPTIONS), intent(out):: MCO
+      class(MCMC_OPTIONS), intent(out):: MCO
       type(MCMC_OUTPUT), intent(inout):: MCOUT
 
       ! defining hardcoded MCMC options
@@ -1117,7 +1117,7 @@ contains
       implicit none
 
       ! local variables
-      type(MCMC_OPTIONS), intent(inout):: MCO
+      class(MCMC_OPTIONS), intent(inout):: MCO
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       integer:: a, b, c, i, j, num_lines, status
       double precision:: dummy

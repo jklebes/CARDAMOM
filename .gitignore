@@ -28,6 +28,7 @@ examine/
 test/data/
 doc/
 **/*_editted
+gprof*
 
 ## potential copyright issue
 CARDAMOM_F/misc/brent_zero/cardamom_zbrent.*

@@ -1,6 +1,6 @@
 Module test_DEMCz
   use testdrive, only : new_unittest, unittest_type, error_type, check
-  use DEMCz_module
+  use DEMCz
   use test_functions
   implicit none
 
@@ -38,7 +38,7 @@ end subroutine
 
 ! TODO move to common
 subroutine test_random_int(error)
-  use DEMCz_module, only: random_int
+  use DEMCz, only: random_int
   implicit none
   type(error_type), allocatable, intent(out):: error
   integer:: r
@@ -99,14 +99,14 @@ subroutine test_metropolis_stochastic(error)
   end subroutine test_metropolis_stochastic
 
   subroutine test_DEMCz_runs(error)
-    use DEMCz_module, only: DEMCz, PARINFO  
+    use DEMCz, only: run_DEMCz, PARINFO  
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
 
     type(DEMCzOPT):: options
      !! new DEMCZ options struct with default values
-    type(MCMC_OUTPUT):: DEMCzOUT 
+    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT 
      !! new (blank) struct to write results to
     
     ! PI: use the PI_xy struct from test_functions quadratic potential
@@ -114,28 +114,30 @@ subroutine test_metropolis_stochastic(error)
 
     options%nout = 10
 
-    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+    call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
     
   end subroutine test_DEMCz_runs
 
   subroutine test_DEMCz_runs_enforce_omp(error)
-    use DEMCz_module, only: DEMCz, PARINFO  
+    use DEMCz, only: run_DEMCz, PARINFO  
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
 
     type(DEMCzOPT):: options
      !! new DEMCZ options struct with default values
-    type(MCMC_OUTPUT):: DEMCzOUT 
+    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT 
      !! new (blank) struct to write results to
+     integer:: nchains
+     nchains = 4
     
     ! PI: use the PI_xy struct from test_functions quadratic potential
     call init_pi()
 
-    call omp_set_num_threads(4)
+    call omp_set_num_threads(nchains)
     options%nout = 10
 
-    call DEMCz(ll_normal, PI_xy, options, DEMCzOUT, nchains_in = 4)
+    call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
     
   end subroutine test_DEMCz_runs_enforce_omp
 

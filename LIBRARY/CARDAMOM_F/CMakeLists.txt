@@ -58,14 +58,14 @@ DALEC.D1.F2.001
 #DALEC.M2.016
 )
 
-add_library(cardamom-samplers-lib SHARED
+add_library(cardamom-samplers-lib STATIC #TODO shared/static on build type
               method/math.f90
               method/random_uniform.f90
               method/samplers_io/samplers_io.f90
               method/samplers_shared.f90
-              method/DEMCz.f90
               method/MHMCMC/cardamom-MHMCMC.f90
               method/MHMCMC/MHMCMC.f90
+              method/DEMCz.f90
 )
 
 set_target_properties(
@@ -99,7 +99,7 @@ if(TEST_COMPILE_ALL)
     list(APPEND FILES ${FILES2})
     list(APPEND FILES "model/${n}/src/${n}.f90")
     list(APPEND FILES "model/${n}/likelihood/MODEL_LIKELIHOOD.f90")
-    add_library("cardamom-lib-${n}" SHARED ${FILES})
+    add_library("cardamom-lib-${n}" STATIC ${FILES}) #TODO switch for debug / R
     add_dependencies("cardamom-lib-${n}" cardamom-samplers-lib) 
     target_link_libraries("cardamom-lib-${n}" PUBLIC cardamom-samplers-lib)
     add_executable("cardamom-${n}" general/cardamom_main.f90)
@@ -108,10 +108,13 @@ if(TEST_COMPILE_ALL)
 endif()
 
 # now with the model we chose to run with
-add_library(cardamom-lib SHARED ${FILES1} ${MODELPARS} ${FILES2} ${MODELLIKELIHOODFILE} ${MODELFILE})
+# TODO static/shared on debug 
+add_library(cardamom-lib STATIC ${FILES1} ${MODELPARS} ${FILES2} ${MODELLIKELIHOODFILE} ${MODELFILE})
 add_dependencies(cardamom-lib cardamom-samplers-lib) 
 target_link_libraries(cardamom-lib PUBLIC cardamom-samplers-lib)
 add_executable(cardamom general/cardamom_main.f90)
 target_link_libraries(cardamom PUBLIC cardamom-lib)
+add_executable(cardamom-diffev general/cardamom_main_diffev.f90)
+target_link_libraries(cardamom-diffev PUBLIC cardamom-lib)
 
 

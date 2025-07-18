@@ -50,12 +50,13 @@ module cardamom_MHMCMC
 
 !> A collection of input options to the MCMC sampler run
 !> contains default values
-   type MCMC_OPTIONS
+   type MCMC_options
       integer:: MAXITER = 10000  ! overall steps, if convergence not reached
       integer:: nadapt = 1000  ! steps per "local" sampling period, between adaptation steps
       integer:: Nchains = 1  ! consider setting OMP env to something compatible
       integer:: nwrite = 1000
       integer:: nprint = 1000
+      integer:: nout
       real:: P_target  
       !! termination criterion-a loglikelihood to stop at (optional)
 !> file names
@@ -63,6 +64,14 @@ module cardamom_MHMCMC
       character(350):: stepfile = "stepout.txt"
       character(350) ::  covfile = "covout.txt"
       character(350):: covifile = "covinfoout.txt"
+      logical:: restart
+      logical:: append
+      real:: fadapt  ! TODO fraction adapt-move to outside
+      logical:: randparini
+      logical:: returnpars  
+      !! a variable that is never used and has no effect, needs deleting in all model likelihood files
+      logical:: fixedpars  
+      !! never used
 ! Adaptive
 !> setting for adaptive AP-MCMC step size
       double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
@@ -78,16 +87,7 @@ module cardamom_MHMCMC
 !! step
 !> Is current proposal multivariate or not?
       logical:: multivariate_proposal = .false.
-      real:: fadapt  ! TODO fraction adapt-move to outside
-      integer:: nout
-      logical:: append
       logical:: use_multivariate
-      logical:: restart
-      logical:: randparini
-      logical:: returnpars  
-      !! a variable that is never used and has no effect, needs deleting in all model likelihood files
-      logical:: fixedpars  
-      !! never used
    end type MCMC_OPTIONS
 
 !> Collection of info for output of the sampling run
@@ -244,6 +244,9 @@ contains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
+         if (restart_) then 
+            write(*,*) MCOUT_list(i)%pars
+         endif
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
       end do
       !$OMP end parallel do

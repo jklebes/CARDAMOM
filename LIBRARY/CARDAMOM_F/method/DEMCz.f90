@@ -1,12 +1,8 @@
-module DEMCz_module
+module DEMCz
 
-   !!!!!!!!!!!
-   ! MC differential evolution z algorithm
-   ! jklebes 2024
-   ! Implementing ter Braak & Vrugt 2008
-   !
+   !-
    ! On normalized parameters:
-   ! All calculation, statistics, and writing is done on "raw" values,
+   ! All calculation, statistics, and writing is done on "raw" values, 
    ! NOT parameters normalized to (0, 1).
    !
    ! How to use:
@@ -17,9 +13,12 @@ module DEMCz_module
    !  Create a double precision function loglikelihood taking a vector of npars (same as in PARINFO) parameters and
    !                 returning rel:: loglikelihood.
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
-   !  Call subroutine DEMCz(fct, parinfo, demczopt, mcmcout)
+   !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
    !!!!
-   use samplers_shared, only: PARINFO
+   use samplers_shared, only: PARINFO, bounds_check
+   use samplers_math, only: log_nor2par
+   use random_uniform, only: UNIF_VECTOR
+   use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_options  
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -29,43 +28,13 @@ module DEMCz_module
 
    !> A collection of input options to the DEMCz sampler run
    !> contains default values
-   type DEMCzOPT
-      integer:: nout = 1000  ! overall steps, if convergence not reached
-      integer:: nadapt = 100  ! steps per independent sampling period
-      integer:: nwrite = 1000
-      integer:: nprint = 1000
-      real:: P_target  ! convergence criterion
-      ! file names
-      character(350):: outfile = "parout.txt"
-      character(350):: stepfile = "stepout.txt"
-      character(350) ::  covfile = "covout.txt"
-      character(350):: covifile = "covinfoout.txt"
-
+   type, extends(MCMC_options):: DEMCZOPT
 ! DEMcz algorithm parameters
-      double precision:: differential_weight = 0.8  ! differential weight gamma, [0, 2]
-      double precision:: crossover_probability = 0.9  ! crossover probability CR, [0, 1]
-
-      logical:: restart
-
+      double precision:: differential_weight = 0.8  
+!! differential weight gamma, [0, 2]
+      double precision:: crossover_probability = 0.9  
+!! crossover probability CR, [0, 1]
    end type DEMCzOPT
-
-   !> Collection of info for output of the sampling run
-!> Note output is mainly via file writing
-! TODO duplicated, move to samplers_shared
-   type MCMC_OUTPUT
-      double precision:: bestll, ll
-      double precision, allocatable, dimension(:):: bestpars, pars
-      double precision:: acceptance_rate
-      logical:: complete
-      integer:: nos_iterations
-!stats collection:
-      double precision:: Nparvar, Nparvar_local
-      double precision, allocatable, dimension(:):: parvar, meanpar
-      double precision, allocatable, dimension(:, :):: covariance
-      logical:: cov = .false. ! Does the covariance matrix exist yet?
-      logical:: use_multivariate
-      logical:: multivariate_proposal
-   end type MCMC_OUTPUT
 
 contains
 
@@ -78,37 +47,27 @@ contains
    !> IN: OPT type(DEMCz) collection of sampling options
    !> OUT: MCOUT type(DEMCzOUT) collection of results
    !> Also writes history to file/output stream and progress to console.
-   subroutine DEMCz(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart_in, nchains_in)
+   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
       implicit none
 
       !! input and output structs
       type(PARINFO), intent(in):: PI
-      type(DEMCzOPT), intent(in):: MCO
-      type(MCMC_OUTPUT), intent(out):: MCOUT
-      logical, optional, intent(in):: restart_in  ! is it a restart ? (i.e. start from data in MCOUT instead of initializing new)
-      logical:: restart
-      integer, optional:: nchains_in
-      integer:: nchains
+      !!PARINFO struct from model giving number, bounds of parameters
+      type(DEMCZOPT), intent(inout):: MCO
+      !! struct of options for the run, shared between all threads
+      type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
+      !! Array of MCMC_OUTPUT structs for each thread's results
 
-      ! the function to minimize  ! TODO change name to loglikelihood everywehere
-      interface
-         subroutine model_likelihood(param_vector, n, ML, id)
-            implicit none
-            double precision, dimension(n), intent(inout):: param_vector
-            integer, intent(in):: n
-            double precision, intent(out):: ML
-            integer, intent(in), optional:: id
-         end subroutine model_likelihood
-      end interface
-
-      ! optionally give a second function with same shape as model_likelihood,
-      ! for writing to file;
-      procedure(model_likelihood), optional:: model_likelihood_write_in
-      ! Going forwards this pointer is the alternateive likelihood function for writing to file
-      procedure(model_likelihood), pointer:: model_likelihood_write
+      logical, optional, intent(in):: restart
+      !! is it a restart ? (i.e. start from data in MCOUT instead of initializing new), optional, default .false.
+      logical:: restart_
+      !! internal restart flag, equal to optional input flag 'restart' or .false.
+      integer, optional:: nchains
+      !! number chains optional, default 1
 
       !> Matrix X, (npars x nchains), holding current state of the n chains
       double precision, allocatable, dimension(:, :):: PARS_current
+      double precision, dimension(PI%npars ):: norPARS
       ! and their current loglikelihood values
       double precision, allocatable, dimension(:):: l0
       ! and their best likelihood values and best pars so far
@@ -119,26 +78,50 @@ contains
       double precision, allocatable, dimension(:, :):: PARS_history
 
       double precision:: differential_weight
+      type(UNIF_VECTOR), allocatable, dimension(:):: random_uniform_vectors
 
-      integer:: npars, MAXITER, Ksteps
+      integer:: npars, MAXITER
+      integer:: P_target
+      integer:: seed
       integer:: i, j, k, len_history  ! counters
 
+      !> the function to maximize.
+      !> Completely agnostic, samples any functions vector -> double
+      !> Typically a loglikelihood evaluation of a model against observation data
+      !> given the inputted parameter values.
+      interface
+         subroutine model_likelihood(param_vector, n, ML, id)
+            implicit none
+            double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
+            integer, intent(in):: n
+            double precision, intent(out):: ML
+            integer, intent(in), optional:: id
+         end subroutine model_likelihood
+      end interface
+
+      !> optionally  give a second function with same shape as model_likelihood, 
+      !> for writing to file.  model_likelihood_write_in is the input arg, which may not be present.
+      procedure(model_likelihood), optional:: model_likelihood_write_in
+      !> A second function with same shape as model_likelihood, 
+      !> for writing to file.  Internal variable equal to model_likelihood_write_in if present
+      !> or (default) same as main model_likelihood function
+      procedure(model_likelihood), pointer:: model_likelihood_write
+
       ! Argument processing  !!!!!!!!!!!!!!!
-      if (.not. present(restart_in)) then
-         restart = .false.
+
+      if (.not. present(restart)) then
+         restart_ = .false.
       else
-         restart = restart_in
+         restart_ = restart
       end if
 
-      if (.not. present(nchains_in)) then
-         nchains = 3  ! min for this algorithm
-         ! or try to infer from OMP_THREADS or columns in MCOUT_PREV ...
+      if (.not. present(nchains)) then
+         MCO%nchains = 3  ! at least 3 are mandatory for this method to work
       else
-         nchains = nchains_in
+      MCO%nchains = nchains
       end if
 
-      ! Set functions ...
-
+      ! process function arguments
       if (present(model_likelihood_write_in)) then
          ! if second function given use it for writing to file
          model_likelihood_write => model_likelihood_write_in
@@ -147,85 +130,100 @@ contains
          model_likelihood_write => model_likelihood
       end if
 
-      ! wrap the model loglikelihood function, which takes raw parameter values, in a new function
-      ! which takes normalized values
 
       ! Extract from types
       differential_weight = MCO%differential_weight
 
       npars = PI%npars
       MAXITER = MCO%nout
-      Ksteps = MCO%nadapt
+      P_target = MCO%P_target
+
+      ! prepare outputs
+      if (.not.allocated(MCOUT_list)) allocate(MCOUT_list(mco%nchains))
 
       ! Allocate arrays
 
-      allocate (PARS_current(npars, Nchains))
+      allocate (PARS_current(npars, mco%Nchains))
       ! but we need these to persist between parallel regions
-      allocate (l0(nchains))
-      allocate (l_best(nchains))
-      allocate (PARS_best(npars, nchains))
-      allocate (PARS_history(npars, MAXITER*nchains))
+      allocate (l0(mco%nchains))
+      allocate (l_best(mco%nchains))
+      allocate (PARS_best(npars, mco%nchains))
+      allocate (PARS_history(npars, MAXITER*mco%nchains))
 
+      allocate (random_uniform_vectors(mco%nchains))
       ! where we are in filling in the history matrix so far
       len_history = 0
 
       !!! Initial state
 
-!$OMP PARALLEL DO
-      do j = 1, nchains
+!$OMP PARALLEL DO private(norpars)
+      do j = 1, mco%nchains
          ! choose initial values
          ! TODO better function for initial state : latin square
-         call init_random(npars, PARS_current(:, j))
+         if (.not. restart_) then 
+         call init_random(npars, norpars)
+         pars_current(:,j) = log_nor2par(npars, norpars, PI%parmin, PI%parmax, pi%paradj)
+         write(*,*) "randomized", pars_current(:,j)
+
+      else
+         pars_current(:,j) =mcout_list(j)%pars
+         write(*,*) "did not randomize", pars_current(:,j)
+      end if
          ! also set the loglikelihoof of the state generated
-         call model_likelihood(PARS_current(:, j), npars, l0(j))
+         call model_likelihood(PARS_current(:, j), npars, l0(j), j)
 
          ! potential burnin steps
          ! ... TODO
 
          ! write first values to history matrix
          PARS_history(:, j) = PARS_current(:, j)
+      ! Initialize pregenerated random numbers, if using-local to this chain
+      seed = irand()  ! TODO record later  ! TODO always the same ?
+      write(*,*) "seed", seed
+        call random_uniform_vectors(j)%initialize_random(seed)
       end do
 !$OMP END PARALLEL DO
-      write (*, *) "initial", pars_current
-      write (*, *) l0
 
-      len_history = len_history + nchains
+      len_history = len_history+mco%nchains
 
       !!! Main "time" loop
 
-      do i = 2, MAXITER
+      do i = 2, MAXITER/mco%nadapt+2
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO
-         do j = 1, nchains
-            do k = 1, Ksteps
+!$OMP PARALLEL DO 
+         do j = 1, mco%nchains
+            do k = 1, mco%nadapt
                call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
-                               npars, PARS_history, len_history, differential_weight)
+                               PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
+         
+              if (mod(i*mco%nadapt+k, MCO%nprint) == 0) then
+                write(*,*) "thread", j
+                write(*,*) "loglikelihood", l0(j)
+                write(*,*) "pars", pars_current(:,j)
+              endif 
             end do
-            ! write the chain's state after nsteps to Z
-            PARS_history(:, len_history + j) = PARS_current(:, j)
+            ! write the chain's state after nadapt steps to Z
+            PARS_history(:, len_history+j) = PARS_current(:, j)
          end do
-!$OMP END PARALLEL DO !!Barrier implicit ?
+!$OMP END PARALLEL DO !!Barrier implicit
 
          ! increment length M (filled so far) of Z
-         len_history = len_history + nchains
+         len_history = len_history+mco%nchains
 
          ! check convergence
 
          ! Reorder for best chains ?  Then write to Z later.
+         
       end do
 
       !!! Write out
-      write (*, *) "final", pars_current
       write (*, *) l0
 
    end subroutine
 
    !> Initialize the chain's state with random values from
    !> parameter ranges.
-   !> This is not the best initialization; all later sampling is
-   !> bounded by min/max of the chains' random initial
-   !> values, plus noise.
    !> Works with normalized values : returns a number between 0 and 1
    !> For each parameter
    subroutine init_random(npars, norpars)
@@ -241,14 +239,17 @@ contains
 
    !> Evolve the state of one chain for 1 step
    subroutine step_chain(X_i, l0, model_likelihood, &
-                         npars, PARS_history, len_history, differential_weight)
+                         PI, PARS_history, len_history, differential_weight, &
+                         thread_id, random_uniform_vector)
       use samplers_shared, only: metropolis_choice
-      integer, intent(in):: npars  ! number of pars
+      type(PARINFO), intent(in):: PI
+      integer, intent(in):: thread_id  ! thread_id-to pass to model evaluation in cases where it matters
       double precision, dimension(:), intent(inout):: X_i  ! current state of the chain; normalized values of all pars
-      double precision, dimension(npars):: previous_vector, proposed_vector  ! internal: save previous state, proposed new state
+      double precision, dimension(PI%npars):: previous_vector, proposed_vector  ! internal: save previous state, proposed new state
       double precision, dimension(:, :), intent(in):: PARS_history  ! the matrix Z so far, to read 2 rows from
       integer, intent(in):: len_history  ! length to which Z is filled
       double precision, intent(inout):: l0  ! likelihood of previous accepted params
+      type(UNIF_VECTOR), intent(inout):: random_uniform_vector
       double precision             :: l  ! likelihood of proposed values
 
       integer:: R1, R2  ! indices of 2 random rows
@@ -274,22 +275,38 @@ contains
          R2 = random_int(len_history)
       end do
       previous_vector = X_i
-      call step(proposed_vector, previous_vector, PARS_history(:, R1), PARS_history(:, R2), differential_weight)
-      call model_likelihood(proposed_vector, npars, l)
+      call step(proposed_vector, previous_vector, PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
+         & random_uniform_vector, PI%npars)
+      if (bounds_check(PI, proposed_vector)) then
+      call model_likelihood(proposed_vector, PI%npars, l, thread_id)
+      !write(*,*) "loglikelihood proposed", l
+      !write(*,*) "loglikelihood previous", l0
+      !write(*,*) "pars proposed", proposed_vector
+      !write(*,*) "pars previous", previous_vector
+      !write(*,*) "accept", metropolis_choice(l, l0)
       if (metropolis_choice(l, l0)) then
          X_i = proposed_vector
          l0 = l
       end if
+      endif
    end subroutine
 
    ! Generate new proposed state from currect state and history
    ! ter Braak & Vrugt eq 2
-   subroutine step(vout, v1, v2, v3, differential_weight)
+   subroutine step(vout, v1, v2, v3, differential_weight, random_uniform_vector, npars)
+      use samplers_math, only: random_normal
+      integer, intent(in):: npars
       double precision, dimension(:), intent(out):: vout
       double precision, dimension(:), intent(in):: v1, v2, v3
+      type(UNIF_VECTOR), intent(inout):: random_uniform_vector
       double precision:: differential_weight
+      double precision:: rn(npars)
+      integer:: p
       ! get differential_weight, corssover_probability from module data
-      vout = v1 + differential_weight*(v2 - v3)  ! TODO+noise e
+      do p = 1, npars
+         call random_normal(random_uniform_vector, rn(p))
+      end do
+      vout = v1+differential_weight*(v2-v3)  + .0001*rn*
    end subroutine
 
    integer function random_int(N)
@@ -299,4 +316,4 @@ contains
       random_int = floor(N*r) + 1
    end function
 
-end module DEMCz_module
+end module DEMCz

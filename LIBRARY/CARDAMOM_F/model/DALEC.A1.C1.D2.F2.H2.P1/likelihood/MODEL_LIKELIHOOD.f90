@@ -1054,7 +1054,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
-    integer, intent(in), optional:: thread_id
+    integer, intent(in), optional:: thread_id  ! TODO index 0, error if not given
     ! declare local variables
     double precision:: EDC1, EDC2
   type (EDCDIAGNOSTICS):: EDCD
