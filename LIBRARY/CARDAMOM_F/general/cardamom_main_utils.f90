@@ -105,13 +105,14 @@ contains
          ! set up edc log likelihood for MHMCMC initial run
          PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
          success_count = 0
-         do while (success_count < nchains)!(PEDC < 0d0)
 
             write (*, *) "Beginning EDC search attempt "
             write (*, *) nchains, "chains working ... "
             MCO%randparini = .false.
-            !$omp parallel do private(ll)
+            ! TODO limit number to number of available hardware threads
+            !$omp parallel do private(ll) 
             do i = 1, nchains
+             do while (success_count < nchains)!(PEDC < 0d0)
                ! call the MHMCMC directing to the appropriate likelihood function
             call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, restart = restart(i), chainid = i)
                restart(i) = .true.
@@ -159,10 +160,10 @@ contains
                else
                   PEDC_prev(i) = PEDC(i)
                end if
+               end do  ! for while condition
             end do
             !$omp end parallel do
 
-         end do  ! for while condition
 
       end if  ! if for restart
 

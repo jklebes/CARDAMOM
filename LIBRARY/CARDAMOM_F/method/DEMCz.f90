@@ -16,7 +16,7 @@ module DEMCz
    !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
    !!!!
    use samplers_shared, only: PARINFO, bounds_check
-   use samplers_math, only: log_nor2par
+   use samplers_math, only: log_nor2par, log_par2nor
    use random_uniform, only: UNIF_VECTOR
    use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_options  
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
@@ -148,6 +148,7 @@ contains
       allocate (l0(mco%nchains))
       allocate (l_best(mco%nchains))
       allocate (PARS_best(npars, mco%nchains))
+      write(*,*) npars, mco%nchains, maxiter
       allocate (PARS_history(npars, MAXITER*mco%nchains))
 
       allocate (random_uniform_vectors(mco%nchains))
@@ -161,12 +162,11 @@ contains
          ! choose initial values
          ! TODO better function for initial state : latin square
          if (.not. restart_) then 
-         call init_random(npars, norpars)
-         pars_current(:,j) = log_nor2par(npars, norpars, PI%parmin, PI%parmax, pi%paradj)
+         call init_random(npars, pars_current(:,j))
          write(*,*) "randomized", pars_current(:,j)
 
       else
-         pars_current(:,j) =mcout_list(j)%pars
+         pars_current(:,j) = log_par2nor(npars, mcout_list(j)%pars, PI%parmin, PI%parmax, PI%paradj)
          write(*,*) "did not randomize", pars_current(:,j)
       end if
          ! also set the loglikelihoof of the state generated
@@ -246,6 +246,7 @@ contains
       integer, intent(in):: thread_id  ! thread_id-to pass to model evaluation in cases where it matters
       double precision, dimension(:), intent(inout):: X_i  ! current state of the chain; normalized values of all pars
       double precision, dimension(PI%npars):: previous_vector, proposed_vector  ! internal: save previous state, proposed new state
+      double precision, dimension(PI%npars):: proposed_vector_real
       double precision, dimension(:, :), intent(in):: PARS_history  ! the matrix Z so far, to read 2 rows from
       integer, intent(in):: len_history  ! length to which Z is filled
       double precision, intent(inout):: l0  ! likelihood of previous accepted params
@@ -277,8 +278,9 @@ contains
       previous_vector = X_i
       call step(proposed_vector, previous_vector, PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
          & random_uniform_vector, PI%npars)
-      if (bounds_check(PI, proposed_vector)) then
-      call model_likelihood(proposed_vector, PI%npars, l, thread_id)
+      proposed_vector_real = log_nor2par(PI%npars, proposed_vector, PI%parmin, PI%parmax, pi%paradj)
+      if (bounds_check(PI, proposed_vector_real)) then
+      call model_likelihood(proposed_vector_real, PI%npars, l, thread_id)
       !write(*,*) "loglikelihood proposed", l
       !write(*,*) "loglikelihood previous", l0
       !write(*,*) "pars proposed", proposed_vector
@@ -306,7 +308,7 @@ contains
       do p = 1, npars
          call random_normal(random_uniform_vector, rn(p))
       end do
-      vout = v1+differential_weight*(v2-v3)  + .0001*rn*
+      vout = v1+differential_weight*(v2-v3)  + .000001*rn
    end subroutine
 
    integer function random_int(N)

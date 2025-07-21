@@ -42,7 +42,7 @@ program cardamom_framework
    type(DEMCZOPT):: MCO
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 12
+   integer:: nchains = 46
    integer:: i
 
    allocate (MCOUT_list(nchains))
