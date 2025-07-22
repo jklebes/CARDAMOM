@@ -77,6 +77,7 @@ module CARBON_MODEL_MOD
            ,update_soil_initial_conditions&
            ,calculate_daylength           &
            ,opt_max_scaling               &
+           ,sw_par_fraction               &
            ,freeze                        &
            ,co2comp_saturation            &
            ,co2comp_half_sat_conc         &
@@ -101,7 +102,6 @@ module CARBON_MODEL_MOD
            ,nos_root_layers               &
            ,wSWP                          &
            ,rSWP                          &
-           ,cica_time                     &
            ,SWP                           &
            ,deltat_1                      &
            ,total_water_flux              &
@@ -119,16 +119,7 @@ module CARBON_MODEL_MOD
            ,drythick                      &
            ,min_drythick                  &
            ,min_layer                     &
-           ,wSWP_time                     &
-           ,rSWP_time                     &
-           ,root_depth_time               &
-           ,DS_time                       &
-           ,gs_demand_supply_ratio        &
-           ,gs_total_canopy               &
-           ,gb_total_canopy               &
            ,canopy_par_MJday              &
-           ,canopy_par_MJday_time         &
-           ,snow_storage_time             &
            ,soil_frac_clay                &
            ,soil_frac_sand                &
            ,nos_soil_layers               &
@@ -170,7 +161,6 @@ module CARBON_MODEL_MOD
            ,snow_storage                  &
            ,canopy_storage                &
            ,intercepted_rainfall          &
-           ,rainfall_time                  &
            ,resp_rate_temp_coeff           &
            ,dim_1,dim_2                    &
            ,nos_trees                      &
@@ -328,7 +318,8 @@ module CARBON_MODEL_MOD
   double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                            water_flux_mmolH2Om2s, & ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                        conductance_mmolH2OMPam2s    ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
@@ -347,6 +338,7 @@ module CARBON_MODEL_MOD
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
+                                          Reff, & ! Effective total hydraulic resistance (MPa.m2.s.mmolH2O-1)                                          
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
@@ -477,18 +469,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   airt_zero_fraction_time, &
                                           daylength_hours, &
                                         daylength_seconds, &
-                                      daylength_seconds_1, &
-                                            rainfall_time, &
-                                   gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                          gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/day)
-                                          gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/day)
-                                    canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
-                                                cica_time, & ! Internal vs ambient CO2 concentrations
-                                          root_depth_time, & ! Rooting depth (m)
-                                                  DS_time, & ! Development Stage
-                                        snow_storage_time, &
-                                                rSWP_time, & ! Soil water potential weighted by root mass distribution
-                                                wSWP_time    ! Soil water potential weighted by root supply of water
+                                      daylength_seconds_1
 
   ! variables local to this module..
   integer ::   plough_day, & ! day-of-year when field is ploughed  (default)
@@ -610,9 +591,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !--------------------------------------------------------------------
   !
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai_out &
-                         ,NEE_out,FLUXES,POOLS,nopars,nomet,nopools,nofluxes &
-                         ,GPP_out,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat &
+                         ,FLUXES,POOLS,DIAGS & 
+                         ,nopars,nomet,nopools,nofluxes,nodiags &
+                         ,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     !
@@ -637,7 +619,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                           ,nomet      & ! number of meteorological fields
                           ,nofluxes   & ! number of model fluxes
                           ,nopools    & ! number of model pools
-                          ,nodays       ! number of days in simulation
+                          ,nodays     & ! number of days in simulation
+                          ,nodiags      ! number of model diagnostics
 
     double precision, intent(in) :: met(nomet,nodays)   & ! met drivers
                          ,stock_seed_labile             & ! seed carbon to get things going
@@ -655,13 +638,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                                DS_LRRT, & !
                                                                   LRRT    !
 
-    double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
-                                               ,GPP_out & ! Gross primary productivity
-                                               ,NEE_out   ! net ecosystem exchange of CO2
-
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
     ! declare local variables
     double precision :: airt_weighting(3) &
@@ -744,10 +723,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! p(34) ! turnover rate of labile C (frac/day)
     ! p(35) ! turnover rate of autotrophic C (frac/day)
 
-    ! zero some values
-    lai_out = 0d0 ; NEE_out = 0d0 ; GPP_out = 0d0
     ! Set some initial states for the io variables
-    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
     ! Reset hydrology variables
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0 ; snowsublimation = 0d0
@@ -852,11 +829,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
     if (.not.allocated(deltat_1)) then
 
-        allocate(deltat_1(nodays),rSWP_time(nodays),wSWP_time(nodays), &
-                 gs_demand_supply_ratio(nodays),gs_total_canopy(nodays), &
-                 gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays), &
-                 DS_time(nodays))
+        allocate(deltat_1(nodays))
         deltat_1 = deltat**(-1d0)
         ! zero variables not done elsewhere
         water_flux_mmolH2Om2s = 0d0
@@ -891,7 +864,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     doy = ceiling(met(6,1)-(deltat(1)*0.5d0))   ! Day of year
     rainfall = max(0d0,met(7,1)) ! rainfall (kgH2O/m2/s)
     meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
-    airt_zero_fraction = (maxt-0d0) / (maxt-mint) ! fraction of temperture period above freezing
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3  ! Vapour pressure deficit (Pa)
 
@@ -922,8 +894,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_Rtot
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,19))  ! assume no evap or rainfall
-    ! Reset variable used to track ratio of water supply used to meet demand
-    gs_demand_supply_ratio = 0d0
     ! store soil water content of the rooting zone (mm)
     POOLS(1,8) = 1d3*soil_waterfrac(1)*layer_thickness(1)
 
@@ -946,13 +916,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
       rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
-      airt_zero_fraction = (maxt-0d0) / (maxt-mint) ! fraction of temperture period above freezing
+      if (mint > 0d0) then
+          airt_zero_fraction = 1d0
+      else if (maxt < 0d0) then
+          airt_zero_fraction = 0
+      else 
+          airt_zero_fraction = (maxt-0d0) / (maxt-mint) ! fraction of temperture period above freezing
+      end if          
       wind_spd = met(15,n) ! wind speed (m/s)
       vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa)
 
       ! states needed for module variables
-      lai_out(n) = POOLS(n,2)/LCA
-      lai = lai_out(n) ! leaf area index (m2/m2)
+      lai = POOLS(n,2)/LCA
+      DIAGS(n,1) = lai
 
       ! Calculate solar declination for the current time step
       declination = calculate_declination(doy)
@@ -1011,8 +987,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           snow_melt = snow_melt / seconds_per_step
       elseif (maxt < 0d0) then
           snow_melt = 0d0
-          ! Add rainfall to the snowpack and clear rainfall variable
-          snow_storage = snow_storage + (snowfall*seconds_per_step)
       else if (mint > 0d0 .and. snow_storage > 0d0) then
           ! otherwise we assume snow is melting at 10 % per day above hour
           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
@@ -1022,7 +996,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       else
           snow_melt = 0d0
       end if
-      snow_storage_time(n) = snow_storage
+      DIAGS(n,2) = snow_storage
 
       !!!!!!!!!!
       ! Calculate surface exchange coefficients
@@ -1035,15 +1009,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! calculate aerodynamic using consistent approach with SPA
       call calculate_aerodynamic_conductance
       ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
-      gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1 * &
-                           leaf_canopy_wind_scaling
+      DIAGS(n,6) = aerodynamic_conductance * convert_ms1_mmol_1 * &
+                   leaf_canopy_wind_scaling
+      DIAGS(n,14) = leaf_canopy_wind_scaling ! canopy area scaling as a function of wind profiles
 
       !!!!!!!!!!
       ! Determine net shortwave and isothermal longwave energy balance
       !!!!!!!!!!
 
       call calculate_radiation_balance
-      canopy_par_MJday_time(n) = canopy_par_MJday
+      DIAGS(n,3) = canopy_par_MJday ! Absorbed PAR by canopy (MJ/m2ground/day)
+      DIAGS(n,15) = leaf_canopy_light_scaling ! canopy area scaling as a function of light profiles
 
       !!!!!!!!!!
       ! Calculate physically constrained evaporation and
@@ -1063,19 +1039,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
       root_biomass = fine_root_biomass
       call calculate_Rtot
-      ! Pass wSWP to output variable
-      wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; root_depth_time(n) = root_reach
+      ! Pass root~water~soil variables to output variable
+      DIAGS(n,8) = root_reach ! Rooting depth (m)
+      DIAGS(n,10) = wSWP      ! Soil water potential weighted by supply of water
+      DIAGS(n,11) = rSWP      ! Soil water potential weighted by access water
+      DIAGS(n,12) = Reff      ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
 
       ! calculate radiation absorption and estimate stomatal conductance
       call calculate_stomatal_conductance
       ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
       ! close are we to maxing out supply (note 0.01 taken from min_gs)
-      gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
-                                / (potential_conductance - minimum_conductance)
-
+      DIAGS(n,7) = (stomatal_conductance  - minimum_conductance) &
+                 / (potential_conductance - minimum_conductance)
       ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
-      gs_total_canopy(n) = stomatal_conductance
-
+      DIAGS(n,5) = stomatal_conductance
       
       ! adjustments
 
@@ -1084,17 +1061,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! Gross primary productivity (gC/m2/day)
           ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
           FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
-          cica_time(n) = ci / co2
+          ! Estimate the ratio of leaf internal to ambient CO2 concentrations
+          DIAGS(n,4) = ci / co2
           ! Canopy transpiration (kgH2O/m2/day)
           call calculate_transpiration(transpiration)
           ! restrict transpiration to positive only
           transpiration = max(0d0,transpiration)
       else
           ! assume zero fluxes
-          FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
+          FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0
       endif
       ! Pass GPP estimate to module variable for use in crop development model
-      gpp_acm = FLUXES(n,1) ; GPP_out = FLUXES(n,1)
+      gpp_acm = FLUXES(n,1) 
+
+      ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
+      ! Positive LWPs can be estimated given very small gs and cold temperatures.
+      ! Debugging print statements
+      !print*,"Estimate LWP"
+      !LWP = SWP(1:nos_root_layers) - head*canopy_height &
+      !     - transpiration*uptake_fraction(1:nos_root_layers) &
+      !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
+      DIAGS(n,9) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
 
       ! pass relevant variables into crop module memory
       avtemp = met(14,n) !meant
@@ -1120,7 +1107,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! determine development stage (DS)
       ! Note that DS must be updated here and not after management_dates. Otherwise, 
       ! there will be problems using DS_time for calculating yield:GPP calculations in MODEL_LIKELIHOOD.f90
-      call development_stage(deltat(n)) ; DS_time(n) = DS 
+      call development_stage(deltat(n)) ; DIAGS(n,13) = DS 
       ! determine the carbon partitioning based on development stage
       call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops
@@ -1128,11 +1115,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! conduct management updates at the end of the day
       call management_dates(stock_seed_labile,deltat(n))
 
-      ! calculate the NEE (gC.m-2.d-1)
-      NEE_out(n) = nee_dalec
-
-      ! GPP (gC.m-2.d-1)
-      !FLUXES(n,1) = GPP_out(n) ! Assigned above
       ! temprate (i.e. temperature modified rate of metabolic activity)
       FLUXES(n,2) = resp_rate
       ! autotrophic respiration (gC.m-2.d-1)
@@ -2418,8 +2400,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0
-    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0 ; Reff = 0d0 
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0 ; conductance_mmolH2OMPam2s = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component.
@@ -2492,6 +2474,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! calculate sum value (mmolH2O.m-2.s-1)
     total_water_flux = sum(water_flux_mmolH2Om2s)
+    ! calculate effective resistance
+    ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
+    ! through the model structure/
+    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
+
     ! wSWP based on the conductance due to the roots themselves.
     ! The idea being that the plant may hedge against growth based on the majority of the
     ! profile being dry while not losing leaves within some toleration.
@@ -3417,7 +3404,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soilR2 = root_resist / (root_mass*root_reach_in)
     ! Estimate the total hydraulic resistance for the layer
     Rtot_layer = transpiration_resistance + soilR1 + soilR2
-
+    ! Track for later diagnosis of the effective canopy leaf water potential
+    if (demand > 0d0) conductance_mmolH2OMPam2s(root_layer) = 1d0/Rtot_layer
     ! Estimate the soil to plant flow of water mmolH2O/m2/s
     water_flux_mmolH2Om2s(root_layer) = demand/Rtot_layer
 

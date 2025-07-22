@@ -108,13 +108,6 @@ module CARBON_MODEL_MOD
                         vonkarman_1 = 2.439024d0,   & ! 1 / von Karman's constant
                               cpair = 1004.6d0        ! Specific heat capacity of air; used in energy balance J.kg-1.K-1
 
-  ! photosynthesis / respiration parameters
-  double precision, parameter :: &
-                        Rg_fraction = 0.21875d0,    & ! fraction of C allocation towards each pool
-                                                      ! lost as growth respiration
-                                                      ! (i.e. 0.28 .eq. xNPP)
-                    one_Rg_fraction = 1d0 - Rg_fraction
-
   ! hydraulic parameters
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
@@ -874,8 +867,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            snow_melt = snow_melt / seconds_per_step
        elseif (maxt < 0d0) then
            snow_melt = 0d0
-           ! Add rainfall to the snowpack and clear rainfall variable
-           snow_storage = snow_storage + (snowfall*seconds_per_step)
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
            snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))

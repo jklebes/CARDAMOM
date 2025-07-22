@@ -70,8 +70,7 @@ use samplers_shared, only: PARINFO
 
     ! Fraction of GPP respired as autotrophic
     ! Currently fraction as Ra for root+wood+foliage growth
-    PI%parmin(2) = 0.1d0
-    !PI%parmin(2) = 0.2d0
+    PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 
     ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
@@ -236,7 +235,7 @@ use samplers_shared, only: PARINFO
     PI%parmax(23) = 250000d0  ! 90000d0
 
     ! Initial soil water fraction
-    PI%parmin(24) = 0.01d0
+    PI%parmin(24) = 0.05d0
     PI%parmax(24) = 1.00d0
 
   end subroutine pars_info

@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.A4.C6.D2.F2.H2.P11 model.
@@ -30,7 +30,7 @@
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+  ! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -43,7 +43,7 @@ use samplers_shared, only: PARINFO
   private
 
   ! specify explicitly the public
-  public :: pars_info
+  public:: pars_info
 
   contains
 
@@ -66,42 +66,42 @@ use samplers_shared, only: PARINFO
     !
 
     ! Decomposition litter -> som (day-1)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    PI%parmin(1) = 0.0001141d0  ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
-    ! Fraction of GPP respired as autotrophic
-    PI%parmin(2) = 0.2d0
-    PI%parmax(2) = 0.8d0
+    ! Fraction of GPP respired as autotrophic respiration
+    ! for maintenance of wood and fine roots
+    PI%parmin(2) = 0.1d0
+    PI%parmax(2) = 0.6d0
 
-    ! Potential rate of direct, i.e. without CDEA control labile to foliage (gC/m2/day)
-    PI%parmin(3) = 0.001d0
-    PI%parmax(3) = 20d0
+    ! Potential rate of labile to foliage (gC/m2/day)
+    PI%parmin(3) = 0.01d0
+    PI%parmax(3) = 10d0
 
-    ! Potential rate of direct labile to fine root (gC/m2/day)
+    ! Potential rate of labile to fine root (gC/m2/day)
     PI%parmin(4) = 0.01d0
     PI%parmax(4) = 20d0
 
-    ! Leaf Lifespan (yr)
-    ! Wright et al. 2004
-    PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 6d0 !8d0
+    ! Minimum foliar loss proposal gC/m2/day
+    PI%parmin(5) = 0.01d0   
+    PI%parmax(5) = 4d0     
 
-    ! TOR wood* - 1% loss per year value
-    PI%parmin(6) = 0.000009d0 ! 304  years
+    ! Turnover of wood (fraction/day)
+    PI%parmin(6) = 0.000009d0  ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    ! Turnover of fine roots (fraction/day)
+    PI%parmin(7) = 0.001368925d0  ! 2    years  ! 0.0006844627d0  ! 4 years
     PI%parmax(7) = 0.02d0        ! 0.13 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmin(8) = 0.0001141d0  ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC  ! 0.0001368926d0 !   20 years at 0oC
+!    PI%parmin(9) = 0.0000001d0  ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-1.6
@@ -113,25 +113,22 @@ use samplers_shared, only: PARINFO
     PI%parmin(11) = 10d0
     PI%parmax(11) = 100d0
 
-    ! max bud burst day
-    PI%parmin(12) = 365.25d0
-    PI%parmax(12) = 365.25d0*4d0
+    ! Temperature (oC) at which cold induced loss is at 50 %
+    PI%parmin(12) =-40d0
+    PI%parmax(12) = 20d0
+    ! Temperature at which heat induced loss is at 50 %
+    PI%parmin(13) = 30d0
+    PI%parmax(13) = 50d0
+    ! Gradient for logistic function, i.e. function change per degree 
+    PI%parmin(14) = 0.1d0 
+    PI%parmax(14) = 10d0 
 
-    ! Potential rate of seasonal labile to foliage (gC/m2/day)
-    PI%parmin(13) = 0.001d0
-    PI%parmax(13) = 20d0
-
-    ! Clab Release period
-    PI%parmin(14) = 10d0
-    PI%parmax(14) = 100d0
-
-    ! max leaf fall day
-    PI%parmin(15) = 365.25d0
-    PI%parmax(15) = 365.25d0*4d0
-
-    ! Leaf fall period
-    PI%parmin(16) = 20d0
-    PI%parmax(16) = 150d0
+    ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
+    PI%parmin(15) = 0d0
+    PI%parmax(15) = 0.1d0
+    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
+    PI%parmin(16) = 0d0
+    PI%parmax(16) = 0.1d0
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -142,12 +139,12 @@ use samplers_shared, only: PARINFO
     PI%parmin(25) = 0.15d0
     PI%parmax(25) = 0.50d0
 
-    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! BUCKET-coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 100d0
-    PI%parmax(26) = 2500d0 !500d0
+    PI%parmax(26) = 1000d0  ! 500d0
 
-    ! BUCKET - maximum rooting depth
+    ! BUCKET-maximum rooting depth
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
@@ -163,13 +160,13 @@ use samplers_shared, only: PARINFO
     ! Combustion completeness factor for soil
     PI%parmin(31) = 0.01d0
     PI%parmax(31) = 0.1d0
-    ! Combustion completeness factor for foliage + fine root litter
+    ! Combustion completeness factor for foliage+fine root litter
     PI%parmin(32) = 0.01d0
     PI%parmax(32) = 0.99d0
 
     ! labile:biomass at which growth is limited by 50 %
-    PI%parmin(33) = 0.001d0  ! 0.1 %
-    PI%parmax(33) = 0.10d0   ! 10 %
+    PI%parmin(33) = 0.0001d0  ! 0.01 %
+    PI%parmax(33) = 0.02d0   ! 2 %
 
     ! Temperature (oC) above p36 at which foliage and fine root growth is limited by 50 %
     PI%parmin(34) = 0.1d0
@@ -178,15 +175,15 @@ use samplers_shared, only: PARINFO
     PI%parmin(35) = 0.1d0
     PI%parmax(35) = 10d0
     ! Temperature (oC) at which foliage and fine root growth is prevented
-    PI%parmin(36) = 0d0 
-    PI%parmax(36) =  8d0
+    PI%parmin(36) =-8d0 
+    PI%parmax(36) = 8d0
     ! Temperature (oC) at which wood growth is prevented
     PI%parmin(37) = 0d0
     PI%parmax(37) = 8d0
 
     ! Potential growth rate of wood (gC/m2/day)
     PI%parmin(38) = 0.01d0
-    PI%parmax(38) = 20d0
+    PI%parmax(38) = 10d0
 
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0
@@ -205,6 +202,24 @@ use samplers_shared, only: PARINFO
     ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
     PI%parmin(43) = -8d0
     PI%parmax(43) = -0.5d0
+
+    ! Baseline leaf maintenance respiration.
+    ! For details see Table S3, Heskel et al., (2016), doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
+    PI%parmin(44) = -4.4d0
+    PI%parmax(44) = -0.6d0
+
+!    ! Potential loss rate for foliage to litter (gC/m2/day)
+!    PI%parmin(45) = 0.01d0
+!    PI%parmax(45) = 20d0
+    ! Potential loss rate for foliage to litter (fraction/day)
+    PI%parmin(45) = 0.0003424658  ! 8 years
+    PI%parmax(45) = 0.0333333333  ! 30 days
+ 
+    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
+    ! This is a hack to account for the model representing whole ecosystem, 
+    ! within which competing leaf stratagies will be at play.
+    PI%parmin(46) = 0.1d0
+    PI%parmax(46) = 1d0
 
     !
     ! INITIAL VALUES DECLARED HERE
@@ -232,10 +247,10 @@ use samplers_shared, only: PARINFO
 
     ! C_som
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    PI%parmax(23) = 250000d0  ! 90000d0
 
     ! Initial soil water fraction
-    PI%parmin(24) = 0.01d0
+    PI%parmin(24) = 0.05d0
     PI%parmax(24) = 1.00d0
 
   end subroutine pars_info

@@ -46,7 +46,7 @@ module model_likelihood_module
   ! All code translation into Fortran, integration into the University of
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function/subroutine specific comments for exceptions and contributors
+  ! See function / subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
   ! make all private
@@ -58,15 +58,15 @@ module model_likelihood_module
 
   ! declare needed types
   type EDCDIAGNOSTICS
-    integer:: EDC
-    integer:: DIAG
-    integer:: PASSFAIL(100)  ! allow space for 100 possible checks
-    integer:: nedc  ! number of edcs being assessed
+    integer :: EDC
+    integer :: DIAG
+    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: nedc ! number of edcs being assessed
   end type
-  type (EDCDIAGNOSTICS), save:: EDCD
+  type (EDCDIAGNOSTICS), save :: EDCD
 
   ! Has the model sanity check been conducted yet?
-  logical:: sanity_check = .false.
+  logical :: sanity_check = .false.
 
   contains
   !
@@ -81,27 +81,23 @@ module model_likelihood_module
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Model likelihood function specifically intended for the determination of
-    ! appropriate initial parameter choices, consistent with EDCs for DALEC2 /
-    ! DALEC_GSI
+    ! appropriate initial parameter choices, consistent with EDCs for this DALEC
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout):: PARS
-double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    double precision, dimension(PI%npars), intent(inout) :: PARS
     ! output
     double precision, intent(inout):: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
-    double precision:: tot_exp, ML, EDC1, EDC2, infini
+    double precision :: tot_exp, ML, EDC1, EDC2, infini
 
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 1
-    ML_obs_out = 0d0; ML_prior_out = 0d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
@@ -111,18 +107,18 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
 
     ! next need to run the model itself
-    call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
-                     ,M_FLUXES, M_POOLS, DATAin%nopars &
-                     ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
-!print*,"edc_model_likelihood: carbon_model done"
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nofluxes,DATAin%nodiags)
+
     ! assess post running EDCs
-    call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools &
-                    ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year   &
-                    ,PI%parmax, PARS, DATAin%MET &
-                    ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                    ,M_FLUXES, DATAin%meantemp, EDC2)
+    call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                    ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                    ,PI%parmax,PARS,DATAin%MET &
+                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
+                    ,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -137,7 +133,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 !    endif
 
     ! convert to a probability
-!    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
@@ -391,53 +386,78 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     implicit none
 
     ! Arguments
-    double precision, dimension(PI%npars), intent(in):: PARS
+    double precision, dimension(PI%npars), intent(in) :: PARS
 
     ! Local arguments
-    integer:: i
-    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: local_pools
-    double precision, dimension(DATAin%nodays, DATAin%nofluxes):: local_fluxes
-    double precision:: pool_error, flux_error
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
+    integer :: i,t
+    double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
+    double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
+    double precision, dimension(DATAin%nodays,DATAin%nodiags) :: local_diags
+    double precision :: pool_error, flux_error, diags_error
 
     ! Run model
 
+    print*,"sanity_check: carbon_model run 1"
     ! next need to run the model itself
-    call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
-                     ,M_FLUXES, M_POOLS, DATAin%nopars &
-                     ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
-!print*,"sanity_check: carbon_model done 1"
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nofluxes,DATAin%nodiags)
+    print*,"sanity_check: carbon_model run 2"
     ! next need to run the model itself
-    call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
-                     ,local_fluxes, local_pools, DATAin%nopars &
-                     ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
-!print*,"sanity_check: carbon_model done 2"
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT &
+                     ,local_fluxes,local_pools,local_diags & 
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nofluxes,DATAin%nodiags)                     
     ! Compare outputs
-    flux_error = sum(abs(M_FLUXES-local_fluxes))
-    pool_error = sum(abs(M_POOLS-local_pools))
+    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
+    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
+    diags_error = sum(abs(DATAin%M_DIAGS - local_diags))
     ! If error between runs exceeds precision error then we have a problem
-    if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
-        flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
-        pool_error /= pool_error .or. flux_error /= flux_error) then
+    if (diags_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
+        pool_error  > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
+        flux_error  > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
+        pool_error /= pool_error .or. flux_error /= flux_error .or. &
+        diags_error /= diags_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
-        do i = 1, DATAin%nofluxes
+        print*,"Cumulative DIAGS error = ",diags_error
+        do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
         end do
+        do i = 1, DATAin%nodiags
+           print*,"Sum abs error over time: diags = ",i
+           print*,sum(abs(DATAin%M_DIAGS(:,i) - local_diags(:,i)))
+        end do
+        print*,"First time step for all fluxes in run 1"
+        print*,local_fluxes(1,:)
+        print*,"First time step for all fluxes in run 2"
+        print*,DATAin%M_FLUXES(1,:)
         stop
     end if
+
+!    ! Commented out to limit error messages, but useful for diagnosis
+!    do t = 1, DATAin%nodays
+!       if (sum(abs(DATAin%M_FLUXES(t,:) - local_fluxes(t,:))) > (tiny(0d0)*(DATAin%nofluxes))) then
+!           print*,"Time step of mismatch = ",i
+!           do i = 1, DATAin%nofluxes
+!               print*,"Flux counter = ",i
+!               print*,"Original run"
+!               print*,local_fluxes(t,i)
+!               print*,"Second run"
+!               print*,DATAin%M_FLUXES(t,i)
+!           end do
+!       end if
+!       stop
+!    end do
 
     ! Update the user
     print*,"Sanity check completed"
@@ -452,27 +472,27 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2014).
+    ! steady state contraints (Bloom et al., 2015).
 
     implicit none
 
     ! declare input variables
-    integer, intent(in):: npars  ! number of parameters
-    double precision, intent(out):: EDC1    ! EDC1 flag
-    double precision, dimension(npars), intent(in):: PARS  ! current parameter set
-    double precision, intent(in):: meantemp & ! mean temperature (k)
+    integer, intent(in) :: npars ! number of parameters
+    double precision, intent(out) :: EDC1    ! EDC1 flag
+    double precision, dimension(npars), intent(in) :: PARS ! current parameter set
+    double precision, intent(in) :: meantemp & ! mean temperature (k)
                                    ,meanrad    ! mean radiation (MJ.m-2.day-1)
 
     ! declare local variables
-    integer:: n, DIAG
-    double precision:: fauto & ! Fractions of GPP to autotrophic respiration
+    integer :: n, DIAG
+    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
              ,ffol  & ! Fraction of GPP to foliage
              ,flab  & ! Fraction of GPP to labile pool
              ,froot & ! Fraction of GPP to root
              ,fwood & ! Fraction of GPP to wood
              ,fsom    ! fraction of GPP som under eqilibrium conditions
 
-    double precision:: torfol  ! yearly leaf loss fraction
+    double precision :: torfol ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1
@@ -499,55 +519,61 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Turnover of litter faster than turnover of som
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8) < pars(9))) then
-        EDC1 = 0d0; EDCD%PASSFAIL(1) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
 
     ! litter2som greater than som to atm rate
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
-        EDC1 = 0d0; EDCD%PASSFAIL(2) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
     ! turnover of foliage faster than turnover of wood
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
-        EDC1 = 0d0; EDCD%PASSFAIL(3) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-        EDC1 = 0d0; EDCD%PASSFAIL(4) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif
 
-    ! GPP allocation to foliage and labile cannot be 5 orders of magnitude
-    ! difference from GPP allocation to roots
-    if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
-        EDC1 = 0d0; EDCD%PASSFAIL(5) = 0
-    endif
+    ! Initial leaf area index should not be larger than ~10 m2/m2
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    endif    
+
+    !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
+    !! difference from GPP allocation to roots
+    !if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
+    !    EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    !endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
-!    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-!        EDC1 = 0d0; EDCD%PASSFAIL(6) = 0
-!    endif
-!    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-!        EDC1 = 0d0; EDCD%PASSFAIL(7) = 0
-!    endif
-!    ! Combustion completeness for foliar+fine root litter should be greater than non-photosynthetic tissue
-!    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(30)) then
-!        EDC1 = 0d0; EDCD%PASSFAIL(8) = 0
-!    endif
+    ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+    endif
+    ! Combustion completeness for non-photosynthetic tissue should be greater than soil
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+    endif
+    ! Combustion completeness for foliar + fine root litter should be greater foliage
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+    endif
 
-    ! could always add more/remove some
+    ! could always add more / remove some
 
   end subroutine assess_EDC1
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC2(npars, nomet, nofluxes, nopools, nodays, deltat, steps_per_year &
-                        ,parmax, pars, met, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES &
-                        ,meantemp, EDC2)
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodiags,nodays,deltat,steps_per_year &
+                        ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
+                        ,meantemp,EDC2)
+
     use cardamom_structures, only: DATAin
 
     ! Determines whether the dynamical contraints for the search of the initial
@@ -557,35 +583,36 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     implicit none
 
     ! declare input variables
-    integer, intent(in):: npars          & ! number of model parameters
+    integer, intent(in) :: npars          & ! number of model parameters
                           ,nomet          & ! number of met drivers
                           ,nofluxes       & ! number of fluxes from model
                           ,nopools        & ! number of pools in model
                           ,nodays         & ! number of days in simulation
+                          ,nodiags        & ! number of diagnostic variables                          
                           ,steps_per_year
 
-    double precision, intent(in):: deltat(nodays)              & ! decimal day model interval
+    double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
                                    ,pars(npars)                 & ! vector of current parameters
                                    ,parmax(npars)               & ! vector of the maximum parameter values
-                                   ,met(nomet, nodays)           & ! array of met drivers
-                                   ,M_LAI(nodays)               & ! LAI output from current model simulation
-                                   ,M_NEE(nodays)               & ! NEE output from current model simulation
-                                   ,M_GPP(nodays)               & ! GPP output from current model simulation
-                                   ,M_POOLS((nodays+1), nopools) & ! time varying states of pools in current model simulation
-                                   ,M_FLUXES(nodays, nofluxes)   & ! time varying fluxes from current model simulation model
+                                   ,met(nomet,nodays)           & ! array of met drivers
+                                   ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
+                                   ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
+                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model                                   
                                    ,meantemp                      ! site mean temperature (oC)
 
-    double precision, intent(out):: EDC2  ! the response flag for the dynamical set of EDCs
+    double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer:: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, &
+    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision:: infi !, EQF, etol
-    double precision, dimension(nopools):: jan_mean_pools, jan_first_pools, &
+    double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
+                        jan_sd_lai, jan_mean_lai, jan_first_lai
+    !double precision, dimension(nodays) :: tmp1, tmp2
+    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
-    double precision, dimension(nofluxes):: FT, FT_yr1, FT_yr2
-    double precision:: fauto & ! Fractions of GPP to autotrophic respiration
+    double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
+    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
                        ,ffol  & ! Fraction of GPP to foliage
                        ,flab  & ! Fraction of GPP to labile pool
                        ,froot & ! Fraction of GPP to root
@@ -593,13 +620,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
-    double precision, parameter:: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
+    double precision, parameter :: EQF1_5 = log(1.5d0), & ! 10.0 = order magnitude; 2 = double and half
                                    EQF2 = log(2d0),   & ! 10.0 = order magnitude; 2 = double and half
                                    EQF5 = log(5d0),   &
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                    etol = 0.050d0  ! 0.20d0 lots of AGB  ! 0.10d0 global/site more data  ! 0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -607,74 +635,38 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
-
     infi = 0d0
 
-    ! estimate GPP allocation fractions
-    fauto = pars(2)
-    ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-
-    ! derive mean pools
-    do n = 1, nopools-1
-       mean_pools(n) = cal_mean_pools(M_POOLS, n, nodays+1, nopools)
+!    ! derive mean pools
+!    do n = 1, nopools
+!       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
+!    end do
+    ! derive mean pools for first year
+    do n = 1, nopools
+       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
     end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
-    ! Determine the mean January pool sizes
-    jan_mean_pools = 0d0; jan_first_pools = 0d0  ! reset before averaging
-    do n = 1, nopools-1
-      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month, n)) / dble(steps_per_month)
-      do y = 1, DATAin%nos_years
-         nn = 1 + (steps_per_year * (y-1)); nnn = nn + (steps_per_month-1)
-         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn, n))
-      end do
-      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
-    end do
-
-    !
-    ! Begin EDCs here
-    !
-
-    ! EDC 6
-    ! ensure ratio between Cfoliar and Croot is less than 5
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-        EDC2 = 0d0; EDCD%PASSFAIL(9) = 0
-    end if
-
-    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
-    ! the empirical phenology but mechanistic hydrology/photosynthesis
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_LAI) > 10d0 ) then
-        EDC2 = 0d0; EDCD%PASSFAIL(10) = 0
-    end if
-
-    ! Equilibrium factor (in comparison with initial conditions)
-!    EQF = 10d0  ! TLS 06/11/2019  ! 10d0  ! JFE replaced 10 by 2-27/06/2018
-    ! Pool exponential decay tolerance
-!    etol = 0.3d0  ! 0.1d0
-
-    ! first calculate total flux for the whole simulation period
-!    do fl = 1, nofluxes
-!        FT(fl) = 0
-!        do nd = 1, nodays
-!            FT(fl) = FT(fl) + M_FLUXES(nd, fl)*deltat(nd)
-!        end do
-!    end do
     ! First calculate total flux for the simulation period
-    io_start = (steps_per_year*2) + 1; io_finish = nodays
+    io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
-!       FT(fl) = sum(M_FLUXES(1:nodays, fl)*deltat(1:nodays))
-       FT(fl) = sum(M_FLUXES(io_start:io_finish, fl)*deltat(io_start:io_finish))
-       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year, fl)*deltat(1:steps_per_year))
-       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2), fl) &
+!       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
+       FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
+       FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
+       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
                        *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+    ! Specific calculation of transpiration extraction from the soil surface layer
+    fl = 41 ! transpiration multiplied by ...
+    fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
+    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+                    *deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -719,6 +711,96 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+    ! Surface water pool (0-30cm)
+    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
+    Fin(7)  = FT(47) 
+    Fout(7) = FT(42)+FT(41)+FT(46) 
+    Fin_yr1(7)  = FT_yr1(47) 
+    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
+!    Fin_yr2(7)  = FT_yr2(47)
+!    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
+
+!    ! Determine the mean January pool sizes
+!    jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
+!    do n = 1, nopools-1
+!      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
+!      do y = 1, DATAin%nos_years
+!         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
+!         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
+!      end do
+!      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
+!    end do
+
+
+    !
+    ! Begin EDCs here
+    !
+
+!    ! ensure ratio between Cfoliar and Croot is less than 5
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+!        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+!    end if
+
+    ! Determine the mean and standard deviation of January LAIs 
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    jan_first_lai = M_DIAGS(1,1) ! First January LAI
+    ! Initially sum each January from each year
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
+    end do
+    ! Calculate the mean
+    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+    ! Calculate the standard deviation now
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
+    end do
+    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    end if
+
+    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
+    ! the empirical phenology but mechanistic hydrology / photosynthesis
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    end if
+
+!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
+!    ! Assesses whether the mean LAI in the summer months (June, July, August)
+!    ! is greater than the mean outwith. This ensures the peak LAI in the season
+!    ! is summer time.
+!    if ((EDC2 == 1 .or. DIAG == 1)) then
+!        ! Set values for vectors used to select summer vs non-summer time points.
+!        tmp1 = 0d0 ; tmp2 = 1d0
+!        ! Where condition sets tmp1 == 1 for days of year for JJA
+!        where (met(6,:) > 150d0 .and. met(6,:) < 245d0) tmp1 = 1d0
+!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
+!        ! during summer but 1 elsewhere
+!        tmp2 = tmp2 - tmp1
+!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
+!        ! The sum of each of these variables is also conveniently the number of values to 
+!        ! be averaged over.
+!        if (sum(M_LAI * tmp1) / sum(tmp1) < sum(M_LAI * tmp2) / sum(tmp2)) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+!        end if 
+!    end if
+
+    ! Equilibrium factor (in comparison with initial conditions)
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+    ! Pool exponential decay tolerance
+!    etol = 0.3d0 !0.1d0
+
+    ! first calculate total flux for the whole simulation period
+!    do fl = 1, nofluxes
+!        FT(fl) = 0
+!        do nd = 1, nodays
+!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
+!        end do
+!    end do
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -726,114 +808,206 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 !    ! iterate to check whether Fin/Fout is within EQF limits
 !    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools/jan_first_pools)
+!    Rs = Rm * (jan_mean_pools / jan_first_pools)
 !    do n = 1, nopools-1
 !       ! Restrict rates of increase
 !       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
-!           EDC2 = 0d0; EDCD%PASSFAIL(13+n-1) = 0
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
 !       end if
 !       ! Restrict exponential decay
 !       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
-!           EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !       end if
 !    end do
 
+     ! What are in effect the potential growth rates are modulated by the current 
+     ! fixed temperature sub-model used in the model. This means that the parameterised 
+     ! potential rates might never be achievable even if plausible. Thus the maximum 
+     ! parameter bound for the potential growth rates need to be increased. These EDCs 
+     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+     if ((EDC2 == 1 .or. DIAG == 1)) then
+         ! Foliage
+         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+         end if
+         ! Fine roots
+         if (maxval(M_FLUXES(:,6)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+         end if
+         ! Wood
+         if (maxval(M_FLUXES(:,7)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+         end if
+     end if
+
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+    endif
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+    endif
+
     if (EDC2 == 1 .or. DIAG == 1) then
 
-        ! Living pools
-        do n = 1, 3
-           ! Restrict mean rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0; EDCD%PASSFAIL(13+n-1) = 0
-           end if
-           ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!        ! Living pools
+!        do n = 1, 3
+!           ! Restrict mean rates of increase
+!           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
-           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
-               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-           end if
-           ! Restrict exponential behaviour at initialisation
-           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
-           !    EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-           !end if
-        end do
-        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 4
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-            EDC2 = 0d0; EDCD%PASSFAIL(13+n-1) = 0
-        end if
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!           ! Restrict rates from deviating unrealistically from the mean
+!!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
+!!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!!           end if
+!           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!           end if
+!           ! Restrict exponential behaviour at initialisation
+!           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!           !end if
+!        end do
+        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 2
+!        ! Restrict mean rates of increase
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > etol ) then
-             EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-         end if
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!        end if
+!        ! Restrict exponential behaviour at initialisation         
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        ! Fine root pool, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 3
+!        ! Restrict mean rates of increase
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        ! Restrict rates from deviating unrealistically from the mean
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation         
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 4
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
 !        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0; EDCD%PASSFAIL(13+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
 !           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
 !                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                     abs(log(Fin(n)/Fout(n))) ) > etol ) then
-               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
 !           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > etol) then
-!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
+!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
         end do
 
-    end if  ! EDC2 == 1 .or. DIAG == 1
+        ! Water pool(s)
+        n = 7  ! surface water pool
+        ! Restrict rates of increase
+        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+        end if
+        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
+!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
+!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+        end if
+!        ! Restrict exponential behaviour at initialisation
+!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
 
-    ! The maximum value for GPP must be greater than 0, 0.001 to guard against precision values
-    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_GPP) < 0.001d0) then
-        EDC2 = 0d0; EDCD%PASSFAIL(35) = 0
-    end if
+    end if ! EDC2 == 1 .or. DIAG == 1
 
-!    ! Prevent NPP -> foliage (FLX4, 8) > NPP (GPP-Ra, FLX1-FLX3)
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_FLUXES(:,4)+M_FLUXES(:,8)) / sum(M_FLUXES(:,1)-M_FLUXES(:,3)) > 1d0 ) then
-!        EDC2 = 0d0; EDCD%PASSFAIL(36) = 0
-!    end if
+    ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
+    ! leaf economic spectrum (LES).
+    ! LL (months) ~ LMA (gm2) R2 = 0.42 from 
+    ! Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
+    ! Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496 
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
+        ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
+        ! Estimating the MTT, converting from days to years using 1/365.25 = 0.002737851
+        ! 0.08333333 converts months to years for the LES equation.
+        tmp = sum(M_POOLS(:,2)) / dble(nodays)
+        tmp1 = sum(M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)) / dble(nodays)
+        tmp = (tmp / tmp1) * 0.002737851d0
+!        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
+!              / dble(nodays)) * 0.002737851d0
+        ! determine the lower and upper bound of the LES .
+        ! not for the upper bound, do not allow a value less than 1 years
+        tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
+        tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
+        if (tmp < tmp1) then
+            ! The current leaf lifespan is shorter than expected
+            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
+        endif        
+        if (tmp > tmp2) then
+            ! The current leaf life span is longer than expected
+            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
 
     !
     ! EDCs done, below are additional fault detection conditions
     !
 
-    ! additional faults can be stored in locations 55-61 of the PASSFAIL array
+    ! additional faults can be stored in locations 55 - 61 of the PASSFAIL array
 
     ! ensure minimum pool values are >= 0, /= NaN or Inf
     if (EDC2 == 1 .or. DIAG == 1) then
 
        do n = 1, nopools
-          if (minval(M_POOLS(1:nodays, n)) < 0d0 .or. &
-              maxval(abs(M_POOLS(1:nodays, n))) == abs(log(infi)) .or. &
-              minval(M_POOLS(1:nodays, n)) /= minval(M_POOLS(1:nodays, n))) then
-              EDC2 = 0d0; EDCD%PASSFAIL(55+n) = 0
+          if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. &
+              maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
+              minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
+              EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
           endif
        end do
 
        do n = 1, nofluxes
           if (maxval(abs(M_FLUXES(:,n))) == abs(log(infi)) .or. &
               minval(M_FLUXES(:,n)) /= minval(M_FLUXES(:,n))) then
-              EDC2 = 0d0; EDCD%PASSFAIL(55+nopools+n) = 0
+              EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
           endif
        end do
 
-    end if  ! min pool assessment
+    end if ! min pool assessment
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: done"
@@ -842,28 +1016,23 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_pools(pools, pool_number, averaging_period, nopools)
+  double precision function cal_mean_pools(pools,averaging_period)
 
-    ! Function calculate the mean values of model pools/states across the
+    ! Function calculate the mean values of model pools / states across the
     ! entire simulation run
 
     implicit none
 
     ! declare input variables
-    integer, intent(in):: nopools          & !
-                          ,pool_number      & !
-                          ,averaging_period   !
+    integer, intent(in) :: averaging_period   !
 
-    double precision, dimension(averaging_period, nopools), intent (in):: pools
+    double precision,dimension(averaging_period), intent (in) :: pools
 
     ! declare local variables
-    integer:: c
-
-    ! initial conditions
-    cal_mean_pools = 0d0
+    integer :: c
 
     ! loop through now
-    cal_mean_pools = sum(pools(1:averaging_period, pool_number))/dble(averaging_period)
+    cal_mean_pools = sum(pools(1:averaging_period))/dble(averaging_period)
 
     ! ensure return command issued
     return
@@ -872,7 +1041,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_mean_annual_pools(pools, year, interval, averaging_period)
+  double precision function cal_mean_annual_pools(pools,year,interval,averaging_period)
 
     ! Function calculates the mean model pools values for each individual year
     ! in the simulation
@@ -880,14 +1049,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     implicit none
 
     ! declare input variables
-    integer, intent(in):: year           & ! which year are we working on
-                          ,averaging_period  ! number of days in analysis period
+    integer, intent(in) :: year           & ! which year are we working on
+                          ,averaging_period ! number of days in analysis period
 
-    double precision, intent(in):: pools(averaging_period) & ! input pool state variables
+    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer:: startday, endday
+    integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
@@ -903,7 +1072,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function cal_max_annual_pools(pools, year, interval, averaging_period)
+  double precision function cal_max_annual_pools(pools,year,interval,averaging_period)
 
     ! Function calculates the max model pools values for each individual year
     ! in the simulation
@@ -911,14 +1080,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     implicit none
 
     ! declare input variables
-    integer, intent(in):: year            & ! which year are we working on
+    integer, intent(in) :: year            & ! which year are we working on
                           ,averaging_period  ! number of days in analysis period
 
-    double precision, intent(in):: pools(averaging_period) & ! input pool state variables
+    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
                                  ,interval((averaging_period-1))      ! model time step in decimal days
 
     ! declare local variables
-    integer:: startday, endday
+    integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
@@ -934,23 +1103,23 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function expdecay2(pools, interval, averaging_period)
+  double precision function expdecay2(pools,interval,averaging_period)
 
    ! Function to calculate the exponential decay coefficients used several EDCs.
-   ! We assumpe the equation Cexp = a+b*exp(c*t)
+   ! We assumpe the equation Cexp= a + b*exp(c*t)
 
    implicit none
 
    ! declare input variables
-   integer, intent(in):: averaging_period  ! i.e. nodays+1
+   integer, intent(in) :: averaging_period ! i.e. nodays + 1
 
-   double precision, intent(in):: pools(averaging_period) & ! input pool state variables
+   double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
                                   ,interval((averaging_period-1))      ! model time step in decimal days
 
    ! declare local variables
-   integer:: n, aw_int
-   integer, parameter:: os = 1  ! offset days
-   double precision:: aw, aw_1 &
+   integer :: n, aw_int
+   integer, parameter :: os = 1 ! offset days
+   double precision :: aw, aw_1 &
                       ,MP0   & ! mean pool (year 1 to year end-2)
                       ,MP1   & ! mean pool (year 2 to year end-1)
                       ,MP0os & ! mean pool (year 1+os to year end-2+os)
@@ -958,10 +1127,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                       ,dcdt1 & ! gradient of exponential over time in second year
                       ,dcdt0   ! gradient of exponential over time in first year
 
-   ! declare initial values/constants
-   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1)))  ! averaging window
-   aw_1 = aw ** (-1d0); aw_int = int(aw)
-   MP0 = 0d0; MP1 = 0d0; MP0os = 0d0; MP1os = 0d0
+   ! declare initial values / constants
+   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1))) ! averaging window
+   aw_1 = aw ** (-1d0) ; aw_int = int(aw)
+   MP0 = 0d0 ; MP1 = 0d0 ; MP0os = 0d0 ; MP1os = 0d0
 
    ! estimate mean stock for first year
    MP0 = sum(pools(1:aw_int))
@@ -1001,34 +1170,28 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  subroutine model_likelihood(PARS, ML_obs_out, ML_prior_out)
-    use model_shared, only: PI
-    use CARBON_MODEL_MOD, only: carbon_model
+  subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
+    use carbon_model_mod, only: carbon_model
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
     ! of the DALEC model, calculation of the log-likelihood for comparison
     ! assessment of parameter performance and use of the EDCs if they are
-    ! present/selected
+    ! present / selected
 
     implicit none
 
     ! declare inputs
-    double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
-double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
     ! output
-    double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
     ! declare local variables
-    double precision:: EDC1, EDC2
-
-!    ! Debugging print statements
-!    print*,"model_likelihood:"
+    double precision :: EDC1, EDC2
 
     ! initial values
-    ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
     EDCD%DIAG = 0
@@ -1036,7 +1199,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -1045,62 +1208,131 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     endif !
 
     ! run the dalec model
-    call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
-                     ,DATAin%nodays, DATAin%LAT, M_LAI, M_NEE &
-                     ,M_FLUXES, M_POOLS, DATAin%nopars &
-                     ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
-                     ,M_GPP)
-!print*,"model_likelihood: carbon_model done"
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nofluxes,DATAin%nodiags)
+
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
-!print*,"model_likelihood: EDC2"
+
         ! check edc2
-        call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
-                        ,DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
-                        ,PI%parmax, PARS, DATAin%MET &
-                        ,M_LAI, M_NEE, M_GPP, M_POOLS &
-                        ,M_FLUXES, DATAin%meantemp, EDC2)
-!print*,"model_likelihood: EDC2 done"
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
+                        ,DATAin%meantemp,EDC2)
+
         ! Add EDC2 log-likelihood to absolute accept reject...
-        ML_obs_out = ML_obs_out+log(EDC2)
-!print*,"model_likelihood: EDC2 likelihood update"
-    end if  ! DATAin%EDC == 1
+        ML_obs_out = ML_obs_out + log(EDC2)
+
+    end if ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
     ! We always want this
-    ML_prior_out = likelihood_p(PI%npars, DATAin%parpriors, DATAin%parpriorunc, DATAin%parpriorweight, PARS)
-!print*,"model_likelihood: update likelihood score"
-    ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out+likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
-!print*,"model_likelihood: update likelihood score done"
-!    ! Debugging print statements
-!    print*,"model_likelihood: done"
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ! Calculate log-likelihood of model compared to obs
+    call calc_obs_likelihoods(ML_obs_out)
+    ! Calculate log-likelihood of 'other priors'
+    call calc_other_likelihoods(ML_obs_out)
 
   end subroutine model_likelihood
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood_p(npars, parpriors, parpriorunc, parpriorweight, pars)
+  subroutine scaled_model_likelihood(PARS,ML_obs_out,ML_prior_out)
+    use MCMCOPT, only:  PI
+    use carbon_model_mod, only: carbon_model
+    use cardamom_structures, only: DATAin
+
+    ! this subroutine is responsible, under normal circumstances for the running
+    ! of the DALEC model, calculation of the log-likelihood for comparison
+    ! assessment of parameter performance and use of the EDCs if they are
+    ! present / selected
+
+    implicit none
+
+    ! declare inputs
+    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
+    ! output
+    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
+                                       ML_prior_out   ! prior log-likelihood
+    ! declare local variables
+    double precision :: EDC1, EDC2
+
+    ! initial values
+    ML_obs_out = 0d0 ; ML_prior_out = 0d0 ; EDC1 = 1d0 ; EDC2 = 1d0
+    ! if == 0 EDCs are checked only until the first failure occurs
+    ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
+    EDCD%DIAG = 0
+
+    if (DATAin%EDC == 1) then
+
+        ! call EDCs which can be evaluated prior to running the model
+        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
+
+        ! update the likelihood score based on EDCs driving total rejection
+        ! proposed parameters
+        ML_obs_out = log(EDC1)
+
+    endif !
+
+    ! run the dalec model
+    call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
+                     ,DATAin%nodays,DATAin%LAT &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nofluxes,DATAin%nodiags)
+
+    ! if first set of EDCs have been passed, move on to the second
+    if (DATAin%EDC == 1) then
+
+        ! check edc2
+        call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
+                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
+                        ,PI%parmax,PARS,DATAin%MET &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
+                        ,DATAin%meantemp,EDC2)
+
+        ! Add EDC2 log-likelihood to absolute accept reject...
+        ML_obs_out = ML_obs_out + log(EDC2)
+
+    end if ! DATAin%EDC == 1
+
+    ! Calculate log-likelihood associated with priors
+    ! We always want this
+    ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ! Calculate log-likelihood of model compared to obs
+    call calc_scaled_obs_likelihoods(ML_obs_out)
+    ! Calculate log-likelihood of 'other priors'
+    call calc_other_likelihoods(ML_obs_out)
+
+  end subroutine scaled_model_likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function likelihood_p(npars,parpriors,parpriorunc,parpriorweight,pars)
     ! function calculates the parameter based log-likelihood for the current set
-    ! of parameters. This assumes that we have any actual priors/prior
+    ! of parameters. This assumes that we have any actual priors / prior
     ! uncertainties to be working with. This does include initial states, as we
     ! consider them to be parameters
 
     implicit none
 
     ! declare input variables
-    integer, intent(in):: npars
-    double precision, dimension(npars), intent(in):: pars         & ! current parameter vector
+    integer, intent(in) :: npars
+    double precision, dimension(npars), intent(in) :: pars         & ! current parameter vector
                                                      ,parpriors    & ! prior values for parameters
                                                      ,parpriorunc  & ! prior uncertainties
-                                                     ,parpriorweight  ! prior weighting
+                                                     ,parpriorweight ! prior weighting
 
     ! declare local variables
-    integer:: n
-    double precision, dimension(npars):: local_likelihood
+    integer :: n
+    double precision, dimension(npars) :: local_likelihood
 !print*,"likelihood_p:"
     ! set initial value
-    likelihood_p = 0d0; local_likelihood = 0d0
+    likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2

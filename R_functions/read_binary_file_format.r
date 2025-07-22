@@ -76,50 +76,50 @@ read_binary_file_format<- function(infile) {
       md=list(parpriors=pr,parpriorunc=pru,parpriorweight=prw,otherpriors=opr,otherpriorunc=opru,otherpriorweight=oprw)
 
       # id code (not currently used)
-      md$id=static[1]
+      md$id = static[1]
       # latitude
-      md$lat=static[2]
+      md$lat = static[2]
       # number of days in simulation
-      md$nodays=static[3]
+      md$nodays = static[3]
       # number of met fields
-      md$nomet=static[4]
+      md$nomet = static[4]
       # number of observation streams
-      md$noobs=static[5]
+      md$noobs = static[5]
       # implement reality checks (1=yes,0=no)
-      md$RC=static[6]
+      md$RC = static[6]
       # ctessel pft
-      md$ctessel_pft=static[7]
+      md$ctessel_pft = static[7]
       # yield if forest
-      md$yield=static[8]
+      md$yield = static[8]
       # age if forest
-      md$age=static[9]
+      md$age = static[9]
       # 10 will be nos_pars
       ###
       # start searching EDCs from anywhere (1) or from prescribed starting point (0)
       md$rc_random_search = static[11] == 1
       # Top sand %
-      md$top_sand=static[12]
+      md$top_sand = static[12]
       # bot sand %
-      md$bot_sand=static[13]
+      md$bot_sand = static[13]
       # Top clay %
-      md$top_clay=static[14]
+      md$top_clay = static[14]
       # Bot clay %
-      md$bot_clay=static[15]
+      md$bot_clay = static[15]
 
 
       # extract temporal data (met and obs)
-      tempdata=bd[(k+1):(k+((md$nomet+md$noobs)*md$nodays))]
+      tempdata = bd[(k+1):(k+((md$nomet+md$noobs)*md$nodays))]
       # restructure correctly
-      tempdata=array(tempdata,dim=c(md$nomet+md$noobs,md$nodays))
+      tempdata = array(tempdata,dim=c(md$nomet+md$noobs,md$nodays))
 
       # pass all met data
-      md$met=t(tempdata[1:md$nomet,1:md$nodays])
+      md$met = t(tempdata[1:md$nomet,1:md$nodays])
       # pass all observations (if any)
       # current defaults are:
       # 1st column = GPP
       # 2nd column = LAI
       # 3rd column = NEE
-      md$obs=t(tempdata[(md$nomet+1):(md$nomet+md$noobs),1:md$nodays])
+      md$obs = t(tempdata[(md$nomet+1):(md$nomet+md$noobs),1:md$nodays])
 
       # pass back out information
       return(md)

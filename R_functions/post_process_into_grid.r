@@ -34,6 +34,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
   # Loop through all sites
   for (n in 1:PROJECT$nosites) {
 
+       # Update the user
+       if (n%%10000 == 0) {print(paste("...",floor((n/PROJECT$nosites)*100),"% completed",sep=""))}
+
        # Extract current site file name from output object
        site_output = site_output_all[[n]]
 
@@ -780,6 +783,9 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "soil_assim_data_overlap_fraction")) {
                grid_output$soil_assim_data_overlap_fraction[slot_i,slot_j] = site_output$soil_assim_data_overlap_fraction
            }
+           if (any(check_list == "fapar_assim_data_overlap_fraction")) {
+               grid_output$fapar_assim_data_overlap_fraction[slot_i,slot_j] = site_output$fapar_assim_data_overlap_fraction
+           }             
            if (any(check_list == "et_assim_data_overlap_fraction")) {
                grid_output$et_assim_data_overlap_fraction[slot_i,slot_j] = site_output$et_assim_data_overlap_fraction
            }
@@ -810,9 +816,21 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$lai_m2m2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_som_gCm2_correlation
            grid_output$lai_m2m2_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCwood_gCm2_correlation
            grid_output$lai_m2m2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCsom_gCm2_correlation
+           # Correlations between NBP and key gross and net fluxes
+           grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_GPP_gCm2day_correlation
+           grid_output$NBP_gCm2day_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_NEE_gCm2day_correlation
+           grid_output$NBP_gCm2day_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_lai_m2m2_correlation           
+           grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_Rauto_gCm2day_correlation
+           grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_Rhet_gCm2day_correlation
+           grid_output$NBP_gCm2day_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_wood_gCm2_correlation
+           grid_output$NBP_gCm2day_to_som_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_som_gCm2_correlation
+           grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_dCwood_gCm2_correlation
+           grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_dCsom_gCm2_correlation  
+  
            # If harvest is estimated
            if (any(check_list == "harvest_gCm2day")) {
                grid_output$lai_m2m2_to_harvest_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_harvest_gCm2day_correlation
+               grid_output$NBP_gCm2day_to_harvest_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_harvest_gCm2day_correlation
            }           
            # If Mean transit time for wood correlation exists, ensure we store it for the gridded run too
            if (any(check_list == "CiCa_parameter_correlation")) {

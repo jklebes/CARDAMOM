@@ -161,7 +161,7 @@ if (PROJECT$spatial_type == "grid") {
     nbp_gCm2yr = format(round(quantile(apply((states_all$nbp_gCm2day)[,s:f],1,mean), prob=quantiles_wanted) * 365.25 * 1e-2, digits = dp), nsmall = dp)
     # STOCKS
     labile_gCm2 = format(round(quantile(apply(states_all$labile_gCm2[,s:f],1,mean) * 1e-2, prob=quantiles_wanted), digits = dp), nsmall = dp)
-    foliage_gCm2 = format(round(quantile(apply(states_all$labile_gCm2[,s:f] + states_all$foliage_gCm2[,s:f],1,mean) * 1e-2, prob=quantiles_wanted), digits = dp), nsmall = dp)
+    foliage_gCm2 = format(round(quantile(apply(states_all$foliage_gCm2[,s:f],1,mean) * 1e-2, prob=quantiles_wanted), digits = dp), nsmall = dp)
     roots_gCm2 = format(round(quantile(apply(states_all$roots_gCm2[,s:f],1,mean), prob=quantiles_wanted) * 1e-2, digits = dp), nsmall = dp)
     wood_gCm2 = format(round(quantile(apply(states_all$wood_gCm2[,s:f],1,mean), prob=quantiles_wanted) * 1e-2, digits = dp), nsmall = dp)
     litter_gCm2 = format(round(quantile(apply(states_all$litter_gCm2[,s:f],1,mean), prob=quantiles_wanted) * 1e-2, digits = dp), nsmall = dp)

@@ -170,7 +170,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var = t(states_all$APAR_MJm2day)
 
-       obs = drivers$obs[,23] ; obs_unc = drivers$obs[,24]
+       obs = drivers$obs[,34] ; obs_unc = drivers$obs[,35]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        # Convert from observation (fAPAR) to model value, where 0.5 is assumed to be the fraction PAR
@@ -342,7 +342,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var = t(states_all$ET_kgH2Om2day)
 
-       obs = drivers$obs[,31] ; obs_unc = drivers$obs[,32]
+       obs = drivers$obs[,40] ; obs_unc = drivers$obs[,41]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -532,7 +532,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		   var = t(states_all$foliage_gCm2)
 
 		   # pass observations driver
-		   obs = drivers$obs[,11] ; obs_unc = drivers$obs[,12]
+		   obs = drivers$obs[,16] ; obs_unc = drivers$obs[,17]
 		   # filter -9999 to NA
 		   filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -566,7 +566,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
         # flip it to get the right shape
         var = t(states_all$lai_m2m2)
-        obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
+        obs = drivers$obs[,4] ; obs_unc = drivers$obs[,5]
         # filter -9999 to NA
         filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
         yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -663,7 +663,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(obs, pch=16,xaxt="n", ylim=yrange,
+       plot(rep(-9999,dim(var)[1]), pch=16,xaxt="n", ylim=yrange,
             cex=0.8,ylab="NPP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -685,7 +685,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    	   # flip it to get the right shape
        var = t(states_all$nbe_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,35] ; obs_unc = drivers$obs[,36]
+       obs = drivers$obs[,46] ; obs_unc = drivers$obs[,47]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -755,7 +755,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    	   # flip it to get the right shape
        var = t(states_all$nee_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,5] ; obs_unc = drivers$obs[,6]
+       obs = drivers$obs[,7] ; obs_unc = drivers$obs[,8]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -952,7 +952,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var = t(states_all$litter_gCm2)
 
        # pass observations driver
-       obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
+       obs = drivers$obs[,25] ; obs_unc = drivers$obs[,26]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -983,16 +983,11 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    } # litter_gCm2
 
-   # Foliage + fine root litter (gCm2)
+   # Wood litter (gCm2)
    if (exists(x = "woodlitter_gCm2", where = states_all)) {
 
        # flip it to get the right shape
        var = t(states_all$woodlitter_gCm2)
-
-#       # pass observations driver
-#       obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
-#       # filter -9999 to NA
-#       filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_woodlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
@@ -1024,7 +1019,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var=t(states_all$roots_gCm2)
 
        # pass observations driver
-       obs=drivers$obs[,15] ; obs_unc=drivers$obs[,16]
+       obs=drivers$obs[,22] ; obs_unc=drivers$obs[,23]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1061,7 +1056,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var=t(states_all$wood_gCm2)
        # pass observations driver
-       obs=drivers$obs[,13] ; obs_unc=drivers$obs[,14]
+       obs=drivers$obs[,19] ; obs_unc=drivers$obs[,20]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1097,7 +1092,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var = t(states_all$som_gCm2)
 
        # pass observations driver
-       obs = drivers$obs[,19] ; obs_unc = drivers$obs[,20]
+       obs = drivers$obs[,28] ; obs_unc = drivers$obs[,29]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1153,7 +1148,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    }  # biomass_gCm2
 
-   # Canopy growth index (CGI; 0-1)
+   # Net Canopy Carbon Export
    if (exists(x = "ncce_gCm2day", where = states_all)) {
 
        # structure needed by function is dim=c(time,iter)
@@ -1352,13 +1347,13 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var=t(states_all$harvest_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,49] ; obs_unc = drivers$obs[,50]
+       obs = drivers$obs[,61] ; obs_unc = drivers$obs[,62]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        # Plotting code below does not allow for lags != 1,
        # therefore we need to treat these as missing data for the purpose of plotting
-       obs[which(drivers$obs[,51] != 1)] = NA
-       obs_unc[which(drivers$obs[,51] != 1)] = NA
+       obs[which(drivers$obs[,63] != 1)] = NA
+       obs_unc[which(drivers$obs[,63] != 1)] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
        if (length(which(is.na(obs) == FALSE)) > 0) {
            yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
@@ -1465,8 +1460,12 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day","LWP_MPa",
                       "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction",
                       "LabBio_limitation","foliage_leafT_limitation","roots_leafT_limitation","wood_leafT_limitation",
-                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation")
-
+                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation",
+                      "canopy_area_scaling_wind","canopy_area_scaling_light","rgrow_gCm2day",
+                      "rmain_from_labile_gCm2day", "foliar_growth_limitation", "ncce_grow_gCgC",
+                      "ncce_loss_gCgC","foliage_feedback_turnover_limitation", 
+                      "foliage_leafT_turnover_limitation", "foliage_wSWP_turnover_limitation",
+                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days")
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

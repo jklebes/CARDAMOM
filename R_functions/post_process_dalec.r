@@ -169,6 +169,23 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$harvest_gCm2day))
   }
 
+  # Correlations between NBP and key gross and net fluxes
+  states_all$NBP_gCm2day_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$gpp_gCm2day))
+  states_all$NBP_gCm2day_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$nee_gCm2day))
+  states_all$NBP_gCm2day_to_lai_m2m2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$lai_m2m2))
+  states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rauto_gCm2day))
+  states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rhet_gCm2day))
+  states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$wood_gCm2))
+  states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$som_gCm2))
+  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
+  states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
+  states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  # If harvest is estimated
+  if (any(check_list == "harvest_gCm2day")) {
+      states_all$NBP_gCm2day_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$harvest_gCm2day))
+  }
+
   # Determine whether have have both mean transit time and allocation to wood
   if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
       # As both exist determine their correlations with parameters...
@@ -264,20 +281,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   ## Comparison with assimilated observation - to what extent does the ensemble overlap?
 
   ## GPP (gC/m2/day)
-  obs_id = 1 ; unc_id = obs_id+1
+  obs_id = 1 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
-  #if (length(which(drivers$obs[,obs_id] != -9999)) > 0) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$gpp_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$gpp_gCm2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$gpp_gCm2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction + tmp2
@@ -292,19 +308,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## LAI (m2/m2)
-  obs_id = 3 ; unc_id = obs_id+1
+  obs_id = 4 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$lai_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$lai_m2m2[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$lai_m2m2[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$lai_assim_data_overlap_fraction = states_all$lai_assim_data_overlap_fraction + tmp2
@@ -319,19 +335,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## NEE (gC/m2/day)
-  obs_id = 5 ; unc_id = obs_id+1
+  obs_id = 7 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nee_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction + tmp2
@@ -346,19 +362,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Reco (gC/m2/day)
-  obs_id = 9 ; unc_id = obs_id+1
+  obs_id = 13 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$reco_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$reco_assim_data_overlap_fraction = states_all$reco_assim_data_overlap_fraction + tmp2
@@ -373,7 +389,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Wood (gC/m2)
-  obs_id = 13 ; unc_id = obs_id+1
+  obs_id = 19 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[21] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[21] ; drivers$obs[1,unc_id] = drivers$parpriorunc[21] }
   if (any(drivers$obs[,obs_id] != -9999)) {
@@ -382,12 +398,12 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$wood_gCm2[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$wood_gCm2[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$wood_assim_data_overlap_fraction = states_all$wood_assim_data_overlap_fraction + tmp2
@@ -402,21 +418,25 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Soil (gC/m2)
-  obs_id = 19 ; unc_id = obs_id+1
+  obs_id = 28 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
-  if (drivers$parpriors[23] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[23] ; drivers$obs[1,unc_id] = drivers$parpriorunc[23] }
+  if (drivers$parpriors[23] > 0) { 
+      drivers$obs[1,obs_id] = drivers$parpriors[23] 
+      drivers$obs[1,unc_id] = drivers$parpriorunc[23] 
+      drivers$obs[1,lag_id] = 0
+  }
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$soil_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$som_gCm2[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$som_gCm2[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction + tmp2
@@ -430,20 +450,48 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
       }
   } # was the obs assimilated?
 
+  ## fAPAR (0-1)
+  obs_id = 34 ; unc_id = obs_id+1 ; lag_id = unc_id+1
+  if (any(drivers$obs[,obs_id] != -9999)) {
+      # Loop through time to assess model overlap with observations
+      nobs = 0 ; states_all$fapar_assim_data_overlap_fraction = 0
+      to_do = which(drivers$obs[,obs_id] != -9999)
+      for (a in 1:length(to_do)) {
+           # Assign correct time step
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
+           # Estimate the min / max values for the observations
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
+           # Create list object containing each observations distributions
+           # NOTE 0.5 is assumed fraction of shortwave radiation that is PAR
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$APAR_MJm2day[,tt:t]/(drivers$met[tt:t,4]*0.5))
+           # Estimate average model ensemble within observated range
+           tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
+           states_all$fapar_assim_data_overlap_fraction = states_all$fapar_assim_data_overlap_fraction + tmp2
+           nobs = nobs + 1
+           } # time loop
+      # Average the overlap
+      if (nobs > 0) {
+          states_all$fapar_assim_data_overlap_fraction = states_all$fapar_assim_data_overlap_fraction / nobs
+      } else {
+          states_all$fapar_assim_data_overlap_fraction = 0
+      }
+  } # was the obs assimilated?
+
   ## ET (kgH2O/m2/day)
-  obs_id = 31 ; unc_id = obs_id+1
+  obs_id = 40 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$et_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$ET_kgH2Om2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$ET_kgH2Om2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$et_assim_data_overlap_fraction = states_all$et_assim_data_overlap_fraction + tmp2
@@ -458,19 +506,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## NBE (gC/m2/day)
-  obs_id = 35 ; unc_id = obs_id+1 
+  obs_id = 46 ; unc_id = obs_id+1  ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$nbe_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$nbe_gCm2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$nbe_gCm2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$nbe_assim_data_overlap_fraction = states_all$nbe_assim_data_overlap_fraction + tmp2
@@ -485,19 +533,19 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
   } # was the obs assimilated?
 
   ## Fire (gC/m2/day)
-  obs_id = 7 ; unc_id = obs_id+1
+  obs_id = 10 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   if (any(drivers$obs[,obs_id] != -9999)) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$fire_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
       for (a in 1:length(to_do)) {
            # Assign correct time step
-           t = to_do[a]
+           t = to_do[a] ; tt = max(1,t - drivers$obs[t,lag_id])
            # Estimate the min / max values for the observations
-           obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
-           obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
+           obs_max = mean(drivers$obs[tt:t,obs_id]) + mean(drivers$obs[tt:t,unc_id])
+           obs_min = mean(drivers$obs[tt:t,obs_id]) - mean(drivers$obs[tt:t,unc_id])
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = states_all$fire_gCm2day[,t])
+           hist_list = list(o = c(obs_min,obs_max), m = states_all$fire_gCm2day[,tt:t])
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$fire_assim_data_overlap_fraction = states_all$fire_assim_data_overlap_fraction + tmp2

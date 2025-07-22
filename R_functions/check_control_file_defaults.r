@@ -55,13 +55,15 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_crop_management") == FALSE)       {path_to_crop_management <<- " "}
   if (exists("path_to_Csom") == FALSE)                  {path_to_Csom <<- " "}
   if (exists("path_to_Cwood_inc") == FALSE)             {path_to_Cwood_inc <<- " "}
+  if (exists("path_to_Cwood_growth") == FALSE)          {path_to_Cwood_growth <<- " "}
   if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- "v"}
   if (exists("path_to_Cwood") == FALSE)                 {path_to_Cwood <<- " "}
   if (exists("path_to_Cwood_initial") == FALSE)         {path_to_Cwood_initial <<- " "}
   if (exists("path_to_Cwood_potential") == FALSE)       {path_to_Cwood_potential <<- " "}
-  if (exists("path_to_gleam") == FALSE)                 {path_to_gleam <<- " "}
+  if (exists("path_to_soilwater") == FALSE)             {path_to_soilwater <<- " "}
   if (exists("path_to_nbe") == FALSE)                   {path_to_nbe <<- " "}
   if (exists("path_to_gpp") == FALSE)                   {path_to_gpp <<- " "}
+  if (exists("path_to_et") == FALSE)                    {path_to_et <<- " "}
   if (exists("path_to_fire") == FALSE)                  {path_to_fire <<- " "}
   if (exists("path_to_lca") == FALSE)                   {path_to_lca <<- " "}
   # Forcings data options
@@ -73,14 +75,15 @@ check_control_file_defaults<-function(paths) {
   if (exists("lai_source") == FALSE)                    {lai_source <<- " "}
   if (exists("fapar_source") == FALSE)                  {fapar_source <<- " "}
   if (exists("Csom_source") == FALSE)                   {Csom_source <<- " "}
-  if (exists("soilwater_initial_source") == FALSE)      {soilwater_initial_source <<- " "}
-  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
+  if (exists("soilwater_source") == FALSE)              {soilwater_source <<- " "}
+  if (exists("et_source") == FALSE)                     {et_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
+  if (exists("Cwood_growth_source") == FALSE)           {Cwood_growth_source <<- " "}
   if (exists("Cwood_mortality_source") == FALSE)        {Cwood_mortality_source <<- " "}
   if (exists("gpp_source") == FALSE)                    {gpp_source <<- " "}
   if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
   if (exists("Reco_source") == FALSE)                   {Reco_source <<- " "}
-  if (exists("NEE_source") == FALSE)                    {NEE_source <<- " "}
+  if (exists("nee_source") == FALSE)                    {nee_source <<- " "}
   if (exists("nbe_source") == FALSE)                    {nbe_source <<- " "}
   if (exists("harvest_source") == FALSE)                {harvest_source <<- " "}
   if (exists("foliage_to_litter_source") == FALSE)      {foliage_to_litter_source <<- " "}
@@ -150,11 +153,12 @@ check_control_file_defaults<-function(paths) {
   if (crop_management_source != "site_specific" & crop_management_source != " " & path_to_crop_management == " "){stop(paste("specified 'crop_management_source' and 'path_to_crop_management' incompatible"))}
   if (Csom_source != "site_specific" & Csom_source != " " & path_to_Csom == " ")                                 {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
   if (Cwood_inc_source != "site_specific" & Cwood_inc_source != " " & path_to_Cwood_inc == " ")                  {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
+  if (Cwood_growth_source != "site_specific" & Cwood_growth_source != " " & path_to_Cwood_growth == " ")         {stop(paste("specified 'Cwood_growth_source' and 'path_to_Cwood_growth' incompatible"))}
   if (Cwood_mortality_source != "site_specific" & Cwood_mortality_source != " " & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
   if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
   if (Cwood_initial_source != "site_specific" & Cwood_initial_source != " " & path_to_Cwood_initial == " ")      {stop(paste("specified 'Cwood_initial_source' and 'path_to_Cwood_initial' incompatible"))}
   if (Cwood_potential_source != "site_specific" & Cwood_potential_source != " " & path_to_Cwood_potential == " "){stop(paste("specified 'Cwood_potential_source' and 'path_to_Cwood_potential' incompatible"))}
-  if (soilwater_initial_source != "site_specific" & soilwater_initial_source != " " & path_to_gleam == " ")      {stop(paste("specified 'soilwater_initial_source' and 'path_to_gleam' incompatible"))}
+  if (soilwater_source != "site_specific" & soilwater_source != " " & path_to_soilwater == " ")                  {stop(paste("specified 'soilwater_source' and 'path_to_soilwater' incompatible"))}
   if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
   if (gpp_source != "site_specific" & gpp_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'gpp_source' and 'path_to_gpp' incompatible"))}
   if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
@@ -164,7 +168,7 @@ check_control_file_defaults<-function(paths) {
 #  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}
 #  if (exists("fire_source") == FALSE)                   {fire_source <<- " "}
 #  if (exists("Reco_source") == FALSE)                   {Reco_source <<- " "}
-#  if (exists("NEE_source") == FALSE)                    {NEE_source <<- " "}
+#  if (exists("nee_source") == FALSE)                    {nee_source <<- " "}
 #  if (exists("harvest_source") == FALSE)                {harvest_source <<- " "}
 #  if (exists("foliage_to_litter_source") == FALSE)      {foliage_to_litter_source <<- " "}
 #  if (exists("Cfol_initial_source") == FALSE)           {Cfol_initial_source <<- " "}

@@ -33,7 +33,7 @@ contains
       call model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
       ! for the purpose of running samplers we are only interested in the sum
-      loglikelihood = ML_obs_out + ML_prior_out
+      loglikelihood = ML_obs_out+ML_prior_out
 
    end subroutine
 
@@ -50,7 +50,7 @@ contains
 
       call log_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
-      loglikelihood = ML_obs_out + ML_prior_out
+      loglikelihood = ML_obs_out+ML_prior_out
    end subroutine
 
    subroutine sub_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_submodellikelihood")
@@ -65,7 +65,7 @@ contains
 
       call sub_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
-      loglikelihood = ML_obs_out + ML_prior_out
+      loglikelihood = ML_obs_out+ML_prior_out
    end subroutine
 
    subroutine sqrt_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_sqrtmodellikelihood")
@@ -79,7 +79,7 @@ contains
       integer(c_int), intent(in), optional:: id
 
       call sqrt_model_likelihood(params, ML_obs_out, ML_prior_out, id)
-      loglikelihood = ML_obs_out + ML_prior_out
+      loglikelihood = ML_obs_out+ML_prior_out
    end subroutine
 
 ! the function for starting loops, which finds a set of parameters fulfilling otherwise
@@ -96,7 +96,7 @@ contains
 
       call edc_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
-      loglikelihood = ML_obs_out + ML_prior_out
+      loglikelihood = ML_obs_out+ML_prior_out
    end subroutine
 
 end module
