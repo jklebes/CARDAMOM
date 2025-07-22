@@ -83,7 +83,7 @@ contains
       integer:: npars, MAXITER
       integer:: P_target
       integer:: seed
-      integer:: i, j, k, len_history, ITER  ! counters
+      integer:: i, j, k, len_history  ! counters
 
       !> the function to maximize.
       !> Completely agnostic, samples any functions vector -> double
@@ -181,7 +181,6 @@ contains
       seed = irand()  ! TODO record later  ! TODO always the same ?
       write(*,*) "seed", seed
         call random_uniform_vectors(j)%initialize_random(seed)
-        ! TODO also make an iospace for each chain
       end do
 !$OMP END PARALLEL DO
 
@@ -192,35 +191,17 @@ contains
       do i = 2, MAXITER/mco%nadapt+2
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO private(ITER)
+!$OMP PARALLEL DO 
          do j = 1, mco%nchains
             do k = 1, mco%nadapt
-               ITER = i*mco%nadapt+k
                call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
                                PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
          
-              if (MCO%nadapt > 0) then
-              if (mod(ITER, MCO%nprint) == 0) then
+              if (mod(i*mco%nadapt+k, MCO%nprint) == 0) then
                 write(*,*) "thread", j
                 write(*,*) "loglikelihood", l0(j)
                 write(*,*) "pars", pars_current(:,j)
               endif 
-              endif
-
-              if (MCO%nwrite > 0) then
-                  if (mod(ITER, MCO%nwrite) == 0) then
-                     call model_likelihood_write(PARS_current(:,j), npars, model_likelihood, j)
-                     ! Now write out to files
-                     ! TODO statistics not updated yet
-                     ! should we truncate running covariance and mean with nparvar, for comparability?
-                     call write_mcmc_output(MCOUT%parvar, ACCRATE, &
-                                            MCOUT%covariance, &
-                                            MCOUT%meanpar, MCOUT%Nparvar, &
-                                            PARS_previous, output_loglikelihood, npars, ITER, &
-                                            io_space, j)
-                  end if
-               end if 
-
             end do
             ! write the chain's state after nadapt steps to Z
             PARS_history(:, len_history+j) = PARS_current(:, j)

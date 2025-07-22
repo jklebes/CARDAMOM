@@ -198,6 +198,9 @@ module cardamom_structures
                 ,nfAPAR                 & ! number of fAPAR by green vegetation
                 ,nsoilwater             & ! number of surface soil water observations
                 ,nharvest                 ! number of harvest observations
+      
+      double precision, dimension(:), allocatable:: soil_frac_clay, soil_frac_sand  ! clay and soil fractions of soil-
+      ! initial value as read from input file.
 
       ! timing variable
       integer:: nos_years, steps_per_year
