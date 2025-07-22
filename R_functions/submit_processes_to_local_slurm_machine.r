@@ -48,7 +48,7 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     # CARDAMOM typically uses a multi-phase MCMC process. First, an EDC searching phase to
     # to find parameters with an EDC compliant starting point. Second, a pre-mcmc during which
     # the likelihood scores for each data stream are normalised by their sample size. Third, the 
-    # main analysis during which the likelihood scores are weighted based on the 'cost_function_scaling'
+    # main analysis during which the likelihood scores are weighted based on the 'request_cost_function_scaling'
     # However, if this is an extended run, i.e. going beyond the parameter proposals originally requested
     # the pre-mcmc must be turned off to maintain consistency in the likelihood scores being assessed.
     if (request_extended_mcmc) {
@@ -64,9 +64,9 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     }
 
     # Check presence of PROJECT_in$cost_function_scaling
-    if (exists(x = "cost_function_scaling", where = PROJECT_in) == FALSE) {
+    if (exists(x = "request_cost_function_scaling", where = PROJECT_in) == FALSE) {
         # If not, assume default cost function
-        PROJECT_in$cost_function_scaling = 0
+        PROJECT_in$request_cost_function_scaling = 0
     }
 
     ## Create the two files needed, one which contains the list of jobs to be ran
@@ -89,7 +89,7 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
                               " 0 ",
                               as.integer(PROJECT_in$samplerate)," ",
                               as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
+                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
                   first_pass=FALSE
               } else {
                   write(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
@@ -99,7 +99,7 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
                               " 0 ",
                               as.integer(PROJECT_in$samplerate)," ",
                               as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
+                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
               } # first pass or not
          } # chain no
     } # nosite

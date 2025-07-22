@@ -436,7 +436,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
            obs_max = drivers$obs[t,obs_id] + drivers$obs[t,unc_id]
            obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
            # Create list object containing each observations distributions
-           hist_list = list(o = c(obs_min,obs_max), m = apply(states_all$som_gCm2[,tt:t]1,mean))
+           hist_list = list(o = c(obs_min,obs_max), m = apply(states_all$som_gCm2[,tt:t],1,mean))
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$soil_assim_data_overlap_fraction = states_all$soil_assim_data_overlap_fraction + tmp2
