@@ -66,7 +66,7 @@ module model_shared
     !! each independent parallel chain.
     !! Must have DATAin filled first.
     use cardamom_structures, only: DATAin
-    use CARBON_MODEL_MOD, only: mVs
+    use CARBON_MODEL_MOD, only: mVs, initialize_mv
     integer, intent(in), optional:: n_chains
     integer:: n_chains_
     integer:: i

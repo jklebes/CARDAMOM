@@ -50,7 +50,8 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers &
            ,sw_par_fraction &
-           , mVs
+           , mVs            &
+           , initialize_mv
 
   !!!!!!!!!
   ! Parameters

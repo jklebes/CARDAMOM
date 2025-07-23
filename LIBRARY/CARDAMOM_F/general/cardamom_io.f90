@@ -47,12 +47,17 @@ module cardamom_io
 
   ! allow access to specific functions
   public::  update_for_restart_simulation   &
+           ,update_obs_scaling_normal       &
+           ,update_obs_scaling_nsamples     &
+           ,update_obs_scaling_sqrt_nsamples&
+           ,update_obs_scaling_log_nsamples &
            ,check_for_existing_output_files &
            ,open_output_files               &
            ,close_output_files              &
            ,cardamom_model_library          &
            ,read_options                    &
-           ,read_binary_data
+           ,read_binary_data                &
+           ,initialize
 
   ! allow access to needed variable
   public:: restart_flag
@@ -1462,5 +1467,171 @@ module cardamom_io
       return
 
    end subroutine update_for_restart_simulation
+
+     !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_normal
+      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      type(DATA_type):: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
+      ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
+      ! - but I made it requires more deliberate steps to stop accidental updates
+      ! from concurrent parts
+    DATAin_tmp = DATAin
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case set all to one where the weight of each
+    ! observation is equal
+
+    DATAin_tmp%GPP_scaling               = 1d0
+    DATAin_tmp%NEE_scaling               = 1d0
+    DATAin_tmp%Fire_scaling              = 1d0
+    DATAin_tmp%LAI_scaling               = 1d0
+    DATAin_tmp%Cwood_inc_scaling         = 1d0
+    DATAin_tmp%Cwood_growth_scaling      = 1d0
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0
+    DATAin_tmp%foliage_to_litter_scaling = 1d0
+    DATAin_tmp%Reco_scaling              = 1d0
+    DATAin_tmp%Cfol_stock_scaling        = 1d0
+    DATAin_tmp%Cwood_stock_scaling       = 1d0
+    DATAin_tmp%Croots_stock_scaling      = 1d0
+    DATAin_tmp%Csom_stock_scaling        = 1d0
+    DATAin_tmp%Cagb_stock_scaling        = 1d0
+    DATAin_tmp%Clit_stock_scaling        = 1d0
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0
+    DATAin_tmp%Evap_scaling              = 1d0
+    DATAin_tmp%SWE_scaling               = 1d0
+    DATAin_tmp%NBE_scaling               = 1d0
+    DATAin_tmp%fAPAR_scaling             = 1d0
+    DATAin_tmp%harvest_scaling           = 1d0
+    DATAin_tmp%soilwater_scaling         = 1d0
+    
+    call set_datain(DATAin_tmp)  ! copy the tmp object to shared cardamom_structures DATAin
+
+    return
+
+  end subroutine update_obs_scaling_normal
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_nsamples
+      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      type(DATA_type):: DATAin_tmp
+    DATAin_tmp = DATAin
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sample size
+    ! giving equal weight to each datastream
+
+    DATAin_tmp%GPP_scaling               = 1d0/dble(DATAin%ngpp)
+    DATAin_tmp%NEE_scaling               = 1d0/dble(DATAin%nnee)
+    DATAin_tmp%Fire_scaling              = 1d0/dble(DATAin%nfire)
+    DATAin_tmp%LAI_scaling               = 1d0/dble(DATAin%nlai)
+    DATAin_tmp%Cwood_inc_scaling         = 1d0/dble(DATAin%nCwood_inc)
+    DATAin_tmp%Cwood_growth_scaling      = 1d0/dble(DATAin%nCwood_growth)
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0/dble(DATAin%nCwood_mortality)
+    DATAin_tmp%foliage_to_litter_scaling = 1d0/dble(DATAin%nfoliage_to_litter)
+    DATAin_tmp%Reco_scaling              = 1d0/dble(DATAin%nreco)
+    DATAin_tmp%Cfol_stock_scaling        = 1d0/dble(DATAin%nCfol_stock)
+    DATAin_tmp%Cwood_stock_scaling       = 1d0/dble(DATAin%nCwood_stock)
+    DATAin_tmp%Croots_stock_scaling      = 1d0/dble(DATAin%nCroots_stock)
+    DATAin_tmp%Csom_stock_scaling        = 1d0/dble(DATAin%nCsom_stock)
+    DATAin_tmp%Cagb_stock_scaling        = 1d0/dble(DATAin%nCagb_stock)
+    DATAin_tmp%Clit_stock_scaling        = 1d0/dble(DATAin%nClit_stock)
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/dble(DATAin%nCcoarseroot_stock)
+    DATAin_tmp%Evap_scaling              = 1d0/dble(DATAin%nEvap)
+    DATAin_tmp%SWE_scaling               = 1d0/dble(DATAin%nSWE)
+    DATAin_tmp%NBE_scaling               = 1d0/dble(DATAin%nnbe)
+    DATAin_tmp%fAPAR_scaling             = 1d0/dble(DATAin%nfAPAR)
+    DATAin_tmp%harvest_scaling           = 1d0/dble(DATAin%nharvest)
+    DATAin_tmp%soilwater_scaling         = 1d0/dble(DATAin%nsoilwater)
+
+    call set_datain(DATAin_tmp)
+
+    return
+
+  end subroutine update_obs_scaling_nsamples
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_sqrt_nsamples
+      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      type(DATA_type):: DATAin_tmp  
+    DATAin_tmp = DATAin
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sqrt of the
+    ! sample size. This allows datastreams with more observations
+    ! to contribute more to the lost function but penalised to reduce
+    ! bias' introduced by unbalanced observations
+
+    DATAin_tmp%GPP_scaling               = 1d0/sqrt(dble(DATAin%ngpp))
+    DATAin_tmp%NEE_scaling               = 1d0/sqrt(dble(DATAin%nnee))
+    DATAin_tmp%Fire_scaling              = 1d0/sqrt(dble(DATAin%nfire))
+    DATAin_tmp%LAI_scaling               = 1d0/sqrt(dble(DATAin%nlai))
+    DATAin_tmp%Cwood_inc_scaling         = 1d0/sqrt(dble(DATAin%nCwood_inc))
+    DATAin_tmp%Cwood_growth_scaling      = 1d0/sqrt(dble(DATAin%nCwood_growth))
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0/sqrt(dble(DATAin%nCwood_mortality))
+    DATAin_tmp%foliage_to_litter_scaling = 1d0/sqrt(dble(DATAin%nfoliage_to_litter))
+    DATAin_tmp%Reco_scaling              = 1d0/sqrt(dble(DATAin%nreco))
+    DATAin_tmp%Cfol_stock_scaling        = 1d0/sqrt(dble(DATAin%nCfol_stock))
+    DATAin_tmp%Cwood_stock_scaling       = 1d0/sqrt(dble(DATAin%nCwood_stock))
+    DATAin_tmp%Croots_stock_scaling      = 1d0/sqrt(dble(DATAin%nCroots_stock))
+    DATAin_tmp%Csom_stock_scaling        = 1d0/sqrt(dble(DATAin%nCsom_stock))
+    DATAin_tmp%Cagb_stock_scaling        = 1d0/sqrt(dble(DATAin%nCagb_stock))
+    DATAin_tmp%Clit_stock_scaling        = 1d0/sqrt(dble(DATAin%nClit_stock))
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/sqrt(dble(DATAin%nCcoarseroot_stock))
+    DATAin_tmp%Evap_scaling              = 1d0/sqrt(dble(DATAin%nEvap))
+    DATAin_tmp%SWE_scaling               = 1d0/sqrt(dble(DATAin%nSWE))
+    DATAin_tmp%NBE_scaling               = 1d0/sqrt(dble(DATAin%nnbe))
+    DATAin_tmp%fAPAR_scaling             = 1d0/sqrt(dble(DATAin%nfAPAR))
+    DATAin_tmp%harvest_scaling           = 1d0/sqrt(dble(DATAin%nharvest))
+    DATAin_tmp%soilwater_scaling         = 1d0/sqrt(dble(DATAin%nsoilwater))
+
+    call set_datain(DATAin_tmp)
+    return
+
+  end subroutine update_obs_scaling_sqrt_nsamples
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_log_nsamples
+      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      type(DATA_type):: DATAin_tmp
+    DATAin_tmp = DATAin
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sqrt of the
+    ! sample size. This allows datastreams with more observations
+    ! to contribute more to the lost function but penalised to reduce
+    ! bias' introduced by unbalanced observations
+
+    DATAin_tmp%GPP_scaling               = 1d0 / (1d0+log(dble(DATAin%ngpp)))
+    DATAin_tmp%NEE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnee)))
+    DATAin_tmp%Fire_scaling              = 1d0 / (1d0+log(dble(DATAin%nfire)))
+    DATAin_tmp%LAI_scaling               = 1d0 / (1d0+log(dble(DATAin%nlai)))
+    DATAin_tmp%Cwood_inc_scaling         = 1d0 / (1d0+log(dble(DATAin%nCwood_inc)))
+    DATAin_tmp%Cwood_growth_scaling      = 1d0 / (1d0+log(dble(DATAin%nCwood_growth)))
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0 / (1d0+log(dble(DATAin%nCwood_mortality)))
+    DATAin_tmp%foliage_to_litter_scaling = 1d0 / (1d0+log(dble(DATAin%nfoliage_to_litter)))
+    DATAin_tmp%Reco_scaling              = 1d0 / (1d0+log(dble(DATAin%nreco)))
+    DATAin_tmp%Cfol_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCfol_stock)))
+    DATAin_tmp%Cwood_stock_scaling       = 1d0 / (1d0+log(dble(DATAin%nCwood_stock)))
+    DATAin_tmp%Croots_stock_scaling      = 1d0 / (1d0+log(dble(DATAin%nCroots_stock)))
+    DATAin_tmp%Csom_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCsom_stock)))
+    DATAin_tmp%Cagb_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCagb_stock)))
+    DATAin_tmp%Clit_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nClit_stock)))
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0 / (1d0+log(dble(DATAin%nCcoarseroot_stock)))
+    DATAin_tmp%Evap_scaling              = 1d0 / (1d0+log(dble(DATAin%nEvap)))
+    DATAin_tmp%SWE_scaling               = 1d0 / (1d0+log(dble(DATAin%nSWE)))
+    DATAin_tmp%NBE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnbe)))
+    DATAin_tmp%fAPAR_scaling             = 1d0 / (1d0+log(dble(DATAin%nfAPAR)))
+    DATAin_tmp%harvest_scaling           = 1d0 / (1d0+log(dble(DATAin%nharvest)))
+    DATAin_tmp%soilwater_scaling         = 1d0 / (1d0+log(dble(DATAin%nsoilwater)))
+
+    call set_datain(DATAin_tmp)
+    return
+
+  end subroutine update_obs_scaling_log_nsamples
 
   end module cardamom_io

@@ -2,20 +2,20 @@ program cardamom_framework
    use math_functions, only: rnstrt, idum  ! TODO redo random seeds
    use DEMCz, only: demczOPT, run_demcz
    use cardamom_MHMCMC, only: MCMC_OUTPUT, mcmc_options
-   use model_shared, only: PI
+   use model_shared, only: PI, initialize_carbon_model
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
                           restart_flag, &
-                          update_for_restart_simulation
+                          update_for_restart_simulation, &
+                        update_obs_scaling_normal, update_obs_scaling_nsamples, &
+                        update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
    use samplers_io, only: open_output_files, &
                           check_for_existing_output_files, &
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
    use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
-   use model_likelihood_wrapper, only: model_likelihood_fct, log_model_likelihood_fct, sqrt_model_likelihood_fct, &
-                                       sub_model_likelihood_fct, edc_model_likelihood_fct
-   use CARBON_MODEL_MOD, only: initialize_carbon_model
+   use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct
    use cardamom_main_utils
 
    ! Command line inputs are:
@@ -210,25 +210,23 @@ program cardamom_framework
       write (*, *) "Beginning parameter search in real likelihoods"
       write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
 
+
       ! Call the main MCMC
       ! The specific normalisation of the cost function is determined here.
       ! But to avoid getting through the EDC do_inflate sections before finding
       ! out that the cost_function_scaling has not been set correctly, 
       ! ensure code after the command line read (above) has been correctly maintained
       if (cost_func_scaling_dble == 0) then
-         ! Caution: order of loglikelihood function arguments is being switched so that the first
-         ! function in the (maybe scaled) one to do the sampling calculation with, second optional
-         ! function argument is the one for writing only
-         call run_demcz(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+         call update_obs_scaling_normal
       else if (cost_func_scaling_dble == 1) then
-        call run_demcz(sub_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+         call update_obs_scaling_nsamples
       else if (cost_func_scaling_dble == 2) then
-       call run_demcz(sqrt_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+         call update_obs_scaling_sqrt_nsamples
       else if (cost_func_scaling_dble == 3) then
-        call run_demcz(log_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
-         !else if (cost_func_scaling_dble == 4) then
-         !    call MHMCMC(1d0, model_likelihood, log_model_likelihood_dtm)
+         call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
+      ! TODO scaled model likelihood fct
+      call run_demcz(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."
