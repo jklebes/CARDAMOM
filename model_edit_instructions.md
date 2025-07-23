@@ -1,17 +1,17 @@
 # How to edit models for thread safety
 ### src / model .f90 file 
 Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 004 before and after example.  As written in the python script's top comment:
-1. insert `type model_working_variables` after its parameter variables with values and before the start of its non-parameter variables at  `double precision :: minlwp = minlwp_default`
-2. insert the line `end type` at the close of list of module variables, before `contains` .
+1. Insert the line `type model_working_variables` after the list of module parameter variables and before the list of non-parameter variables, before the line  `double precision :: minlwp = minlwp_default`
+2. Insert the line `end type` at the close of list of module variables, before `contains` .
 3. Get rid of all the variables in "public:" block except  CARBON_MODEL and read-only parameters USEd by likelihood file such as nos_soil_layers, top_soil_depth .  Add `mVs` to `public` list.
-4. close the file and run the script on it, e.g. 
+4. Close the file and run the script on it, e.g. 
 		  `python cardamom_model_type.py LIBRARY/CARDAMOM_F/model/DALEC.A1.C1.D2.F2.H2.P1.004/src/DALEC.A1.C1.D2.F2.H2.P1.004.f90` .
 	- This inserts `mv%` in front of all variables in the `type model_working_variables` block and adds an argument `mV` to subroutine definitions and subroutine calls.
 	- This creates a new file `<...>_editted`
-5. open the new `_editted` file and check for successful `mV` insertion. Move `_editted` file to the original filename
+5. Open the new `_editted` file and check for successful `mV` insertions. Move the `_editted` file to the original filename
 6. Try compiling cardamom with the model of interest.    It will not compile , but since the model file is in the compile order first it should compile past the model file and get errors in some other file such as (now not compatible) MODEL_LIKELIHOOD file.
 7. Fix common problems
-   - ``do mV%soil_layer = 1, nos_soil_layers`` - here a loop counter `soil_layers` happened to have the same name as a variable in `mV` .  Change to a different loop counter variable name.
+   - ``do mV%soil_layer = 1, nos_soil_layers`` - here a loop counter `soil_layers` happened to have the same name as a variable in `mV` and was wrongly editted .  Change to a different loop counter variable name.
    - Errors related to `find_gs_iWUE` function:
 	- *Inside* subroutine `calculate_stomatal_conductance`, insert a function definition
 				  ```fortran
