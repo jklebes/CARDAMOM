@@ -2,12 +2,12 @@ set(FILES1 misc/math_functions.f90
                   misc/oksofar.f90
                   misc/brent_zero/brent_zero.f90
                   general/cardamom_structures.f90
-                  model/model_shared.f90
                 )
 set(MODELPARS
-                  model/DALEC.A1.C1.D2.F2.H2.P1/src/DALEC.A1.C1.D2.F2.H2.P1_PARS.f90
+                  model/DALEC.A1.C1.D2.F2.H2.P1.004/src/DALEC.A1.C1.D2.F2.H2.P1.004_PARS.f90
                 )
 set(FILES2
+                  model/model_shared.f90
                   general/cardamom_io.f90
                   general/model_likelihood_wrapper.f90
                   general/wrappers_for_R.f90
@@ -16,10 +16,10 @@ set(FILES2
                   #general/stresstest_wrappers_for_R.f90
                 )
 set(MODELLIKELIHOODFILE
-                  model/DALEC.A1.C1.D2.F2.H2.P1/likelihood/MODEL_LIKELIHOOD.f90
+                  model/DALEC.A1.C1.D2.F2.H2.P1.004/likelihood/MODEL_LIKELIHOOD.f90
                 )
 set(MODELFILE
-                  model/DALEC.A1.C1.D2.F2.H2.P1/src/DALEC.A1.C1.D2.F2.H2.P1.f90
+                  model/DALEC.A1.C1.D2.F2.H2.P1.004/src/DALEC.A1.C1.D2.F2.H2.P1.004.f90
                 )
 
 set(ALLMODELNAMES

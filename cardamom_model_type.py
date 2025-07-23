@@ -8,6 +8,9 @@
 #       - changes references  from x to mv%x
 #       - inserts mV into subroutine args list where needed
 #       - inserts mV declaration into subroutines where needed
+#
+#     (doesn't overwrite, writes to _editted file )
+#
 # 4) Copy altered file to original filename
 # 5) Correct function calls that were missed
 
