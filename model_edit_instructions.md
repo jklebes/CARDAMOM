@@ -161,8 +161,8 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 7. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
 8. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
 9. add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likelihood`
-10. add last argument `EDCD` and declaration `type (EDCDIAGNOSTICS), intent(inout):: EDCD` to  `assess_EDC2`
-11. add `EDCD` last argument to calls to `assess_EDC2`
+10. add last argument `EDCD` and declaration `type (EDCDIAGNOSTICS), intent(inout):: EDCD` to  `assess_EDC2`, `assess_EDC1`
+11. add `EDCD` last argument to calls to `assess_EDC2`, `assess_EDC1`
 12. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
 13. add `mVs(thread_id)` as last argument to all `call carbon_model`
 14. in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
