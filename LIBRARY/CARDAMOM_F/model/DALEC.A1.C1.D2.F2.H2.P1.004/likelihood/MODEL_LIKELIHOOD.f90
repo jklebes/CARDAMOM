@@ -53,7 +53,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public:: model_likelihood, scaled_model_likelihood, find_edc_initial_values
+  public:: model_likelihood, scaled_model_likelihood
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -69,7 +69,7 @@ module model_likelihood_module
 
   contains
 
-  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use cardamom_structures, only: DATAin
     use model_shared, only: PI
     use CARBON_MODEL_MOD, only: mvs, carbon_model
@@ -91,6 +91,9 @@ module model_likelihood_module
 
     ! TODO move into here in all model likelihood files
   type (EDCDIAGNOSTICS):: EDCD
+  double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
 
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
@@ -99,15 +102,15 @@ module model_likelihood_module
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
-    if (.not.sanity_check) call model_sanity_check(PARS)
+    if (.not.sanity_check) call model_sanity_check(PARS, thread_id)
 
     ! call EDCs which can be evaluated prior to running the model
-    call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
+    call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
 
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT &
-                     ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS &
+                     ,M_FLUXES, M_POOLS, M_DIAGS &
                      ,DATAin%nopars, DATAin%nomet, DATAin%nopools & 
                      ,DATAin%nofluxes, DATAin%nodiags, mVs(thread_id))
 
@@ -115,7 +118,7 @@ module model_likelihood_module
     call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                     ,DATAin%nodiags, DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                     ,PI%parmax, PARS, DATAin%MET &
-                    ,DATAin%M_POOLS, DATAin%M_FLUXES, DATAin%M_DIAGS &
+                    ,M_POOLS, M_FLUXES, M_DIAGS &
                     ,DATAin%meantemp, EDC2, EDCD)
 
     ! calculate the likelihood
@@ -157,6 +160,9 @@ module model_likelihood_module
     double precision, dimension((DATAin%nodays+1), DATAin%nopools):: local_pools
     double precision, dimension(DATAin%nodays, DATAin%nofluxes):: local_fluxes
     double precision, dimension(DATAin%nodays, DATAin%nodiags):: local_diags
+    double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     double precision:: pool_error, flux_error, diags_error
  integer, intent(in):: thread_id
 
@@ -166,7 +172,7 @@ module model_likelihood_module
     ! next need to run the model itself
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT &
-                     ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS & 
+                     ,M_FLUXES, M_POOLS, M_DIAGS & 
                      ,DATAin%nopars, DATAin%nomet, DATAin%nopools & 
                      ,DATAin%nofluxes, DATAin%nodiags, mVs(thread_id))
     print*,"sanity_check: carbon_model run 2"
@@ -177,9 +183,9 @@ module model_likelihood_module
                      ,DATAin%nopars, DATAin%nomet, DATAin%nopools & 
                      ,DATAin%nofluxes, DATAin%nodiags, mVs(thread_id) )                     
     ! Compare outputs
-    flux_error = sum(abs(DATAin%M_FLUXES-local_fluxes))
-    pool_error = sum(abs(DATAin%M_POOLS-local_pools))
-    diags_error = sum(abs(DATAin%M_DIAGS-local_diags))
+    flux_error = sum(abs(M_FLUXES-local_fluxes))
+    pool_error = sum(abs(M_POOLS-local_pools))
+    diags_error = sum(abs(M_DIAGS-local_diags))
     ! If error between runs exceeds precision error then we have a problem
     if (diags_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         pool_error  > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
@@ -192,15 +198,15 @@ module model_likelihood_module
         print*,"Cumulative DIAGS error = ",diags_error
         do i = 1, DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
         end do
         do i = 1, DATAin%nodiags
            print*,"Sum abs error over time: diags = ",i
-           print*,sum(abs(DATAin%M_DIAGS(:,i) - local_diags(:,i)))
+           print*,sum(abs(M_DIAGS(:,i) - local_diags(:,i)))
         end do
         print*,"First time step for all fluxes in run 1"
         print*,local_fluxes(1, :)
@@ -956,6 +962,9 @@ module model_likelihood_module
     integer, intent(in), optional:: thread_id  ! TODO index 0, error if not given
     ! declare local variables
     double precision:: EDC1, EDC2
+    double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
   type (EDCDIAGNOSTICS):: EDCD
 
 
@@ -968,7 +977,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1, EDCD)
+        call assess_EDC1(PARS, PI%npars, DATAin%meantemp, DATAin%meanrad, EDC1)
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
@@ -978,7 +987,7 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT &
-                     ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS & 
+                     ,M_FLUXES, M_POOLS, M_DIAGS & 
                      ,DATAin%nopars, DATAin%nomet, DATAin%nopools & 
                      ,DATAin%nofluxes, DATAin%nodiags, mVs(thread_id))
 
@@ -989,7 +998,7 @@ module model_likelihood_module
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodiags, DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,DATAin%M_POOLS, DATAin%M_FLUXES, DATAin%M_DIAGS &
+                        ,M_POOLS, M_FLUXES, M_DIAGS &
                         ,DATAin%meantemp, EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -1009,9 +1018,9 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine scaled_model_likelihood(PARS, ML_obs_out, ML_prior_out)
+  subroutine scaled_model_likelihood(PARS, ML_obs_out, ML_prior_out, thread_id)
     use model_shared, only:  PI
-    use carbon_model_mod, only: carbon_model
+    use carbon_model_mod, only: carbon_model, mVs
     use cardamom_structures, only: DATAin
 
     ! this subroutine is responsible, under normal circumstances for the running
@@ -1026,8 +1035,12 @@ module model_likelihood_module
     ! output
     double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
+    double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     ! declare local variables
     double precision:: EDC1, EDC2
+    integer, intent(in), optional:: thread_id
 
     ! initial values
     ML_obs_out = 0d0; ML_prior_out = 0d0; EDC1 = 1d0; EDC2 = 1d0
@@ -1049,9 +1062,9 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT &
-                     ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS & 
+                     ,M_FLUXES, M_POOLS, M_DIAGS & 
                      ,DATAin%nopars, DATAin%nomet, DATAin%nopools & 
-                     ,DATAin%nofluxes, DATAin%nodiags)
+                     ,DATAin%nofluxes, DATAin%nodiags, mVs(thread_id))
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -1060,8 +1073,8 @@ module model_likelihood_module
         call assess_EDC2(PI%npars, DATAin%nomet, DATAin%nofluxes, DATAin%nopools  &
                         ,DATAin%nodiags, DATAin%nodays, DATAin%deltat, DATAin%steps_per_year     &
                         ,PI%parmax, PARS, DATAin%MET &
-                        ,DATAin%M_POOLS, DATAin%M_FLUXES, DATAin%M_DIAGS &
-                        ,DATAin%meantemp, EDC2)
+                        ,M_POOLS, M_FLUXES, M_DIAGS &
+                        ,DATAin%meantemp, EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out+log(EDC2)

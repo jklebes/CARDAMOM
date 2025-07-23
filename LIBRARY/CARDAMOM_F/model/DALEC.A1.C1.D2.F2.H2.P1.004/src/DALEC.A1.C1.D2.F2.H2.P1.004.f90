@@ -49,6 +49,7 @@ module CARBON_MODEL_MOD
   public:: CARBON_MODEL     &
            ,top_soil_depth   &
            ,nos_soil_layers &
+           ,sw_par_fraction &
            , mVs
 
   !!!!!!!!!
