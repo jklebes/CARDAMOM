@@ -153,17 +153,18 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 ### likelihood / MODEL_LIKELIHOOD.f90 file
 1. remove ` type (EDCDIAGNOSTICS), save:: EDCD` at the top of module
 2. delete subroutine `find_edc_initial_values` , this is now in `_main_utils` .  Delete from `public` list.
-3. change all use ``MCMCOPT, only: PI`` to  `use model_shared, only: PI`
-4. change all `use carbon_model_mod, only: carbon_model` to `use carbon_model_mod, only: carbon_model,  mVs`
-5. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `edc_model_likelihood`
-6. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
-7. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
-8. add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likelihood`
-9. add last argument `EDCD` and declaration `type (EDCDIAGNOSTICS), intent(inout):: EDCD` to  `assess_EDC2`
-10. add `EDCD` last argument to calls to `assess_EDC2`
-11. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
-12. add `mVs(thread_id)` as last argument to all `call carbon_model`
-13. in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
+3. add `edc_model_likelihood` to `public::` list
+4. change all use ``MCMCOPT, only: PI`` to  `use model_shared, only: PI`
+5. change all `use carbon_model_mod, only: carbon_model` to `use carbon_model_mod, only: carbon_model,  mVs`
+6. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `edc_model_likelihood`
+7. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
+8. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
+9. add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likelihood`
+10. add last argument `EDCD` and declaration `type (EDCDIAGNOSTICS), intent(inout):: EDCD` to  `assess_EDC2`
+11. add `EDCD` last argument to calls to `assess_EDC2`
+12. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
+13. add `mVs(thread_id)` as last argument to all `call carbon_model`
+14. in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
 ```fortran
 	double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
 	double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
