@@ -1,18 +1,18 @@
 ## How to edit models for thread safety
-	- Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 004 before and after example.  As written in the python script's top comment:
-		- insert `type model_working_variables` after its parameter variables with values and before the start of its non-parameter variables at  `double precision :: minlwp = minlwp_default`
-		- insert the line `end type` at the close of list of module variables, before `contains` .
-		- Get rid of all the variables in "public:" block except  CARBON_MODEL and read-only parameters USEd by likelihood file such as nos_soil_layers, top_soil_depth .  Add `mVs` to `public` list.
-		- close the file and run the script on it, e.g. 
+- Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 004 before and after example.  As written in the python script's top comment:
+	- insert `type model_working_variables` after its parameter variables with values and before the start of its non-parameter variables at  `double precision :: minlwp = minlwp_default`
+	- insert the line `end type` at the close of list of module variables, before `contains` .
+	- Get rid of all the variables in "public:" block except  CARBON_MODEL and read-only parameters USEd by likelihood file such as nos_soil_layers, top_soil_depth .  Add `mVs` to `public` list.
+	- close the file and run the script on it, e.g. 
 		  `python cardamom_model_type.py LIBRARY/CARDAMOM_F/model/DALEC.A1.C1.D2.F2.H2.P1.004/src/DALEC.A1.C1.D2.F2.H2.P1.004.f90` .
-			- This inserts `mv%` in front of all variables in the `type model_working_variables` block and adds an argument `mV` to subroutine definitions and subroutine calls.
-			- This creates a new file `<...>_editted`
-		- open the new `_editted` file and check for successful `mV` insertion. Move `_editted` file to the original filename
-		- Try compiling cardamom with the model of interest.    It will not compile , but since the model file is in the compile order first it should compile past the model file and get errors in some other file such as (now not compatible) MODEL_LIKELIHOOD file.
-		- Fix common problems
-			- ``do mV%soil_layer = 1, nos_soil_layers`` - here a loop counter `soil_layers` happened to have the same name as a variable in `mV` .  Change to a different loop counter variable name.
-			- Errors related to `find_gs_iWUE` function:
-				- *Inside* subroutine `calculate_stomatal_conductance`, insert a function definition
+		- This inserts `mv%` in front of all variables in the `type model_working_variables` block and adds an argument `mV` to subroutine definitions and subroutine calls.
+		- This creates a new file `<...>_editted`
+	- open the new `_editted` file and check for successful `mV` insertion. Move `_editted` file to the original filename
+	- Try compiling cardamom with the model of interest.    It will not compile , but since the model file is in the compile order first it should compile past the model file and get errors in some other file such as (now not compatible) MODEL_LIKELIHOOD file.
+	- Fix common problems
+		- ``do mV%soil_layer = 1, nos_soil_layers`` - here a loop counter `soil_layers` happened to have the same name as a variable in `mV` .  Change to a different loop counter variable name.
+		- Errors related to `find_gs_iWUE` function:
+			- *Inside* subroutine `calculate_stomatal_conductance`, insert a function definition
 				  ```fortran
 				   subroutine calculate_stomatal_conductance (mV)
 				  ...
@@ -23,13 +23,13 @@
 				    
 				  end function
 				  ```
-					- and use this variant name when passing the function to `zbrent` *only* (all other references to `find_gs_iWUE` in `calculate_stomatal_conductance` unchanged)
+				- and use this variant name when passing the function to `zbrent` *only* (all other references to `find_gs_iWUE` in `calculate_stomatal_conductance` unchanged)
 					  ```fortran
 					                  mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
 					                                                find_gs_iWUE_, mV%minimum_conductance, mV%potential_conductance, tol_gs*mV%lai, mV%iWUE_step*0.10d0)
 					  ```
-					- All other calls to `find_gs_iWUE` should have the second argument `mV`, may need to add this
-				- Errors related to ``water_retention_saxton_eqns`` : Do the same for `water_retention_saxton_eqns` inside `calculate_field_capacity`
+				- All other calls to `find_gs_iWUE` should have the second argument `mV`, may need to add this
+			- Errors related to ``water_retention_saxton_eqns`` : Do the same for `water_retention_saxton_eqns` inside `calculate_field_capacity`
 				  ```fortran
 				    subroutine calculate_field_capacity (mV)
 				  
@@ -61,13 +61,12 @@
 				  
 				    end subroutine calculate_field_capacity
 				  ```
-				- Same for any other functions passed to `zbrent` : only single-argument functions can be passed to zbrent, so we have to define a single-argument function as a wrapper around the functions with `mV` argument.
-		- After `end type`, devlare an array of `model_working_variables` structs :
+			- Same for any other functions passed to `zbrent` : only single-argument functions can be passed to zbrent, so we have to define a single-argument function as a wrapper around the functions with `mV` argument.
+	- After `end type`, devlare an array of `model_working_variables` structs :
 		  ```fortran
 		  type(model_working_variables), allocatable, dimension(:):: mVs
 		  ```
-		- Done when we get compile error about `MODEL_LIKELIHOOD.f90` file instead of model file
-		- Make subroutine `initialize_mv`
+	- Make subroutine `initialize_mv`
 		  ```fortran
 		   subroutine initialize_mv(mV, nodays, nomet, nopars)
 		      !! For a single chain's model_working_varibles type object mV, allocate arrays
@@ -144,37 +143,37 @@
 		  
 		  ```
 		  with type like this example.  It contains
-			- setting `deltat`, `met`, and `lat` which are needed in code below from `DATAin`
-			- setting `mv%soil_frac_sand` and `mv%soil_frac_clay` arrays from DATAin
-			- AND setup code moved here from `CARBON_MODEL`'s `if (.not.allocated(mV%deltat_1)) then` block, including allocation of all other arrays in this model's `model_working_variables` type
+		- setting `deltat`, `met`, and `lat` which are needed in code below from `DATAin`
+		- setting `mv%soil_frac_sand` and `mv%soil_frac_clay` arrays from DATAin
+		- AND setup code moved here from `CARBON_MODEL`'s `if (.not.allocated(mV%deltat_1)) then` block, including allocation of all other arrays in this model's `model_working_variables` type
 				- problem with `call update_soil_initial_conditions(pars(24), mV)` : delete this line from `initialize_mv`.  It belongs in the `else` branch of `CARBON_MODEL` - `if (.not.allocated(mV%deltat_1))` only .
-		- After moving it to `initialize_mv`, remove the initialization code from `CARBON_MODEL`'s `if (.not.allocated(mV%deltat_1)) then` branch and delete the if/else .
-	- Editting `MODEL_LIKELIHOOD.f90` file.  See edits to model 004 as example  :
-		- remove ` type (EDCDIAGNOSTICS), save:: EDCD` at the top of module
-		- delete subroutine `find_edc_initial_values` , this is now in `_main_utils` .  Delete from `public` list.
-		- change all use ``MCMCOPT, only: PI`` to  `use model_shared, only: PI`
-		- change all `use carbon_model_mod, only: carbon_model` to `use carbon_model_mod, only: carbon_model,  mVs`
-		- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `edc_model_likelihood`
-		- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
-		- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
-		- add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likleihood`
-		- add `EDCD` last argument to calls to `assess_EDC2`
-		- change `PI%parini` argument of `call model_sanity_check()` to `PARS`
-		- add `mVs(thread_id)` as last argument to all `call carbon_model`
-		- add last argument `EDCD` and declaration ` type (EDCDIAGNOSTICS), intent(inout):: EDCD` to `assess_EDC1`, `assess_EDC2`
-		- in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
+	- After moving it to `initialize_mv`, remove the initialization code from `CARBON_MODEL`'s `if (.not.allocated(mV%deltat_1)) then` branch and delete the if/else .
+	- Done when we get compile error about `MODEL_LIKELIHOOD.f90` file instead of model file
+- Editting `MODEL_LIKELIHOOD.f90` file.  See edits to model 004 as example  :
+	- remove ` type (EDCDIAGNOSTICS), save:: EDCD` at the top of module
+	- delete subroutine `find_edc_initial_values` , this is now in `_main_utils` .  Delete from `public` list.
+	- change all use ``MCMCOPT, only: PI`` to  `use model_shared, only: PI`
+	- change all `use carbon_model_mod, only: carbon_model` to `use carbon_model_mod, only: carbon_model,  mVs`
+	- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `edc_model_likelihood`
+	- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
+	- add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
+	- add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likleihood`
+	- add `EDCD` last argument to calls to `assess_EDC2`
+	- change `PI%parini` argument of `call model_sanity_check()` to `PARS`
+	- add `mVs(thread_id)` as last argument to all `call carbon_model`
+	- add last argument `EDCD` and declaration ` type (EDCDIAGNOSTICS), intent(inout):: EDCD` to `assess_EDC1`, `assess_EDC2`
+	- in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
 		  ```fortran
 		  double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
 		  double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
 		  double precision,dimension(datain%nodays, datain%nodiags)::  M_DIAGS
 		  ```
 		  and pass these to `carbon_model`, `assess_EDC2` instead of `DATAin%M_FLUXES`, `DATAin%M_POOLS`, `DATAin%M_DIAGS`
-			- for error
-			  ```
-			  1052 |                      ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS &
-			       |                      1
-			  Error: Variable ‘datain’ is PROTECTED and cannot appear in a variable definition context (actual argument to INTENT = OUT/INOUT) at (1)
-			  
-			  ```
-			- also reference `M_DIAGS` instead of `DATAin%M_DIAGS` etc in the body of `model_sanity_check`
+		- for error
+		```
+		1052 |                      ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS &
+		     |                      1
+			Error: Variable ‘datain’ is PROTECTED and cannot appear in a variable definition context (actual argument to INTENT = OUT/INOUT) at (1)
+		```
+		- also reference `M_DIAGS` instead of `DATAin%M_DIAGS` etc in the body of `model_sanity_check`
 -
