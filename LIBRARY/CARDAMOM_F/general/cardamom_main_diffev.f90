@@ -15,7 +15,7 @@ program cardamom_framework
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
    use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
-   use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct
+   use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct, scaled_model_likelihood_fct
    use cardamom_main_utils
 
    ! Command line inputs are:
@@ -226,7 +226,7 @@ program cardamom_framework
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
       ! TODO scaled model likelihood fct
-      call run_demcz(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+      call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."

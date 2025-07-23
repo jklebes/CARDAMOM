@@ -668,6 +668,8 @@ module cardamom_io
     nopars_dummy = int(statdat(10))  ! needed for next dev stage
     ! Assume 3 soil layers only and that the
     ! top soil layer is assigned the top soil condition
+    allocate (DATAin%soil_frac_sand(nos_soil_layers))
+    allocate (DATAin%soil_frac_clay(nos_soil_layers))
     DATAin%soil_frac_sand(1) = statdat(12)  ! top soil sand percentage
     DATAin%soil_frac_sand(2:nos_soil_layers) = statdat(13)  ! bot
     DATAin%soil_frac_clay(1) = statdat(14)  ! top soil clay percentage

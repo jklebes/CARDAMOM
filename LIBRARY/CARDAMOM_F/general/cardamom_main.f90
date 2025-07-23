@@ -58,7 +58,7 @@ program cardamom_framework
    use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
    !use model_likelihood_module, only: model_likelihood, &
    !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
-   use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct
+   use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct, scaled_model_likelihood_fct
    use cardamom_main_utils
 
  !!!!!!!!!!!
@@ -352,7 +352,8 @@ program cardamom_framework
          !MCO%nwrite = 1000
          !MCO%nprint = 1000
          write(*,*) "MCOUT_list" , MCOUT_list(2)%pars
-         ! TODO scale for sub
+         ! Second phase, run Mcmc with sub scaling 
+         call update_obs_scaling_nsamples
          call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
@@ -401,8 +402,7 @@ program cardamom_framework
       else if (cost_func_scaling_dble == 3) then
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
-      ! TODO scaled model likelihood fct
-      call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."
