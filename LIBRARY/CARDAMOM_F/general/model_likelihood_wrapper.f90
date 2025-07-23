@@ -8,8 +8,8 @@ module model_likelihood_wrapper
 ! that can be used as input to cardamom_samplers
 
    use model_likelihood_module, only: model_likelihood, &
-                                      edc_model_likelihood, &
-                                      sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
+                                      edc_model_likelihood
+                                      !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
    use iso_c_binding
    implicit none
 
@@ -36,52 +36,6 @@ contains
       loglikelihood = ML_obs_out+ML_prior_out
 
    end subroutine
-
-! variants
-   subroutine log_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_logmodellikelihood")
-      use iso_c_binding
-      implicit none
-      integer(c_int), intent(in)  :: npars
-      real(c_double), intent(inout), dimension(npars):: params
-      real(c_double), intent(out):: loglikelihood
-
-      real(c_double):: ML_obs_out, ML_prior_out
-      integer(c_int), intent(in), optional:: id
-
-      call log_model_likelihood(params, ML_obs_out, ML_prior_out, id)
-
-      loglikelihood = ML_obs_out+ML_prior_out
-   end subroutine
-
-   subroutine sub_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_submodellikelihood")
-      use iso_c_binding
-      implicit none
-      integer(c_int), intent(in)  :: npars
-      real(c_double), intent(inout), dimension(npars):: params
-      real(c_double), intent(out):: loglikelihood
-
-      real(c_double):: ML_obs_out, ML_prior_out
-      integer(c_int), intent(in), optional:: id
-
-      call sub_model_likelihood(params, ML_obs_out, ML_prior_out, id)
-
-      loglikelihood = ML_obs_out+ML_prior_out
-   end subroutine
-
-   subroutine sqrt_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_sqrtmodellikelihood")
-      use iso_c_binding
-      implicit none
-      integer(c_int), intent(in)  :: npars
-      real(c_double), intent(inout), dimension(npars):: params
-      real(c_double), intent(out):: loglikelihood
-
-      real(c_double):: ML_obs_out, ML_prior_out
-      integer(c_int), intent(in), optional:: id
-
-      call sqrt_model_likelihood(params, ML_obs_out, ML_prior_out, id)
-      loglikelihood = ML_obs_out+ML_prior_out
-   end subroutine
-
 ! the function for starting loops, which finds a set of parameters fulfilling otherwise
 ! hard boundary conditions with a softer potential
    subroutine edc_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_edcmodellikelihood")

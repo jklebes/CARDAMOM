@@ -53,7 +53,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public:: model_likelihood, scaled_model_likelihood
+  public:: model_likelihood, scaled_model_likelihood, edc_model_likelihood
 
   ! declare needed types
   type EDCDIAGNOSTICS
