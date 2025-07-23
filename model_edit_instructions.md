@@ -158,11 +158,11 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 5. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `edc_model_likelihood`
 6. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_sanity_check`
 7. add `thread_id` last argument and declaration `integer, intent(in), optional:: thread_id` to `model_likelihood`, `scaled_model_likelihood`
-8. add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likleihood`
-9. add `EDCD` last argument to calls to `assess_EDC2`
-10. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
-11. add `mVs(thread_id)` as last argument to all `call carbon_model`
-12. add last argument `EDCD` and declaration ` type (EDCDIAGNOSTICS), intent(inout):: EDCD` to `assess_EDC1`, `assess_EDC2`
+8. add internal variable `type (EDCDIAGNOSTICS):: EDCD` to `edc_model_likelihood`
+9. add last argument `EDCD` and declaration `type (EDCDIAGNOSTICS), intent(inout):: EDCD` to  `assess_EDC2`
+10. add `EDCD` last argument to calls to `assess_EDC2`
+11. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
+12. add `mVs(thread_id)` as last argument to all `call carbon_model`
 13 in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
 		  ```fortran
 		  double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
