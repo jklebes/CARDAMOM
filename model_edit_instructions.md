@@ -163,17 +163,19 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 10. add `EDCD` last argument to calls to `assess_EDC2`
 11. change `PI%parini` first argument of `call model_sanity_check()` to `PARS`
 12. add `mVs(thread_id)` as last argument to all `call carbon_model`
-13 in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
-		  ```fortran
-		  double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
-		  double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
-		  double precision,dimension(datain%nodays, datain%nodiags)::  M_DIAGS
-		  ```
-		  and pass these to `carbon_model`, `assess_EDC2` instead of `DATAin%M_FLUXES`, `DATAin%M_POOLS`, `DATAin%M_DIAGS`
-		- for error
-		```
+13. in `model_sanity_check`, `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood` add local variable declarations
+```fortran
+	double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+	double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+	double precision,dimension(datain%nodays, datain%nodiags)::  M_DIAGS
+```
+and pass these to `carbon_model`, `assess_EDC2` instead of `DATAin%M_FLUXES`, `DATAin%M_POOLS`, `DATAin%M_DIAGS`
+  	
+   - for error
+```
 		1052 |                      ,DATAin%M_FLUXES, DATAin%M_POOLS, DATAin%M_DIAGS &
 		     |                      1
 			Error: Variable ‘datain’ is PROTECTED and cannot appear in a variable definition context (actual argument to INTENT = OUT/INOUT) at (1)
-		```
-	- also reference `M_DIAGS` instead of `DATAin%M_DIAGS` etc in the body of `model_sanity_check`
+```
+
+  - also reference `M_DIAGS` instead of `DATAin%M_DIAGS` etc in the body of `model_sanity_check`
