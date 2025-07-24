@@ -1,5 +1,4 @@
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   !!!!!!!!!!!
   ! Authorship contributions
@@ -25,8 +24,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or
@@ -44,7 +43,6 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
     ! Decomposition rate

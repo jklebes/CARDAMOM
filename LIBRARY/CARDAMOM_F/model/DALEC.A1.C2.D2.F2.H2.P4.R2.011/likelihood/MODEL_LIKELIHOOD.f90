@@ -25,13 +25,13 @@
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
 ! of DALEC.A1.C2.D2.F2.H2.P4.R2 as a function of observations and ecological dynamical constraints.
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -42,7 +42,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public::  model_likelihood, edc_model_likelihood, &
+  public :: model_likelihood, find_edc_initial_values, &
             sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood
 
   ! declare needed types
@@ -61,12 +61,122 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
+  subroutine find_edc_initial_values
+    use MCMCOPT, only: PI, MCOUT, MCO
+    use cardamom_structures, only: DATAin ! will need to change due to circular dependance
+    use cardamom_io, only: restart_flag
+    use MHMCMC_MODULE, only: MHMCMC
+
+    ! subroutine deals with the determination of initial parameter and initial
+    ! conditions which are consistent with EDCs
+
+    implicit none
+
+    ! declare local variables
+    integer :: n, counter_local, EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, append_save
+    double precision :: PEDC, PEDC_prev, ML, ML_prior, P_target
+    double precision, dimension(PI%npars+1) :: EDC_pars
+
+    ! Hold for later
+!    nOUT_save = MCO%nOUT ; nWRITE_save = MCO%nWRITE ; nADAPT_save = MCO%nADAPT
+!    append_save = MCO%append
+
+    ! set MCMC options needed for EDC run
+    MCO%append = 0
+    MCO%nADAPT = 500
+    MCO%fADAPT = 1d0
+    MCO%nOUT = 100000
+    MCO%nPRINT = 0
+    MCO%nWRITE = 0
+    ! the next two lines ensure that parameter inputs are either given or
+    ! entered as -9999
+    MCO%randparini = .true.
+    MCO%returnpars = .true.
+    MCO%fixedpars  = .true. ! TLS: changed from .false. for testing 16/12/2019
+
+    ! Set initial priors to vector...
+    PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+    ! ... and assume we need to find random parameters
+    PI%parfix = 0
+    ! Target likelihood allows for controlling when the MCMC will stop
+    P_target = 0d0
+
+    ! if the prior is not missing and we have not told the edc to be random
+    ! keep the value
+!    do n = 1, PI%npars
+!       if (PI%parini(n) /= -9999d0 .and. DATAin%edc_random_search < 1) PI%parfix(n) = 1
+!    end do ! parameter loop
+
+    ! set the parameter step size at the beginning
+    PI%parvar = 1d0 ; PI%Nparvar = 0d0
+    PI%use_multivariate = .false.
+    ! Covariance matrix cannot be set to zero therefore set initial value to a
+    ! small positive value along to variance access
+    PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+    do n = 1, PI%npars
+       PI%covariance(n,n) = 1d0
+    end do
+
+    ! if this is not a restart run, i.e. we do not already have a starting
+    ! position we must being the EDC search procedure to find an ecologically
+    ! consistent initial parameter set
+    if (.not. restart_flag) then
+
+        ! set up edc log likelihood for MHMCMC initial run
+        PEDC_prev = -1000d0 ; PEDC = -1d0 ; counter_local = 0
+        do while (PEDC < 0d0)
+
+           write(*,*)"Beginning EDC search attempt"
+           ! call the MHMCMC directing to the appropriate likelihood
+           call MHMCMC(P_target,model_likelihood,edc_model_likelihood)
+
+           ! store the best parameters from that loop
+           PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
+           ! turn off random selection for initial values
+           MCO%randparini = .false.
+
+           ! call edc likelihood function to get final edc probability
+           call edc_model_likelihood(PI%parini,PEDC,ML_prior)
+
+           ! keep track of attempts
+           counter_local = counter_local + 1
+           ! periodically reset the initial conditions
+           if (PEDC < 0d0 .and. PEDC <= PEDC_prev .and. counter_local > 5) then
+               ! Reset the previous EDC likelihood score
+               PEDC_prev = -1000d0
+               ! Reset parameters back to default
+               PI%parini(1:PI%npars) = DATAin%parpriors(1:PI%npars)
+               ! reset to select random starting point
+               MCO%randparini = .true.
+               ! reset the parameter step size at the beginning of each attempt
+               PI%parvar = 1d0 ; PI%Nparvar = 0d0
+               ! Covariance matrix cannot be set to zero therefore set initial value to a
+               ! small positive value along to variance access
+               PI%covariance = 0d0 ; PI%mean_par = 0d0 ; PI%cov = .false.
+               PI%use_multivariate = .false.
+               do n = 1, PI%npars
+                  PI%covariance(n,n) = 1d0
+               end do
+           else
+               PEDC_prev = PEDC
+           endif
+
+        end do ! for while condition
+
+    endif ! if for restart
+
+    ! reset so that currently saved parameters will be used
+    ! starting point in main MCMC
+    PI%parfix(1:PI%npars) = 0
+    MCOUT%best_pars = 0d0
+
+  end subroutine find_edc_initial_values
   !
   !------------------------------------------------------------------
   !
   subroutine edc_model_likelihood(PARS, ML_obs_out, ML_prior_out)
     use cardamom_structures, only: DATAin
-    use model_shared, only: PI
+    use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Model likelihood function specifically intended for the determination of
@@ -77,9 +187,6 @@ module model_likelihood_module
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
@@ -94,23 +201,23 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Perform a more aggressive sanity check which compares the bulk difference
     ! in all fluxes and pools from multiple runs of the same parameter set
-    if (.not.sanity_check) call model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    if (.not.sanity_check) call model_sanity_check(PI%parini)
 
     ! call EDCs which can be evaluated prior to running the model
     call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                       ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                       ,M_FLUXES,M_POOLS,DATAin%nopars &
+                       ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                       ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                        ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                       ,M_GPP)
+                       ,DATAin%M_GPP)
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                     ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                    ,M_LAI,M_NEE,M_GPP,M_POOLS &
-                    ,M_FLUXES,DATAin%meantemp,EDC2)
+                    ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                    ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -132,7 +239,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !------------------------------------------------------------------
   !
   subroutine sub_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use model_shared, only: PI
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -145,9 +252,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -174,10 +278,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                      ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                      ,M_FLUXES,M_POOLS,DATAin%nopars &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,M_GPP)
+                      ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -185,8 +289,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
-                        ,M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -197,14 +301,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    ML_obs_out = ML_obs_out + scale_likelihood(PI%npars,PARS)
 
   end subroutine sub_model_likelihood
   !
   !------------------------------------------------------------------
   !
   subroutine sqrt_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use model_shared, only: PI
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -217,9 +321,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -246,10 +347,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                      ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                      ,M_FLUXES,M_POOLS,DATAin%nopars &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,M_GPP)
+                      ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -257,8 +358,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
-                        ,M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -269,14 +370,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + sqrt_scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    ML_obs_out = ML_obs_out + sqrt_scale_likelihood(PI%npars,PARS)
 
   end subroutine sqrt_model_likelihood
   !
   !------------------------------------------------------------------
   !
   subroutine log_model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use model_shared, only: PI
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -289,9 +390,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -318,10 +416,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                      ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                      ,M_FLUXES,M_POOLS,DATAin%nopars &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,M_GPP)
+                      ,DATAin%M_GPP)
 
     ! if first set of EDCs have been passed, move on to the second
     if (DATAin%EDC == 1) then
@@ -329,8 +427,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                         ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                        ,M_LAI,M_NEE,M_GPP,M_POOLS &
-                        ,M_FLUXES,DATAin%meantemp,EDC2)
+                        ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                        ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -341,15 +439,15 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + log_scale_likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    ML_obs_out = ML_obs_out + log_scale_likelihood(PI%npars,PARS)
 
   end subroutine log_model_likelihood
   !
   !------------------------------------------------------------------
   !
-  subroutine model_sanity_check(PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  subroutine model_sanity_check(PARS)
     use cardamom_structures, only: DATAin
-    use model_shared, only: PI
+    use MCMCOPT, only: PI
     use CARBON_MODEL_MOD, only: carbon_model
 
     ! Carries out multiple carbon model iterations using the same parameter set
@@ -367,29 +465,26 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision, dimension((DATAin%nodays+1),DATAin%nopools) :: local_pools
     double precision, dimension(DATAin%nodays,DATAin%nofluxes) :: local_fluxes
     double precision :: pool_error, flux_error
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Run model
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                     ,M_FLUXES,M_POOLS,DATAin%nopars &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,DATAin%M_GPP)
 !print*,"sanity_check: carbon_model done 1"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                     ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
+                     ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
                      ,local_fluxes,local_pools,DATAin%nopars &
                      ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                     ,M_GPP)
+                     ,DATAin%M_GPP)
 !print*,"sanity_check: carbon_model done 2"
     ! Compare outputs
-    flux_error = sum(abs(M_FLUXES - local_fluxes))
-    pool_error = sum(abs(M_POOLS - local_pools))
+    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
+    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
     ! If error between runs exceeds precision error then we have a problem
     if (pool_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
@@ -399,11 +494,11 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
         end do
         stop
     end if
@@ -886,7 +981,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Therefore, we expect that the mean annual maximum should allow roots to reach > 90 % of their max
     if (EDC2 == 1 .or. DIAG == 1) then
        ! Estimate the coarse root pool
-       biomass_root = (M_POOLS(1:DATAin%nodays,3) + (M_POOLS(1:DATAin%nodays,3) * pars(29))) * 2d0
+       biomass_root = (DATAin%M_POOLS(1:DATAin%nodays,3) + (DATAin%M_POOLS(1:DATAin%nodays,3) * pars(29))) * 2d0
        ! Determine the annual max for each pool
        do y = 1, no_years
           ! derive mean annual fine + coarse root pool
@@ -1544,7 +1639,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !------------------------------------------------------------------
   !
   subroutine model_likelihood(PARS,ML_obs_out,ML_prior_out)
-    use model_shared, only: PI
+    use MCMCOPT, only:  PI
     use CARBON_MODEL_MOD, only: carbon_model
     use cardamom_structures, only: DATAin
 
@@ -1557,9 +1652,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare inputs
     double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! output
     double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
                                        ML_prior_out   ! prior log-likelihood
@@ -1585,10 +1677,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! run the dalec model
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
-                      ,DATAin%nodays,DATAin%LAT,M_LAI,M_NEE &
-                      ,M_FLUXES,M_POOLS,DATAin%nopars &
+                      ,DATAin%nodays,DATAin%LAT,DATAin%M_LAI,DATAin%M_NEE &
+                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%nopars &
                       ,DATAin%nomet,DATAin%nopools,DATAin%nofluxes  &
-                      ,M_GPP)
+                      ,DATAin%M_GPP)
 
 
     ! if first set of EDCs have been passed, move on to the second
@@ -1597,8 +1689,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools &
                          ,DATAin%nodays,DATAin%deltat,PI%parmax,PARS,DATAin%MET &
-                         ,M_LAI,M_NEE,M_GPP,M_POOLS &
-                         ,M_FLUXES,DATAin%meantemp,EDC2)
+                         ,DATAin%M_LAI,DATAin%M_NEE,DATAin%M_GPP,DATAin%M_POOLS &
+                         ,DATAin%M_FLUXES,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1609,7 +1701,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
     ! calculate final model likelihood when compared to obs
-    ML_obs_out = ML_obs_out + likelihood(PI%npars, PARS, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+    ML_obs_out = ML_obs_out + likelihood(PI%npars,PARS)
 
   end subroutine model_likelihood
   !
@@ -1648,7 +1740,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  double precision function likelihood(npars,pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, &
                                 fire_emiss_wood, &
@@ -1665,9 +1757,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, obs, model, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -1682,7 +1771,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"likelihood: NBE"
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       likelihood = likelihood-tot_exp
@@ -1693,8 +1782,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        ! Determine the mean value for model, observtion and uncertainty estimates
 !        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !              / dble(DATAin%nnbe)
-!        model = sum(M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-!                    M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !              / dble(DATAin%nnbe)
 !        unc   = sqrt(sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))**2)) &
 !              / dble(DATAin%nnbe)
@@ -1702,7 +1791,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        likelihood = likelihood - (((model - obs) / unc) ** 2)
 !        ! Determine the anomalies based on substraction of the global mean
 !        ! Greater information would come from breaking this down into annual estimates
-!        tot_exp = sum( (((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
         ! Loop through each year
@@ -1717,14 +1806,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
-               model = sum((M_NEE(s:f)+ &
-                            M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               likelihood = likelihood - sum( (sub_time*(((M_NEE(s:f)+M_FLUXES(s:f,17)-model) - &
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
                                                          (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -1733,7 +1822,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
 !                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
 !       likelihood = likelihood-tot_exp
 !    endif
@@ -1752,13 +1841,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               likelihood = likelihood - sum( (sub_time*(((M_FLUXES(s:f,1)-model) - &
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
                                                           (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -1767,7 +1856,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%Evappts(1:DATAin%nEvap)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1775,7 +1864,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       likelihood = likelihood-tot_exp
 !    endif
@@ -1794,13 +1883,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                likelihood = likelihood - (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               likelihood = likelihood - sum( (sub_time*(((M_FLUXES(s:f,17)-model) - &
+               likelihood = likelihood - sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
                                                           (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -1809,13 +1898,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
        ! Split loop to allow vectorisation
        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        ! loop split to allow vectorisation
-       !tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
@@ -1832,7 +1921,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        likelihood = likelihood-tot_exp
     endif
@@ -1842,7 +1931,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = M_NEE(dn)+M_GPP(dn)
+         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -1856,7 +1945,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_incpts(n)
          s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1869,7 +1958,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_mortalitypts(n)
          s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        likelihood = likelihood-tot_exp
@@ -1878,7 +1967,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
@@ -1896,7 +1985,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -1915,7 +2004,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
        ! Create vector of (Wood_t0 + Wood_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
@@ -1928,7 +2017,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,3) + M_POOLS(2:(DATAin%nodays+1),3) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
@@ -1943,10 +2032,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
        ! Create vector of (lit_t0 + lit_t1) * 0.5
-       !mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
        !          * 0.5d0
-       mid_state = (sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
-                 * M_POOLS(:,5)
+       mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                 * DATAin%M_POOLS(:,5)
        mid_state = (mid_state(1:DATAin%nodays) + mid_state(2:(DATAin%nodays+1))) * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Clit_stockpts(1:DATAin%nClit_stock)) &
@@ -1959,7 +2048,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
        ! Create vector of (som_t0 + som_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,6) + M_POOLS(2:(DATAin%nodays+1),6) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
@@ -1975,7 +2064,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
         tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         likelihood = likelihood-tot_exp
     end if
@@ -1983,7 +2072,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         likelihood = likelihood-tot_exp
     end if
@@ -1998,7 +2087,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         likelihood = likelihood-tot_exp
     end if
@@ -2009,9 +2098,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        !tot_exp = (sum(M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
-        input = sum(M_FLUXES(:,7))
-        output = sum(M_POOLS(:,4) / (M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         likelihood = likelihood-tot_exp
@@ -2034,7 +2123,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  double precision function scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, &
                                 fire_emiss_wood, &
@@ -2051,9 +2140,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -2064,7 +2150,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnbe))
@@ -2075,8 +2161,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        ! Determine the mean value for model, observtion and uncertainty estimates
 !        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !              / dble(DATAin%nnbe)
-!        model = sum(M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-!                    M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !              / dble(DATAin%nnbe)
 !        unc   = sqrt(sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))**2)) &
 !              / dble(DATAin%nnbe)
@@ -2084,7 +2170,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        scale_likelihood = scale_likelihood - (((model - obs) / unc) ** 2)
 !        ! Determine the anomalies based on substraction of the global mean
 !        ! Greater information would come from breaking this down into annual estimates
-!        tot_exp = sum( (((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
         ! Reset variable
@@ -2101,14 +2187,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
-               model = sum((M_NEE(s:f)+ &
-                            M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_NEE(s:f)+M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2119,7 +2205,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"scale_likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
 !                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%ngpp))
 !    endif
@@ -2140,13 +2226,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,1)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
                                                     (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2156,14 +2242,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"scale_likelihood: GPP done"
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nEvap))
     endif
 !print*,"scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nFire))
 !    endif
@@ -2184,13 +2270,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2202,13 +2288,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
        ! Split loop to allow vectorisation
        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        ! loop split to allow vectorisation
-       !tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
@@ -2225,7 +2311,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nnee))
     endif
@@ -2235,7 +2321,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = M_NEE(dn)+M_GPP(dn)
+         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -2249,7 +2335,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_incpts(n)
          s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_inc))
@@ -2262,7 +2348,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_mortalitypts(n)
          s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        scale_likelihood = scale_likelihood-(tot_exp/dble(DATAin%nCwood_mortality))
@@ -2271,7 +2357,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
@@ -2289,7 +2375,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -2308,7 +2394,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
        ! Create vector of (Wood_t0 + Wood_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
@@ -2321,7 +2407,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,3) + M_POOLS(2:(DATAin%nodays+1),3) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
@@ -2336,10 +2422,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
        ! Create vector of (lit_t0 + lit_t1) * 0.5
-       !mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
        !          * 0.5d0
-       mid_state = (sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
-                 * M_POOLS(:,5)
+       mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                 * DATAin%M_POOLS(:,5)
        mid_state = (mid_state(1:DATAin%nodays) + mid_state(2:(DATAin%nodays+1))) * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Clit_stockpts(1:DATAin%nClit_stock)) &
@@ -2352,7 +2438,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
        ! Create vector of (som_t0 + som_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,6) + M_POOLS(2:(DATAin%nodays+1),6) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
@@ -2368,7 +2454,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
         tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -2376,7 +2462,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -2391,7 +2477,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         scale_likelihood = scale_likelihood-tot_exp
     end if
@@ -2402,9 +2488,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        !tot_exp = (sum(M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
-        input = sum(M_FLUXES(:,7))
-        output = sum(M_POOLS(:,4) / (M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         scale_likelihood = scale_likelihood-tot_exp
@@ -2427,7 +2513,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function sqrt_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  double precision function sqrt_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, &
                                 fire_emiss_wood, &
@@ -2444,9 +2530,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -2457,7 +2540,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nnbe)))
@@ -2468,8 +2551,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        ! Determine the mean value for model, observtion and uncertainty estimates
 !        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !              / dble(DATAin%nnbe)
-!        model = sum(M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-!                    M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !              / dble(DATAin%nnbe)
 !        unc   = sqrt(sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))**2)) &
 !              / dble(DATAin%nnbe)
@@ -2477,7 +2560,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        sqrt_scale_likelihood = sqrt_scale_likelihood - (((model - obs) / unc) ** 2)
 !        ! Determine the anomalies based on substraction of the global mean
 !        ! Greater information would come from breaking this down into annual estimates
-!        tot_exp = sum( (((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
         ! Reset variable
@@ -2494,14 +2577,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
-               model = sum((M_NEE(s:f)+ &
-                            M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_NEE(s:f)+M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2512,7 +2595,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"sqrt_scale_likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
 !                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%ngpp)))
 !    endif
@@ -2533,13 +2616,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,1)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
                                                     (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2549,14 +2632,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"sqrt_scale_likelihood: GPP done"
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nEvap)))
     endif
 !print*,"sqrt_scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nFire)))
 !    endif
@@ -2577,13 +2660,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2595,13 +2678,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
        ! Split loop to allow vectorisation
        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        ! loop split to allow vectorisation
-       !tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
@@ -2618,7 +2701,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nnee)))
     endif
@@ -2628,7 +2711,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = M_NEE(dn)+M_GPP(dn)
+         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -2642,7 +2725,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_incpts(n)
          s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_inc)))
@@ -2655,7 +2738,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_mortalitypts(n)
          s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        sqrt_scale_likelihood = sqrt_scale_likelihood-(tot_exp/sqrt(dble(DATAin%nCwood_mortality)))
@@ -2664,7 +2747,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
@@ -2682,7 +2765,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -2701,7 +2784,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
        ! Create vector of (Wood_t0 + Wood_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
@@ -2714,7 +2797,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,3) + M_POOLS(2:(DATAin%nodays+1),3) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
@@ -2729,10 +2812,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
        ! Create vector of (lit_t0 + lit_t1) * 0.5
-       !mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
        !          * 0.5d0
-       mid_state = (sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
-                 * M_POOLS(:,5)
+       mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                 * DATAin%M_POOLS(:,5)
        mid_state = (mid_state(1:DATAin%nodays) + mid_state(2:(DATAin%nodays+1))) * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Clit_stockpts(1:DATAin%nClit_stock)) &
@@ -2745,7 +2828,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
        ! Create vector of (som_t0 + som_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,6) + M_POOLS(2:(DATAin%nodays+1),6) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
@@ -2761,7 +2844,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
         tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -2769,7 +2852,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -2784,7 +2867,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
     end if
@@ -2795,9 +2878,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        !tot_exp = (sum(M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
-        input = sum(M_FLUXES(:,7))
-        output = sum(M_POOLS(:,4) / (M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         sqrt_scale_likelihood = sqrt_scale_likelihood-tot_exp
@@ -2820,7 +2903,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
   !
   !------------------------------------------------------------------
   !
-  double precision function log_scale_likelihood(npars, pars, M_LAI, M_NEE, M_GPP, M_POOLS, M_FLUXES)
+  double precision function log_scale_likelihood(npars,pars)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: layer_thickness, &
                                 fire_emiss_wood, &
@@ -2837,9 +2920,6 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! declare local variables
     integer :: n, dn, y, s, f
-double precision, dimension(DATAin%nodays) :: M_LAI, M_NEE, M_GPP
-double precision, dimension(DATAin%nodays, DATAin%nofluxes) :: M_FLUXES
-double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     double precision :: tot_exp, tmp_var, infini, input, output, model, obs, unc
     double precision, dimension(DATAin%nodays) :: mid_state
     double precision, dimension(DATAin%steps_per_year) :: sub_time
@@ -2850,7 +2930,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
 !    ! NBE Log-likelihood
 !    if (DATAin%nnbe > 0) then
-!       tot_exp = sum((((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!       tot_exp = sum((((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !                       -DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !                       /DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nnbe))))
@@ -2861,8 +2941,8 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        ! Determine the mean value for model, observtion and uncertainty estimates
 !        obs   = sum(DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe))) &
 !              / dble(DATAin%nnbe)
-!        model = sum(M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
-!                    M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
+!        model = sum(DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+ &
+!                    DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)) &
 !              / dble(DATAin%nnbe)
 !        unc   = sqrt(sum(DATAin%NBE_unc(DATAin%nbepts(1:DATAin%nnbe))**2)) &
 !              / dble(DATAin%nnbe)
@@ -2870,7 +2950,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !        log_scale_likelihood = log_scale_likelihood - (((model - obs) / unc) ** 2)
 !        ! Determine the anomalies based on substraction of the global mean
 !        ! Greater information would come from breaking this down into annual estimates
-!        tot_exp = sum( (((M_NEE(DATAin%nbepts(1:DATAin%nnbe))+M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
+!        tot_exp = sum( (((DATAin%M_NEE(DATAin%nbepts(1:DATAin%nnbe))+DATAin%M_FLUXES(DATAin%nbepts(1:DATAin%nnbe),17)-model) - &
 !                        (DATAin%NBE(DATAin%nbepts(1:DATAin%nnbe)) - obs)) / unc)**2 )
 !        likelihood = likelihood-tot_exp
         ! Reset variable
@@ -2887,14 +2967,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%NBE(s:f)*sub_time) / sum(sub_time)
-               model = sum((M_NEE(s:f)+ &
-                            M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
+               model = sum((DATAin%M_NEE(s:f)+ &
+                            DATAin%M_FLUXES(s:f,17))*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%NBE_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_NEE(s:f)+M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_NEE(s:f)+DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%NBE(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2905,7 +2985,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"log_scale_likelihood: GPP"
 !    ! GPP Log-likelihood
 !    if (DATAin%ngpp > 0) then
-!       tot_exp = sum(((M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
+!       tot_exp = sum(((DATAin%M_GPP(DATAin%gpppts(1:DATAin%ngpp))-DATAin%GPP(DATAin%gpppts(1:DATAin%ngpp))) &
 !                       /DATAin%GPP_unc(DATAin%gpppts(1:DATAin%ngpp)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%ngpp))))
 !    endif
@@ -2926,13 +3006,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%GPP(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,1)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%GPP_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,1)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,1)-model) - &
                                                     (DATAin%GPP(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2942,14 +3022,14 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 !print*,"log_scale_likelihood: GPP done"
     ! Evap Log-likelihood
     if (DATAin%nEvap > 0) then
-       tot_exp = sum(((M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
+       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Evappts(1:DATAin%nEvap),19)-DATAin%Evap(DATAin%Evappts(1:DATAin%nEvap))) &
                        /DATAin%Evap_unc(DATAin%evappts(1:DATAin%nEvap)))**2)
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nEvap))))
     endif
 !print*,"log_scale_likelihood: Fire"
 !    ! Fire Log-likelihood
 !    if (DATAin%nFire > 0) then
-!       tot_exp = sum(((M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
+!       tot_exp = sum(((DATAin%M_FLUXES(DATAin%Firepts(1:DATAin%nFire),17)-DATAin%Fire(DATAin%Firepts(1:DATAin%nFire))) &
 !                       /DATAin%Fire_unc(DATAin%Firepts(1:DATAin%nFire)))**2)
 !       log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nFire))))
 !    endif
@@ -2970,13 +3050,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
                ! assuming we select only time steps in the model time series which have
                ! an estimate in the observations
                obs   = sum(DATAin%Fire(s:f)*sub_time) / sum(sub_time)
-               model = sum(M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
+               model = sum(DATAin%M_FLUXES(s:f,17)*sub_time) / sum(sub_time)
                unc   = sqrt(sum((sub_time*DATAin%Fire_unc(s:f))**2)) / sum(sub_time)
                ! Update the likelihood score with the mean bias
                tot_exp = tot_exp + (((model - obs) / unc) ** 2)
                ! Determine the anomalies based on substraction of the annual mean
                ! Greater information would come from breaking this down into annual estimates
-               tot_exp = tot_exp + sum( (sub_time*(((M_FLUXES(s:f,17)-model) - &
+               tot_exp = tot_exp + sum( (sub_time*(((DATAin%M_FLUXES(s:f,17)-model) - &
                                                     (DATAin%Fire(s:f) - obs)) / unc))**2 )
            end if ! sum(sub_time) > 0
         end do ! loop years
@@ -2988,13 +3068,13 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Assume physical property is best represented as the mean of value at beginning and end of times step
     if (DATAin%nlai > 0) then
        ! Create vector of (LAI_t0 + LAI_t1) * 0.5, note / pars(17) to convert foliage C to LAI
-       mid_state = ( ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0 ) / pars(17)
        ! Split loop to allow vectorisation
        tot_exp = sum(((mid_state(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
                        /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        ! loop split to allow vectorisation
-       !tot_exp = sum(((M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
+       !tot_exp = sum(((DATAin%M_LAI(DATAin%laipts(1:DATAin%nlai))-DATAin%LAI(DATAin%laipts(1:DATAin%nlai))) &
        !                /DATAin%LAI_unc(DATAin%laipts(1:DATAin%nlai)))**2)
        do n = 1, DATAin%nlai
          dn = DATAin%laipts(n)
@@ -3011,7 +3091,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! NEE likelihood
     if (DATAin%nnee > 0) then
-       tot_exp = sum(((M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
+       tot_exp = sum(((DATAin%M_NEE(DATAin%neepts(1:DATAin%nnee))-DATAin%NEE(DATAin%neepts(1:DATAin%nnee))) &
                        /DATAin%NEE_unc(DATAin%neepts(1:DATAin%nnee)))**2)
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nnee))))
     endif
@@ -3021,7 +3101,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        tot_exp = 0d0
        do n = 1, DATAin%nreco
          dn = DATAin%recopts(n)
-         tmp_var = M_NEE(dn)+M_GPP(dn)
+         tmp_var = DATAin%M_NEE(dn)+DATAin%M_GPP(dn)
          ! note that we calculate the Ecosystem resp from GPP and NEE
          tot_exp = tot_exp+((tmp_var-DATAin%Reco(dn))/DATAin%Reco_unc(dn))**2
        end do
@@ -3035,7 +3115,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_incpts(n)
          s = max(0,dn-nint(DATAin%Cwood_inc_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,7)) / DATAin%Cwood_inc_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_inc(dn)) / DATAin%Cwood_inc_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_inc))))
@@ -3048,7 +3128,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
          dn = DATAin%Cwood_mortalitypts(n)
          s = max(0,dn-nint(DATAin%Cwood_mortality_lag(dn)))+1
          ! Estimate the mean allocation to wood over the lag period
-         tmp_var = sum(M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
+         tmp_var = sum(DATAin%M_FLUXES(s:dn,11)) / DATAin%Cwood_mortality_lag(dn)
          tot_exp = tot_exp+((tmp_var-DATAin%Cwood_mortality(dn)) / DATAin%Cwood_mortality_unc(dn))**2
        end do
        log_scale_likelihood = log_scale_likelihood-(tot_exp/(1d0+log(dble(DATAin%nCwood_mortality))))
@@ -3057,7 +3137,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cfoliage log-likelihood
     if (DATAin%nCfol_stock > 0) then
        ! Create vector of (FOL_t0 + FOL_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,2) + M_POOLS(2:(DATAin%nodays+1),2) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,2) + DATAin%M_POOLS(2:(DATAin%nodays+1),2) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cfol_stockpts(1:DATAin%nCfol_stock)) &
@@ -3075,7 +3155,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
        ! determine the annual max for each pool
        do y = 1, DATAin%nos_years
           ! derive mean annual foliar pool
-          mean_annual_pools(y) = cal_max_annual_pools(M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
+          mean_annual_pools(y) = cal_max_annual_pools(DATAin%M_POOLS(1:(DATAin%nodays+1),2),y,DATAin%deltat,DATAin%nodays+1)
        end do ! year loop
        ! loop through the observations then
        do n = 1, DATAin%nCfolmax_stock
@@ -3094,7 +3174,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Cwood log-likelihood (i.e. branch, stem and CR)
     if (DATAin%nCwood_stock > 0) then
        ! Create vector of (Wood_t0 + Wood_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Cwood_stockpts(1:DATAin%nCwood_stock)) &
@@ -3107,7 +3187,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Croots log-likelihood
     if (DATAin%nCroots_stock > 0) then
        ! Create vector of (root_t0 + root_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,3) + M_POOLS(2:(DATAin%nodays+1),3) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,3) + DATAin%M_POOLS(2:(DATAin%nodays+1),3) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Croots_stockpts(1:DATAin%nCroots_stock)) &
@@ -3122,10 +3202,10 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! originating from surface pools
     if (DATAin%nClit_stock > 0) then
        ! Create vector of (lit_t0 + lit_t1) * 0.5
-       !mid_state = ( M_POOLS(1:DATAin%nodays,4) + M_POOLS(2:(DATAin%nodays+1),4) ) &
+       !mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,4) + DATAin%M_POOLS(2:(DATAin%nodays+1),4) ) &
        !          * 0.5d0
-       mid_state = (sum(M_FLUXES(:,10))/sum(M_FLUXES(:,10)+M_FLUXES(:,12))) &
-                 * M_POOLS(:,5)
+       mid_state = (sum(DATAin%M_FLUXES(:,10))/sum(DATAin%M_FLUXES(:,10)+DATAin%M_FLUXES(:,12))) &
+                 * DATAin%M_POOLS(:,5)
        mid_state = (mid_state(1:DATAin%nodays) + mid_state(2:(DATAin%nodays+1))) * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Clit_stockpts(1:DATAin%nClit_stock)) &
@@ -3138,7 +3218,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Csom log-likelihood
     if (DATAin%nCsom_stock > 0) then
        ! Create vector of (som_t0 + som_t1) * 0.5
-       mid_state = ( M_POOLS(1:DATAin%nodays,6) + M_POOLS(2:(DATAin%nodays+1),6) ) &
+       mid_state = ( DATAin%M_POOLS(1:DATAin%nodays,6) + DATAin%M_POOLS(2:(DATAin%nodays+1),6) ) &
                  * 0.5d0
        ! Vectorised version of loop to estimate cost function
        tot_exp = sum(( (mid_state(DATAin%Csom_stockpts(1:DATAin%nCsom_stock)) &
@@ -3154,7 +3234,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
 
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(1) > -9998) then
-        tot_exp = sum(M_FLUXES(:,3)) / sum(M_FLUXES(:,1))
+        tot_exp = sum(DATAin%M_FLUXES(:,3)) / sum(DATAin%M_FLUXES(:,1))
         tot_exp =  DATAin%otherpriorweight(1) * ((tot_exp-DATAin%otherpriors(1))/DATAin%otherpriorunc(1))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
@@ -3162,7 +3242,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Initial soil water prior. The actual prior is linked to a fraction of field capacity so here is were that soil water at t=1
     ! is actually assessed against an observation
     if (DATAin%otherpriors(2) > -9998) then
-        tot_exp = (M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
+        tot_exp = (DATAin%M_POOLS(1,8) * 1d-3) / layer_thickness(1) ! convert mm -> m3/m3
         tot_exp =  DATAin%otherpriorweight(2) * ((tot_exp-DATAin%otherpriors(2))/DATAin%otherpriorunc(2))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
@@ -3177,7 +3257,7 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        tot_exp = sum(M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
+        tot_exp = sum(DATAin%M_FLUXES(:,19)) / sum(DATAin%MET(7,:) * 86400d0)
         tot_exp =  DATAin%otherpriorweight(4) * ((tot_exp-DATAin%otherpriors(4))/DATAin%otherpriorunc(4))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp
     end if
@@ -3188,9 +3268,9 @@ double precision, dimension((DATAin%nodays+1), DATAin%nopools) :: M_POOLS
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the mean annual input to the wood pool (gC.m-2.day-1) and
         ! remove the day-1 by multiplying by residence time (day)
-        !tot_exp = (sum(M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
-        input = sum(M_FLUXES(:,7))
-        output = sum(M_POOLS(:,4) / (M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
+        !tot_exp = (sum(DATAin%M_FLUXES(:,7)) / dble(DATAin%nodays)) * (pars(6) ** (-1d0))
+        input = sum(DATAin%M_FLUXES(:,7))
+        output = sum(DATAin%M_POOLS(:,4) / (DATAin%M_FLUXES(:,11)+fire_emiss_wood+fire_litter_wood))
         tot_exp = (input/dble(DATAin%nodays)) * (output/dble(DATAin%nodays))
         tot_exp =  DATAin%otherpriorweight(5)* ((tot_exp-DATAin%otherpriors(5))/DATAin%otherpriorunc(5))**2
         log_scale_likelihood = log_scale_likelihood-tot_exp

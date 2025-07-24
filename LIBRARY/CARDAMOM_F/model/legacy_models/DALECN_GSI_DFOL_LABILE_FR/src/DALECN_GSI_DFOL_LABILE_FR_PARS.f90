@@ -1,5 +1,4 @@
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -25,8 +24,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -45,7 +44,6 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
     ! Fraction of litter turnover to atmosphere

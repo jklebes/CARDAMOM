@@ -24,18 +24,17 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the ACM-GPP-ET model.
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -50,8 +49,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -65,7 +64,6 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
     !

@@ -24,19 +24,18 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.A3.F2.H2.M2 model.
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
 ! S. Zhu (University of Edinburgh, now University of Southampton)
-  ! See function / subroutine specific comments for exceptions and contributors
+! See function / subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -51,8 +50,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -63,7 +62,6 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
     ! Decomposition rate [1e-5, 0.01]

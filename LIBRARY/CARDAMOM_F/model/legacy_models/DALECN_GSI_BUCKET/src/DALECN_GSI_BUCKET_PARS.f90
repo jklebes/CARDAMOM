@@ -1,5 +1,4 @@
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -25,8 +24,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
     use cardamom_structures, only: DATAin
 
     ! Subroutine contains a list of parameter ranges for the model.
@@ -56,7 +55,6 @@ use samplers_shared, only: PARINFO
 
        !
        ! declare parameters
-    type(PARINFO), intent(inout):: PI
        !
 
        ! Decomposition of litter to som (fraction; temperature adjusted)
@@ -287,13 +285,12 @@ use samplers_shared, only: PARINFO
     ! Subroutine reads specific parameter ranges for the
     ! generic AT_DALEC model
 
-    
+    use MCMCOPT, only: PI
 
     implicit none
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
 !    PI%npars=34;
