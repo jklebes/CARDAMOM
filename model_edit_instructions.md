@@ -181,3 +181,5 @@ and pass these to `carbon_model`, `assess_EDC2` instead of `DATAin%M_FLUXES`, `D
 ```
 
   - also reference `M_DIAGS` instead of `DATAin%M_DIAGS` etc in the body of `model_sanity_check`
+15. Check inside all functions called by `model_likelihood`, `scaled_model_likelihood`, `edc_model_likelihood`: `calc_other_likelihoods`, `calc_scaled_obs_likelihoods`, `calc_obs_likelihoods` .  Change all `DATAin%M_POOLS`, `DATAin%M_FLUXES`, `DATAin%M_DIAGS` to `M_POOLS`, `M_FLUXES`, `M_DIAGS`.  Make these arguments of the functions.
+    A search of the model_likelihood file for `DATAin%M_DIAGS` etc should show no more occurences. This could be a search and replace over all `MODEL_LIKELIHOOD.f90` files.
