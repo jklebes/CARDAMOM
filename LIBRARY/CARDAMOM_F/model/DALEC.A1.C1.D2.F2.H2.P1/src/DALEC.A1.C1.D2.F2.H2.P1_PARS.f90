@@ -1,29 +1,9 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
-! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
-!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
-! UoE = University of Edinburgh
+module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
+  implicit none
 
-! This program is free software: you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation, either version 3 of the License, or
-! (at your option) any later version.
-
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-
-! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-!!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H2.P1 model.
+  !!!!!!!!!!!
+  ! Authorship contributions
   !
   ! This code is based on the original C verion of the University of Edinburgh
   ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -31,13 +11,7 @@
   ! Edinburgh CARDAMOM code and subsequent modifications by:
   ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
   ! See function/subroutine specific comments for exceptions and contributors
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
-
-  implicit none
+  !!!!!!!!!!!
 
   ! make all private
   private
@@ -51,7 +25,6 @@ use samplers_shared, only: PARINFO
   !------------------------------------------------------------------
   !
   subroutine pars_info(PI)
-    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -65,17 +38,16 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
-
+    type(PARINFO), intent(inout):: PI
     PI%npars = 32
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
     if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Decomposition of litter to som (fraction/day-1)
     ! Note is modified by exponential temperature function (p10)
-    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
-    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
+    PI%parmin(1) = 0.00001d0
+    PI%parmax(1) = 0.01d0
 
     ! Fraction of GPP respired as autotrophic (Ra:GPP), 
     ! i.e. 1-CUE
@@ -209,7 +181,7 @@ use samplers_shared, only: PARINFO
     PI%parmax(23) = 250000d0  ! 90000d0
 
     ! Initial soil water fraction
-    PI%parmin(24) = 0.05d0
+    PI%parmin(24) = 0.1d0
     PI%parmax(24) = 1.00d0
 
   end subroutine pars_info

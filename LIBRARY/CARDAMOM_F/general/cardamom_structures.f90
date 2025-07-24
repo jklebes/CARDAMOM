@@ -1,10 +1,10 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! used as a fully integrated component of CARDAMOM or independently.
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,46 +14,45 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Describes module variables containing critical declarable types to support passing
 ! information around the CARDAMOM software.
-! 
+!
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
 ! All code translation into Fortran, integration into the University of
 ! Edinburgh CARDAMOM code and subsequent modifications by:
 ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
 ! J. F. Exbrayat (University of Edinburgh)
-! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
-! See function / subroutine specific comments for exceptions and contributors
+! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)
+! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module cardamom_structures
 
-implicit none
+   implicit none
 
-private
+   private
 
-public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
+   public:: data_type, DATAin, set_datain, emulator_parameters, emulator_pars
 
-  !!!!! such as the data type !!!!!
-  type DATA_type
+   type DATA_type
 
       ! drivers
-      double precision, allocatable, dimension(:,:) :: MET ! contains our met fields
-      double precision :: meanco2, meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
+      double precision, allocatable, dimension(:, :):: MET  ! contains our met fields
+      double precision:: meanco2, meantemp, meanrad, meanprecip  ! mean conditions used in some EDCs
 
       ! OBS: more can obviously be added
-      double precision, allocatable, dimension(:) :: GPP               & ! GPP (gC/m2day)
+      double precision, allocatable, dimension(:):: GPP               & ! GPP (gC/m2day)
                                                     ,NEE               & ! NEE (gC/m2/day)
                                                     ,Fire              & ! Fire (gC/m2/day)
                                                     ,LAI               & ! LAI (m2/m2)
@@ -78,7 +77,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
 
 
       ! OBS uncertainties: obv these must be paired with OBS above
-      double precision, allocatable, dimension(:) :: GPP_unc               & ! gC/m2/day
+      double precision, allocatable, dimension(:):: GPP_unc               & ! gC/m2/day
                                                     ,NEE_unc               & ! gC/m2/day
                                                     ,Fire_unc              & ! gC/m2/day
                                                     ,LAI_unc               & ! m2/m2
@@ -102,7 +101,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                                     ,harvest_unc             ! gC/m2/day
 
       ! OBS lagged period (model timestep): obs these must be paired with OBS and their uncertainties above
-      integer, allocatable, dimension(:) :: GPP_lag               &
+      integer, allocatable, dimension(:):: GPP_lag               &
                                            ,NEE_lag               &
                                            ,Fire_lag              &
                                            ,LAI_lag               &
@@ -126,7 +125,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                            ,harvest_lag            
 
       ! location of observations in the data stream, these must be paired with the above
-      integer, allocatable, dimension(:) :: gpppts                   & ! gpppts vector used in deriving ngpp
+      integer, allocatable, dimension(:):: gpppts                   & ! gpppts vector used in deriving ngpp
                                            ,neepts                   & ! same for nee
                                            ,Firepts                  & ! same for Fire
                                            ,Cwood_growthpts          & ! same for wood gross increment
@@ -149,10 +148,10 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                                            ,soilwaterpts             & ! same for surface soil water content
                                            ,harvestpts                 ! same for C extracted due to harvest
 
-      double precision :: nobs_scaler
+      double precision:: nobs_scaler
 
       ! OBS scaling coefficients declared but calculated later
-      double precision :: GPP_scaling               &
+      double precision:: GPP_scaling               &
                          ,NEE_scaling               &
                          ,Fire_scaling              &
                          ,LAI_scaling               &
@@ -176,7 +175,7 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                          ,harvest_scaling            
 
       ! counters for the number of observations per data stream
-      integer :: total_obs              & ! total number of obervations
+      integer:: total_obs              & ! total number of obervations
                 ,ngpp                   & ! number of GPP observations
                 ,nnee                   & ! number of NEE observations
                 ,nFire                  & ! number of Fire observations
@@ -199,16 +198,19 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,nfAPAR                 & ! number of fAPAR by green vegetation
                 ,nsoilwater             & ! number of surface soil water observations
                 ,nharvest                 ! number of harvest observations
+      
+      double precision, dimension(:), allocatable:: soil_frac_clay, soil_frac_sand  ! clay and soil fractions of soil-
+      ! initial value as read from input file.
 
       ! timing variable
-      integer :: nos_years, steps_per_year
-      double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
+      integer:: nos_years, steps_per_year
+      double precision, allocatable, dimension(:):: deltat  ! time step (decimal day)
 
-      double precision, allocatable, dimension(:,:) :: M_FLUXES & ! All fluxes
+      double precision, allocatable, dimension(:,:):: M_FLUXES & ! All fluxes
                                                       ,M_POOLS  & ! All POOLS
                                                       ,M_DIAGS    ! All diagnostic variables
       ! static data
-      integer :: nodays   & ! number of days in simulation
+      integer:: nodays   & ! number of days in simulation
                 ,ID       & ! model ID
                 ,noobs    & ! number of obs fields
                 ,nomet    & ! number met drivers
@@ -219,57 +221,50 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
                 ,EDC      & ! Ecological and dynamical contraints on (1) or off (0)
                 ,yield    & ! yield class for ecosystem (forest only)
                 ,age      & ! time in years since ecosystem established (forest only)
-                ,pft        ! plant functional type information used to select appropriate DALEC submodel / ACM
+                ,pft        ! plant functional type information used to select appropriate DALEC submodel/ACM
 
-      double precision :: LAT ! site latitude
+      double precision:: LAT  ! site latitude
 
       ! binary file mcmc options (need to add all options HERE except
       ! inout files)
-      integer :: edc_random_search !
+      integer:: edc_random_search !
 
       ! priors
-      double precision, dimension(100) :: parpriors       & ! prior values
+      double precision, dimension(100):: parpriors       & ! prior values
                                          ,parpriorunc     & ! prior uncertainties
                                          ,parpriorweight   ! prior weighting
       ! other priors
-      double precision, dimension(50) :: otherpriors      & ! other prior values
-                                        ,otherpriorunc    & ! other prior uncertainties
-                                        ,otherpriorweight   ! other prior weighting
+      double precision, dimension(50):: otherpriors & ! other prior values
+         , otherpriorunc & ! other prior uncertainties
+         , otherpriorweight   ! other prior weighting
 
-  end type ! DATA_type
-  type (DATA_type), save :: DATAin
+   end type  ! DATA_type
+   type(DATA_type), protected, save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
+   ! shared object !  Protected (read-only), can only be set via set_datain
 
-  type io_buffer_space
+   type emulator_parameters
 
-    integer :: io_buffer, io_buffer_count
-    double precision, allocatable, dimension(:,:) :: &
-                                    variance_buffer, &
-                                   mean_pars_buffer, &
-                                        pars_buffer
+      integer ::    dim_1, & ! dimension 1 of response surface
+                 dim_2, & ! dimension 2 of response surface
+                 nos_trees, & ! number of trees in randomForest
+                 nos_inputs    ! number of driver inputs
 
-    double precision, allocatable, dimension(:) :: &
-                                   nsample_buffer, &
-                               accept_rate_buffer, &
-                                      prob_buffer
+      double precision, allocatable, dimension(:, :) ::     leftDaughter, & ! left daughter for forest
+         rightDaughter, & ! right daughter for forets
+         nodestatus, & ! nodestatus for forests
+         xbestsplit, & ! for forest
+         nodepred, & ! prediction value for each tree
+         bestvar    ! for randomForests
 
-  end type
-  type(io_buffer_space), save :: io_space
+   end type  ! emulator parameters
+   type(emulator_parameters), protected, save:: emulator_pars  ! TODO make sure not shared, or read-only
+contains
 
-  type emulator_parameters
-
-    integer ::    dim_1, & ! dimension 1 of response surface
-                  dim_2, & ! dimension 2 of response surface
-              nos_trees, & ! number of trees in randomForest
-             nos_inputs    ! number of driver inputs
-
-    double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                        rightDaughter, & ! right daughter for forets
-                                                           nodestatus, & ! nodestatus for forests
-                                                           xbestsplit, & ! for forest
-                                                             nodepred, & ! prediction value for each tree
-                                                              bestvar    ! for randomForests
-
-  end type ! emulator parameters
-  type (emulator_parameters), save :: emulator_pars
-
+   subroutine set_datain(datain_source)
+      ! A setter, copying the argument to cardamom_structures:: DATAin
+      ! The central DATAin in module cardamom_structures can ONLY be set by the constructor, 
+      ! this ensures that no model calculations are writing to its elements from different parallel threads
+      type(DATA_type), intent(in):: datain_source
+      DATAin = datain_source
+   end subroutine set_datain
 end module cardamom_structures
