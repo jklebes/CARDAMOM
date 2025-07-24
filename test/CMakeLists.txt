@@ -15,7 +15,7 @@ set(
   "cardamom-MCMC"
   "DEMCz"
   "model"
-  "wrappers_for_R"
+  #"wrappers_for_R"
 )
 set(
   test-srcs

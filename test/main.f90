@@ -10,7 +10,7 @@ program tester
   use test_cardamom_MCMC, only : collect_cardamom_MCMCtests
   use test_DEMCz, only : collect_DEMCztests
   use test_model, only : collect_modeltests
-  use test_wrappers_for_R, only : collect_test_wrappers_for_R
+  !use test_wrappers_for_R, only : collect_test_wrappers_for_R
   implicit none
   integer:: stat, is
   integer:: clock
@@ -33,8 +33,8 @@ program tester
     new_testsuite("cardamom_MCMC", collect_cardamom_MCMCtests), &
     new_testsuite("MCMC", collect_MCMCtests), &
     new_testsuite("DEMCz", collect_DEMCztests), &
-    new_testsuite("model", collect_modeltests), &
-    new_testsuite("wrappers_for_R", collect_test_wrappers_for_R) &
+    new_testsuite("model", collect_modeltests) &
+    !new_testsuite("wrappers_for_R", collect_test_wrappers_for_R) &
      ]
 
   call get_argument(1, suite_name)

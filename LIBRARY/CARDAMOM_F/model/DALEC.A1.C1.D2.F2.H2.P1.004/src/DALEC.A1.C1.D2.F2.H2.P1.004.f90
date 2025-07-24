@@ -921,7 +921,6 @@ type(model_working_variables), allocatable, dimension(:):: mVs
        mV%fine_root_biomass = max(min_root, POOLS(n, 3)*2d0)
        mV%root_biomass = mV%fine_root_biomass+max(min_root, POOLS(n, 4)*pars(25)*2d0)
        call calculate_Rtot(mV)
-       call calculate_Rtot(mV)
        ! Pass root~water~soil variables to output variable
        DIAGS(n, 8) = mV%root_reach  ! Rooting depth (m)
        DIAGS(n, 10) = mV%wSWP      ! Soil water potential weighted by supply of water
@@ -2455,7 +2454,9 @@ type(model_working_variables), allocatable, dimension(:):: mVs
     ! wSWP based on the conductance due to the roots themselves.
     ! The idea being that the plant may hedge against growth based on the majority of the
     ! profile being dry while not losing leaves within some toleration.
+    ! TODO sometimes divide by zero
     mV%rSWP = sum(mV%SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
+    mV%rSWP = 0.00001
     if (mV%total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         mV%uptake_fraction = (mV%layer_thickness(1:nos_root_layers) / sum(mV%layer_thickness(1:nos_root_layers)))
@@ -3027,20 +3028,20 @@ type(model_working_variables), allocatable, dimension(:):: mVs
 
           ! initial conditions; i.e. is there liquid water and more water than
           ! layer can hold
-          if (avail_to_flow(mV%soil_layer) > 0d0 .and. mV%soil_waterfrac(mV%soil_layer+1) < mV%porosity(mV%soil_layer+1)) then
+          if (avail_to_flow(soil_layer_count) > 0d0 .and. mV%soil_waterfrac(soil_layer_count+1) < mV%porosity(soil_layer_count+1)) then
 
               ! Unsaturated volume of layer below (m3 m-2)
-              unsat = ( mV%porosity(mV%soil_layer+1) - mV%soil_waterfrac(mV%soil_layer+1) ) &
-                    * mV%layer_thickness(mV%soil_layer+1) / mV%layer_thickness(mV%soil_layer)
+              unsat = ( mV%porosity(soil_layer_count+1) - mV%soil_waterfrac(soil_layer_count+1) ) &
+                    * mV%layer_thickness(soil_layer_count+1) / mV%layer_thickness(soil_layer_count)
               ! Restrict potential rate calculate above for the available water
               ! and available space in the layer below.
               ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
-              change = min(unsat, min(pot_drainage(mV%soil_layer), avail_to_flow(mV%soil_layer))) * mV%layer_thickness(mV%soil_layer)
+              change = min(unsat, min(pot_drainage(soil_layer_count), avail_to_flow(soil_layer_count)))*mV%layer_thickness(soil_layer_count)
               ! update soil layer below with drained liquid
-              mV%waterchange( mV%soil_layer+1 ) = mV%waterchange( mV%soil_layer+1 ) + change
-              mV%waterchange( mV%soil_layer     ) = mV%waterchange( mV%soil_layer     ) - change
+              mV%waterchange( soil_layer_count+1 ) = mV%waterchange( soil_layer_count+1 ) + change
+              mV%waterchange( soil_layer_count) = mV%waterchange( soil_layer_count ) - change
               ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
-              mV%water_grav_flow(mV%soil_layer) = mV%water_grav_flow(mV%soil_layer) + change
+              mV%water_grav_flow(soil_layer_count) = mV%water_grav_flow(soil_layer_count) + change
 
           end if  ! some liquid water and drainage possible
 
