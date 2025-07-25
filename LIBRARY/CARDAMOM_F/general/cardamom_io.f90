@@ -8,7 +8,7 @@
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
-
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
@@ -18,10 +18,10 @@
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+!
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Code responsible for input / output operations for CARDAMOM
 ! 
@@ -397,179 +397,6 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-!  subroutine load_emulator_parameters
-!    use cardamom_structures, only: DATAin
-!    use CARBON_MODEL_MOD, only: dim_1,dim_2,nos_trees,nos_inputs      &
-!                               ,leftDaughter,rightDaughter,nodestatus &
-!                               ,xbestsplit,nodepred,bestvar
-!
-!    ! subroutine opens and reads the PFT specific emulator information needed
-!    ! for the randomForest regression trees generated using R package
-!    ! randomForest
-!    ! 10/10/2014: TLS
-!
-!    ! TEMPLATE FOR ALL DALEC MCMC DATA files
-!    ! Static Elements: 1-100 - use as many as needed
-!
-!    !STATIC DATA
-!    ! 1) PFT
-!    ! 2) number of trees in forest
-!    ! 3) dimension 1 of response surface (same as interpolation interval)
-!    ! 4) dimension 2 of response surface
-!    ! 5) number of model inputs needed
-!
-!    implicit none
-!
-!    ! declare input variables
-!    character(350) :: infile,pft_local
-!
-!    ! declare local variables
-!    integer :: a,i,j,start,finish  &
-!              ,ifile_unit   ! unit number assigned to the input binary
-!
-!    double precision, dimension(:), allocatable :: statdat & ! static data input
-!                                                  ,temp_matrix
-!
-!
-!    ! convert PFT into character value for use in file search
-!    if (DATAin%PFT < 10) then
-!        write(pft_local,fmt='(I1)')DATAin%PFT
-!    else if (DATAin%PFT >= 10) then
-!        write(pft_local,fmt='(I2)')DATAin%PFT
-!    else
-!        print*,"Incorrect definition of PFT"
-!    endif
-!
-!    ! assume that parameter files have been copied / linked from the
-!    ! AT_DALEC/src
-!    ! directory to the execution location
-!    write(infile,fmt='(A)')"gpp_emulator_parameters_"//trim(pft_local)//".bin"
-!    write(*,*)"Reading emulator coefficients for PFT = ",DATAin%PFT
-!    write(*,*)"File path = ",trim(infile)
-!
-!    ! open the binary file, with direct access for binary (unformatted) at
-!    ! double precision (double precision = 64 bytes)
-!    open(unit=ifile_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
-!    rewind(ifile_unit)
-!
-!    ! allocate memory
-!    allocate(statdat(100))
-!
-!    ! now read the static elements (1-100)
-!    do i = 1, 100 ! number of static elements
-!       read(ifile_unit) statdat(i)
-!    end do
-!
-!    ! allocate the default run information
-!    nos_trees = int(statdat(2))
-!    dim_1 = int(statdat(3))
-!    dim_2 = int(statdat(4))
-!    nos_inputs = int(statdat(5))
-!
-!    ! tidy
-!    deallocate(statdat)
-!
-!    ! allocate some other variables
-!    allocate(leftDaughter(dim_1,dim_2),rightDaughter(dim_1,dim_2) &
-!            ,nodestatus(dim_1,dim_2),xbestsplit(dim_1,dim_2)      &
-!            ,nodepred(dim_1,dim_2),bestvar(dim_1,dim_2)           &
-!            ,temp_matrix(dim_1*dim_2))
-!
-!    ! read in left daughter to temp vector
-!    a = 1 ; start = 100+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure left daughter into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          leftDaughter(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in right daughter into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure right daughter into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          rightDaughter(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in nodestatus into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure nodestatus into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          nodestatus(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in xbestsplit into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure xbestsplit into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          xbestsplit(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in nodepred into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure nodepred into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          nodepred(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in bestvar into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure bestvar into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          bestvar(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! tidy
-!    deallocate(temp_matrix)
-!    close(ifile_unit)
-!
-!    ! inform the user
-!    write(*,*)"Have read in GPP emulator coefficients"
-!
-!  end subroutine load_emulator_parameters
-  !
-  !--------------------------------------------------------------------
-  !
   subroutine open_output_files(parname,stepname,covname,covinfoname)
 
     ! Subroutine opens the needed output files and destroys any previously
@@ -763,22 +590,22 @@ module cardamom_io
     ! Drivers
     DATAin%met = 0d0
     ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
-    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0d0
-    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0d0
-    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0d0
-    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0d0
-    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0d0
-    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0d0
-    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0d0
-    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0d0
-    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0d0
-    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0d0
-    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0d0
-    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0d0
-    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0d0
-    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0d0
-    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0d0
-    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0d0
+    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0
+    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0
+    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0
+    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0
+    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0
+    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0
+    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0
+    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0
+    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0
+    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0
+    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0
+    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0
+    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0
+    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0
+    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0
+    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0
     DATAin%Cwood_inc = 0d0         ; DATAin%Cwood_inc_unc = 0d0         ; DATAin%Cwood_inc_lag = 0
     DATAin%Cwood_growth = 0d0      ; DATAin%Cwood_growth_unc = 0d0      ; DATAin%Cwood_growth_lag = 0
     DATAin%Cwood_mortality = 0d0   ; DATAin%Cwood_mortality_unc = 0d0   ; DATAin%Cwood_mortality_lag = 0
@@ -1043,6 +870,7 @@ module cardamom_io
     o = 1 ; p = 1 ; q = 1 ; r = 1 ; s = 1 ; t = 1 ; u = 1
     v = 1 ; w = 1 ; x = 1 ; y = 1 ; z = 1
 
+    ! Read through each timestep to extract any available assimilatable observations
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
           DATAin%gpppts(a) = day ; a = a + 1
@@ -1102,13 +930,13 @@ module cardamom_io
            DATAin%fAPARpts(s) = day ; s = s + 1
        endif ! data present condition
        if (DATAin%harvest(day) > -9998d0) then
-        DATAin%harvestpts(t) = day ; t = t + 1
+           DATAin%harvestpts(t) = day ; t = t + 1
        endif ! data present condition
        if (DATAin%Cwood_growth(day) > -9998d0) then
-        DATAin%Cwood_growthpts(u) = day ; u = u + 1
+           DATAin%Cwood_growthpts(u) = day ; u = u + 1
        endif ! data present condition
        if (DATAin%soilwater(day) > -9998d0) then
-        DATAin%soilwaterpts(v) = day ; v = v + 1
+           DATAin%soilwaterpts(v) = day ; v = v + 1
        endif ! data present condition              
     end do ! day loop
 

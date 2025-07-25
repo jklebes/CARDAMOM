@@ -8,20 +8,20 @@
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
-
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+!
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
 ! of DALEC.A1.C1.D2.F2.H2.P1 as a function of observations and ecological dynamical constraints.
@@ -224,10 +224,10 @@ module model_likelihood_module
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                    ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                    ,PI%parmax,PARS,DATAin%MET &
-                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                    ,DATAin%meantemp,EDC2)
+                    ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                    ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                    ,DATAin%meantemp,EDC2)      
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -445,7 +445,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodiags,nodays,deltat,steps_per_year &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
                         ,meantemp,EDC2)
 
@@ -1094,10 +1094,10 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                        ,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                        ,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                        ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1165,10 +1165,10 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                        ,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                        ,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                        ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)

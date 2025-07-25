@@ -43,7 +43,7 @@ implicit none
 
 private
 
-public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
+public :: data_type, DATAin, io_space
 
   !!!!! such as the data type !!!!!
   type DATA_type
@@ -51,6 +51,9 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       ! drivers
       double precision, allocatable, dimension(:,:) :: MET ! contains our met fields
       double precision :: meanco2, meantemp, meanrad, meanprecip ! mean conditions used in some EDCs
+
+      ! Model variables
+      double precision, allocatable, dimension(:,:) :: M_FLUXES, M_POOLS, M_DIAGS
 
       ! OBS: more can obviously be added
       double precision, allocatable, dimension(:) :: GPP               & ! GPP (gC/m2day)
@@ -204,9 +207,6 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
       integer :: nos_years, steps_per_year
       double precision, allocatable, dimension(:) :: deltat ! time step (decimal day)
 
-      double precision, allocatable, dimension(:,:) :: M_FLUXES & ! All fluxes
-                                                      ,M_POOLS  & ! All POOLS
-                                                      ,M_DIAGS    ! All diagnostic variables
       ! static data
       integer :: nodays   & ! number of days in simulation
                 ,ID       & ! model ID
@@ -254,22 +254,5 @@ public :: data_type, DATAin, emulator_parameters, emulator_pars, io_space
 
   end type
   type(io_buffer_space), save :: io_space
-
-  type emulator_parameters
-
-    integer ::    dim_1, & ! dimension 1 of response surface
-                  dim_2, & ! dimension 2 of response surface
-              nos_trees, & ! number of trees in randomForest
-             nos_inputs    ! number of driver inputs
-
-    double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                        rightDaughter, & ! right daughter for forets
-                                                           nodestatus, & ! nodestatus for forests
-                                                           xbestsplit, & ! for forest
-                                                             nodepred, & ! prediction value for each tree
-                                                              bestvar    ! for randomForests
-
-  end type ! emulator parameters
-  type (emulator_parameters), save :: emulator_pars
 
 end module cardamom_structures
