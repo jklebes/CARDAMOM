@@ -435,12 +435,12 @@ module model_likelihood_module
     endif
     ! High temperature constraint should now have a significant value at mean temperature
     tmp = 1d0 - (1d0+exp(pars(14)*(meantemp-pars(13))))**(-1d0)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.1d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.01d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
     ! Low temperature constraint should now have a significant value at mean temperature
     tmp = (1d0+exp(pars(14)*(meantemp-pars(12))))**(-1d0) 
-    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.1d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.01d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 

@@ -251,7 +251,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                             est_var_name_out = "et_kgH2Om2day",
                                                             unc_var_name_out = "et_unc_kgH2Om2day",
                                                             lag_var_name_out = "et_lag_day",
-                                                             default_lag = 0)         
+                                                            default_lag = 0)         
            # Fire carbon emissions (gC/m2/day)
            fire_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              fire_source,path_to_fire,prefix = "fire_carbon_emissions_gCm2day_",

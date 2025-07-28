@@ -48,10 +48,10 @@ submit_processes_to_cluster<-function (PROJECT_in) {
         pre_mcmc = 0
     }
 
-    # Check presence of PROJECT_in$cost_function_scaling
-    if (exists(x = "cost_function_scaling", where = PROJECT_in) == FALSE) {
+    # Check presence of PROJECT_in$request_cost_function_scaling
+    if (exists(x = "request_cost_function_scaling", where = PROJECT_in) == FALSE) {
         # If not, assume default cost function
-        PROJECT_in$cost_function_scaling = 0
+        PROJECT_in$request_cost_function_scaling = 0
     }
 
     # create the new file name in the correct location
@@ -71,7 +71,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
                               " 0 ",
                               as.integer(PROJECT_in$samplerate)," ",
                               as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
+                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
                   first_pass=FALSE
               } else {
                   write(paste(PROJECT_in$eexepath,PROJECT_in$exe," ",
@@ -81,7 +81,7 @@ submit_processes_to_cluster<-function (PROJECT_in) {
                               " 0 ",
                               as.integer(PROJECT_in$samplerate)," ",
                               as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
+                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
               }
          } # chain no
     } # nosite
