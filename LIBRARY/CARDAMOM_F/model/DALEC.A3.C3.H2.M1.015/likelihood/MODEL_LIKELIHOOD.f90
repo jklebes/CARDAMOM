@@ -215,7 +215,7 @@ module model_likelihood_module
                     ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                     ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                     ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                    ,DATAin%meantemp,EDC2)                        
+                    ,DATAin%meantemp,EDC2)       
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
 !    tot_exp = 0d0
@@ -859,7 +859,6 @@ module model_likelihood_module
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
-
     endif !
 
     ! run the dalec model
@@ -877,11 +876,10 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                        ,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                        ,DATAin%meantemp,EDC2)
-
+                        ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                        ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                        ,DATAin%meantemp,EDC2)      
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
 
@@ -1092,7 +1090,6 @@ module model_likelihood_module
                                              DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              DATAin%soilwater_scaling,mod)
     endif ! nsoilwater > 0
-
 
     !
     ! Do fluxes (FLUXES)

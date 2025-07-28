@@ -3424,7 +3424,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end do
     ! calculate soil porosity (m3/m3)
     call soil_porosity(soil_frac_clay,soil_frac_sand)
-    ! calculate field capacity (m3/m-3)
+    ! calculate field capacity (m3/m3)
     call calculate_field_capacity
 
     ! final sanity check for porosity

@@ -65,10 +65,10 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
         pre_mcmc = 0
     }
 
-    # Check presence of PROJECT_in$cost_function_scaling
-    if (exists(x = "cost_function_scaling", where = PROJECT_in) == FALSE) {
+    # Check presence of PROJECT_in$request_cost_function_scaling
+    if (exists(x = "request_cost_function_scaling", where = PROJECT_in) == FALSE) {
         # If not, assume default cost function
-        PROJECT_in$cost_function_scaling = 0
+        PROJECT_in$request_cost_function_scaling = 0
     }
 
     # begin submitting the different tasks
@@ -90,7 +90,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
                                " 0 ",
                                as.integer(PROJECT_in$samplerate)," ",
                                as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$cost_function_scaling)," & ",sep=""))
+                               as.integer(PROJECT_in$request_cost_function_scaling)," & ",sep=""))
               } else {
                   system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
                                infile," ",
@@ -99,7 +99,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
                                " 0 ",
                                as.integer(PROJECT_in$samplerate)," ",
                                as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$cost_function_scaling),sep=""))
+                               as.integer(PROJECT_in$request_cost_function_scaling),sep=""))
               }
               # To ensure that each chain is submitted at a unique time we want to delay the code - this impacts the seed value used in the random number generator
               Sys.sleep(1) # wait for 1 seconds
