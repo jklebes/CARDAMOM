@@ -303,7 +303,7 @@ contains
    !> the core "step" function.  After cardamom-MHMCMC and 
    !> sampling is observed to be better when this is done on lognormalized parameters.
    subroutine step_real(vout, v1, v2, v3, differential_weight, random_uniform_vector, PI)
-      use samplers_math, only: log_nor2par_scalar, log_par2nor_scalar
+      use samplers_math, only: log_nor2par, log_par2nor
       type(PARINFO), intent(in):: PI
       double precision, dimension(PI%npars), intent(out):: vout
       !! proposed step on raw parameter space
@@ -315,14 +315,11 @@ contains
       !! input: current and two random states from history on lognorm space
       type(UNIF_VECTOR), intent(inout):: random_uniform_vector
       double precision:: differential_weight
-      v1_lognorm = log_par2nor_scalar(v1, PI%parmin, PI%parmax, PI%paradj) 
-      v2_lognorm = log_par2nor_scalar(v2, PI%parmin, PI%parmax, PI%paradj) 
-      v3_lognorm = log_par2nor_scalar(v3, PI%parmin, PI%parmax, PI%paradj) 
-      call step(vout_lognorm,  log_par2nor_scalar(v1, PI%parmin, PI%parmax, PI%paradj), &
-                 log_par2nor_scalar(v2, PI%parmin, PI%parmax, PI%paradj), &
-                log_par2nor_scalar(v3, PI%parmin, PI%parmax, PI%paradj), &
+      call step(vout_lognorm,  log_par2nor(v1, PI%parmin, PI%parmax, PI%paradj), &
+                 log_par2nor(v2, PI%parmin, PI%parmax, PI%paradj), &
+                log_par2nor(v3, PI%parmin, PI%parmax, PI%paradj), &
                differential_weight, random_uniform_vector, PI%npars)
-      vout = log_nor2par_scalar(vout_lognorm, PI%parmin, PI%parmax, PI%paradj)
+      vout = log_nor2par(vout_lognorm, PI%parmin, PI%parmax, PI%paradj)
    end subroutine
 
    !> Generate new proposed state from currect state and history

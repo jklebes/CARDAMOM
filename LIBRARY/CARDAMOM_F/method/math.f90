@@ -45,8 +45,7 @@ module samplers_math
    public::  std, idum, covariance_matrix, &
             random_normal, &
             random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par, nor2par_scalar, log_par2nor, log_nor2par, &
-            log_par2nor_scalar, log_nor2par_scalar, &
+            par2nor, nor2par, log_par2nor, log_nor2par, &
             cholesky_factor, inverse_matrix, matrix_vector_func, &
             calculate_variance, increment_variance
 
@@ -710,42 +709,23 @@ contains
    !
    !------------------------------------------------------------------
    !
-   pure function par2nor(npars, initial_par, min_par, max_par) result(out_par)
-      !#
-      ! functions to normalised parameter values and return them back to
-      ! un-normalised value.
-      !#
+   elemental function par2nor(initial_par, min_par, max_par) result(out_par)
 
-      ! converting parameters on log scale between 0-1 for min/max values
-      implicit none
-      integer, intent(in):: npars     ! number of iterations in current vector.
-      double precision, dimension(npars), intent(in):: min_par, max_par
-      double precision, dimension(npars), intent(in):: initial_par
-      double precision, dimension(npars):: out_par
+    ! functions to normalised parameter values and return them back to
+    ! un-normalised value.
 
-      ! then normalise
-      out_par = (initial_par-min_par)/(max_par-min_par)
+    ! converting parameters on log scale between 0-1 for min/max values
+    implicit none
+    double precision, intent(in):: min_par, max_par
+    double precision, intent(in):: initial_par
+    double precision:: out_par
 
-   end function par2nor
-   !
-   !---------------------and vice versa------------------------------
-   !
-   pure function nor2par(npars, initial_par, min_par, max_par) result(out_par)
-      !#
-      ! Converting values back from normalised (0-1) to 'real' numbers
-      !#
+    ! then normalise
+    out_par = (initial_par-min_par)/(max_par-min_par)
 
-      implicit none
-      integer, intent(in):: npars    ! number of iterations in current vector
-      double precision, dimension(npars), intent(in):: min_par, max_par
-      double precision, dimension(npars), intent(in):: initial_par
-      double precision, dimension(npars):: out_par
+  end function par2nor
 
-      ! ...then un-normalise without logs as we cross zero and logs wont work
-      out_par = min_par + (max_par-min_par)*initial_par
-   end function nor2par
-
-   pure elemental function nor2par_scalar(initial_par, min_par, max_par) result(out_par)
+   elemental function nor2par(initial_par, min_par, max_par) result(out_par)
       !#
       ! Converting values back from normalised (0-1) to 'real' numbers
       !#
@@ -758,12 +738,12 @@ contains
       ! ...then un-normalise without logs as we cross zero and logs wont work
       out_par = min_par + (max_par-min_par)*initial_par
 
-   end function nor2par_scalar
+   end function nor2par
    !
    !------------------------------------------------------------------
    !
    !
-   pure elemental function log_par2nor_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
+   elemental function log_par2nor(initial_par, min_par, max_par, par_adj) result(out_par)
       !#
       ! Functions to normalised-log parameter values.
       !
@@ -787,38 +767,12 @@ contains
       !out_par = log(initial_par/min_par)/log(max_par/min_par)
       out_par = log(invar/minvar)/log(maxvar/minvar)
 
-   end function log_par2nor_scalar
-
-   pure function log_par2nor(npars, initial_par, min_par, max_par, par_adj) result(out_par)
-
-      !#
-      ! Functions to normalised-log parameter values.
-      !#
-
-      ! Converting parameters on log scale between 0-1 for min/max values
-      implicit none
-      integer, intent(in):: npars
-      double precision, dimension(npars), intent(in):: min_par, max_par, par_adj
-      double precision, dimension(npars), intent(in):: initial_par
-      double precision, dimension(npars):: out_par
-      ! local values
-      double precision, dimension(npars):: invar, minvar, maxvar
-
-      ! Assign inputs to the local variables
-      invar = initial_par+par_adj
-      minvar = min_par+par_adj
-      maxvar = max_par+par_adj
-
-      ! Then normalise
-      !out_par = log(initial_par/min_par)/log(max_par/min_par)
-      out_par = log(invar/minvar)/log(maxvar/minvar)
-
    end function log_par2nor
    !
    !---------------------and vice versa------------------------------
    !
 
-   pure elemental function log_nor2par_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
+   elemental function log_nor2par(initial_par, min_par, max_par, par_adj) result(out_par)
 
       !#
       ! Converting values back from log-normalised (0-1) to 'real' numbers
@@ -830,30 +784,6 @@ contains
       double precision:: out_par
       ! local values
       double precision:: minvar, maxvar
-
-      ! Assign inputs to the local variables
-      minvar = min_par+par_adj
-      maxvar = max_par+par_adj
-
-      ! ...then un-normalise without logs as we cross zero and logs wont work
-      !out_par = min_par*(max_par/min_par)**initial_par
-      out_par = (minvar*(maxvar/minvar)**initial_par) - par_adj
-
-   end function log_nor2par_scalar
-
-   pure function log_nor2par(npars, initial_par, min_par, max_par, par_adj) result(out_par)
-
-      !#
-      ! Converting values back from log-normalised (0-1) to 'real' numbers
-      !#
-
-      implicit none
-      integer, intent(in):: npars     ! number of iterations in current vector
-      double precision, dimension(npars), intent(in):: min_par, max_par, par_adj  ! adjustment prevents negative values being fed into the analysis
-      double precision, dimension(npars), intent(in):: initial_par
-      double precision, dimension(npars):: out_par
-      ! local values
-      double precision, dimension(npars):: minvar, maxvar
 
       ! Assign inputs to the local variables
       minvar = min_par+par_adj
@@ -939,7 +869,7 @@ contains
       !
       !  Licensing: This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Wed 30 Jul 2025 09:51:02 BST
+      !  Last Modified: Wed 30 Jul 2025 10:39:27 BST
       !
       !  Original Author: John Burkardt (07 December 2009)
       !
@@ -1047,7 +977,7 @@ contains
       !
       !    This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Wed 30 Jul 2025 09:51:02 BST
+      !  Last Modified: Wed 30 Jul 2025 10:39:27 BST
       !
       !    03/05/2019
       !

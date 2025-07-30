@@ -30,7 +30,7 @@ contains
 !! core sampler math
 
 !> Accept or reject
-!> First argument is new/proposed log(!)likelihood,
+!> First argument is new/proposed log(!)likelihood, 
 !> second is old log likelihood
 !> return logical
    logical function metropolis_choice(new_loglikelihood, old_loglikelihood)
@@ -39,14 +39,14 @@ contains
       call random_number(r)
 ! TODO add optional pregen random
 ! l1/l2 > r  <=> logl1-logl2 > log(r)
-      metropolis_choice = ((new_loglikelihood - old_loglikelihood) > log(r))
+      metropolis_choice = ((new_loglikelihood-old_loglikelihood) > log(r))
    end function
 
 !!!! routines for random initialization
 
    subroutine init_pars_random(PI, pars0, fix_pars_flag, uniform_random_vector)
       use random_uniform, only: UNIF_VECTOR, next_random_uniform
-      use samplers_math, only: log_nor2par_scalar
+      use samplers_math, only: log_nor2par
       implicit none
       type(PARINFO), intent(in):: PI  ! give number, bounds of params
       double precision, dimension(PI%npars), intent(inout):: pars0  ! return random initial values-nonnormalized
@@ -72,7 +72,7 @@ contains
          if (.not. (fix_pars_flag_(i))) then
             ! make sure to give it a random number vector unique to the chain
             ! scale each to the parameter's range
-            pars0(i) = log_nor2par_scalar(uniform_random_vector%next_random_uniform(), PI%parmin(i), PI%parmax(i), PI%paradj(i))
+            pars0(i) = log_nor2par(uniform_random_vector%next_random_uniform(), PI%parmin(i), PI%parmax(i), PI%paradj(i))
          end if
 
       end do  ! for PI%npar loop
@@ -81,7 +81,7 @@ contains
    end subroutine
 
    subroutine init_latin_square(PI, pars0, n_chains)  ! TODO
-      use samplers_math, only: nor2par_scalar
+      use samplers_math, only: nor2par
       implicit none
       type(PARINFO), intent(in):: PI  ! give number, bounds, and potentially current value of params
       integer, intent(in):: n_chains
@@ -94,7 +94,7 @@ contains
       ! convert to real parameter values space
       do j = 1, n_chains
          do i = 1, PI%npars
-            pars0(i, j) = nor2par_scalar(points(i, j), PI%parmin(i), PI%parmax(i))
+            pars0(i, j) = nor2par(points(i, j), PI%parmin(i), PI%parmax(i))
          end do
       end do
 

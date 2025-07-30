@@ -259,7 +259,7 @@ contains
 
    subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart, chainid)
    !! Main function for a single adaptive MCMC simulation
-      use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
+      use samplers_math, only: log_par2nor, log_nor2par
       use samplers_shared, only: init_pars_random, bounds_check, is_infinity, metropolis_choice
       use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
                              , write_covariance_info, restart_flag, write_mcmc_output, open_output_files
@@ -516,7 +516,7 @@ contains
             ! (this chain)
             ! Because this history matrix is used for (normalized) statistics for adaptiveness, 
             ! store normalized version of pars
-            PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
+            PARSALL(1:npars, ACCLOC+1) = log_par2nor(PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
             ! Keep count of the number of accepted proposals in this local period
             ACCLOC = ACCLOC+1
             ! Accepted first proposal from multivariate
@@ -531,7 +531,7 @@ contains
 	    endif
          else
             ! write to history  
-            PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
+            PARSALL(1:npars, ACCLOC+1) = log_par2nor(PARS_previous, PI%parmin, PI%parmax, PI%paradj)
          end if  ! accept or reject proposed pars
 
          ! count iteration
@@ -759,10 +759,10 @@ contains
       double precision, dimension(:, :), intent(in):: covariance
       double precision, dimension(PI%npars)             :: pars0_norm, pars_norm
       double precision, intent(in):: beta, opt_scaling, par_minstepsize
-      pars0_norm = log_par2nor(PI%npars, pars0, PI%parmin, PI%parmax, PI%paradj)
+      pars0_norm = log_par2nor(pars0, PI%parmin, PI%parmax, PI%paradj)
       call step_pars(pars0_norm, pars_norm, PI%npars, multivariate, covariance, beta, opt_scaling, par_minstepsize, &
                      random_uniform_vector)
-      pars = log_nor2par(PI%npars, pars_norm, PI%parmin, PI%parmax, PI%paradj)
+      pars = log_nor2par(pars_norm, PI%parmin, PI%parmax, PI%paradj)
    end subroutine
 
    !-

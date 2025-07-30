@@ -501,7 +501,7 @@ contains
             ! (this chain)
             ! Because this history matrix is used for (normalized) statistics for adaptiveness, 
             ! store normalized version of pars
-            PARSALL(1:npars, ACCLOC+1) = log_par2nor(npars, PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
+            PARSALL(1:npars, ACCLOC+1) = log_par2nor(PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
             ! Keep count of the number of accepted proposals in this local period
             ACCLOC = ACCLOC+1
             ! Accepted first proposal from multivariate
@@ -561,7 +561,7 @@ contains
                ! This results in innacurate covariance estimates.
                if (MCOUT%cov) then
                   ACCLOC = 1  ! TODO this is really a different variable than ACCLOC
-                  PARSALL(1:npars, ACCLOC) = log_par2nor(npars, PARS_previous, PI%parmin, PI%parmax, PI%paradj)
+                  PARSALL(1:npars, ACCLOC) = log_par2nor(PARS_previous, PI%parmin, PI%parmax, PI%paradj)
                   ! leads to call to increment_covariance_matrix with the one new row
                else if (ACCLOC > 3) then
                   PARSALL(1:npars, 2) = PARSALL(1:npars, ceiling(ACCLOC*0.5d0))
@@ -761,10 +761,10 @@ contains
       double precision, dimension(:, :), intent(in):: covariance
       double precision, dimension(PI%npars)             :: pars0_norm, pars_norm
       double precision, intent(in):: beta, opt_scaling, par_minstepsize
-      pars0_norm = log_par2nor(PI%npars, pars0, PI%parmin, PI%parmax, PI%paradj)
+      pars0_norm = log_par2nor(pars0, PI%parmin, PI%parmax, PI%paradj)
       call step_pars(pars0_norm, pars_norm, PI%npars, multivariate, covariance, beta, opt_scaling, par_minstepsize, &
                      random_uniform_vector)
-      pars = log_nor2par(PI%npars, pars_norm, PI%parmin, PI%parmax, PI%paradj)
+      pars = log_nor2par(pars_norm, PI%parmin, PI%parmax, PI%paradj)
    end subroutine
 
    !-
