@@ -195,7 +195,6 @@ program cardamom_framework
             !...so the reset for nos_iterations must only occur when not a restart run
             MCOUT_list(i)%nos_iterations = 0
          end if  ! restart run or not
-         write(*,*) "pars", mcout_list(i)%pars
       end do
 
 

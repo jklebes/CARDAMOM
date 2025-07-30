@@ -48,12 +48,12 @@ contains
 !    end subroutine
 
    subroutine initialize_example_FI_Hyy() bind(c, name="C_TMP_initialize")
-      ! trigger read_binary_data(hard coded filename) for testing,
+      ! trigger read_binary_data(hard coded filename) for testing, 
       ! later do this better
       use iso_c_binding
       use cardamom_io, only: initialize
       implicit none
-      character(kind=c_char, len=350)  :: filename
+      character(kind = c_char, len = 350)  :: filename
       filename = "/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin"
       call initialize(filename)
    end subroutine
@@ -64,7 +64,7 @@ contains
       use CARBON_MODEL_MOD, only: initialize_carbon_model
       implicit none
       !character(kind = c_char, len = *), intent(in):: datain_filename
-      character(kind=c_char, len=350):: filename
+      character(kind = c_char, len = 350):: filename
       integer(c_int), intent(in), optional:: nchains
       integer(c_int):: nchains_
       if (.not. present(nchains)) then
@@ -77,7 +77,6 @@ contains
       filename = "/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin"
       call initialize(filename)
       nchains_ = 4
-      write (*, *) nchains_
       call initialize_carbon_model(nchains_)
    end subroutine
 
@@ -85,7 +84,7 @@ contains
       use model_shared, only: PI, initialize_parinfo
       use MHMCMC_StressTests
       implicit none
-      character(len=350):: infile, outfile
+      character(len = 350):: infile, outfile
       infile = ""
       outfile = "Circle"
       call prepare_for_stress_test(infile, outfile)

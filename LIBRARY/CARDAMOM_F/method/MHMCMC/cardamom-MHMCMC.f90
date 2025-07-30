@@ -244,9 +244,6 @@ contains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
-         if (restart_) then 
-            write(*,*) MCOUT_list(i)%pars
-         endif
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
       end do
       !$OMP end parallel do
@@ -461,7 +458,6 @@ contains
 
       else  ! restart case
          PARS_previous = MCOUT%PARS
-         write (*, *) "starting at", pars_previous, iter
          loglikelihood_previous = MCOUT%ll
          BESTPARS = MCOUT%bestpars
          llmax = MCOUT%bestll
@@ -472,7 +468,6 @@ contains
       ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
       ! could read an EDC consistent parameter set in the first instance
       call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
-      write (*, *) "EDC model likelihood", loglikelihood_previous, chainid_
 
       if (.false. .and. is_infinity(loglikelihood_previous)) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
@@ -590,6 +585,7 @@ contains
          ! Should I be write(*,*)ing to screen or not?
          if (MCO%nPRINT > 0) then
             if (mod(ITER, MCO%nPRINT) == 0) then
+               write (*, *) "Chain ", chainid, "of", mco%nchains
                write (*, *) "Using multivariate sampling = ", MCOUT%use_multivariate
                write (*, *) "Total proposal = ", ITER, " out of ", MCO%nOUT
                write (*, *) "Total accepted = ", ACC
@@ -618,7 +614,6 @@ contains
       MCOUT%ll = loglikelihood_previous
       ! record how many iterations were taken to complete
       MCOUT%nos_iterations = MCOUT%nos_iterations+ITER
-      write (*, *) "MCOUT%nos_iterations", MCOUT%nos_iterations
       ! set flag MCMC completed
       MCOUT%complete = .true.
       ! tidy up

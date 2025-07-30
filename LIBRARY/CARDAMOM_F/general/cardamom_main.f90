@@ -351,7 +351,6 @@ program cardamom_framework
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          !MCO%nwrite = 1000
          !MCO%nprint = 1000
-         write(*,*) "MCOUT_list" , MCOUT_list(2)%pars
          ! Second phase, run Mcmc with sub scaling 
          call update_obs_scaling_nsamples
          call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)

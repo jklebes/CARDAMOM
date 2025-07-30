@@ -48,6 +48,7 @@ contains
    !> OUT: MCOUT type(DEMCzOUT) collection of results
    !> Also writes history to file/output stream and progress to console.
    subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
+      use samplers_shared, only: metropolis_choice
       implicit none
 
       !! input and output structs
@@ -73,6 +74,11 @@ contains
       ! and their best likelihood values and best pars so far
       double precision, allocatable, dimension(:):: l_best
       double precision, allocatable, dimension(:, :):: PARS_best
+      double precision             :: l  
+        !! likelihood of proposed values (private on each thread)
+      double precision, dimension(PI%npars):: proposed_vector
+        !! proposed values (private on each thread)
+      double precision, dimension(PI%npars):: proposed_vector_real
 
       !> history Matrix Z, (npars x (nchains*maxiter))
       double precision, allocatable, dimension(:, :):: PARS_history
@@ -83,7 +89,13 @@ contains
       integer:: npars, MAXITER
       integer:: P_target
       integer:: seed
-      integer:: i, j, k, len_history  ! counters
+      integer, dimension(:), allocatable:: ACC
+      !! acceptance counter for each thread
+      integer, dimension(:), allocatable:: ACCLOC
+      !! acceptance counter for each thread, local to each nadapt phase 
+      integer:: i, j, k, ITER, len_history  ! counters
+      integer:: R1, R2 
+      !!random indices in history
 
       !> the function to maximize.
       !> Completely agnostic, samples any functions vector -> double
@@ -118,7 +130,7 @@ contains
       if (.not. present(nchains)) then
          MCO%nchains = 3  ! at least 3 are mandatory for this method to work
       else
-      MCO%nchains = nchains
+         MCO%nchains = nchains
       end if
 
       ! process function arguments
@@ -147,8 +159,9 @@ contains
       ! but we need these to persist between parallel regions
       allocate (l0(mco%nchains))
       allocate (l_best(mco%nchains))
+      allocate (ACC(mco%nchains))
+      allocate (ACCLOC(mco%nchains))
       allocate (PARS_best(npars, mco%nchains))
-      write(*,*) npars, mco%nchains, maxiter
       allocate (PARS_history(npars, MAXITER*mco%nchains))
 
       allocate (random_uniform_vectors(mco%nchains))
@@ -163,14 +176,14 @@ contains
          ! TODO better function for initial state : latin square
          if (.not. restart_) then 
          call init_random(npars, pars_current(:,j))
-         write(*,*) "randomized", pars_current(:,j)
 
       else
          pars_current(:,j) = log_par2nor(npars, mcout_list(j)%pars, PI%parmin, PI%parmax, PI%paradj)
-         write(*,*) "did not randomize", pars_current(:,j)
       end if
          ! also set the loglikelihoof of the state generated
          call model_likelihood(PARS_current(:, j), npars, l0(j), j)
+         l_best(j) = l0(j)
+         PARS_best(:,j) = PARS_current(:,j)
 
          ! potential burnin steps
          ! ... TODO
@@ -179,7 +192,6 @@ contains
          PARS_history(:, j) = PARS_current(:, j)
       ! Initialize pregenerated random numbers, if using-local to this chain
       seed = irand()  ! TODO record later  ! TODO always the same ?
-      write(*,*) "seed", seed
         call random_uniform_vectors(j)%initialize_random(seed)
       end do
 !$OMP END PARALLEL DO
@@ -191,22 +203,53 @@ contains
       do i = 2, MAXITER/mco%nadapt+2
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO 
+!$OMP PARALLEL DO private(ITER, R1, R2, l, proposed_vector, proposed_vector_real)
          do j = 1, mco%nchains
             do k = 1, mco%nadapt
-               call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
-                               PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
-         
-              if (mod(i*mco%nadapt+k, MCO%nprint) == 0) then
-                write(*,*) "thread", j
-                write(*,*) "loglikelihood", l0(j)
-                write(*,*) "pars", pars_current(:,j)
-              endif 
-            end do
-            ! write the chain's state after nadapt steps to Z
-            PARS_history(:, len_history+j) = PARS_current(:, j)
-         end do
-!$OMP END PARALLEL DO !!Barrier implicit
+                     ITER = i*mco%nadapt+k
+!               call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
+!                               PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
+
+                     R1 = random_int(len_history)
+                     R2 = random_int(len_history)
+                     do while (R1 == R2)  ! should not equal R1 ("without replacement")
+                        R2 = random_int(len_history)
+                     end do
+                     call step(proposed_vector, PARS_current(:,j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
+                        & random_uniform_vectors(j), PI%npars)
+                     proposed_vector_real = log_nor2par(PI%npars, proposed_vector, PI%parmin, PI%parmax, pi%paradj)
+                     if (bounds_check(PI, proposed_vector_real)) then
+                     call model_likelihood(proposed_vector_real, PI%npars, l, j)
+                     if (metropolis_choice(l, l0(j))) then
+                        PARS_current(:,j) = proposed_vector
+                        l0(j) = l
+                        ACCLOC(j) = ACCLOC(j) + 1
+                        ! check for new best
+                        if (l > l_best(j)) then
+                           l_best(j) = l
+                           !best_pars(:,j) = proposed_vector
+                        endif
+                     !else 
+                        ! else-no accept 
+                     end if
+                     endif
+                        
+
+                    if (mod(ITER, MCO%nprint) == 0) then
+                     write (*, *) "Chain ", j, "of", mco%nchains 
+                     write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
+                     write (*, *) "Total accepted = ", ACC(j)
+                     !write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
+                     !write (*, *) "Local   acceptance rate    = ", ACCRATE
+                     write (*, *) "Current obs   = ", l0(j) !, "proposed = ", loglikelihood_proposed, " log-likelihood"
+                     !write (*, *) "Maximum likelihood = ", llmax
+                    endif 
+                  end do
+                  ACC(j) = ACC(j) + ACCLOC(j)
+                  ! write the chain's state after nadapt steps to Z
+                  PARS_history(:, len_history+j) = PARS_current(:, j)
+               end do
+      !$OMP END PARALLEL DO !!Barrier implicit
 
          ! increment length M (filled so far) of Z
          len_history = len_history+mco%nchains
@@ -216,9 +259,18 @@ contains
          ! Reorder for best chains ?  Then write to Z later.
          
       end do
-
-      !!! Write out
-      write (*, *) l0
+      
+      ! Final summary output from each chain individually
+      !$OMP PARALLEL DO
+      do j = 1, mco%nchains
+      ! completed 
+      write (*, *) "chain ",j, ": DEMCZ completed"
+      write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
+      !write (*, *) "Final local acceptance rate = ", ACCRATE
+      write (*, *) "Best log-likelihood = ", l_best(j)
+      !write (*, *) "Best parameters = ", MCOUT%bestpars
+      end do
+      !$OMP END PARALLEL DO
 
    end subroutine
 
@@ -237,64 +289,8 @@ contains
 
    end subroutine
 
-   !> Evolve the state of one chain for 1 step
-   subroutine step_chain(X_i, l0, model_likelihood, &
-                         PI, PARS_history, len_history, differential_weight, &
-                         thread_id, random_uniform_vector)
-      use samplers_shared, only: metropolis_choice
-      type(PARINFO), intent(in):: PI
-      integer, intent(in):: thread_id  ! thread_id-to pass to model evaluation in cases where it matters
-      double precision, dimension(:), intent(inout):: X_i  ! current state of the chain; normalized values of all pars
-      double precision, dimension(PI%npars):: previous_vector, proposed_vector  ! internal: save previous state, proposed new state
-      double precision, dimension(PI%npars):: proposed_vector_real
-      double precision, dimension(:, :), intent(in):: PARS_history  ! the matrix Z so far, to read 2 rows from
-      integer, intent(in):: len_history  ! length to which Z is filled
-      double precision, intent(inout):: l0  ! likelihood of previous accepted params
-      type(UNIF_VECTOR), intent(inout):: random_uniform_vector
-      double precision             :: l  ! likelihood of proposed values
-
-      integer:: R1, R2  ! indices of 2 random rows
-      double precision:: rand
-      double precision:: differential_weight
-      integer:: i  ! counters
-
-      ! the function, vector of normalized par values -> loglikelihood
-
-      interface
-         subroutine model_likelihood(param_vector, n, ML, id)
-            implicit none
-            double precision, dimension(n), intent(inout):: param_vector
-            integer, intent(in):: n
-            double precision, intent(out):: ML
-            integer, intent(in), optional:: id
-         end subroutine model_likelihood
-      end interface
-
-      R1 = random_int(len_history)
-      R2 = random_int(len_history)
-      do while (R1 == R2)  ! should not equal R1 ("without replacement")
-         R2 = random_int(len_history)
-      end do
-      previous_vector = X_i
-      call step(proposed_vector, previous_vector, PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
-         & random_uniform_vector, PI%npars)
-      proposed_vector_real = log_nor2par(PI%npars, proposed_vector, PI%parmin, PI%parmax, pi%paradj)
-      if (bounds_check(PI, proposed_vector_real)) then
-      call model_likelihood(proposed_vector_real, PI%npars, l, thread_id)
-      !write(*,*) "loglikelihood proposed", l
-      !write(*,*) "loglikelihood previous", l0
-      !write(*,*) "pars proposed", proposed_vector
-      !write(*,*) "pars previous", previous_vector
-      !write(*,*) "accept", metropolis_choice(l, l0)
-      if (metropolis_choice(l, l0)) then
-         X_i = proposed_vector
-         l0 = l
-      end if
-      endif
-   end subroutine
-
-   ! Generate new proposed state from currect state and history
-   ! ter Braak & Vrugt eq 2
+   !> Generate new proposed state from currect state and history
+   !> ter Braak & Vrugt eq 2
    subroutine step(vout, v1, v2, v3, differential_weight, random_uniform_vector, npars)
       use samplers_math, only: random_normal
       integer, intent(in):: npars
