@@ -48,7 +48,7 @@ subroutine test_model_initialize(error)
     call initialize_stats(MCOUT, PI%npars)
     ! check initialized?
     call check(error, allocated(mVs(1)%rainfall_time))
-    call destroy_carbon_model(nchains)
+    call destroy_carbon_model()
     call check(error, .not. allocated(mVs))
 end subroutine test_model_initialize
 
@@ -92,7 +92,7 @@ integer:: seed
     call check(error, flux_error < .0000000001)
     call check(error, pool_error < .0000000001)
     call check(error, diag_error < .0000000001)
-    call destroy_carbon_model(nchains)
+    call destroy_carbon_model()
 end subroutine test_model_repeat_evaluation
 
 subroutine test_model_repeat_and_independent_evaluation(error)
@@ -131,14 +131,14 @@ integer:: seed, i, clock
                      ,fluxes1, pools1, diags1,  DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,DATAin%nodiags, mVs(i))
-    !call destroy_carbon_model(nchains)
+    !call destroy_carbon_model()
     !call initialize_carbon_model(nchains)
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
                      ,DATAin%nodays, DATAin%LAT &
                      ,fluxes2, pools2, diags2,  DATAin%nopars &
                      ,DATAin%nomet, DATAin%nopools, DATAin%nofluxes  &
                      ,DATAin%nodiags, mVs(i))
-    !call destroy_carbon_model(nchains)
+    !call destroy_carbon_model()
     flux_error = sum(abs(fluxes1-fluxes2))
     pool_error = sum(abs(pools1-pools2))
     diag_error = sum(abs(diags1-diags2))
@@ -147,7 +147,7 @@ integer:: seed, i, clock
     call check(error, pool_error < .0000000001)
     call check(error, diag_error < .0000000001)
     end do
-    call destroy_carbon_model(nchains)
+    call destroy_carbon_model()
 end subroutine test_model_group_repeat_evaluation
 
 subroutine test_model_group_repeat_evaluation_3(error)
@@ -205,7 +205,7 @@ integer:: seed, i
     call check(error, flux_error < .0000000001)
     call check(error, pool_error < .0000000001)
     end do
-    call destroy_carbon_model(nchains)
+    call destroy_carbon_model()
 end subroutine test_model_group_repeat_evaluation_3
 
 subroutine test_model_cross_repeat_evaluation(error)

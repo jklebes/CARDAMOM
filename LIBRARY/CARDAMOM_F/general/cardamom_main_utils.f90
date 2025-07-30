@@ -48,13 +48,12 @@ contains
       type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list
       type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list_tmp
       type(mcmc_OPTIONS), intent(out):: MCO
-      integer:: n, i, counter_local(nchains), EDC_iter, nOUT_save, nWRITE_save, nADAPT_save, j
+      integer:: i, counter_local(nchains), nOUT_save, nWRITE_save, nADAPT_save
       integer:: success_count
       logical:: append_save
       logical:: restart(nchains)
       double precision:: ll
-      double precision:: PEDC(nchains), PEDC_prev(nchains), ML, ML_prior, P_target
-      double precision, dimension(PI%npars+1):: EDC_pars
+      double precision:: PEDC(nchains), PEDC_prev(nchains), P_target
       double precision, dimension(PI%npars):: parini  ! local variable, or array
 
       allocate (MCOUT_list_tmp(nchains))

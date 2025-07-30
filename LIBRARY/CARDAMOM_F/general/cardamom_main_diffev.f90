@@ -32,10 +32,9 @@ program cardamom_framework
    ! declare local variables
    character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
                     freq_write_char, do_inflate_char, cost_func_scaling_char
-   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, n, &
-             nOUT_save, do_inflate_dble, cost_func_scaling_dble
+   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, &
+             do_inflate_dble, cost_func_scaling_dble
    logical:: do_inflate = .false.
-   double precision:: ll
    type(MCMC_OUTPUT):: MCOUT
    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
    type(mcmc_options):: edc_MCO

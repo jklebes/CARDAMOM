@@ -81,20 +81,10 @@ module model_shared
     end do
     end subroutine
 
-    subroutine destroy_carbon_model(n_chains)
+    subroutine destroy_carbon_model()
     !! deallocate members of model_working_variables struct(s) Mvs
     use CARBON_MODEL_MOD, only: mVs
-    integer, intent(in), optional:: n_chains
     integer:: n_chains_
-    integer:: i
-!    if (present(n_chains)) then
-!      n_chains_ = n_chains
-!    else
-!      n_chains_ = 1
-!    endif
-!    do i = 1, n_chains_
-!        call destroy_mv(Mvs(i))
-!    end do
     deallocate(mVs)
     end subroutine
 

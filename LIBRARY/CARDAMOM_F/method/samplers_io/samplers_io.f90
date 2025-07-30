@@ -35,9 +35,7 @@ module samplers_io
             , open_output_files &
             , close_output_files
 
-   ! declare module level variables
-   ! TODO problem for parallel file writing !
-   integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
+   integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13
    ! default assumption is that this is not a restart fun
    logical:: restart_flag = .false.
 
@@ -145,7 +143,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
       ! close the files we have in memory
       close (pfile_unit+offset)
       close (sfile_unit+offset)
@@ -173,7 +171,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
 
       ! open files now
       ! most of these will require new information to be appended to the end at
@@ -236,7 +234,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
 
       ! If we have already written the initial covariance matrix we want to keep
       ! over-writing the current matrix. We do this to avoid large files form
@@ -275,12 +273,12 @@ contains
       double precision, dimension(npars), intent(in):: meanpars
 
       ! declare local variables
-      integer:: i, j
+      integer:: i
 
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
@@ -314,7 +312,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
@@ -349,7 +347,7 @@ contains
       integer, intent(in):: chainid
       integer  :: offset
 
-      offset = (chainid-1)*5
+      offset = (chainid-1)*4
 
       ! write out the file. Its binary format has already been determined at the
       ! openning of the file
@@ -380,7 +378,8 @@ contains
       double precision, dimension(npars), intent(in):: meanpars, &
          variance, &
          pars
-      double precision, intent(in):: nsample, accept_rate, prob
+      integer, intent(in):: nsample
+      double precision, intent(in):: accept_rate, prob
       logical, intent(in):: dump_now
       type(io_buffer_space), intent(inout):: io_space
       integer, intent(in):: chainid

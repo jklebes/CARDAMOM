@@ -105,12 +105,11 @@ program cardamom_framework
    ! declare local variables
    character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
                     freq_write_char, do_inflate_char, cost_func_scaling_char
-   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, n, &
+   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, &
              nOUT_save, do_inflate_dble, cost_func_scaling_dble
    logical:: do_inflate = .false.
    logical:: sub_sample_complete = .false.
    double precision:: sub_fraction = 0.2d0
-   double precision:: ll
    !double precision:: idum  ! TODO redo seeds
    type(MCMC_OUTPUT):: MCOUT
    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
@@ -265,7 +264,7 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT%cov .and. MCOUT%use_multivariate) then
-            MCOUT%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
+            MCOUT%Nparvar = MCO%N_before_mv*PI%npars+1
          else
             call reset_stats(MCOUT, PI%npars)
             ! reset the parameter step size at the beginning of each attempt  ! TODO where does this comment come from, to do?
@@ -366,7 +365,7 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT_list(i)%cov .and. MCOUT_list(i)%use_multivariate) then
-            MCOUT_list(i)%Nparvar = (MCO%N_before_mv*dble(PI%npars)) + 1d0
+            MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars+1
          else
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)

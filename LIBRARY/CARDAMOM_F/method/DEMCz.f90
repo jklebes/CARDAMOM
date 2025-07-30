@@ -90,7 +90,6 @@ contains
         !! likelihood of proposed values (private on each thread)
       double precision, dimension(PI%npars):: proposed_vector
         !! proposed values (private on each thread)
-      double precision, dimension(PI%npars):: proposed_vector_real
 
       !> history Matrix Z, (npars x (nchains*maxiter))
       double precision, allocatable, dimension(:, :):: PARS_history
@@ -99,7 +98,7 @@ contains
       type(UNIF_VECTOR), allocatable, dimension(:):: random_uniform_vectors
 
       integer:: npars, MAXITER
-      integer:: P_target
+      double precision:: P_target
       integer:: seed
       integer, dimension(:), allocatable:: ACC
       !! acceptance counter for each thread
@@ -373,8 +372,6 @@ contains
       !! proposed step on lognormed parameter space
       double precision, dimension(PI%npars), intent(in):: v1, v2, v3
       !! input: current and two random states from history on parameter space
-      double precision, dimension(PI%npars):: v1_lognorm, v2_lognorm, v3_lognorm
-      !! input: current and two random states from history on lognorm space
       type(UNIF_VECTOR), intent(inout):: random_uniform_vector
       double precision:: differential_weight
       call step(vout_lognorm,  log_par2nor(v1, PI%parmin, PI%parmax, PI%paradj), &

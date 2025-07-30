@@ -76,7 +76,6 @@ contains
       double precision, intent(out):: meanpar, variance
 
       ! local variables
-      integer:: i
       double precision, dimension(:), allocatable:: deviances
       ! allocate memory to local variable
       allocate (deviances(naccepted))
@@ -123,7 +122,7 @@ contains
       double precision, intent(inout):: meanpar, variance
 
       ! local variables
-      integer:: n, i, j
+      integer:: n
       double precision:: new_meanpar, nnew, cur
       cur = dble(cur1)
       nnew = 1d0
@@ -869,7 +868,7 @@ contains
       !
       !  Licensing: This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Wed 30 Jul 2025 10:39:27 BST
+      !  Last Modified: Wed 30 Jul 2025 15:57:41 BST
       !
       !  Original Author: John Burkardt (07 December 2009)
       !
@@ -977,7 +976,7 @@ contains
       !
       !    This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Wed 30 Jul 2025 10:39:27 BST
+      !  Last Modified: Wed 30 Jul 2025 15:57:41 BST
       !
       !    03/05/2019
       !

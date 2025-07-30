@@ -174,7 +174,7 @@ contains
       use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
       use samplers_shared, only: init_pars_random, bounds_check, is_infinity, metropolis_choice
       use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
-                             , write_covariance_info, restart_flag, write_mcmc_output, open_output_files
+                             , write_covariance_info, write_mcmc_output, open_output_files
       use random_uniform, ONLY: UNIF_VECTOR, initialize_random
       ! declare any local variables
     ! all variables in here are local to the single chain and the duration of its run
@@ -207,12 +207,6 @@ contains
       double precision:: llmax
         !! best loglikelihood seen so far
       double precision:: burn_in_period & ! global TODO module data ?! for how many proposals will we adapt the covariance matrix as a minimum
-         , AM_likelihood &
-         , outputP0 &
-         , outputP0prior &
-         , Pmax, P0prior, Pprior & ! as below but for priors only
-         , P0 & ! previously accepted observation based log-likelihood
-         , P & ! current observation based log-likelihood
          , opt_scaling & ! = opt_scaling_const/npars
          , beta &
          , par_minstepsize &
@@ -221,7 +215,6 @@ contains
       !! object holding array of pre-generated random values - (supposedly faster to pregenerate) - local to this
       !! chain
       logical:: multivariate
-      integer:: i
       integer:: MAXITER, nchains, npars
       !> counters-local to this chain's run
       integer:: ITER, ACC, ACC_FIRST, ACCLOC, N_before_mv_target
@@ -264,7 +257,7 @@ contains
       MAXITER = MCO%nout
       P_target = MCO%P_target
       MCOUT%use_multivariate = MCO%use_multivariate
-      N_before_mv_target = MCO%N_before_mv*dble(PI%npars)
+      N_before_mv_target = MCO%N_before_mv*PI%npars
       beta = MCO%beta
       par_minstepsize = MCO%par_minstepsize
 
@@ -570,7 +563,7 @@ contains
       integer, intent(in):: ACCLOC
       double precision, intent(in):: PARSALL(npars, ACCLOC)  ! collection of recently accepted normalised parameter combinations
       ! declare local variables
-      integer p, i, info  ! counters
+      integer p, info  ! counters
       double precision, dimension(npars, npars):: cov_backup
       double precision, dimension(npars, npars):: cholesky
       double precision, dimension(npars):: meanpar_backup

@@ -75,7 +75,7 @@ module samplers_shared
       integer:: nos_iterations
       !! number main loop interations run so far
 !stats collection:
-      double precision:: Nparvar, Nparvar_local
+      integer:: Nparvar, Nparvar_local
       !! Number of states in history that have gone into running
       !! mean, variance, and covariance calculation.
       double precision, allocatable, dimension(:):: parvar
@@ -103,9 +103,8 @@ contains
 !! Check whether a loglikelihood is infinity/likelihood is zero
 !! usually signalling hard reject of the state due to boundary conditions and physical constraints
       double precision, intent(in):: ll
-      double precision:: l
 ! undo the log
-      is_infinity = (ll <= log(epsilon))  ! check approx zero
+      is_infinity = (ll <= log(epsilon(1d0)))  ! check approx zero
    end function
 
 !! core sampler math
