@@ -58,6 +58,7 @@ contains
    !> Also writes history to file/output stream and progress to console.
    subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
       use samplers_shared, only: metropolis_choice
+      use samplers_io, only:write_mcmc_output, open_output_files
       implicit none
 
       !! input and output structs
@@ -67,6 +68,8 @@ contains
       !! struct of options for the run, shared between all threads
       type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
       !! Array of MCMC_OUTPUT structs for each thread's results
+      type(MCMC_OUTPUT):: MCOUT
+      !! A single thread's output object
 
       logical, optional, intent(in):: restart
       !! is it a restart ? (i.e. start from data in MCOUT instead of initializing new), optional, default .false.
@@ -84,6 +87,7 @@ contains
       double precision, allocatable, dimension(:):: l_best
       double precision, allocatable, dimension(:, :):: PARS_best
       double precision             :: l  
+      double precision             :: output_loglikelihood
         !! likelihood of proposed values (private on each thread)
       double precision, dimension(PI%npars):: proposed_vector
         !! proposed values (private on each thread)
@@ -105,6 +109,13 @@ contains
       integer:: i, j, k, ITER, len_history  ! counters
       integer:: R1, R2 
       !!random indices in history
+
+      type(io_buffer_space), dimension(:), allocatable:: io_space  
+      !! collection of io_space objects holding file writing buffers, one for each chain
+      character(4):: chainid_str
+      !! string version of chain number j, for file names, private to each chain
+      character(350):: outfile, stepfile, covfile, covifile
+      !! file names tagges with chainid, private to each chain
 
       !> the function to maximize.
       !> Completely agnostic, samples any functions vector -> double
@@ -174,13 +185,45 @@ contains
       allocate (PARS_history(npars, MAXITER*mco%nchains))
 
       allocate (random_uniform_vectors(mco%nchains))
+
+      allocate (io_space(mco%nchains))
+
       ! where we are in filling in the history matrix so far
       len_history = 0
 
       !!! Initial state
 
-!$OMP PARALLEL DO private(norpars)
+!$OMP PARALLEL DO private(MCOUT, norpars, chainid_str, outfile, stepfile, covfile, covifile)
       do j = 1, mco%nchains
+
+      MCOUT = MCOUT_list(j)
+      ! initialize output fields
+      if (.not. allocated(MCOUT%parvar)) then
+         ! we recieved blank new MCOUT, start new stats collection
+         MCOUT%Nparvar = 0
+         allocate (MCOUT%parvar(npars))
+         allocate (MCOUT%meanpar(npars))
+         allocate (MCOUT%covariance(npars, npars))
+      end if
+      MCOUT_list(j) = MCOUT
+
+    !!! prepare file writing
+      if (MCO%nwrite > 0) then
+         ! internal write to convert int -> str
+         write (chainid_str, '(i0)') j
+         ! append number to file names
+         outfile = trim(MCO%outfile)//"_"//trim(chainid_str)
+         stepfile = trim(MCO%stepfile)//"_"//trim(chainid_str)
+         covfile = trim(MCO%covfile)//"_"//trim(chainid_str)
+         covifile = trim(MCO%covifile)//"_"//trim(chainid_str)
+         ! allocate buffers io_space (different one for each chain)
+         call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
+         ! TODO potential restart handling !  outside
+         !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
+         !, parname, stepname, covname, covinfoname)
+         call open_output_files(outfile, stepfile, covfile, covifile, j)
+      end if
+
       ! Initialize pregenerated random numbers, if using-local to this chain
       seed = irand()  ! TODO record later  ! TODO always the same ?
         call random_uniform_vectors(j)%initialize_random(seed)
@@ -202,6 +245,7 @@ contains
 
          ! write first values to history matrix
          PARS_history(:, j) = PARS_current(:, j)
+         ACC(j) = 0
       end do
 !$OMP END PARALLEL DO
 
@@ -212,8 +256,10 @@ contains
       do i = 2, MAXITER/mco%nadapt+2
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO private(ITER, R1, R2, l, proposed_vector, proposed_vector_real)
+!$OMP PARALLEL DO private(ITER, R1, R2, l, proposed_vector, output_loglikelihood, MCOUT)
          do j = 1, mco%nchains
+            MCOUT = MCOUT_list(j)
+            ACCLOC(j) = 0
             do k = 1, mco%nadapt
                      ITER = i*mco%nadapt+k
 !               call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
@@ -247,16 +293,33 @@ contains
                      write (*, *) "Chain ", j, "of", mco%nchains 
                      write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
                      write (*, *) "Total accepted = ", ACC(j)
-                     !write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
-                     !write (*, *) "Local   acceptance rate    = ", ACCRATE
+                     write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
+                     write (*, *) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
                      write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
                      write (*, *) "Maximum likelihood = ", l_best(j)
                     endif 
-                  end do
+                  end do  ! nadapt
+
+                  if (MCO%nwrite > 0) then
+                     if (mod(ITER, MCO%nwrite) == 0) then
+                        ! calculate the likelihood for the actual uncertainties-this avoid
+                        ! issues with different phases of the MCMC which may use sub-samples
+                        ! of observations or inflated uncertainties to aid parameter
+                        ! searching
+                        call model_likelihood_write(PARS_current(:,j), npars, output_loglikelihood, j)
+                        ! Now write out to files
+                        call write_mcmc_output(MCOUT%parvar,  dble(ACC(j))/dble(MAXITER), &
+                                               MCOUT%covariance, &
+                                               MCOUT%meanpar, MCOUT%Nparvar, &
+                                               PARS_current(:,j), output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                               io_space(j), j)
+                     end if
+                  end if  ! write or not to write
+
                   ACC(j) = ACC(j) + ACCLOC(j)
                   ! write the chain's state after nadapt steps to Z
                   PARS_history(:, len_history+j) = PARS_current(:, j)
-               end do
+               end do  ! nchains
       !$OMP END PARALLEL DO !!Barrier implicit
 
          ! increment length M (filled so far) of Z
