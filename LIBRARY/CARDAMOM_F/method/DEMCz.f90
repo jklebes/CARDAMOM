@@ -1,9 +1,16 @@
 module DEMCz
-
    !-
-   ! On normalized parameters:
-   ! All calculation, statistics, and writing is done on "raw" values, 
-   ! NOT parameters normalized to (0, 1).
+   ! Differential evolution sampler (with history z), see ter Braak & Vrugt, Stat Comput 2008, 
+   ! "Differential Evolution Markov Chain with snooker updater and fewer chains".
+   !
+   !  jklebes 2024-2025
+   !
+   !  See also R BayesianSamplers DEMCz ... we implement a similar algorithm so that behavior can be 
+   ! compared.
+   !
+   !  This sampler should function similarly to other cardamom-samplers in terms of 
+   !  invocation, printing and file writing behavior.
+   !
    !
    ! How to use:
    !  Create an object of type PARINFO : number and bounds of parameters
@@ -14,11 +21,10 @@ module DEMCz
    !                 returning rel:: loglikelihood.
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
-   !!!!
-   use samplers_shared, only: PARINFO, bounds_check
-   use samplers_math, only: log_nor2par, log_par2nor
+   !-
+   use samplers_shared, only: PARINFO, bounds_check, init_pars_random
    use random_uniform, only: UNIF_VECTOR
-   use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_options  
+   use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_options
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -40,12 +46,15 @@ contains
 
    !> Main DEMCz sampler subroutine
    !> Write all OMP parallelization at this top level only
-   !> IN: model_loglikelihood a function parameters (array) -> loglikelihood (real)
+   !> IN: model_loglikelihoodi: a subroutine parameters (array) -> loglikelihood (real), to maximize
    !> IN: model_loglikelihood_write: an alternative function of same type for writing to file
    !>                                (optional, defaults to using model_loglikelihood )
    !> IN: PI type(ParInfo) collection of parameter bounds
    !> IN: OPT type(DEMCz) collection of sampling options
-   !> OUT: MCOUT type(DEMCzOUT) collection of results
+   !> OUT: MCOUT_list type(DEMCzOUT) collection of results, one object for each chain
+   !> IN: restart (optional, default .false.) : .true. -> restart from state in MCOU_list
+   !>                          .false. -> start from random initial positions
+   !> IN : nchains (optional, default 3) : number chains in swarm.
    !> Also writes history to file/output stream and progress to console.
    subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
       use samplers_shared, only: metropolis_choice
@@ -172,27 +181,27 @@ contains
 
 !$OMP PARALLEL DO private(norpars)
       do j = 1, mco%nchains
+      ! Initialize pregenerated random numbers, if using-local to this chain
+      seed = irand()  ! TODO record later  ! TODO always the same ?
+        call random_uniform_vectors(j)%initialize_random(seed)
          ! choose initial values
          ! TODO better function for initial state : latin square
          if (.not. restart_) then 
-         call init_random(npars, pars_current(:,j))
-
+         call init_pars_random(PI, pars_current(:,j), PI%fix_pars, random_uniform_vectors(j))
       else
-         pars_current(:,j) = log_par2nor(npars, mcout_list(j)%pars, PI%parmin, PI%parmax, PI%paradj)
+         pars_current(:,j) =  mcout_list(j)%pars
       end if
          ! also set the loglikelihoof of the state generated
          call model_likelihood(PARS_current(:, j), npars, l0(j), j)
          l_best(j) = l0(j)
          PARS_best(:,j) = PARS_current(:,j)
 
+         write(*,*) "start", j, l0(j), PARS_current(:,j)
          ! potential burnin steps
          ! ... TODO
 
          ! write first values to history matrix
          PARS_history(:, j) = PARS_current(:, j)
-      ! Initialize pregenerated random numbers, if using-local to this chain
-      seed = irand()  ! TODO record later  ! TODO always the same ?
-        call random_uniform_vectors(j)%initialize_random(seed)
       end do
 !$OMP END PARALLEL DO
 
@@ -215,11 +224,10 @@ contains
                      do while (R1 == R2)  ! should not equal R1 ("without replacement")
                         R2 = random_int(len_history)
                      end do
-                     call step(proposed_vector, PARS_current(:,j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
-                        & random_uniform_vectors(j), PI%npars)
-                     proposed_vector_real = log_nor2par(PI%npars, proposed_vector, PI%parmin, PI%parmax, pi%paradj)
-                     if (bounds_check(PI, proposed_vector_real)) then
-                     call model_likelihood(proposed_vector_real, PI%npars, l, j)
+                     call step_real(proposed_vector, PARS_current(:,j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
+                        & random_uniform_vectors(j), PI)
+                     if (bounds_check(PI, proposed_vector)) then
+                     call model_likelihood(proposed_vector, PI%npars, l, j)
                      if (metropolis_choice(l, l0(j))) then
                         PARS_current(:,j) = proposed_vector
                         l0(j) = l
@@ -227,7 +235,7 @@ contains
                         ! check for new best
                         if (l > l_best(j)) then
                            l_best(j) = l
-                           !best_pars(:,j) = proposed_vector
+                           pars_best(:,j) = proposed_vector
                         endif
                      !else 
                         ! else-no accept 
@@ -241,8 +249,8 @@ contains
                      write (*, *) "Total accepted = ", ACC(j)
                      !write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
                      !write (*, *) "Local   acceptance rate    = ", ACCRATE
-                     write (*, *) "Current obs   = ", l0(j) !, "proposed = ", loglikelihood_proposed, " log-likelihood"
-                     !write (*, *) "Maximum likelihood = ", llmax
+                     write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
+                     write (*, *) "Maximum likelihood = ", l_best(j)
                     endif 
                   end do
                   ACC(j) = ACC(j) + ACCLOC(j)
@@ -268,7 +276,7 @@ contains
       write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
       !write (*, *) "Final local acceptance rate = ", ACCRATE
       write (*, *) "Best log-likelihood = ", l_best(j)
-      !write (*, *) "Best parameters = ", MCOUT%bestpars
+      write (*, *) "Best parameters = ", pars_best(:,j)
       end do
       !$OMP END PARALLEL DO
 
@@ -287,6 +295,34 @@ contains
       end do
       ! also output the loglikelihood of the state generated
 
+   end subroutine
+
+
+   !> Thin wrapper on "step" which takes three vectors in the space of raw parameter values; 
+   !> they are converted to lognormalized parameters (0, 1) before being lineraly combined in 
+   !> the core "step" function.  After cardamom-MHMCMC and 
+   !> sampling is observed to be better when this is done on lognormalized parameters.
+   subroutine step_real(vout, v1, v2, v3, differential_weight, random_uniform_vector, PI)
+      use samplers_math, only: log_nor2par_scalar, log_par2nor_scalar
+      type(PARINFO), intent(in):: PI
+      double precision, dimension(PI%npars), intent(out):: vout
+      !! proposed step on raw parameter space
+      double precision, dimension(PI%npars):: vout_lognorm
+      !! proposed step on lognormed parameter space
+      double precision, dimension(PI%npars), intent(in):: v1, v2, v3
+      !! input: current and two random states from history on parameter space
+      double precision, dimension(PI%npars):: v1_lognorm, v2_lognorm, v3_lognorm
+      !! input: current and two random states from history on lognorm space
+      type(UNIF_VECTOR), intent(inout):: random_uniform_vector
+      double precision:: differential_weight
+      v1_lognorm = log_par2nor_scalar(v1, PI%parmin, PI%parmax, PI%paradj) 
+      v2_lognorm = log_par2nor_scalar(v2, PI%parmin, PI%parmax, PI%paradj) 
+      v3_lognorm = log_par2nor_scalar(v3, PI%parmin, PI%parmax, PI%paradj) 
+      call step(vout_lognorm,  log_par2nor_scalar(v1, PI%parmin, PI%parmax, PI%paradj), &
+                 log_par2nor_scalar(v2, PI%parmin, PI%parmax, PI%paradj), &
+                log_par2nor_scalar(v3, PI%parmin, PI%parmax, PI%paradj), &
+               differential_weight, random_uniform_vector, PI%npars)
+      vout = log_nor2par_scalar(vout_lognorm, PI%parmin, PI%parmax, PI%paradj)
    end subroutine
 
    !> Generate new proposed state from currect state and history

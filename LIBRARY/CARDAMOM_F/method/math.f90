@@ -745,7 +745,7 @@ contains
       out_par = min_par + (max_par-min_par)*initial_par
    end function nor2par
 
-   elemental function nor2par_scalar(initial_par, min_par, max_par) result(out_par)
+   pure elemental function nor2par_scalar(initial_par, min_par, max_par) result(out_par)
       !#
       ! Converting values back from normalised (0-1) to 'real' numbers
       !#
@@ -763,7 +763,7 @@ contains
    !------------------------------------------------------------------
    !
    !
-   pure function log_par2nor_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
+   pure elemental function log_par2nor_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
       !#
       ! Functions to normalised-log parameter values.
       !
@@ -818,7 +818,7 @@ contains
    !---------------------and vice versa------------------------------
    !
 
-   pure function log_nor2par_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
+   pure elemental function log_nor2par_scalar(initial_par, min_par, max_par, par_adj) result(out_par)
 
       !#
       ! Converting values back from log-normalised (0-1) to 'real' numbers
@@ -939,7 +939,7 @@ contains
       !
       !  Licensing: This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Fri 18 Jul 2025 12:37:32 BST
+      !  Last Modified: Wed 30 Jul 2025 09:51:02 BST
       !
       !  Original Author: John Burkardt (07 December 2009)
       !
@@ -1047,7 +1047,7 @@ contains
       !
       !    This code is distributed under the GNU LGPL license.
       !
-      !  Last Modified: Fri 18 Jul 2025 12:37:32 BST
+      !  Last Modified: Wed 30 Jul 2025 09:51:02 BST
       !
       !    03/05/2019
       !
