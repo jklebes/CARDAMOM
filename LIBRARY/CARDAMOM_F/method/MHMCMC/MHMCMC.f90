@@ -42,95 +42,13 @@ module MHMCMC
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout)
 
-   use samplers_shared, only: PARINFO
+   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
    implicit none
 
    public
-
-!> A collection of input options to the DEMCz sampler run
-!> contains default values
-   type MCMC_OPTIONS
-      integer:: MAXITER = 10000  ! overall steps, if convergence not reached
-      integer:: nadapt = 1000  ! steps per "local" sampling period, between adaptation steps
-      integer:: Nchains = 1  ! consider setting OMP env to something compatible
-      integer:: nwrite = 1000
-      integer:: nprint = 1000
-      real:: P_target  
-      !! termination criterion-a loglikelihood to stop at (optional)
-!> file names
-      character(350):: outfile = "parout.txt"
-      character(350):: stepfile = "stepout.txt"
-      character(350) ::  covfile = "covout.txt"
-      character(350):: covifile = "covinfoout.txt"
-! Adaptive 
-!> setting for adaptive AP-MCMC step size
-      double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
-                                           , par_maxstepsize = 0.01d0 &
-                                                               , par_initstepsize = 0.005d0
-      double precision:: beta = 0.05d0  ! weighting for gaussian step in multivariate proposals
-!> Optimal scaling variable for parameter searching
-      double precision:: opt_scaling_const = 2.381204**2  ! scd = 2.381204 the optimal scaling parameter
-      ! for MCMC search, when applied to  multivariate proposal.
-      ! NOTE 1: 2.38/sqrt(npars) sometimes used when applied to the Cholesky
-      ! factor. NOTE 2: 2.381204**2 = 5.670132
-      double precision:: N_before_mv = 10d0
-!! step
-!> Is current proposal multivariate or not?
-      logical:: multivariate_proposal = .false.
-      real:: fadapt  ! TODO fraction adapt-move to outside
-      integer:: nout
-      logical:: append
-      logical:: use_multivariate
-      logical:: restart
-      logical:: randparini
-      logical:: returnpars  
-      !! a variable that is never used and has no effect, needs deleting in all model likelihood files
-      logical:: fixedpars  
-      !! never used
-   end type MCMC_OPTIONS
-
-
-
-!> Collection of info for output of the sampling run
-!> , can also be passed to next run to continue from the last state
-!> Note output is mainly via file writing
-   type MCMC_OUTPUT
-      double precision:: bestll
-      !! best (maximum) loglikelihood value found so far
-      double precision:: ll 
-      !! latest loglikelihood value
-      double precision, allocatable, dimension(:):: bestpars
-      !! best (loglikelihood-maximizing) parameter values found so far
-      double precision, allocatable, dimension(:):: pars
-      !! latest parameter values
-      double precision:: acceptance_rate
-      !! acceptance rate
-      logical:: complete
-      !! Did the main loop finish?
-      integer:: nos_iterations
-      !! number main loop interations run so far
-!stats collection:
-      double precision:: Nparvar, Nparvar_local
-      !! Number of states in history that have gone into running 
-      !! mean, variance, and covariance calculation.  
-      double precision, allocatable, dimension(:):: parvar
-      !! variance 
-      double precision, allocatable, dimension(:):: meanpar
-      !! mean of parameters 
-      double precision, allocatable, dimension(:, :):: covariance
-      !! covariance matrix measured during sampling
-      logical:: cov = .false. 
-      !! Does the covariance matrix exist yet?
-      logical:: use_multivariate
-      !! Are we in the later simulation phase where step size depend 
-      !! on covariance matrix ?  i.e. after enough data has been observed
-      !! that a useful covariance matrix exists
-      logical:: multivariate_proposal
-      !! TODO general setting to ever use multivariate or not?
-   end type MCMC_OUTPUT
 
 contains
    !

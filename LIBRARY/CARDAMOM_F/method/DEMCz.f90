@@ -22,9 +22,8 @@ module DEMCz
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
    !-
-   use samplers_shared, only: PARINFO, bounds_check, init_pars_random
+   use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options
    use random_uniform, only: UNIF_VECTOR
-   use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_options
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -58,7 +57,7 @@ contains
    !> Also writes history to file/output stream and progress to console.
    subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
       use samplers_shared, only: metropolis_choice
-      use samplers_io, only:write_mcmc_output, open_output_files
+      use samplers_io, only: write_mcmc_output, open_output_files
       implicit none
 
       !! input and output structs
