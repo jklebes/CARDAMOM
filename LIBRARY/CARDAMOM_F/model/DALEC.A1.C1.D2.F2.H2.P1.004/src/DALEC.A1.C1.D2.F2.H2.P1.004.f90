@@ -905,7 +905,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot
-       call calculate_Rtot
        ! Pass root~water~soil variables to output variable
        DIAGS(n,8) = root_reach ! Rooting depth (m)
        DIAGS(n,10) = wSWP      ! Soil water potential weighted by supply of water
@@ -930,7 +929,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
            FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
            ! Estimate the ratio of leaf internal to ambient CO2 concentrations
-           DIAGS(n,4) = ci / co2
+           DIAGS(n,4) = ci / co2       
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
@@ -1316,9 +1315,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! Estimate ci as a function of the final combined GPP estimate
-    !pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
-    !! calculate internal CO2 concentration (ppm or umol/mol)
-    !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+    pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
+    ! calculate internal CO2 concentration (ppm or umol/mol)
+    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
@@ -2034,9 +2033,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
                 canopy_iso_to_net_const
     canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
-    ! Estimate the mean leaf temperature as a result of net radiation update
-    leafT = (((((canopy_loss + canopy_loss) - delta_iso) / (canopy_release_fraction * 2d0)) &
-             / emiss_boltz) ** (0.25d0)) - freeze
+    ! Estimate the mean leaf temperature as a result of net radiation update.
+    ! This can only be attempted if the canopy release fraction (an empirical fit) is greater than
+    ! zero. Otherwise the leafT defaults to infinity which is unrealistic.
+    if (canopy_release_fraction > 0d0) then
+        leafT = (((((canopy_loss + canopy_loss) - delta_iso) / (canopy_release_fraction * 2d0)) &
+                 / emiss_boltz) ** (0.25d0)) - freeze 
+    end if 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -2373,34 +2376,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Turn the output resistance into conductance
     Rcond_layer = Rcond_layer**(-1d0)
 
-    ! if freezing then assume soil surface is frozen, therefore no water flux
+    ! If freezing then assume soil surface is frozen, therefore no water flux
     if (soilT < 1d0) then
         water_flux_mmolH2Om2s(1) = 0d0
         Rcond_layer(1) = 0d0
     end if
 
-    ! calculate sum value (mmolH2O.m-2.s-1)
+    ! Calculate sum value (mmolH2O.m-2.s-1)
     total_water_flux = sum(water_flux_mmolH2Om2s)
-    ! calculate effective resistance
+    ! Calculate effective resistance
     ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
     ! through the model structure/
     Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
-
-    ! wSWP based on the conductance due to the roots themselves.
-    ! The idea being that the plant may hedge against growth based on the majority of the
-    ! profile being dry while not losing leaves within some toleration.
-    rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! However, similar to the wSWP we need a special case calculation 
+        ! when there is no extraction from the soil. Here we use the ratio of root mass itself.
+        rSWP = sum(SWP(1:rooted_layer) * (root_mass(1:rooted_layer) / sum(root_mass(1:rooted_layer))))
         total_water_flux = 0d0
       else
         ! calculate weighted SWP and uptake fraction
         uptake_fraction(1:nos_root_layers) = water_flux_mmolH2Om2s(1:nos_root_layers) / total_water_flux
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! The idea being that the plant may hedge against growth based on the majority of the
+        ! profile being dry while not losing leaves within some toleration.
+        rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
     endif
 
     ! and return
