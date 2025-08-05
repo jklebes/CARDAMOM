@@ -200,6 +200,7 @@ program cardamom_framework
    ! PI lives in model_shared and its info can be read after call to initiialize_model
    ! TODO not sure about MCO at this point
    do i = 1, nchains
+      ! the problem is 
       call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, sub_fraction, &
                                            MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile, i)
    end do

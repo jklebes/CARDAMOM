@@ -970,7 +970,7 @@ module cardamom_io
 
    subroutine initialize(infile)  ! formerly read_pari_data
       ! 3 steps must be called in this order
-      use cardamom_structures, only: DATA_type, set_datain
+      use cardamom_structures, only: DATA_type, set_datain, set_datain_original
       use model_shared, only: initialize_parinfo
       implicit none
       character(350), intent(in):: infile
@@ -979,6 +979,9 @@ module cardamom_io
       call initialize_parinfo()  ! TODO not really a file reading thing
       call read_check_binary_data(infile, DATAin)
       call initialize_model(DATAin)
+      ! Save the DATAin from file to cardamom_structures : DATAin_original
+      call set_datain_original(DATAin)
+      ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
       call set_datain(DATAin)
    end subroutine
 
@@ -1302,12 +1305,12 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_normal
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
       ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
       ! - but I made it requires more deliberate steps to stop accidental updates
       ! from concurrent parts
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case set all to one where the weight of each
@@ -1345,9 +1348,9 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sample size
@@ -1385,9 +1388,9 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_sqrt_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp  
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sqrt of the 
@@ -1426,9 +1429,9 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_log_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sqrt of the 
