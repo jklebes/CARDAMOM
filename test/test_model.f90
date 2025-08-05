@@ -29,8 +29,8 @@ subroutine collect_modeltests(testsuite)
   testsuite = [ &
     new_unittest("model_initialize", test_model_initialize), &
     new_unittest("model_repeat_evaluation", test_model_repeat_evaluation), &
-    new_unittest("model_group_repeat_evaluation", test_model_group_repeat_evaluation_3), &
-    new_unittest("model_group_repeat_evaluation_3", test_model_group_repeat_evaluation) &
+    new_unittest("model_group_repeat_evaluation", test_model_group_repeat_evaluation), &
+    new_unittest("model_group_repeat_evaluation_3", test_model_group_repeat_evaluation_3) &
     ]
 
 end subroutine collect_modeltests
@@ -60,10 +60,10 @@ subroutine test_model_repeat_evaluation(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   integer:: nchains 
-    double precision, dimension(PI%npars):: PARS
-    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: pools1, pools2
-    double precision, dimension(DATAin%nodays, DATAin%nofluxes):: fluxes1, fluxes2
-    double precision, dimension(DATAin%nodays, DATAin%nodiags):: diags1, diags2
+    double precision, dimension(:), allocatable:: PARS
+    double precision, dimension(:,:), allocatable:: pools1, pools2
+    double precision, dimension(:,:), allocatable:: fluxes1, fluxes2
+    double precision, dimension(:,:), allocatable:: diags1, diags2
     double precision:: pool_error, flux_error, diag_error
     ! These are here because they're kept at this level in model_likelihood.f90 files, 
     ! and they are there in DALEC models because this text insertion was the simplest way to edit 37 models
@@ -71,6 +71,11 @@ integer:: seed
     type(UNIF_VECTOR):: random_uniform
   nchains = 1
     call initialize(infile) 
+    write(*,*) "datain 0", DATAin%nodays, DATAin%nopools, DATAin%nofluxes, DATAin%nodiags
+    write(*,*) "total" , DATAin%nodays*DATAin%nofluxes*8
+    allocate(pools1(DATAin%nodays+1, DATAin%nopools), pools2(DATAin%nodays+1, DATAin%nopools))
+    allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes))
+    allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
     seed = irand()  ! TODO record later
@@ -111,14 +116,19 @@ subroutine test_model_group_repeat_evaluation(error)
   type(error_type), allocatable, intent(out):: error
   integer:: nchains 
     double precision, dimension(PI%npars):: PARS
-    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: pools1, pools2
-    double precision, dimension(DATAin%nodays, DATAin%nofluxes):: fluxes1, fluxes2
-    double precision, dimension(DATAin%nodays, DATAin%nodiags):: diags1, diags2
+    double precision, dimension(:,:), allocatable:: pools1, pools2
+    double precision, dimension(:,:), allocatable:: fluxes1, fluxes2
+    double precision, dimension(:,:), allocatable:: diags1, diags2
     double precision:: pool_error, flux_error, diag_error
 integer:: seed, i, clock
     type(UNIF_VECTOR):: random_uniform
     nchains = 4
     call initialize(infile) 
+    write(*,*) "datain a", DATAin%nodays+1, DATAin%nopools, DATAin%nofluxes, DATAin%nodiags
+    write(*,*) DATAin%nodays*DATAin%nofluxes*8
+    allocate(pools1(DATAin%nodays, DATAin%nopools), pools2(DATAin%nodays, DATAin%nopools))
+    allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes))
+    allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
     PARS = DATAin%parpriors(1:PI%npars)
     seed = irand()  
     call random_uniform%initialize_random(seed)
@@ -144,6 +154,8 @@ integer:: seed, i, clock
     diag_error = sum(abs(diags1-diags2))
     write(*,*) i, flux_error, pool_error
     call check(error, flux_error < .0000000001)
+    write(*,*) pools1, pools2
+    write(*,*) pool_error
     call check(error, pool_error < .0000000001)
     call check(error, diag_error < .0000000001)
     end do
@@ -161,14 +173,19 @@ subroutine test_model_group_repeat_evaluation_3(error)
   type(error_type), allocatable, intent(out):: error
   integer:: nchains 
     double precision, dimension(PI%npars):: PARS
-    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: pools1, pools2, pools3
-    double precision, dimension(DATAin%nodays, DATAin%nofluxes):: fluxes1, fluxes2, fluxes3
-    double precision, dimension(DATAin%nodays, DATAin%nodiags):: diags1, diags2, diags3
+    double precision, dimension(:,:), allocatable:: pools1, pools2, pools3
+    double precision, dimension(:,:), allocatable:: fluxes1, fluxes2, fluxes3
+    double precision, dimension(:,:), allocatable:: diags1, diags2, diags3
     double precision:: pool_error, flux_error, diag_error
 integer:: seed, i
     type(UNIF_VECTOR):: random_uniform
     nchains = 4
     call initialize(infile) 
+    write(*,*) "datain", DATAin%nodays, DATAin%nopools, DATAin%nofluxes, DATAin%nodiags
+    write(*,*) DATAin%nodays*DATAin%nofluxes*8
+    allocate(pools1(DATAin%nodays+1, DATAin%nopools), pools2(DATAin%nodays+1, DATAin%nopools), pools3(DATAin%nodays+1, DATAin%nopools))
+    allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes), fluxes3(DATAin%nodays, DATAin%nofluxes))
+    allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags), diags3(DATAin%nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
     seed = irand()  ! TODO record later
