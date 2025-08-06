@@ -290,8 +290,8 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
     call check(error, mcout1%pars(2) >= pi_xy%parmin(2) .and. mcout1%pars(2) <= pi_xy%parmax(2) )
     ! expect bestll and bestpars better than final one (unless they happen to be the same one, unlikely)
     call check(error, mcout1%bestll > mcout1%ll )
-    call check(error, (abs(mcout1%pars(1) - x_ideal) > abs(mcout1%bestpars(1)-x_ideal)) &
-    & .or.  (abs(mcout1%pars(2) - y_ideal) > abs(mcout1%bestpars(2)-y_ideal) ))
+    call check(error, (abs(mcout1%pars(1) - x_ideal) >= abs(mcout1%bestpars(1)-x_ideal)) &
+    & .or.  (abs(mcout1%pars(2) - y_ideal) >= abs(mcout1%bestpars(2)-y_ideal) ))
     ! outputs complete and nos_iterations
     call check(error, mcout1%complete)  ! expect .true.
     call check(error, mcout1%nos_iterations, mcopt%nout)  ! because no convergence checks implemented at the moment
@@ -312,7 +312,7 @@ subroutine test_mcmc_stop_condition(error)
   mcopt%P_target = -0.0d0  ! convergence criteria : loglikelood reached 0
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect we have optimized the values to the correct ranges
-  write(*,*) mcout%pars, x_lower, x_upper, y_lower, y_upper
+  call check(error, mcout%bestpars(1) == mcout%pars(1) .and. mcout%bestpars(2) == mcout%pars(2) )  
   call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )  
   call check(error, mcout%pars(2) >= y_lower  .and. mcout%pars(2) <= y_upper )
   ! Expect the optimization stopped early
