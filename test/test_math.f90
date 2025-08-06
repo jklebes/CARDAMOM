@@ -49,9 +49,9 @@ function approx(a, b, rel_tol) result(eq)
     rel_tol_ = rel_tol
   endif 
   ! check close to zero
-  if (a == 0d0) then 
+  if (abs(a) <= epsilon(0d0)) then 
     eq = (abs(b) <= epsilon(0d0))
-  else if (b == 0d0) then
+  else if (abs(b) <= epsilon(0d0)) then
     eq = (abs(a) <= epsilon(0d0))
   else 
   ! else check relative difference
