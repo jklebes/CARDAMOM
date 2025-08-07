@@ -53,7 +53,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public:: model_likelihood, scaled_model_likelihood, edc_model_likelihood
+  public:: model_likelihood, scaled_model_likelihood, edc_model_likelihood, model_sanity_check, sanity_check
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -185,6 +185,7 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     ! Compare outputs
     flux_error = sum(abs(M_FLUXES-local_fluxes))
     pool_error = sum(abs(M_POOLS-local_pools))
+    !write(*,*) "mpools", m_pools
     diags_error = sum(abs(M_DIAGS-local_diags))
     ! If error between runs exceeds precision error then we have a problem
     if (diags_error > (tiny(0d0)*(DATAin%nodiags*DATAin%nodays)) .or. &
