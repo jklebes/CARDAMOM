@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -14,13 +14,13 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful,
+! This program is distributed in the hope that it will be useful, 
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
 
 ! You should have received a copy of the GNU General Public License
-! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+! along with this program.  If not, see < https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains functions needed to mathematical calculations in CARDAMOM
@@ -31,7 +31,7 @@
 ! Edinburgh CARDAMOM code and subsequent modifications by:
 ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
 ! J. F. Exbrayat (University of Edinburgh)
-! See function / subroutine specific comments for exceptions and contributors
+! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -47,12 +47,11 @@ module math_functions
   private
 
   ! make explicit bits we want others to see
-  public:: randn, std, idum, covariance_matrix, &
-            random_normal, random_uniform, rnstrt, &
-            random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par, log_par2nor, log_nor2par, &
-            cholesky_factor, inverse_matrix, matrix_vector_func, &
-            calculate_variance, increment_variance, linear_model_gradient
+  public:: randn, &
+            random_normal, random_uniform, &
+            random_multivariate, &
+            matrix_vector_func, &
+            linear_model_gradient
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -96,292 +95,6 @@ module math_functions
   integer, save       :: ranx(kk)
 
   contains
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine calculate_variance(sample, meanpar, naccepted, variance)
-
-    ! Subroutine to estimate the sample variance
-    ! Var = Σ ( Xi-X )*2 / (N-1)
-    ! X = mean for parameter
-    ! Xi = ith member of the vector
-    ! N = number of parameters accepted so far
-    ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
-    ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
-    ! (contact abloom@jpl.nasa.gov for access)
-
-    implicit none
-
-    ! Arguments
-    integer, intent(in):: naccepted
-    double precision, intent(in):: sample(naccepted)
-    double precision, intent(out):: meanpar, variance
-
-    ! local variables
-    integer:: i
-    double precision, dimension(:), allocatable:: deviances
-
-    ! allocate memory to local variable
-    allocate(deviances(naccepted))
-
-    ! calculate components needed for variance
-    meanpar = sum(sample) / dble(naccepted)
-    ! estimate deviance
-    deviances = sample-meanpar
-    ! estimate the variance
-    ! NOTE: that naccepted-1 makes this the sample variance
-    variance = sum(deviances*deviances) * dble(naccepted-1)**(-1)
-
-    ! tidy up
-    deallocate(deviances)
-
-    ! return to user
-    return
-
-  end subroutine calculate_variance
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine increment_variance(sample, meanpar, cur, new, variance)
-
-    ! Subroutine for incremental update of the variance
-    ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
-    ! M  = mean vector for parameters
-    ! Mi = new mean vector for updated variance_matrix
-    ! ar = number of new parameters to be added
-    ! N = number of parameters accepted so far
-    ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
-    ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
-    ! (contact abloom@jpl.nasa.gov for access)
-    ! Translation to fortran and subsequent modifications by T. L. Smallman
-    ! University of Edinburgh, t.l.smallman@ed.ac.uk
-
-    implicit none
-
-    ! Arguments
-    integer, intent(in):: new
-    double precision, intent(in):: sample(new)
-    double precision, intent(inout):: cur, meanpar, variance
-
-    ! local variables
-    integer:: n, i, j
-    double precision:: new_meanpar, nnew
-
-    nnew = 1d0
-    ! loop through each accepted parameter set...
-    do n = 1, new
-       ! ...estimate the new mean value for each parameter...
-       new_meanpar = ((meanpar*cur) + (sample(n) * nnew)) &
-                    / (cur+nnew)
-       ! ...update the variance with each new parameter vector in turn
-       variance = variance*(cur-1d0)/(cur-1d0+nnew) &
-                + (cur*meanpar*meanpar- &
-                  (cur+nnew)*new_meanpar*new_meanpar + &
-                   nnew*sample(n)*sample(n))/(cur-1d0+nnew)
-       ! update running totals and mean for the next iteration
-       cur = cur+1; meanpar = new_meanpar
-    end do  ! new_accepted
-
-    ! return to user
-    return
-
-  end subroutine increment_variance
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine covariance_matrix(PARSALL, meanpar, npars, naccepted, covariance)
-
-    ! Subroutine to estimate the covariance matrix
-    ! Cov(X, Y) = Σ ( Xi-X ) ( Yi-Y ) / (N-1)
-    ! X = mean for parameter 1
-    ! Y = mean parameter 2
-    ! Xi = ith member of the vector
-    ! N = number of parameters accepted so far
-    ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
-    ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
-    ! (contact abloom@jpl.nasa.gov for access)
-    ! Translation to fortran and subsequent modifications by T. L. Smallman
-    ! University of Edinburgh, t.l.smallman@ed.ac.uk
-
-    implicit none
-
-    ! Arguments
-    integer, intent(in):: npars, naccepted
-    double precision, intent(in):: PARSALL(npars, naccepted)
-    double precision, intent(out):: meanpar(npars), covariance(npars, npars)
-
-    ! local variables
-    integer:: i
-    double precision, dimension(:,:), allocatable:: deviances
-
-    ! allocate memory to local variable
-    allocate(deviances(npars, naccepted))
-
-    ! calculate components needed for covariance
-    do i = 1, npars
-       meanpar(i) = sum(PARSALL(i, :)) / dble(naccepted)
-       ! estimate deviance
-       deviances(i, :) = PARSALL(i, :) - meanpar(i)
-    end do
-
-    ! use matrix multiplication to estimate covariance
-    ! NOTE: that naccepted-1 makes this the sample covariance
-    covariance = matmul(deviances, transpose(deviances)) * dble(naccepted-1)**(-1)
-
-    ! tidy up
-    deallocate(deviances)
-
-    ! return to user
-    return
-
-  end subroutine covariance_matrix
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine increment_covariance_matrix(PARSALL, meanpar, npars, cur, new, covariance)
-
-    ! Subroutine for incremental update of a covariance matrix
-    ! CMOUT = CM*(N-1)/(N-1+ar) + (N*M'*M-(N+ar)*Mi'*Mi+x'*x*ar)/(N-1+ar)
-    ! M  = mean vector for parameters
-    ! Mi = new mean vector for updated covariance_matrix
-    ! ar = number of new parameters to be added
-    ! N = number of parameters accepted so far
-    ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
-    ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
-    ! (contact abloom@jpl.nasa.gov for access)
-
-    implicit none
-
-    ! Arguments
-    integer, intent(in):: npars, new
-    double precision, intent(in):: PARSALL(npars, new)
-    double precision, intent(inout):: cur, meanpar(npars), covariance(npars, npars)
-
-    ! local variables
-    integer:: n, i, j
-    double precision:: new_meanpar(npars), nnew
-
-    nnew = 1d0
-    ! loop through each accepted parameter set...
-    do n = 1, new
-       ! ...estimate the new mean value for each parameter...
-       new_meanpar = ((meanpar*cur) + (PARSALL(:,n) * nnew)) &
-                    / (cur+nnew)
-       ! ...update the covariance matrix with each new parameter vector in turn
-       do i = 1, npars
-          do j = 1, npars
-             covariance(i, j) = covariance(i, j)*(cur-1d0)/(cur-1d0+nnew) &
-                             + (cur*meanpar(i)*meanpar(j)- &
-                               (cur+nnew)*new_meanpar(i)*new_meanpar(j) + &
-                                nnew*PARSALL(i, n)*PARSALL(j, n))/(cur-1d0+nnew)
-          end do  ! j = 1, npars
-       end do  ! i = 1, npars
-       ! update running totals and mean for the next iteration
-       cur = cur+1; meanpar = new_meanpar
-    end do  ! new_accepted
-
-    ! return to user
-    return
-
-  end subroutine increment_covariance_matrix
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine inverse_matrix(n, a, c)
-
-     !============================================================
-     ! Inverse for positive definite symmetric matrix
-     ! Method: Based on Doolittle LU factorization for Ax = b
-     ! Alex L. Godunov December 2009
-     ! Modifed for CARDAMOM: T. Luke Smallman (June 2019)
-     !                       t.l.smallman@ed.ac.uk
-     ! Warning if matrix not positive definite this function will fail
-     !-----------------------------------------------------------
-     ! input ...
-     ! a(n, n) - array of coefficients for matrix A
-     ! n      - dimension
-     ! output ...
-     ! c(n, n) - inverse matrix of A
-     ! comments ...
-     ! the original matrix a(n, n) will be destroyed
-     ! during the calculation
-     !===========================================================
-
-     implicit none
-
-     ! arguments
-     integer, intent(in):: n
-     double precision, dimension(n, n), intent(in):: a
-     double precision, dimension(n, n), intent(out):: c
-
-     ! local arguments
-     double precision, dimension(n, n):: L, U, a_local
-     double precision, dimension(n):: b(n), d(n), x(n)
-     double precision:: coeff
-     integer:: i, j, k
-
-     ! Step 0: initialization for matrices L and U and b
-     ! Fortran 90/95 allows such operations on matrices
-     L = 0d0; U = 0d0; b = 0d0; a_local = a
-
-     ! Step 1: forward elimination
-     do k = 1, n-1
-        do i = k+1, n
-           coeff = a_local(i, k)/a_local(k, k)
-           L(i, k) = coeff
-           do j = k+1, n
-              a_local(i, j) = a_local(i, j)-coeff*a_local(k, j)
-           end do
-        end do
-     end do
-
-     ! Step 2: prepare L and U matrices
-
-     ! L matrix is a matrix of the elimination coefficient
-     ! + the diagonal elements are 1.0
-
-     do i = 1, n
-        L(i, i) = 1d0
-     end do
-
-     ! U matrix is the upper triangular part of A
-     do j = 1, n
-        do i = 1, j
-           U(i, j) = a_local(i, j)
-        end do
-     end do
-
-     ! Step 3: compute columns of the inverse matrix C
-     do k = 1, n
-        b(k) = 1d0
-        d(1) = b(1)
-        ! Step 3a: Solve Ld = b using the forward substitution
-        do i = 2, n
-           d(i) = b(i)
-           do j = 1, i-1
-              d(i) = d(i) - L(i, j)*d(j)
-           end do
-        end do
-        ! Step 3b: Solve Ux = d using the back substitution
-        x(n) = d(n)/U(n, n)
-        do i = n-1, 1, -1
-           x(i) = d(i)
-           do j = n, i+1, -1
-              x(i) = x(i)-U(i, j)*x(j)
-           end do
-           x(i) = x(i)/U(i, i)
-        end do
-        ! Step 3c: fill the solutions x(n) into column k of C
-        do i = 1, n
-           c(i, k) = x(i)
-        end do
-        b(k) = 0d0
-     end do
-
-     ! return to user
-     return
-
-  end subroutine inverse_matrix
   !
   !--------------------------------------------------------------------
   !
@@ -665,142 +378,7 @@ module math_functions
   !
   !--------------------------------------------------------------------
   !
-  double precision function std(a, n)
-
-    ! Function to determine the standard deviation
-    ! inputs are the vector of values and number of values included
-
-    implicit none
-
-    ! declare inputs
-    integer, intent(in):: n  ! number of values in vector
-    double precision, dimension(n), intent(in):: a
-
-    ! declare local variables
-    integer:: i
-    double precision:: mean, sq_diff_sum, diff, variance, sample
-
-    ! multiple use variable
-    sample = dble(n)
-    ! first calculate the mean
-    mean = sum(a) / sample
-    ! ensure zero values
-    sq_diff_sum = 0d0
-    ! calculate cumulative square difference
-    do i = 1, n
-       diff = a(i)-mean
-       sq_diff_sum = sq_diff_sum + (diff*diff)
-    end do
-    ! calculate the variance
-    variance = sq_diff_sum / (sample-1d0)
-    ! return the standard deviation
-    std = sqrt(variance)
-
-    return
-
-  end function std
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine par2nor(niter, initial_par, min_par, max_par, out_par)
-
-    ! functions to normalised parameter values and return them back to
-    ! un-normalised value.
-
-    ! converting parameters on log scale between 0-1 for min/max values
-    implicit none
-    integer, intent(in):: niter     ! number of iterations in current vector
-    double precision, intent(in):: min_par, max_par
-    double precision, dimension(niter), intent(in):: initial_par
-    double precision, dimension(niter), intent(out):: out_par
-
-    ! then normalise
-    out_par = (initial_par-min_par)/(max_par-min_par)
-
-    ! explicit return
-    return
-
-  end subroutine par2nor
-  !
-  !---------------------and vise versa------------------------------
-  !
-  subroutine nor2par(niter, initial_par, min_par, max_par, out_par)
-
-    ! Converting values back from normalised (0-1) to 'real' numbers
-
-    implicit none
-    integer, intent(in):: niter     ! number of iterations in current vector
-    double precision, intent(in):: min_par, max_par
-    double precision, dimension(niter), intent(in):: initial_par
-    double precision, dimension(niter), intent(out):: out_par
-
-    ! ...then un-normalise without logs as we cross zero and logs wont work
-    out_par = min_par+(max_par-min_par)*initial_par
-
-    ! explicit return
-    return
-
-  end subroutine nor2par
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine log_par2nor(niter, initial_par, min_par, max_par, par_adj, out_par)
-
-    ! Functions to normalised-log parameter values.
-
-    ! Converting parameters on log scale between 0-1 for min/max values
-    implicit none
-    integer, intent(in):: niter     ! number of iterations in current vector
-    double precision, intent(in):: min_par, max_par, par_adj
-    double precision, dimension(niter), intent(in):: initial_par
-    double precision, dimension(niter), intent(out):: out_par
-    ! local values
-    double precision:: invar(niter), minvar, maxvar
-
-    ! Assign inputs to the local variables
-    invar = initial_par+par_adj
-    minvar = min_par+par_adj
-    maxvar = max_par+par_adj
-
-    ! Then normalise
-    !out_par = log(initial_par/min_par)/log(max_par/min_par)
-    out_par = log(invar/minvar)/log(maxvar/minvar)
-
-    ! explicit return
-    return
-
-  end subroutine log_par2nor
-  !
-  !---------------------and vise versa------------------------------
-  !
-  subroutine log_nor2par(niter, initial_par, min_par, max_par, par_adj, out_par)
-
-    ! Converting values back from log-normalised (0-1) to 'real' numbers
-
-    implicit none
-    integer, intent(in):: niter     ! number of iterations in current vector
-    double precision, intent(in):: min_par, max_par, par_adj  ! adjustment prevents negative values being fed into the analysis
-    double precision, dimension(niter), intent(in):: initial_par
-    double precision, dimension(niter), intent(out):: out_par
-    ! local values
-    double precision:: minvar, maxvar
-
-    ! Assign inputs to the local variables
-    minvar = min_par+par_adj
-    maxvar = max_par+par_adj
-
-    ! ...then un-normalise without logs as we cross zero and logs wont work
-    !out_par = min_par*(max_par/min_par)**initial_par
-    out_par = (minvar*(maxvar/minvar)**initial_par) - par_adj
-
-    ! explicit return
-    return
-
-  end subroutine log_nor2par
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function linear_model_gradient(x,y,interval)
+  double precision function linear_model_gradient(x, y, interval)
 
     ! Function to calculate the gradient of a linear model for a given depentent
     ! variable (y) based on predictive variable (x). The typical use of this
@@ -809,11 +387,11 @@ module math_functions
     implicit none
 
     ! declare input variables
-    integer :: interval ! the total number of variables being regressed over
-    double precision, dimension(interval) :: x,y 
+    integer:: interval  ! the total number of variables being regressed over
+    double precision, dimension(interval):: x, y 
 
     ! declare local variables
-    double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
+    double precision:: sum_x, sum_y, sumsq_x, sum_product_xy
 
     ! calculate the sum of x
     sum_x = sum(x)
@@ -1042,7 +620,7 @@ module math_functions
     !
     !  Licensing: This code is distributed under the GNU LGPL license.
     !
-    !  Last Modified: Wed 12 Mar 2025 15:36:04 GMT
+    !  Last Modified: Thu 07 Aug 2025 15:44:49 BST
     !
     !  Original Author: John Burkardt (07 December 2009)
     !
@@ -1132,231 +710,6 @@ module math_functions
     return
 
   end subroutine random_multivariate
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine cholesky_factor ( n, a, info )
-
-    !
-    !  Discussion:
-    !
-    !    Subroutine calculates the symmetric positive definite
-    !    matrix and its inverse. The Cholesky factor is an
-    !    upper triangular matrix.
-    !
-    !    Only the diagonal and upper triangle of the square array are used.
-    !    For clarity, the lower triangle is set to zero.
-    !
-    !    The positive definite symmetric matrix A has a Cholesky factorization
-    !    of the form:
-    !
-    !      A = R' * R
-    !
-    !    where R is an upper triangular matrix with positive elements on
-    !    its diagonal.  This routine overwrites the matrix A with its
-    !    factor R.
-    !
-    !  Licensing:
-    !
-    !    This code is distributed under the GNU LGPL license.
-    !
-    !  Last Modified: Wed 12 Mar 2025 15:36:04 GMT
-    !
-    !    03/05/2019
-    !
-    !  Author:
-    !
-    !    Original FORTRAN77 version by Dongarra, Bunch, Moler, Stewart.
-    !    FORTRAN90 version by John Burkardt.
-    !    Modified for coupling to CARDAMOM by T. L. Smallman (t.l.smallman@ed.ac.uk)
-    !
-    !  Reference:
-    !
-    !    Jack Dongarra, Jim Bunch, Cleve Moler, Pete Stewart, 
-    !    LINPACK User's Guide, 
-    !    SIAM, 1979, 
-    !    ISBN13: 978-0-898711-72-1, 
-    !    LC: QA214.L56.
-    !
-    !  Parameters:
-    !
-    !    Input, integer N, the order of the matrix.
-    !
-    !    Input/output, double precision A(N, N).
-    !    On output, the Cholesky factor R.
-    !
-    !    Output, integer INFO, error flag.
-    !    0, normal return.
-    !    K, error condition. The principal minor of order K is not
-    !    positive definite, and the factorization was not completed.
-    !
-
-    implicit none
-
-    ! arguments
-    integer, intent(in):: n
-    integer, intent(out):: info
-    double precision, intent(inout):: a(n, n)
-
-    ! local arguments
-    integer:: i, j, k
-    double precision:: s
-
-    ! Loop through the matrix along one dimension
-    do j = 1, n
-
-       ! doing the upper triangle only
-       do k = 1, j-1
-          a(k, j) = ( a(k, j) - sum ( a(1:k-1, k) * a(1:k-1, j) ) ) / a(k, k)
-       end do
-
-       s = a(j, j) - sum ( a(1:j-1, j)**2 )
-
-       ! error checking
-       if ( s <= 0.0D+00 ) then
-           info = j
-           return
-       end if
-
-       ! final calculation of Cholesky
-       a(j, j) = sqrt ( s )
-
-    end do  ! j = 1, n
-
-    info = 0
-
-    !
-    !  Since the Cholesky factor is upper right corner only, be sure to
-    !  zero out the lower triangle.
-    !
-
-    do i = 1, n
-       do j = 1, i-1
-          a(i, j) = 0.0D+00
-       end do
-    end do
-
-    return
-
-  end subroutine cholesky_factor
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine rnarry(aa, n)
-
-    ! Generate an array of n integers between 0 and 2^30-1.
-    ! Part of process to an array of n double precision values between 0 and 1.
-    ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
-    !       including the MODIFICATIONS made in the 9th printing (2002)
-    ! ********* see the book for explanations and caveats! *********
-    ! Author: Steve Kifowit
-    ! http://ourworld.compuserve.com/homepages/steve_kifowit
-    ! with modifications by Alan Miller to rnarry and rnstrt based upon
-    ! Knuth's code.
-    ! Code converted using TO_F90 by Alan Miller
-    ! Date: 2000-09-10, last update 16 January 2003
-    ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! 03/05/2019
-
-    integer, intent(in)   :: n
-    integer, intent(out)  :: aa(n)
-
-    ! Local variables
-    integer  :: j
-
-    aa(1:kk) = ranx(1:kk)
-    do j = kk+1, n
-       aa(j) = aa(j-kk) - aa(j-ll)
-       if (aa(j) < 0) aa(j) = aa(j) + mm
-    end do
-    do j = 1, ll
-       ranx(j) = aa(n+j-kk) - aa(n+j-ll)
-       if (ranx(j) < 0) ranx(j) = ranx(j) + mm
-    end do
-    do j = ll+1, kk
-       ranx(j) = aa(n+j-kk) - ranx(j-ll)
-       if (ranx(j) < 0) ranx(j) = ranx(j) + mm
-    end do
-
-    return
-
-  end subroutine rnarry
-  !
-  !--------------------------------------------------------------------
-  !
-  subroutine rnstrt(seed)
-
-    ! Initialize integer array ranx using the input seed.
-    ! Part of process to an array of n double precision values between 0 and 1.
-    ! from Seminumerical Algorithms by D E Knuth, 3rd edition (1997)
-    !       including the MODIFICATIONS made in the 9th printing (2002)
-    ! ********* see the book for explanations and caveats! *********
-    ! Author: Steve Kifowit
-    ! http://ourworld.compuserve.com/homepages/steve_kifowit
-    ! with modifications by Alan Miller to rnarry and rnstrt based upon
-    ! Knuth's code.
-    ! Code converted using TO_F90 by Alan Miller
-    ! Date: 2000-09-10, last update 16 January 2003
-    ! Modified for integration into CARDAMOM by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! 03/05/2019
-
-    integer, intent(in)  :: seed
-
-    ! Local variables
-    integer  :: x(kkk), j, ss, sseed, t
-
-    if (seed < 0) then
-        sseed = mm-1 - mod(-1-seed, mm)
-    else
-        sseed = mod(seed, mm)
-    end if
-    ss = sseed-mod(sseed, 2) + 2
-    do j = 1, kk
-       x(j) = ss
-       ss = ishft(ss, 1)
-       if (ss >= mm) ss = ss-mm+2
-    end do
-    x(kk+1:kkk) = 0
-    x(2) = x(2)+1
-    ss = sseed
-    t = tt-1
-10  do j = kk, 2, -1
-       x(j+j-1) = x(j)
-    end do
-    do j = kkk, kk+1, -1
-       x(j-(kk-ll)) = x(j-(kk-ll)) - x(j)
-       if (x(j-(kk-ll)) < 0) x(j-(kk-ll)) = x(j-(kk-ll)) + mm
-       x(j-kk) = x(j-kk) - x(j)
-       if (x(j-kk) < 0) x(j-kk) = x(j-kk) + mm
-    end do
-    if (mod(ss, 2) == 1) then
-        do j = kk, 1, -1
-           x(j+1) = x(j)
-        end do
-        x(1) = x(kk+1)
-        x(ll+1) = x(ll+1) - x(kk+1)
-        if (x(ll+1) < 0) x(ll+1) = x(ll+1) + mm
-    end if
-    if (ss /= 0) THEN
-        ss = ishft(ss, -1)
-    else
-        t = t-1
-    end if
-    if (t > 0) GO TO 10
-
-    do j = 1, ll
-       ranx(j+kk-ll) = x(j)
-    end do
-    do j = ll+1, kk
-       ranx(j-ll) = x(j)
-    end do
-
-    do j = 1, 10
-       call rnarry(x, kkk)
-    end do
-
-    return
-  end subroutine rnstrt
   !
   !--------------------------------------------------------------------
   !

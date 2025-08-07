@@ -50,9 +50,7 @@ module cardamom_io
            ,update_obs_scaling_nsamples     &
            ,update_obs_scaling_sqrt_nsamples&
            ,update_obs_scaling_log_nsamples &
-           ,check_for_existing_output_files &
            ,open_output_files               &
-           ,close_output_files              &
            ,cardamom_model_library          &
            ,read_options                    &
            ,read_binary_data                &
@@ -306,92 +304,6 @@ module cardamom_io
   end subroutine cardamom_model_library
   !
   !------------------------------------------------------------------
-  !
-  subroutine check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-                                            ,parname, stepname, covname, covinfoname)
-
-    ! subroutine checks whether both the parameter and step files exist for this
-    ! job. If they do we will assume that this is a restart job that we want to
-    ! finish off. Important for large jobs or running on machines with may crash
-    ! / have runtime limits
-    implicit none
-    ! declare input variables
-    integer, intent(in):: npars, nOUT, nWRITE
-    double precision, intent(in):: sub_fraction
-    character(350), intent(in):: parname, stepname, covname, covinfoname
-    ! local variables
-    logical:: par_exists, step_exists, cov_exists, covinfo_exists
-    double precision:: dummy
-    integer:: num_lines, status
-
-    ! Check that all files exist
-    inquire(file = trim(parname),     exist = par_exists)
-    inquire(file = trim(stepname),    exist = step_exists)
-    inquire(file = trim(covname),     exist = cov_exists)
-    inquire(file = trim(covinfoname), exist = covinfo_exists)
-
-    ! now determine the correct response
-    if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
-
-        ! All files exist therefore this might be a restart run.
-        ! lets see if there is anything in the files that we might use
-        ! count the number of remaining lines in the file..
-        ! open the relevant output files
-        call open_output_files(parname, stepname, covname, covinfoname)
-        status = 0; num_lines = 0
-        do
-          read(pfile_unit, iostat = status) dummy
-          if ( status .ne. 0 ) exit
-          num_lines = num_lines+1
-        enddo
-        ! Re-use dummy to calculate the target file size to be considered for
-        ! restart
-        dummy = ((dble(nOUT)/dble(nWRITE)) * sub_fraction) * dble(npars+1)
-        if (num_lines > dummy) then
-            ! Then there is something in the file we we can use it
-            restart_flag = .true.
-            print*,"...have found parameter file = ",trim(parname)
-            print*,"...have found step file = ",trim(stepname)
-            print*,"...have found cov file = ",trim(covname)
-            print*,"...have found cov_info file = ",trim(covinfoname)
-        else
-            ! The file exists but is empty/no enough so treat it as a fresh start
-            restart_flag = .false.
-            print*,"Output files are present, however they are too small for a restart"
-        endif
-        ! Either way we open the file up later on so now we need to close them
-        call close_output_files
-
-    else  ! par_exists .and. step_exists
-
-        ! Then or of these files exists and the other does not so it is
-        ! ambiguous whether or not this is a restart
-        print*,"One or more of the analysis files cannot be found."
-        print*,"CARDAMOM must start from scratch... "
-        restart_flag = .false.
-
-    endif  ! par_exists .and. step_exists
-
-  end subroutine check_for_existing_output_files
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine close_output_files
-
-    ! where you open a file you've got to make sure that you close them too. It
-    ! just tidy
-
-    implicit none
-
-    ! close the files we have in memory
-    close(pfile_unit)
-    close(sfile_unit)
-    close(cfile_unit)
-    close(cifile_unit)
-
-  end subroutine close_output_files
-  !
-  !--------------------------------------------------------------------
   !
   subroutine open_output_files(parname, stepname, covname, covinfoname)
 

@@ -1,5 +1,4 @@
-program cardamom_framework
-   use math_functions, only: rnstrt, idum  ! TODO redo random seeds
+program cardamom_DEMCz
    use DEMCz, only: demczOPT, run_demcz
    use cardamom_MHMCMC, only: MCMC_OUTPUT, mcmc_options
    use model_shared, only: PI, initialize_carbon_model
@@ -101,8 +100,8 @@ program cardamom_framework
    ! determine unique (sort of) seed value; based on system time
    call system_clock(time1, time2, time3)
    ! set seed value outside of the function, idum must be a negative number
-   idum = dble(time1+time2+time3)
-   call rnstrt(nint(idum))
+   !idum = dble(time1+time2+time3)
+   !call rnstrt(nint(idum))
 
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
@@ -246,4 +245,4 @@ contains
    !
    !------------------------------------------------------------------
 
-end program cardamom_framework
+end program cardamom_DEMCz
