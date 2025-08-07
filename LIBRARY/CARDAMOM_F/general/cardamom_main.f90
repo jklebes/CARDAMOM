@@ -393,6 +393,7 @@ program cardamom_framework
       ! Since they all get the same nout setting, assume all sub_model phase simulation 
       ! were same length  ! TODO
       MCO%nOUT = max(1, MCO%nOUT-MCOUT_list(1)%nos_iterations)
+      MCO%restart = .true.
 
       ! Update the user
       write (*, *) "Beginning parameter search in real likelihoods"

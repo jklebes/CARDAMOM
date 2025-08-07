@@ -40,7 +40,7 @@ program cardamom_framework
    type(DEMCZOPT):: MCO
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 14
+   integer:: nchains = 4
    integer:: i
 
    allocate (MCOUT_list(nchains))
@@ -206,6 +206,7 @@ program cardamom_framework
       ! Update the user
       write (*, *) "Beginning parameter search in real likelihoods"
       write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
+      MCO%restart = .true.
 
 
       ! Call the main MCMC

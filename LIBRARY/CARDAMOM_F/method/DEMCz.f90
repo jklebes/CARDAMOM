@@ -55,7 +55,7 @@ contains
    !>                          .false. -> start from random initial positions
    !> IN : nchains (optional, default 3) : number chains in swarm.
    !> Also writes history to file/output stream and progress to console.
-   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
+   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains)
       use samplers_shared, only: metropolis_choice
       use samplers_io, only: write_mcmc_output, open_output_files
       implicit none
@@ -70,10 +70,6 @@ contains
       type(MCMC_OUTPUT):: MCOUT
       !! A single thread's output object
 
-      logical, optional, intent(in):: restart
-      !! is it a restart ? (i.e. start from data in MCOUT instead of initializing new), optional, default .false.
-      logical:: restart_
-      !! internal restart flag, equal to optional input flag 'restart' or .false.
       integer, optional:: nchains
       !! number chains optional, default 1
 
@@ -137,11 +133,6 @@ contains
 
       ! Argument processing  !!!!!!!!!!!!!!!
 
-      if (.not. present(restart)) then
-         restart_ = .false.
-      else
-         restart_ = restart
-      end if
 
       if (.not. present(nchains)) then
          MCO%nchains = 3  ! at least 3 are mandatory for this method to work
@@ -215,9 +206,6 @@ contains
 
             ! allocate buffers io_space (different one for each chain)
          call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
-         ! TODO potential restart handling !  outside
-         !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-         !, parname, stepname, covname, covinfoname)
          call open_output_files(outfile, stepfile, covfile, covifile, j)
       end if
 
@@ -226,7 +214,7 @@ contains
         call random_uniform_vectors(j)%initialize_random(seed)
          ! choose initial values
          ! TODO better function for initial state : latin square
-         if (.not. restart_) then 
+         if (.not. MCO%restart) then 
          call init_pars_random(PI, pars_current(:,j), PI%fix_pars, random_uniform_vectors(j))
       else
          pars_current(:,j) =  mcout_list(j)%pars
