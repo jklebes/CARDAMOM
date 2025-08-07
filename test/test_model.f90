@@ -16,8 +16,9 @@ module test_model
 
   public:: collect_modeltests
 
-  character(len=*), parameter:: infile = "/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin"
-  ! TODO hard coded path
+  character(len=*), parameter:: infile = "../../test/data/UK_baseline_sites_AliceHolt.bin"
+
+  ! relative to ctest working directory, by default CARDAMOM/build/test/ , where add_test was called
 
 contains
 
