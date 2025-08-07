@@ -42,7 +42,7 @@ module MHMCMC
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout)
 
-   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options
+   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, number_filenames
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -199,8 +199,6 @@ contains
       !! buffer for writing to out files, private to this chain
       character(350):: outfile, stepfile, covfile, covifile
       !! filenames
-      character(4):: chainid_str
-      !! internal char version of chainid number, for filenames
       double precision, dimension(PI%npars):: PARS_previous & ! parameter values for current state
          , PARS_proposed & ! parameter values for current proposal
          , BESTPARS        ! best set of parameters so far
@@ -283,20 +281,14 @@ contains
          chainid_ = 1
       end if
 
+
       ! process file names
+      outfile = MCO%outfile
+      stepfile = MCO%stepfile
+      covfile = MCO%covfile
+      covifile = MCO%covifile
       if (MCO%nchains > 1 .and. present(chainid)) then
-         ! internal write to convert int -> str
-         write (chainid_str, '(i0)') chainid_
-         ! append number to file names
-         outfile = trim(MCO%outfile)//"_"//trim(chainid_str)
-         stepfile = trim(MCO%stepfile)//"_"//trim(chainid_str)
-         covfile = trim(MCO%covfile)//"_"//trim(chainid_str)
-         covifile = trim(MCO%covifile)//"_"//trim(chainid_str)
-      else
-         outfile = MCO%outfile
-         stepfile = MCO%stepfile
-         covfile = MCO%covfile
-         covifile = MCO%covifile
+         call number_filenames(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
     !! Calculate derived  settings of the run...

@@ -22,7 +22,7 @@ module DEMCz
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
    !-
-   use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options
+   use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, number_filenames
    use random_uniform, only: UNIF_VECTOR
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
@@ -110,8 +110,6 @@ contains
 
       type(io_buffer_space), dimension(:), allocatable:: io_space  
       !! collection of io_space objects holding file writing buffers, one for each chain
-      character(4):: chainid_str
-      !! string version of chain number j, for file names, private to each chain
       character(350):: outfile, stepfile, covfile, covifile
       !! file names tagges with chainid, private to each chain
 
@@ -191,7 +189,7 @@ contains
 
       !!! Initial state
 
-!$OMP PARALLEL DO private(MCOUT, norpars, chainid_str, outfile, stepfile, covfile, covifile)
+!$OMP PARALLEL DO private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
       do j = 1, mco%nchains
 
       MCOUT = MCOUT_list(j)
@@ -207,14 +205,15 @@ contains
 
     !!! prepare file writing
       if (MCO%nwrite > 0) then
-         ! internal write to convert int -> str
-         write (chainid_str, '(i0)') j
-         ! append number to file names
-         outfile = trim(MCO%outfile)//"_"//trim(chainid_str)
-         stepfile = trim(MCO%stepfile)//"_"//trim(chainid_str)
-         covfile = trim(MCO%covfile)//"_"//trim(chainid_str)
-         covifile = trim(MCO%covifile)//"_"//trim(chainid_str)
-         ! allocate buffers io_space (different one for each chain)
+
+         ! process file names
+         outfile = MCO%outfile
+         stepfile = MCO%stepfile
+         covfile = MCO%covfile
+         covifile = MCO%covifile
+         call number_filenames(outfile, stepfile, covfile, covifile, j)
+
+            ! allocate buffers io_space (different one for each chain)
          call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
          ! TODO potential restart handling !  outside
          !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &

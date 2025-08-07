@@ -46,12 +46,11 @@ program cardamom_framework
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
-                          restart_flag, &
-                          update_for_restart_simulation, &
                          update_obs_scaling_normal, update_obs_scaling_nsamples, &
                         update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
    use samplers_io, only: open_output_files, &
                           check_for_existing_output_files, &
+                          update_for_restart_simulation, &
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
    !use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
@@ -114,6 +113,7 @@ program cardamom_framework
    type(MCMC_OUTPUT):: MCOUT
    type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
    type(MCMC_OPTIONS):: MCO
+   logical:: restart
 
    ! TODO not to hardcode, from command line argument
    integer:: nchains = 4
@@ -198,12 +198,17 @@ program cardamom_framework
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
    ! check whether this is a restart?
    ! PI lives in model_shared and its info can be read after call to initiialize_model
-   ! TODO not sure about MCO at this point
+   MCO%restart = .true. !to gather results onto-false as soon as some file is not found
    do i = 1, nchains
-      ! the problem is 
-      call check_for_existing_output_files(PI%npars, MCO%nOUT, MCO%nWRITE, sub_fraction, &
-                                           MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile, i)
+      call check_for_existing_output_files(PI%npars, MCO, sub_fraction, i, restart)
+      MCO%restart = MCO%restart .and. restart
    end do
+   !if all nchains files were found, read them to get a starting point
+   if (MCO%restart) then
+     call update_for_restart_simulation(MCO, MCOUT, PI%npars)
+   endif 
+
+
    ! Initialise MCMC output, possibly a bit of a redundent subroutine...
    !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
    ! Open the relevant output files TODO now happens in run_mcmc
@@ -293,10 +298,15 @@ program cardamom_framework
 
    else  ! We are not doing a stress test
 
-      ! Begin search for initial conditions
-      write (*, *) "Beginning search for initial parameter conditions"
-      ! Determine initial values, this requires using the AP-MCMC
-      call find_edc_initial_values(MCO, MCOUT_list, nchains)
+      if (.not. MCO%restart) then
+        ! Begin search for initial conditions
+        write (*, *) "Beginning search for initial parameter conditions"
+        ! Determine initial values, this requires using the AP-MCMC
+        call find_edc_initial_values(MCO, MCOUT_list, nchains)
+        MCO%restart = .true.
+      else 
+
+      endif
 
       ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
       do i = 1, nchains
@@ -307,13 +317,13 @@ program cardamom_framework
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
 
-         if (restart_flag) then
+         if (MCO%restart) then
             ! Restarting an old one
             print *, "beginning restart simulation"
             ! now begin update of model timing variables and parameter values if this is a
             ! restart. NOTE that this include information determining the number of
             ! iterations already completed...
-            call update_for_restart_simulation(MCO, MCOUT_list(i))
+            ! call update_for_restart_simulation(MCO, MCOUT_list(i))
          else
             ! Brand new analysis
             !print*,"writing initial covariance matrix"
@@ -349,11 +359,12 @@ program cardamom_framework
 
          MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
+         MCO%restart = .true.
          !MCO%nwrite = 1000
          !MCO%nprint = 1000
          ! Second phase, run Mcmc with sub scaling 
          call update_obs_scaling_nsamples
-         call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+         call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
          !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
          ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
@@ -373,7 +384,7 @@ program cardamom_framework
          end if  ! do we need a new covariance matrix or can we use the existing one?
          end do
 
-      end if  ! restart flag
+      end if 
 
       ! Restore module variables needed for the run-these components could be split
       ! into two subroutines to avoid double calling of file name creation
@@ -401,7 +412,7 @@ program cardamom_framework
       else if (cost_func_scaling_dble == 3) then
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
-      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."

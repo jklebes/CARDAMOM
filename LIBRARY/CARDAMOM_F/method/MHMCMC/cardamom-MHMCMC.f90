@@ -40,7 +40,7 @@ module cardamom_MHMCMC
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout)
    !-
 
-   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options
+   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, number_filenames
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -51,7 +51,7 @@ contains
    !
    !--------------------------------------------------------------------
    !
-   subroutine run_parallel_mcmc(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, restart, nchains)
+   subroutine run_parallel_mcmc(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains)
       !- Run multiple parallel MCMC simulations (adaptive MCMC algorithm with CARDAMOM-specific quirks)
       !
       !/* ***********INPUTS************
@@ -95,10 +95,6 @@ contains
       type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
       !! Array of MCMC_OUTPUT structs for each thread's results
 
-      logical, optional, intent(in):: restart
-      !! is it a restart ? (i.e. start from data in MCOUT instead of initializing new), optional, default .false.
-      logical:: restart_
-      !! internal restart flag, equal to optional input flag 'restart' or .false.
       integer, optional:: nchains
       !! number chains optional, default 1
       integer:: i
@@ -128,11 +124,6 @@ contains
 
       ! Argument processing  !!!!!!!!!!!!!!!
 
-      if (.not. present(restart)) then
-         restart_ = .false.
-      else
-         restart_ = restart
-      end if
 
       if (.not. present(nchains)) then
          MCO%nchains = 1
@@ -163,13 +154,13 @@ contains
          ! saves best loglikelihood and associated parameters to MCOUT(i)
          ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
          ! possible entire history and stats from previous run, possible empty new MCOUT object
-         call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, restart_, i)
+         call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i)
       end do
       !$OMP end parallel do
 
    end subroutine run_parallel_mcmc
 
-   subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, restart, chainid)
+   subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, chainid)
    !! Main function for a single adaptive MCMC simulation
       use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
       use samplers_shared, only: init_pars_random, bounds_check, is_infinity, metropolis_choice
@@ -183,9 +174,7 @@ contains
       type(MCMC_OPTIONS), intent(in):: MCO
       type(MCMC_OUTPUT), intent(inout):: MCOUT
 
-      logical, intent(in), optional:: restart
       integer, intent(in), optional:: chainid
-      logical:: restart_
       integer:: chainid_
       integer:: seed
 
@@ -193,8 +182,6 @@ contains
       !! buffer for writing to out files, private to this chain
       character(350):: outfile, stepfile, covfile, covifile
       !! filenames
-      character(4):: chainid_str
-      !! internal char version of chainid number, for filenames
       double precision, dimension(PI%npars):: PARS_previous & ! parameter values for current state
          , PARS_proposed & ! parameter values for current proposal
          , BESTPARS        ! best set of parameters so far
@@ -277,19 +264,12 @@ contains
       end if
 
       ! process file names
+      outfile = MCO%outfile
+      stepfile = MCO%stepfile
+      covfile = MCO%covfile
+      covifile = MCO%covifile
       if (MCO%nchains > 1 .and. present(chainid)) then
-         ! internal write to convert int -> str
-         write (chainid_str, '(i0)') chainid_
-         ! append number to file names
-         outfile = trim(MCO%outfile)//"_"//trim(chainid_str)
-         stepfile = trim(MCO%stepfile)//"_"//trim(chainid_str)
-         covfile = trim(MCO%covfile)//"_"//trim(chainid_str)
-         covifile = trim(MCO%covifile)//"_"//trim(chainid_str)
-      else
-         outfile = MCO%outfile
-         stepfile = MCO%stepfile
-         covfile = MCO%covfile
-         covifile = MCO%covifile
+         call number_filenames(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
     !! Calculate derived  settings of the run...
@@ -303,13 +283,7 @@ contains
       ! NOTE 2: 2.381204**2 = 5.670132
       opt_scaling = MCO%opt_scaling_const/dble(PI%npars)
 
-      if (.not. present(restart)) then
-         restart_ = .false.
-      else
-         restart_ = restart
-      end if
-
-      if (restart_) then
+      if (MCO%restart) then
          ! keep MCOUT
       else
          ! init MCOUT
@@ -337,16 +311,13 @@ contains
       if (MCO%nwrite > 0) then
          ! allocate buffers (different one for each chain)
          call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
-         ! TODO potential restart handling !  outside
-         !call check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-         !, parname, stepname, covname, covinfoname)
          call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
     !!!! init params
       ! TODO implement reading in PI%fix_pars
       ! initalize bestpars to current pars
-      if (.not. restart_) then
+      if (.not. MCO%restart) then
          call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
          ! Inform the user
          write (*, *) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"

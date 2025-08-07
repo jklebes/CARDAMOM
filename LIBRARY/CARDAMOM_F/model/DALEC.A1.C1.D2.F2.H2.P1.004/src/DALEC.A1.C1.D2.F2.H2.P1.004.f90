@@ -182,12 +182,12 @@ module CARBON_MODEL_MOD
             nos_trees, & ! number of trees in randomForest
            nos_inputs    ! number of driver inputs
 
-  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                      rightDaughter, & ! right daughter for forets
-                                                         nodestatus, & ! nodestatus for forests
-                                                         xbestsplit, & ! for forest
-                                                           nodepred, & ! prediction value for each tree
-                                                            bestvar    ! for randomForests
+  !double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+  !                                                    rightDaughter, & ! right daughter for forets
+  !                                                       nodestatus, & ! nodestatus for forests
+  !                                                       xbestsplit, & ! for forest
+  !                                                         nodepred, & ! prediction value for each tree
+  !                                                          bestvar    ! for randomForests
 
   ! hydraulic model variables
   integer:: water_retention_pass, soil_layer
@@ -420,9 +420,9 @@ type(model_working_variables), allocatable, dimension(:):: mVs
                          ,pars(nopars)      & ! number of parameters
                          ,lat                 ! site latitude (degrees)
 
-    double precision, dimension((nodays+1), nopools), intent(inout):: POOLS  ! vector of ecosystem pools
-    double precision, dimension(nodays, nofluxes), intent(inout):: FLUXES  ! vector of ecosystem fluxes
-    double precision, dimension(nodays, nodiags), intent(inout):: DIAGS  ! vector of ecosystem diagnostics
+    double precision, dimension((nodays+1), nopools), intent(out):: POOLS  ! vector of ecosystem pools
+    double precision, dimension(nodays, nofluxes), intent(out):: FLUXES  ! vector of ecosystem fluxes
+    double precision, dimension(nodays, nodiags), intent(out):: DIAGS  ! vector of ecosystem diagnostics
 
     ! declare local variables
     double precision ::      infi &
@@ -1039,6 +1039,7 @@ type(model_working_variables), allocatable, dimension(:):: mVs
        FLUXES(n, 29) = FLUXES(n, 29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
        POOLS(n+1, 7) = 1d3*mV%soil_waterfrac(1) * mV%layer_thickness(1)
+
        ! Assign all water variables to output variables (kgH2O/m2/day)
        FLUXES(n, 41) = transpiration   ! transpiration
        FLUXES(n, 42) = soilevaporation  ! soil evaporation

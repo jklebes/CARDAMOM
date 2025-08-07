@@ -113,7 +113,8 @@ contains
             do i = 1, nchains
              do while (success_count < nchains)!(PEDC < 0d0)
                ! call the MHMCMC directing to the appropriate likelihood function
-            call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, restart = restart(i), chainid = i)
+               MCO%restart = restart(i)
+            call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, chainid = i)
                restart(i) = .true.
 
                ! turn off random selection for initial values

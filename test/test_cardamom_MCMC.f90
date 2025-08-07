@@ -394,7 +394,8 @@ subroutine test_mcmc_two_phase(error)
   ! Keep McOUT, but reset step counter and statistics
   mcopt%nout = 0  ! run for zero steps 
   ! pass optional restart=.true. argument to not generate new random starting point
-  call run_mcmc(ll_bounded, pi_xy, mcopt, mcout, restart=.true.)
+  mcopt%restart = .true.
+  call run_mcmc(ll_bounded, pi_xy, mcopt, mcout)
   ! Expect previously found point has been passed to new mcmc run
   call check(error, mcout%pars(1) == startingpars(1) )
   call check(error, mcout%pars(2) == startingpars(2) )
@@ -402,7 +403,7 @@ subroutine test_mcmc_two_phase(error)
   call check(error, mcout%ll > -999999 )
   ! Run for a few more rounds
   mcopt%nout = 100000
-  call run_mcmc(ll_bounded, pi_xy, mcopt, mcout, restart=.true.)
+  call run_mcmc(ll_bounded, pi_xy, mcopt, mcout)
   ! Expect we continue to be in the "allowed" region
   call check(error, mcout%ll > -999999 )
 end subroutine 
@@ -450,7 +451,8 @@ subroutine test_mcmc_two_phase_parallel(error)
   ! Keep McOUT, but reset step counter and statistics
   mcopt%nout = 0  ! run for zero steps 
   ! pass optional restart=.true. argument to not generate new random starting points
-  call run_parallel_mcmc(ll_bounded, pi_xy, mcopt, mcout_list, restart=.true.)
+  mcopt%restart = .true.
+  call run_parallel_mcmc(ll_bounded, pi_xy, mcopt, mcout_list)
 
   ! loop of checks
   do i = 1, nchains
@@ -462,7 +464,7 @@ subroutine test_mcmc_two_phase_parallel(error)
   end do 
   ! Run for a few more rounds
   mcopt%nout = 100000
-  call run_parallel_mcmc(ll_bounded, pi_xy, mcopt, mcout_list, restart=.true.)
+  call run_parallel_mcmc(ll_bounded, pi_xy, mcopt, mcout_list)
   ! Expect we continue to be in the "allowed" region
   do i = 1, nchains
   write(*,*) mcout_list(i)%pars

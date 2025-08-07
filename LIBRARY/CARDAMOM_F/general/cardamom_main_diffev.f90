@@ -6,12 +6,11 @@ program cardamom_framework
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
-                          restart_flag, &
-                          update_for_restart_simulation, &
                         update_obs_scaling_normal, update_obs_scaling_nsamples, &
                         update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
    use samplers_io, only: open_output_files, &
                           check_for_existing_output_files, &
+                          update_for_restart_simulation, &
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
    use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
@@ -176,13 +175,13 @@ program cardamom_framework
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
 
-         if (restart_flag) then
+         if (MCO%restart) then
             ! Restarting an old one
             print *, "beginning restart simulation"
             ! now begin update of model timing variables and parameter values if this is a
             ! restart. NOTE that this include information determining the number of
             ! iterations already completed...
-            call update_for_restart_simulation(MCO, MCOUT_list(i))
+            call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
          else
             ! Brand new analysis
             !print*,"writing initial covariance matrix"
@@ -224,7 +223,7 @@ program cardamom_framework
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
       ! TODO scaled model likelihood fct
-      call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains, restart=.true.)
+      call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."

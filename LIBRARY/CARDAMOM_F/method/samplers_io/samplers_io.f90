@@ -31,13 +31,14 @@ module samplers_io
             , write_covariance_matrix &
             , write_covariance_info &
             , check_for_existing_output_files &
+            , update_for_restart_simulation &
             , initialize_buffers &
             , open_output_files &
             , close_output_files
 
    integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13
    ! default assumption is that this is not a restart fun
-   logical:: restart_flag = .false.
+   ! logical:: restart_flag = .false.
 
    ! parameters
    integer, parameter:: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision
@@ -55,7 +56,7 @@ module samplers_io
          prob_buffer
    end type
    ! allow access to needed variable
-   public:: restart_flag, io_buffer_space
+   public:: io_buffer_space
 
    save
 
@@ -64,8 +65,8 @@ contains
    !
    !------------------------------------------------------------------
    !
-   subroutine check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-                                              , parname, stepname, covname, covinfoname, chainid)
+   subroutine check_for_existing_output_files(npars, MCO, sub_fraction, chainid, restart)
+      use samplers_shared, only: MCMC_OPTIONS, number_filenames
 
       ! subroutine checks whether both the parameter and step files exist for this
       ! job. If they do we will assume that this is a restart job that we want to
@@ -73,20 +74,37 @@ contains
       ! / have runtime limits
       implicit none
       ! declare input variables
-      integer, intent(in):: npars, nOUT, nWRITE
+      integer, intent(in):: npars
+      integer:: nOUT, nWRITE
+      type(MCMC_OPTIONS), intent(in):: MCO
+      !! simulation settings object-to read nOut, nWrite, filenames
       double precision, intent(in):: sub_fraction
-      character(350), intent(in):: parname, stepname, covname, covinfoname
+      character(350):: outfile, stepfile, covfile, covifile
       integer, intent(in):: chainid
+      logical, intent(out):: restart
       ! local variables
       logical:: par_exists, step_exists, cov_exists, covinfo_exists
       double precision:: dummy
       integer:: num_lines, status
 
+      nOUT = MCO%nOUT
+      nWRITE = MCO%nWRITE
+
+      ! process file names-numbered file names as they would be written by
+      ! a simulation recieving the same MCO object
+      outfile = MCO%outfile
+      stepfile = MCO%stepfile
+      covfile = MCO%covfile
+      covifile = MCO%covifile
+      if (MCO%nchains > 1) then
+      call number_filenames(outfile, stepfile, covfile, covifile, chainid)
+      endif
+
       ! Check that all files exist
-      inquire (file = trim(parname), exist = par_exists)
-      inquire (file = trim(stepname), exist = step_exists)
-      inquire (file = trim(covname), exist = cov_exists)
-      inquire (file = trim(covinfoname), exist = covinfo_exists)
+      inquire (file = trim(outfile), exist = par_exists)
+      inquire (file = trim(stepfile), exist = step_exists)
+      inquire (file = trim(covfile), exist = cov_exists)
+      inquire (file = trim(covifile), exist = covinfo_exists)
 
       ! now determine the correct response
       if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
@@ -95,7 +113,7 @@ contains
          ! lets see if there is anything in the files that we might use
          ! count the number of remaining lines in the file..
          ! open the relevant output files
-         call open_output_files(parname, stepname, covname, covinfoname, chainid)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid)
          status = 0; num_lines = 0
          do
             read (pfile_unit, iostat = status) dummy
@@ -107,14 +125,14 @@ contains
          dummy = ((dble(nOUT)/dble(nWRITE))*sub_fraction)*dble(npars+1)
          if (num_lines > dummy) then
             ! Then there is something in the file we we can use it
-            restart_flag = .true.
-            print *, "...have found parameter file = ", trim(parname)
-            print *, "...have found step file = ", trim(stepname)
-            print *, "...have found cov file = ", trim(covname)
-            print *, "...have found cov_info file = ", trim(covinfoname)
+            restart = .true.
+            print *, "...have found parameter file = ", trim(outfile)
+            print *, "...have found step file = ", trim(stepfile)
+            print *, "...have found cov file = ", trim(covfile)
+            print *, "...have found cov_info file = ", trim(covifile)
          else
             ! The file exists but is empty/no enough so treat it as a fresh start
-            restart_flag = .false.
+            restart  = .false.
             print *, "Output files are present, however they are too small for a restart"
          end if
          ! Either way we open the file up later on so now we need to close them
@@ -126,7 +144,7 @@ contains
          ! ambiguous whether or not this is a restart
          print *, "One or more of the analysis files cannot be found."
          print *, "CARDAMOM must start from scratch... "
-         restart_flag = .false.
+         restart  = .false.
 
       end if  ! par_exists .and. step_exists
 
@@ -134,6 +152,190 @@ contains
    !
    !------------------------------------------------------------------
    !
+   subroutine update_for_restart_simulation(MCO, MCOUT, npars)
+    !! subroutine is responsible for loading previous parameter and step size
+    !! information into the current
+    !! modifies: arg MCOUT%pars. To be used as starting point for next run.
+      use samplers_shared, only: MCMC_OUTPUT, MCMC_OPTIONS
+      use samplers_math, only: std, covariance_matrix, inverse_matrix, par2nor
+
+      implicit none
+
+      ! local variables
+      class(MCMC_OPTIONS), intent(inout):: MCO
+      type(MCMC_OUTPUT), intent(inout):: MCOUT
+      integer, intent(in):: npars
+      integer:: a, b, c, i, j, num_lines, status
+      double precision:: dummy
+      double precision, dimension(:, :), allocatable:: tmp
+
+      ! the parameter and step files should have already been openned so
+      ! read the parameter and step files to get to the end
+
+      ! rewind to the beginning
+      rewind (pfile_unit); rewind (sfile_unit); rewind (cifile_unit)
+
+      !
+      ! As this subroutine will only be called once reading each file will occur
+      ! separately to improve simplicity.
+      !
+
+      !
+      ! Parameter file-stored as non-normalised values
+      !
+
+      ! count the number of lines in the file..
+      status = 0; num_lines = 0
+      do
+         read (pfile_unit, iostat = status) dummy
+         if (status .ne. 0) exit
+         num_lines = num_lines+1
+      end do
+      ! Determine the number of complete parameter vectors stored. Note that the +
+      ! 1 is due to the log-likelihood score being saved as well.
+      num_lines = num_lines/(npars+1)
+
+      ! Allocate memory to our temperary variable and the normalised parameter
+      ! vector equivalent.
+      allocate (tmp(num_lines, (npars+1)))
+      ! rewind so that we can read the contents now correctly
+      rewind (pfile_unit)
+       ! Read the data for real
+      do i = 1, num_lines
+         do j = 1, (npars+1)
+            read (pfile_unit) tmp(i, j)
+         end do  ! j for parameter
+      end do  ! i for combinations
+
+      ! Determine the total number of iterations processed so far
+      MCOUT%nos_iterations = num_lines*MCO%nWRITE
+      ! Extract the final parameter set and load into the initial parameter vector
+      ! for the analysis. NOTE: This parameter set will be normalised on entry
+      ! into the MHMCMC subroutine
+      MCOUT%pars = tmp(num_lines, 1:npars)
+
+      ! free up variable for new file
+      deallocate (tmp)
+
+      !
+      ! Variance file-stores output of the current parameter variance
+      !
+
+      ! count the number of remaining lines in the file..
+      status = 0; num_lines = 0
+      do
+         read (sfile_unit, iostat = status) dummy
+         if (status .ne. 0.) exit
+         num_lines = num_lines+1
+      end do
+
+      ! Determine the number of actual stepsize vectors present.
+      ! The+1 is due to the local acceptance rate being provided too.
+      num_lines = num_lines/(npars+1)
+      ! allocate memory
+      allocate (tmp(num_lines, (npars+1)))
+      ! rewind, for actual reading
+      rewind (sfile_unit)
+
+      ! now read the data for real
+      do i = 1, num_lines
+         do j = 1, (npars+1)
+            read (sfile_unit) tmp(i, j)
+         end do  ! j for parameter
+      end do  ! i for combinations
+      ! Save the current acceptance_rate
+      MCOUT%acceptance_rate = MCOUT%nos_iterations*MCO%nWRITE
+
+      ! tidy up for the next file
+      deallocate (tmp)
+
+      !
+      ! Covariance matrix file
+      !
+
+      ! The covariance matrix may contain either 1 or 2 complete matrices. We will
+      ! just want to the latest one.
+
+      ! count the number of remaining lines in the file..
+      status = 0; num_lines = 1
+      do
+         read (cfile_unit, iostat = status, rec = num_lines) dummy
+         if (status .ne. 0.) exit
+         num_lines = num_lines+1
+      end do
+
+      ! Determine whether there is 1 or more matrice here
+      if ((num_lines/npars)/npars == 1) then
+         ! the size of the file is consistent with a single matrix having been
+         ! saved
+         a = 1
+      else if ((num_lines/npars)/npars == 2) then
+         !
+         a = 2
+      else
+         ! something has gone wrong-best stop
+         print *, "Error reading COV file"
+         print *, "npars = ", npars, "COV length = ", num_lines*npars
+         stop
+      end if
+
+      ! now read the data for real
+      c = 1
+      do b = 1, a
+         do i = 1, npars
+            do j = 1, npars
+               read (cfile_unit, rec = c) MCOUT%covariance(i, j)
+               c = c+1
+            end do  ! j for parameter
+         end do  ! i for combinations
+      end do
+
+      ! extract current variance information
+      do i = 1, npars
+         MCOUT%parvar(i) = MCOUT%covariance(i, i)
+      end do
+      ! estimate status of the inverse covariance matrix-iC never used
+      ! call inverse_matrix( PI%npars, MCOUT%covariance, PI%iC )
+
+      !
+      ! Covariance information file
+      !
+
+      ! The number of parameters on which the covariance matrix is based must be
+      ! known to allow for correct updating. Similarly the mean normalised
+      ! parameter values are also needed
+
+      ! count the number of remaining lines in the file..
+      status = 0; num_lines = 0
+      do
+         read (cifile_unit, iostat = status) dummy
+         if (status .ne. 0.) exit
+         num_lines = num_lines+1
+      end do
+
+      ! how many parameter vectors have been output. Note the+1 is accounting
+      ! for the number of samples underlying the mean
+      num_lines = num_lines/(npars+1)
+      ! allocate memory
+      allocate (tmp(num_lines, (npars+1)))
+      ! rewind, for actual reading
+      rewind (cifile_unit)
+            ! now read the data for real
+      do i = 1, num_lines
+         do j = 1, (npars+1)
+            read (cifile_unit) tmp(i, j)
+         end do  ! j for parameter
+      end do  ! i for combinations
+      ! Store the most recent step size, which corresponds with the saved
+      ! parmeters (above) and covariance matrix (below)
+      MCOUT%meanpar = tmp(num_lines, 1:npars)
+      MCOUT%Nparvar = tmp(num_lines, npars+1)
+
+      return
+
+   end subroutine update_for_restart_simulation
+
+
    subroutine close_output_files(chainid)
 
       ! where you open a file you've got to make sure that you close them too. It

@@ -1,5 +1,5 @@
 module samplers_shared
-
+implicit none
 !> A collection of info about the model's parameters
 !> npars and min, max bounds as two arrays
 !> Closely related to model fct; model fct must take this number
@@ -30,14 +30,15 @@ module samplers_shared
       character(350):: stepfile = "stepout.txt"
       character(350) ::  covfile = "covout.txt"
       character(350):: covifile = "covinfoout.txt"
-      logical:: restart
       logical:: append
       real:: fadapt  ! TODO fraction adapt-move to outside
       logical:: randparini
       logical:: returnpars  
       !! a variable that is never used and has no effect, needs deleting in all model likelihood files
+      logical:: restart = .false.
+      !! is it a restart ?
       logical:: fixedpars  
-      !! never used
+      !! never used-yet-for array of flags to hold some parameters constant
 ! Adaptive
 !> setting for adaptive AP-MCMC step size
       double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005
@@ -189,5 +190,19 @@ contains
       bounds_check = all((PARS > PI%parmin) .and. (PARS < PI%parmax))
 
    end function
+
+   subroutine number_filenames(outfile, stepfile, covfile, covifile, chainid)
+      character(len=*), intent(inout):: outfile, stepfile, covfile, covifile
+      integer, intent(in):: chainid
+      character(4):: chainid_str
+      !! internal char version of chainid number, for filenames
+         ! internal write to convert int -> str
+         write (chainid_str, '(i0)') chainid
+         ! append number to file names
+         outfile = trim(outfile)//"_"//trim(chainid_str)
+         stepfile = trim(stepfile)//"_"//trim(chainid_str)
+         covfile = trim(covfile)//"_"//trim(chainid_str)
+         covifile = trim(covifile)//"_"//trim(chainid_str)
+   end subroutine
 
 end module
