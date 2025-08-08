@@ -115,7 +115,7 @@ program cardamom_framework
    logical:: restart
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 4
+   integer:: nchains = 3
    integer:: i
 
    allocate (MCOUT_list(nchains))
@@ -303,6 +303,7 @@ program cardamom_framework
         ! Determine initial values, this requires using the AP-MCMC
         call find_edc_initial_values(MCO, MCOUT_list, nchains)
         MCO%restart = .true.
+        MCOUT_list(i)%nos_iterations = 0
       else 
 
       endif
