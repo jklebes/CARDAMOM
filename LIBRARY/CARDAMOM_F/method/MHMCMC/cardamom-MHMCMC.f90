@@ -412,12 +412,12 @@ contains
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
-               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood, chainid_)
+               call model_likelihood_write(PARS_previous, npars, output_loglikelihood, chainid_)
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
                                       MCOUT%covariance, &
                                       MCOUT%meanpar, MCOUT%Nparvar, &
-                                      PARS_previous, output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                      PARS_previous, output_loglikelihood, npars, ITER == MAXITER, &
                                       io_space, chainid_)
             end if
          end if  ! write or not to write
@@ -470,7 +470,7 @@ contains
             if (mod(ITER, MCO%nPRINT) == 0) then
                write (*, *) "Chain ", chainid, "of", mco%nchains
                write (*, *) "Using multivariate sampling = ", MCOUT%use_multivariate
-               write (*, *) "Total proposal = ", ITER, " out of ", MCO%nOUT
+               write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
                write (*, *) "Total accepted = ", ACC
                write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
                write (*, *) "Local   acceptance rate    = ", ACCRATE

@@ -447,7 +447,7 @@ contains
                ! issues with different phases of the MCMC which may use sub-samples
                ! of observations or inflated uncertainties to aid parameter
                ! searching
-               call model_likelihood_write(PARS_proposed, npars, output_loglikelihood, chainid_)
+               call model_likelihood_write(PARS_previous, npars, output_loglikelihood, chainid_)
                ! Now write out to files
                call write_mcmc_output(MCOUT%parvar, ACCRATE, &
                                       MCOUT%covariance, &

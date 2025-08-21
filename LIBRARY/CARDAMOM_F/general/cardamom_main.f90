@@ -115,7 +115,7 @@ program cardamom_framework
    logical:: restart
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 3
+   integer:: nchains = 1
    integer:: i
 
    allocate (MCOUT_list(nchains))
@@ -224,8 +224,6 @@ program cardamom_framework
       write (*, *) "Carrying out a stress test analysis"
       write (*, *) "Any existing files will be ignored"
 
-      ! Reset interations counter
-      MCOUT%nos_iterations = 0
       ! Ensure that we use a random starting point
       ! MCO%randparini = .true.
       ! MCO%fixedpars  = .false.
@@ -249,13 +247,15 @@ program cardamom_framework
 
          ! Set flag to indicate this phase has occurred and make a record of the
          ! total iterations to be attempted
-         sub_sample_complete = .true.; nOUT_save = MCO%nOUT
+         sub_sample_complete = .true.;! nOUT_save = MCO%nOUT
 
          ! Report to the user
          write (*, *) "Beginning parameter search on sample size normalised likelihoods"
 
-         MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
+         ! number of steps still to do in this phase
+         MCO%nOUT = nint(dble(MCO%nout)*sub_fraction) - MCOUT%nos_iterations
          write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
+
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          !call run_mcmc(1d0, StressTest_likelihood, StressTest_sublikelihood)
 
@@ -278,7 +278,7 @@ program cardamom_framework
          ! Assume that sub-sampling process, if completed, will use 10 % of the
          ! simulation time therefore we want to adjust the output frequency to
          ! correct for this
-         MCO%nOUT = max(1, nOUT_save-MCOUT%nos_iterations)
+         ! MCO%nOUT = max(1, MCOUTnOUT_save-MCOUT%nos_iterations)
          ! by pass read_options file for StressTest special case
          MCO%append = .true.
          MCO%nADAPT = 1000
@@ -302,13 +302,13 @@ program cardamom_framework
         write (*, *) "Beginning search for initial parameter conditions"
         ! Determine initial values, this requires using the AP-MCMC
         call find_edc_initial_values(MCO, MCOUT_list, nchains)
+        ! Having done EDC search phase, flag to start the next phase from this state
         MCO%restart = .true.
         MCOUT_list(i)%nos_iterations = 0
       else 
 
       endif
 
-      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
       do i = 1, nchains
 
          ! Reset the MCMC parameters for the next stage
@@ -317,24 +317,6 @@ program cardamom_framework
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
 
-         if (MCO%restart) then
-            ! Restarting an old one
-            print *, "beginning restart simulation"
-            ! now begin update of model timing variables and parameter values if this is a
-            ! restart. NOTE that this include information determining the number of
-            ! iterations already completed...
-            ! call update_for_restart_simulation(MCO, MCOUT_list(i))
-         else
-            ! Brand new analysis
-            !print*,"writing initial covariance matrix"
-            ! write out first covariance matrix, this will be compared with the final covariance matrix
-            !if (MCO%nWRITE > 0) then %TODO problem because files not opened yet?
-                !call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
-                !call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
-            !endif
-            !...so the reset for nos_iterations must only occur when not a restart run
-            MCOUT_list(i)%nos_iterations = 0
-         end if  ! restart run or not
       end do
 
       ! Do we do the initial MCMC period where we normalise the likelihood by number of observations
@@ -357,7 +339,7 @@ program cardamom_framework
          ! Report to the user
          write (*, *) "Beginning parameter search on sample size normalised likelihoods"
 
-         MCO%nOUT = nint(dble(nOUT_save)*sub_fraction) - MCOUT%nos_iterations
+         MCO%nOUT = nint(dble(nout_save)*sub_fraction) 
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
          MCO%restart = .true.
          !MCO%nwrite = 1000
@@ -384,20 +366,21 @@ program cardamom_framework
          end if  ! do we need a new covariance matrix or can we use the existing one?
          end do
 
+         MCOUT_list(i)%nos_iterations = 0
+
       end if 
 
       ! Restore module variables needed for the run-these components could be split
       ! into two subroutines to avoid double calling of file name creation
       ! components.
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
-      ! Since they all get the same nout setting, assume all sub_model phase simulation 
-      ! were same length  ! TODO
-      MCO%nOUT = max(1, MCO%nOUT-MCOUT_list(1)%nos_iterations)
+
+      MCO%nOUT = nout_save*(1-sub_fraction)  !number of steps in final phase
       MCO%restart = .true.
 
       ! Update the user
       write (*, *) "Beginning parameter search in real likelihoods"
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
+      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT-MCOUT_list(1)%nos_iterations
 
       ! Call the main MCMC
       ! The specific normalisation of the cost function is determined here.
