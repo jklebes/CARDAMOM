@@ -56,13 +56,8 @@ module cardamom_io
            ,read_binary_data                &
            ,initialize
 
-  ! allow access to needed variable
-  public:: restart_flag
-
   ! declare module level variables
   integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
-  ! default assumption is that this is not a restart fun
-  logical:: restart_flag = .false.
 
   ! parameters
   integer, parameter:: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision
@@ -964,8 +959,8 @@ module cardamom_io
    end subroutine
   !------------------------------------------------------------------
   !
-  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
-    use cardamom_MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
+  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
+    use cardamom_MHMCMC, only: MCMC_OPTIONS
 
     ! loads required options about the MHMCMC either form hardcoded sources or
     ! from variables which were read form the command line
@@ -976,7 +971,6 @@ module cardamom_io
     character(350), intent(in):: outfile
     integer, intent(in):: solutions_wanted, freq_print, freq_write
     class(MCMC_OPTIONS), intent(out):: MCO
-    type(MCMC_OUTPUT), intent(inout):: MCOUT
 
 
     ! defining hardcoded MCMC options

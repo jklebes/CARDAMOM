@@ -37,8 +37,6 @@ module samplers_io
             , close_output_files
 
    integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13
-   ! default assumption is that this is not a restart fun
-   ! logical:: restart_flag = .false.
 
    ! parameters
    integer, parameter:: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision

@@ -52,10 +52,7 @@ program cardamom_framework
                           update_for_restart_simulation, &
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
-   !use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
-   use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
-   !use model_likelihood_module, only: model_likelihood, &
-   !   sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood  ! to replace soon with wrappers
+   !use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
    use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct, scaled_model_likelihood_fct
    use cardamom_main_utils
 
@@ -107,16 +104,19 @@ program cardamom_framework
              nOUT_save, do_inflate_dble, cost_func_scaling_dble
    logical:: do_inflate = .false.
    logical:: sub_sample_complete = .false.
-   double precision:: sub_fraction = 0.2d0
-   !double precision:: idum  ! TODO redo seeds
-   type(MCMC_OUTPUT):: MCOUT
-   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
+   double precision:: sub_fraction = 0.2d0 
+    !! run this percentage of simulation with variant function
+   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list 
+    !! array of output objects from each thread 
    type(MCMC_OPTIONS):: MCO
+     !! options for sampler
    logical:: restart
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 1
+   integer:: nchains = 3
    integer:: i
+
+   double precision:: ll, ll2, ll3  ! tmp write
 
    allocate (MCOUT_list(nchains))
 
@@ -174,154 +174,71 @@ program cardamom_framework
    ! TODO make sure seeds are saved
    ! seed the random number generator
    ! determine unique (sort of) seed value; based on system time
-   call system_clock(time1, time2, time3)
+   ! call system_clock(time1, time2, time3)
    ! set seed value outside of the function, idum must be a negative number
    !idum = dble(time1+time2+time3)
    !call rnstrt(nint(idum))
 
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
-      ! call special functions to prepare for stress test
-      call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
-   else
-      call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
-      call initialize_carbon_model(nchains)
+     !call run_stresstest()
+     ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+     stop 
+   endif
+
+   ! read input data file
+   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  
+                           ! sets cardamom_structures:: DATAin
+   
+   call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
    end do
-   end if
+
    ! having filled PI%npars from model file, we can allocate stats array in MCOUT
 
    ! load module variables needed for restart check
    ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
-   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
-   ! check whether this is a restart?
-   ! PI lives in model_shared and its info can be read after call to initiialize_model
+   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
+
+   ! check whether this is a restart from aborted simulation
    MCO%restart = .true. !to gather results onto-false as soon as some file is not found
    do i = 1, nchains
       call check_for_existing_output_files(PI%npars, MCO, sub_fraction, i, restart)
       MCO%restart = MCO%restart .and. restart
-   end do
    !if all nchains files were found, read them to get a starting point
    if (MCO%restart) then
-     call update_for_restart_simulation(MCO, MCOUT, PI%npars)
+     call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
    endif 
-
-
-   ! Initialise MCMC output, possibly a bit of a redundent subroutine...
-   !call initialise_mcmc_output  ! TODO now happens in run_mcmc if not restart
-   ! Open the relevant output files TODO now happens in run_mcmc
-   !call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
+   end do
 
    ! Report which model ID we are using
-   write (*, *) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
-
-   ! Check whether we are doing a stress test again
-   if (DATAin%ID < 0) then
-      !TODO move to testing
-
-      ! We are doing a stress test
-      write (*, *) "Carrying out a stress test analysis"
-      write (*, *) "Any existing files will be ignored"
-
-      ! Ensure that we use a random starting point
-      ! MCO%randparini = .true.
-      ! MCO%fixedpars  = .false.
-      ! restart_flag = .false. ! default all random if no further arguments passed to run_mcmc
-
-      ! Do we do the initial MCMC period where we normalise the likelihood by
-      ! number of observations
-      ! This process allows for very bad starting points to more easily move
-      ! towards the general area of the observatons.
-      if (MCOUT%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
-
-         ! Having found an EDC compliant parameter vector, we want to do a MCMC
-         ! search on inflated uncertainties. This inflation search allows us to
-         ! more easily move towards higher likelihoods, where the inflation
-         ! allows easier movement through parameter space.
-
-         ! The inflated search phase will make use of three stages over which
-         ! the
-         ! inflation will be reduced. Phase 1 used half of the allocated
-         ! iterations for the inflation while the second and third is
-
-         ! Set flag to indicate this phase has occurred and make a record of the
-         ! total iterations to be attempted
-         sub_sample_complete = .true.;! nOUT_save = MCO%nOUT
-
-         ! Report to the user
-         write (*, *) "Beginning parameter search on sample size normalised likelihoods"
-
-         ! number of steps still to do in this phase
-         MCO%nOUT = nint(dble(MCO%nout)*sub_fraction) - MCOUT%nos_iterations
-         write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
-
-         MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         !call run_mcmc(1d0, StressTest_likelihood, StressTest_sublikelihood)
-
-         allocate (MCOUT_list(nchains))
-         call run_parallel_mcmc(stresstest_sublikelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = nchains)
-
-         ! Use the best parameter set as the starting point for the next stage
-! REALLY NOT SURE I SHOULD BE DOING THIS-SHOULD BE PROGRESSING FROM THE LAST ACCEPTED PARAMETER SET?
-         MCOUT%pars = MCOUT%bestpars
-         ! Leave parameter and covariance structures as they come out form the
-         ! sub-sample-but reset the number of samples used in the update
-         ! weighting
-         if (MCOUT%cov .and. MCOUT%use_multivariate) then
-            MCOUT%Nparvar = MCO%N_before_mv*PI%npars+1
-         else
-            call reset_stats(MCOUT, PI%npars)
-            ! reset the parameter step size at the beginning of each attempt  ! TODO where does this comment come from, to do?
-         end if  ! do we need a new covariance matrix or can we use the existing one?
-
-         ! Assume that sub-sampling process, if completed, will use 10 % of the
-         ! simulation time therefore we want to adjust the output frequency to
-         ! correct for this
-         ! MCO%nOUT = max(1, MCOUTnOUT_save-MCOUT%nos_iterations)
-         ! by pass read_options file for StressTest special case
-         MCO%append = .true.
-         MCO%nADAPT = 1000
-         MCO%fADAPT = 0.5d0
-         MCO%randparini = .false.
-         MCO%fixedpars = .true.
-
-      end if  ! restart flag
-
-      ! Let the user know how many more we will propose
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
-      ! Call the AP-MCMC
-      call run_parallel_mcmc(stresstest_likelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = nchains)
-      ! Tell the user the best parameter set
-      print *, "Best parameters = ", MCOUT%bestpars
-
-   else  ! We are not doing a stress test
-
+   write (*, *) "Running model version ", DATAin%ID  
+  
       if (.not. MCO%restart) then
         ! Begin search for initial conditions
         write (*, *) "Beginning search for initial parameter conditions"
         ! Determine initial values, this requires using the AP-MCMC
         call find_edc_initial_values(MCO, MCOUT_list, nchains)
         ! Having done EDC search phase, flag to start the next phase from this state
-        MCO%restart = .true.
+        MCO%fixedpars = .true.
+      do i = 1, nchains
         MCOUT_list(i)%nos_iterations = 0
-      else 
-
+        end do
       endif
 
       do i = 1, nchains
 
          ! Reset the MCMC parameters for the next stage
-         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT_list(i))
+         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
 
       end do
 
-      ! Do we do the initial MCMC period where we normalise the likelihood by number of observations
-      ! This process allows for very bad starting points to more easily move towards the general area of the observatons.
-      if (DATAin%total_obs > 0 .and. MCOUT%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
+      ! sub-sampling phase, first sub_fraction% of the simulation with variant loglikelihood
+      if (DATAin%total_obs > 0 .and. MCOUT_list(1)%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
 
          ! Having found an EDC compliant parameter vector, we want to do a MCMC
          ! search on inflated uncertainties. This inflation search allows us to
@@ -340,25 +257,23 @@ program cardamom_framework
          write (*, *) "Beginning parameter search on sample size normalised likelihoods"
 
          MCO%nOUT = nint(dble(nout_save)*sub_fraction) 
-         MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         MCO%restart = .true.
-         !MCO%nwrite = 1000
-         !MCO%nprint = 1000
+         MCO%fADAPT = 1d0 
+         MCO%fixedpars = .true. ! start from end points of EDC phase
          ! Second phase, run Mcmc with sub scaling 
          call update_obs_scaling_nsamples
-         call run_parallel_mcmc(model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
-         !call run_mcmc(1d0, model_likelihood, sub_model_likelihood)
-         ! call MHMCMC(PI, MCO, model_likelihood, sub_model_likelihood)
-         ! Use the best parameter set as the starting point for the next stage
+         call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
          MCO%fixedpars = .true.
          do i = 1, nchains
+         ! Use the best parameter set as the starting point for the next stage
+         call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll, i)
          MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
-         ! subtract number iterations done by sub_model phase from total to do
-
+         call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll2, i)
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT_list(i)%cov .and. MCOUT_list(i)%use_multivariate) then
+            ! TODO check this branch is happening
+            write(*,*) "in this branch"
             MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars+1
          else
             ! reset the parameter step size at the beginning of each attempt
@@ -373,10 +288,10 @@ program cardamom_framework
       ! Restore module variables needed for the run-these components could be split
       ! into two subroutines to avoid double calling of file name creation
       ! components.
-      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
       MCO%nOUT = nout_save*(1-sub_fraction)  !number of steps in final phase
-      MCO%restart = .true.
+      MCO%fixedpars = .true.
 
       ! Update the user
       write (*, *) "Beginning parameter search in real likelihoods"
@@ -396,12 +311,15 @@ program cardamom_framework
       else if (cost_func_scaling_dble == 3) then
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
+      do i = 1, nchains
+      call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll3, i)
+      write(*,*) "chain", i, "write likelihood of pars in", ll3
+      end do
       call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
 
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."
 
-   end if  ! stress test or not
 
    ! tidy up by closing all files
    do i = 1, nchains

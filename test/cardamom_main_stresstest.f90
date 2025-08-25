@@ -1,5 +1,7 @@
-program cardamom_main_stresstest
+module cardamom_main_stresstest
 
+contains
+subroutine run_stresstest()
  use cardamom_io, only: initialize, &
                         read_options, open_output_files, &
                         check_for_existing_output_files, restart_flag,   &
@@ -248,4 +250,5 @@ program cardamom_main_stresstest
  write(*,*)"=========================Honestly=========================="
 
 
-end program cardamom_main_stresstest
+end subroutine
+end module

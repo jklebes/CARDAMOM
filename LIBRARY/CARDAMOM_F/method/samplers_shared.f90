@@ -37,8 +37,8 @@ implicit none
       !! a variable that is never used and has no effect, needs deleting in all model likelihood files
       logical:: restart = .false.
       !! is it a restart ?
-      logical:: fixedpars  
-      !! never used-yet-for array of flags to hold some parameters constant
+      logical:: fixedpars = .false.
+      !! Continue from last state in MCOUT (don't initialize to random points) ?
 ! Adaptive
 !> setting for adaptive AP-MCMC step size
       double precision:: par_minstepsize = 0.001d0 & ! 0.0005 -> 0.001 -> 0.01 -> 0.1 -> 0.005

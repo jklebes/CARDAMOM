@@ -12,7 +12,7 @@ program cardamom_DEMCz
                           update_for_restart_simulation, &
                           write_covariance_matrix, &
                           close_output_files, write_covariance_info
-   use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
+   !use MHMCMC_StressTests, only: StressTest_likelihood_fct, StressTest_sublikelihood_fct, prepare_for_stress_test
    use model_likelihood_wrapper, only: model_likelihood_fct, edc_model_likelihood_fct, scaled_model_likelihood_fct
    use cardamom_main_utils
 
@@ -106,19 +106,22 @@ program cardamom_DEMCz
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
       ! call special functions to prepare for stress test
-      call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
-   else
+      !call run_stresstest()
+      write(*,*) "Stresstest currently not implemented, moving to tests"
+      return
+      !call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+   endif
+
       call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
       call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
    end do
-   end if
    ! having filled PI%npars from model file, we can allocate stats array in MCOUT
 
    ! load module variables needed for restart check
    ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
-   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
    ! check whether this is a restart?
    ! PI lives in model_shared and its info can be read after call to initiialize_model
    ! TODO not sure about MCO at this point
@@ -134,30 +137,7 @@ program cardamom_DEMCz
    ! Report which model ID we are using
    write (*, *) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
 
-   ! Check whether we are doing a stress test again
-   if (DATAin%ID < 0) then
-      !TODO move to testing
 
-      ! We are doing a stress test
-      write (*, *) "Carrying out a stress test analysis"
-      write (*, *) "Any existing files will be ignored"
-
-      ! Reset interations counter
-      MCOUT%nos_iterations = 0
-      ! Ensure that we use a random starting point
-      ! MCO%randparini = .true.
-      ! MCO%fixedpars  = .false.
-      ! restart_flag = .false. ! default all random if no further arguments passed to run_mcmc
-
-      ! Let the user know how many more we will propose
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
-      ! Call stresstest sampling
-      write(*,*) nchains
-      call run_demcz(stresstest_likelihood_fct, PI, MCO, MCOUT_list, stresstest_likelihood_fct, nchains = nchains)
-      ! Tell the user the best parameter set
-      print *, "Best parameters = ", MCOUT%bestpars
-
-   else  ! We are not doing a stress test
 
       ! Begin search for initial conditions
       write (*, *) "Beginning search for initial parameter conditions"
@@ -169,7 +149,7 @@ program cardamom_DEMCz
       do i = 1, nchains
 
          ! Reset the MCMC parameters for the next stage
-         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT_list(i))
+         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
          ! Reset stepsize and covariance for main DRAM-MCMC
          call reset_stats(MCOUT_list(i), PI%npars)
@@ -198,7 +178,7 @@ program cardamom_DEMCz
       ! Restore module variables needed for the run-these components could be split
       ! into two subroutines to avoid double calling of file name creation
       ! components.
-      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
+      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
       ! Since they all get the same nout setting, assume all sub_model phase simulation 
       ! were same length  ! TODO
 
@@ -228,7 +208,6 @@ program cardamom_DEMCz
       ! Let the user know we are done
       write (*, *) "AP-MCMC done now, moving on ..."
 
-   end if  ! stress test or not
 
    ! tidy up by closing all files
    do i = 1, nchains

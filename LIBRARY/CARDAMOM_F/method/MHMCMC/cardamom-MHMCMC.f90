@@ -151,9 +151,7 @@ contains
       ! structure in this loop.
       !$OMP parallel do
       do i = 1, MCO%nchains
-         ! saves best loglikelihood and associated parameters to MCOUT(i)
-         ! MCOUT_list(i) possibly contains desired starting poisition in `pars` field, 
-         ! possible entire history and stats from previous run, possible empty new MCOUT object
+         ! saves latest, best loglikelihood and associated parameters to MCOUT_list(i)
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i)
       end do
       !$OMP end parallel do
@@ -248,20 +246,15 @@ contains
       beta = MCO%beta
       par_minstepsize = MCO%par_minstepsize
 
-      ! initialize output fields
-      if (.not. allocated(MCOUT%parvar)) then
-         ! we recieved blank new MCOUT, start new stats collection
-         MCOUT%Nparvar = 0
-         allocate (MCOUT%parvar(npars))
-         allocate (MCOUT%meanpar(npars))
-         allocate (MCOUT%covariance(npars, npars))
-      end if
-
       if (present(chainid)) then
          chainid_ = chainid
       else
          chainid_ = 1
       end if
+
+      ! Initialize pregenerated random numbers, if using-local to this chain
+      seed = irand()  ! TODO record later  ! TODO always the same ?
+      call uniform_random_vector%initialize_random(seed)
 
       ! process file names
       outfile = MCO%outfile
@@ -275,7 +268,7 @@ contains
     !! Calculate derived  settings of the run...
       ! Determine how long we will continue to adapt our proposal covariance
       ! matrix and use of Delayed Rejection
-      burn_in_period = MCO%fADAPT*dble(MAXITER)
+      burn_in_period = MCO%fADAPT*dble(MAXITER)  ! TODO used?
       ! See step() for relevant references.
       ! scd = 2.381204 the optimal scaling parameter for MCMC search, when applied
       ! to multivariate proposal.
@@ -284,28 +277,46 @@ contains
       opt_scaling = MCO%opt_scaling_const/dble(PI%npars)
 
       if (MCO%restart) then
-         ! keep MCOUT
+         ! For aborted simulations
+         ! keep MCOUT, starting point, counters statistics collection
+         ! implies start from last state
       else
+         ! Not a restart from aborted simulation 
+         ! start new counters
+
          ! init MCOUT
          MCOUT%complete = .false.
          MCOUT%nos_iterations = 0
-         if (.not. allocated(MCOUT%pars)) allocate (MCOUT%pars(npars))
-         if (.not. allocated(MCOUT%bestpars)) allocate (MCOUT%bestpars(npars))
+         ! Initialize basic MCMC counters
+         ITER = 0
+         ! Initialize further counters for adaptive
+         ACC = 0
+         ACC_first = 0
+         ACCLOC = 0
+         ACCRATE = 0d0
+         ACCRATE_GLOBAL = 0d0
+
+         if (.not.MCO%fixedpars) then
+            ! completely new simulation from new starting point
+
+            if (.not. allocated(MCOUT%pars)) allocate (MCOUT%pars(npars))
+            if (.not. allocated(MCOUT%bestpars)) allocate (MCOUT%bestpars(npars))
+
+            ! initialize statistics collection output fields
+            if (.not. allocated(MCOUT%parvar)) then
+               ! we recieved blank new MCOUT, start new stats collection
+               MCOUT%Nparvar = 0
+               allocate (MCOUT%parvar(npars))
+               allocate (MCOUT%meanpar(npars))
+               allocate (MCOUT%covariance(npars, npars))
+            end if
+
+         !else 
+          ! (.not. restart and fixedpars) : keep MCOUT%pars and statistics from previous phase
+
+         endif
+
       end if
-
-      ! Initialize basic MCMC counters
-      ITER = 0
-
-      ! Initialize further counters for adaptive
-      ACC = 0
-      ACC_first = 0
-      ACCLOC = 0
-      ACCRATE = 0d0
-      ACCRATE_GLOBAL = 0d0
-
-      ! Initialize pregenerated random numbers, if using-local to this chain
-      seed = irand()  ! TODO record later  ! TODO always the same ?
-      call uniform_random_vector%initialize_random(seed)
 
     !!! prepare file writing
       if (MCO%nwrite > 0) then
@@ -314,45 +325,31 @@ contains
          call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
-    !!!! init params
-      ! TODO implement reading in PI%fix_pars
+      !!!! init params
       ! initalize bestpars to current pars
-      if (.not. MCO%restart) then
+      if (.not. MCO%restart .and. .not. MCO%fixedpars ) then
          call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
          ! Inform the user
          write (*, *) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
-         ! initialize loglikelihood value of the given model with these pars
-         !P = -1d0; Pprior = -1d0
-
-         ! calculate the initial probability/log likelihood.
-         ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
-         ! could read an EDC consistent parameter set in the first instance
-         call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
-
-         if (.false. .and. is_infinity(loglikelihood_previous)) then
-            write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
-            & AP-MCMC will get stuck, if so please check initial conditions"
-            error stop 1
-         end if
-
-         ! initalize bestpars to current pars
-         BESTPARS = PARS_previous
-         llmax = loglikelihood_previous
-
-      else  ! restart case
+      else  ! restart or fixedpars case-from aborted simulation or from previous phase-use pars in MCOUT as stating point
          PARS_previous = MCOUT%PARS
-         loglikelihood_previous = MCOUT%ll
-         BESTPARS = MCOUT%bestpars
-         llmax = MCOUT%bestll
-
+         ! start statistics from previous statistics in MCOUT 
       end if
 
-      ! calculate the initial probability/log likelihood.
-      ! NOTE: passing P0 -> P is needed during the EDC searching phase where we
-      ! could read an EDC consistent parameter set in the first instance
-      call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
+      if (.not. MCO%restart) then  ! if new simulation, from fixedpars or random pars
+         ! calculate initial ll 
+         call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
+         BESTPARS = PARS_previous
+         llmax = loglikelihood_previous
+         ! reset length of statistics collection history to zero
+         ! cardamom quirk 4) between phases, statistics are kept but past history is downweighted even further
+         ! Or is it effectively not kept when multiplied by zero on first iteration?
+         MCOUT%Nparvar = 0
+      else 
+         loglikelihood_previous = MCOUT%ll
+      endif 
 
-      if (.false. .and. is_infinity(loglikelihood_previous)) then
+      if (loglikelihood_previous < -999999) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
          & AP-MCMC will get stuck, if so please check initial conditions"
          error stop 1
