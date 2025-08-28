@@ -116,8 +116,6 @@ program cardamom_framework
    integer:: nchains = 3
    integer:: i
 
-   double precision:: ll, ll2, ll3  ! tmp write
-
    allocate (MCOUT_list(nchains))
 
    ! user update
@@ -265,9 +263,8 @@ program cardamom_framework
          MCO%fixedpars = .true.
          do i = 1, nchains
          ! Use the best parameter set as the starting point for the next stage
-         call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll, i)
          MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
-         call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll2, i)
+
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
@@ -275,6 +272,7 @@ program cardamom_framework
             ! TODO check this branch is happening
             write(*,*) "in this branch"
             MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars+1
+            write(*,*) "Set Nparvar to", MCOUT_list(i)%Nparvar
          else
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)
@@ -312,8 +310,6 @@ program cardamom_framework
          call update_obs_scaling_log_nsamples
       end if  ! cost_func_scaling_dble ==
       do i = 1, nchains
-      call model_likelihood_fct(MCOUT_list(i)%pars, PI%npars, ll3, i)
-      write(*,*) "chain", i, "write likelihood of pars in", ll3
       end do
       call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
 

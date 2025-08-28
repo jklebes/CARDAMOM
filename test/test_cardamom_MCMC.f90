@@ -23,6 +23,7 @@ subroutine collect_cardamom_MCMCtests(testsuite)
     new_unittest("step_pars_real", test_step_pars_real), &
     new_unittest("mcmc_output_type", test_mcmc_output_type), &
     new_unittest("mcmc_len0", test_run_mcmc_len0), &
+    new_unittest("mcmc_not_static", test_not_static), &
     new_unittest("mcmc_len1000", test_run_mcmc_len1000), &
     new_unittest("mcmc_nchains1_len0", test_run_parallel_mcmc_nchains1_len0), &
     new_unittest("mcmc_nchains4_len0", test_run_parallel_mcmc_nchains4_len0), &
@@ -156,6 +157,31 @@ subroutine test_run_mcmc_len0(error)
   !call check(error, mcout%pars(1), x_ideal )
   !call check(error, mcout%pars(2), y_ideal)
   !call check(error, MCOUT% ll, 0.0 )
+end subroutine 
+
+subroutine test_not_static(error)
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  type(mcmc_output):: mcout
+  type(mcmc_options):: mcopt  ! filled with defaults only
+  double precision, dimension(2):: state0, state1, state2
+    !! Evolving values of x, y estimate of normal distribution ll_normal
+  call init_pi()
+  mcopt%nout = 0
+  ! a Zero-length run to intialize to random state
+  call run_mcmc(ll_normal, pi_xy, mcopt, mcout)
+  state0 = mcout%pars
+  mcopt%fixedpars = .true. ! start from same state
+  mcopt%nout = 100
+  ! A short run
+  call run_mcmc(ll_normal, pi_xy, mcopt, mcout)
+  state1 = mcout%pars
+  ! another 100 sampling steps
+  call run_mcmc(ll_normal, pi_xy, mcopt, mcout)
+  state2 = mcout%pars
+  ! check that there were fluctuations
+  call check(error, state1(1) /= state0(1) .and. state1(2) /= state0(2))
+  call check(error, state2(1) /= state1(1) .and. state2(2) /= state1(2))
 end subroutine 
 
 subroutine test_run_mcmc_len1000(error)

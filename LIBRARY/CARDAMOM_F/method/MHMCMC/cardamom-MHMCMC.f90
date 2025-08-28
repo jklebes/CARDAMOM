@@ -312,7 +312,7 @@ contains
             end if
 
          !else 
-          ! (.not. restart and fixedpars) : keep MCOUT%pars and statistics from previous phase
+          ! ((.not. restart) .and. fixedpars) : keep MCOUT%pars and statistics from previous phase
 
          endif
 
@@ -556,6 +556,9 @@ contains
          Nparvar_local = min(N_before_mv_target, Nparvar_backup)
          call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                           , Nparvar_local, ACCLOC, MCOUT%covariance)
+         if (.not. MCOUT%covariance(1, 1) > 0.0d0) then
+            write(*,*) MCOUT%covariance(1, 1)
+         end if
          ! Calculate the cholesky factor as this includes a determination of
          ! whether the covariance matrix is positive definite.
          cholesky = MCOUT%covariance
@@ -712,6 +715,10 @@ contains
          ! NOTE: if covariance matrix provided is not positive definite
          !       a sample from normal distribution is returned
          call random_multivariate(npars, 1, covariance, mu, rn, random_uniform_vector)
+               if (.not. (covariance(1, 1) > 0.0d0 )) then
+                  write(*,*) covariance(1, 1)
+                  continue
+               endif 
 
          ! Estimate the step to be applied to the current parameter vector to
          ! create the new proposal. scd = a scaling parameter linking searching
