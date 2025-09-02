@@ -241,7 +241,7 @@ contains
       nchains = MCO%Nchains
       MAXITER = MCO%nout
       P_target = MCO%P_target
-      MCOUT%use_multivariate = MCO%use_multivariate
+      !MCOUT%use_multivariate  ! default .false.
       N_before_mv_target = MCO%N_before_mv*PI%npars
       beta = MCO%beta
       par_minstepsize = MCO%par_minstepsize
@@ -305,7 +305,6 @@ contains
             ! initialize statistics collection output fields
             if (.not. allocated(MCOUT%parvar)) then
                ! we recieved blank new MCOUT, start new stats collection
-               MCOUT%Nparvar = 0
                allocate (MCOUT%parvar(npars))
                allocate (MCOUT%meanpar(npars))
                allocate (MCOUT%covariance(npars, npars))
@@ -341,10 +340,6 @@ contains
          call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
          BESTPARS = PARS_previous
          llmax = loglikelihood_previous
-         ! reset length of statistics collection history to zero
-         ! cardamom quirk 4) between phases, statistics are kept but past history is downweighted even further
-         ! Or is it effectively not kept when multiplied by zero on first iteration?
-         MCOUT%Nparvar = 0
       else 
          loglikelihood_previous = MCOUT%ll
       endif 
@@ -385,7 +380,7 @@ contains
             ! Keep count of the number of accepted proposals in this local period
             ACCLOC = ACCLOC+1
             ! Accepted first proposal from multivariate
-            if (MCOUT%multivariate_proposal) ACC_first = ACC_first+1
+            if (multivariate) ACC_first = ACC_first+1
 
             PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save accepted pars as previous pars
             loglikelihood_previous = loglikelihood_proposed;   ! save as previous loglikelihood
@@ -526,9 +521,11 @@ contains
       ! declare input types
       type(MCMC_OUTPUT), intent(inout):: MCOUT  ! incl statistics collection
       logical, intent(inout):: use_multivariate
+      !! covariance matrix exists and is useable, i.e. positive definite
       ! declare inputs variables
       integer, intent(in):: npars
       integer, intent(in):: ACCLOC
+      !! "accepted local", number of new states to add into running statistics
       double precision, intent(in):: PARSALL(npars, ACCLOC)  ! collection of recently accepted normalised parameter combinations
       ! declare local variables
       integer p, info  ! counters
@@ -556,9 +553,6 @@ contains
          Nparvar_local = min(N_before_mv_target, Nparvar_backup)
          call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                           , Nparvar_local, ACCLOC, MCOUT%covariance)
-         if (.not. MCOUT%covariance(1, 1) > 0.0d0) then
-            write(*,*) MCOUT%covariance(1, 1)
-         end if
          ! Calculate the cholesky factor as this includes a determination of
          ! whether the covariance matrix is positive definite.
          cholesky = MCOUT%covariance
@@ -569,6 +563,14 @@ contains
             ! Set multivariate sampling to true
             use_multivariate = .true.
             MCOUT%Nparvar = Nparvar_local
+            if (.not. MCOUT%covariance(1, 1) > 0.0d0) then
+               write(*,*) MCOUT%covariance(1, 1)
+               write(*,*) PARSALL(:, 1:ACCLOC)
+               write(*,*) MCOUT%meanpar
+               write(*,*) npars, Nparvar_local, ACCLOC
+               write(*,*) cov_backup(1, 1)
+               stop 1
+            end if
          else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive
@@ -604,7 +606,6 @@ contains
             cholesky = MCOUT%covariance
             call cholesky_factor(npars, cholesky, info)
 
-            ! step at this time.
             if (info /= 0) then
                ! Keep accumulating information until positive definite matrix
                ! calculated

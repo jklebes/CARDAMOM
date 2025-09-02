@@ -51,10 +51,6 @@ implicit none
       ! NOTE 1: 2.38/sqrt(npars) sometimes used when applied to the Cholesky
       ! factor. NOTE 2: 2.381204**2 = 5.670132
       double precision:: N_before_mv = 10d0
-!! step
-!> Is current proposal multivariate or not?
-      logical:: multivariate_proposal = .false.
-      logical:: use_multivariate
    end type MCMC_OPTIONS
 
 !> Collection of info for output of the sampling run
@@ -87,12 +83,8 @@ implicit none
       !! covariance matrix measured during sampling
       logical:: cov = .false.
       !! Does the covariance matrix exist yet?
-      logical:: use_multivariate
-      !! Are we in the later simulation phase where step size depend
-      !! on covariance matrix ?  i.e. after enough data has been observed
-      !! that a useful covariance matrix exists
-      logical:: multivariate_proposal
-      !! TODO general setting to ever use multivariate or not?
+      logical:: use_multivariate = .false.
+      !! Covariance matrix exists and is positive definite
    end type MCMC_OUTPUT
 
 

@@ -261,7 +261,7 @@ contains
       nchains = MCO%Nchains
       MAXITER = MCO%nout
       P_target = MCO%P_target
-      MCOUT%use_multivariate = MCO%use_multivariate
+      !MCOUT%use_multivariate  ! default false
       N_before_mv_target = MCO%N_before_mv*PI%npars
       beta = MCO%beta
       par_minstepsize = MCO%par_minstepsize
@@ -423,7 +423,7 @@ contains
             ! Keep count of the number of accepted proposals in this local period
             ACCLOC = ACCLOC+1
             ! Accepted first proposal from multivariate
-            if (MCOUT%multivariate_proposal) ACC_first = ACC_first+1
+            if (multivariate) ACC_first = ACC_first+1
 
             PARS_previous(1:npars) = PARS_proposed(1:npars)          ! save accepted pars as previous pars
             loglikelihood_previous = loglikelihood_proposed;   ! save as previous loglikelihood
