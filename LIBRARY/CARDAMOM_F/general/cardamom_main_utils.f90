@@ -107,7 +107,7 @@ contains
             write (*, *) nchains, "chains working ... "
             MCO%randparini = .false.
             ! TODO limit number to number of available hardware threads
-            !$omp parallel do private(ll) 
+            !$omp parallel do private(ll) firstprivate(MCO)
             do i = 1, nchains
              do while (success_count < nchains)!(PEDC < 0d0)
                ! call the MHMCMC directing to the appropriate likelihood function
