@@ -718,17 +718,12 @@ contains
          ! NOTE: if covariance matrix provided is not positive definite
          !       a sample from normal distribution is returned
          call random_multivariate(npars, 1, covariance, mu, rn, random_uniform_vector)
-               if (.not. (covariance(1, 1) > 0.0d0 )) then
-                  write(*,*) covariance(1, 1)
-                  continue
-               endif 
 
          ! Estimate the step to be applied to the current parameter vector to
          ! create the new proposal. scd = a scaling parameter linking searching
          ! stepping to the number of parameters being retrieved by the analysis.
          ! See Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
          ! and references therein. See also, Roberts & Rosenthal (2009) for beta scaling.
-         ! TODO par_minstepsize a user input with a default value
          pars = pars0 + (rn*opt_scaling*(1d0-beta)) + (par_minstepsize*rn2*beta)
 
       else
