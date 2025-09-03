@@ -265,6 +265,13 @@ contains
          call number_filenames(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
+    !!! prepare file writing
+      if (MCO%nwrite > 0) then
+         ! allocate buffers (different one for each chain)
+         call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
+      end if
+
     !! Calculate derived  settings of the run...
       ! Determine how long we will continue to adapt our proposal covariance
       ! matrix and use of Delayed Rejection
@@ -310,18 +317,14 @@ contains
                allocate (MCOUT%covariance(npars, npars))
             end if
 
-         !else 
+          else 
           ! ((.not. restart) .and. fixedpars) : keep MCOUT%pars and statistics from previous phase
-
+          ! write "initial" covariance matrix that we inherited from previous phase to file
+          if (MCO%nwrite > 0) then
+             call write_covariance_matrix(MCOUT%covariance, npars, .true., chainid_)
+          endif
          endif
 
-      end if
-
-    !!! prepare file writing
-      if (MCO%nwrite > 0) then
-         ! allocate buffers (different one for each chain)
-         call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
-         call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
       !!!! init params
@@ -448,6 +451,12 @@ contains
                ! update the covariance matrix for multivariate proposal
                ! TODO rename "parsall" to reflect that it's really a small subsample of period's history
                call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, ACCLOC, N_before_mv_target)
+
+               if (MCO%nwrite > 0 .and. ACCLOC == 3 .and. MCOUT%cov) then
+                  ! we just switched from not having a covraiance matrix to having an initial covariance matrix
+                  ! write the first covariance matrix to file
+                  call write_covariance_matrix(MCOUT%covariance, npars, .true., chainid_)
+               endif
 
             end if !  have enough parameter been accepted
             ! TODO what if MCO%use_multivariate ???
