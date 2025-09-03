@@ -431,17 +431,10 @@ contains
             ! Second, are we still in the adaption phase?
             if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not. MCOUT%use_multivariate) then
 
-               ! Once covariance matrix has been created just update based on a
-               ! single parameter set from each period.
-               ! Cardamom quirk : only last 1 or first, middle, and last 3 states out of the last
-               ! period of nadapt steps are used to
-               ! calculate running covariances.
-               ! This results in innacurate covariance estimates.
-               if (MCOUT%cov) then
-                  ACCLOC = 1  ! TODO this is really a different variable than ACCLOC
-                  PARSALL(1:npars, ACCLOC) = log_par2nor(PARS_previous, PI%parmin, PI%parmax, PI%paradj)
-                  ! leads to call to increment_covariance_matrix with the one new row
-               else if (ACCLOC > 3) then
+               ! Cardamom quirk : initial estimate comes from first, middle, and last 3 states out of the last
+               ! period of nadapt steps only.
+               ! then (new 2025) continue with all accepted samples from last period.
+               if (.not.MCOUT%cov .and. ACCLOC > 3) then
                   PARSALL(1:npars, 2) = PARSALL(1:npars, ceiling(ACCLOC*0.5d0))
                   PARSALL(1:npars, 3) = PARSALL(1:npars, ACCLOC)
                   ACCLOC = 3
@@ -519,7 +512,7 @@ contains
     !! Formerly adapt_step_size, this function is central to the adaptive method from Roberts and Rosenthal 2009
     !! which adjusts proposal step size proportional to observed variances/covariances.
     !! three CARDAMOM quirks here :  1) only accepted steps were recorded, not repeat entries for non-accepted steps
-    !!                             2) update_statistics is passed only first or first, middle, and last rows instead of whole history, extremely limnited covariance estimate
+    !!                             2) initial update_statistics is passed only first or first, middle, and last rows
     !!                               3) Modified increment_covariance_matrix call with artificially low 4th argument means more
     !!                                distant history is downweighted
       use samplers_math, only: cholesky_factor, covariance_matrix, &
