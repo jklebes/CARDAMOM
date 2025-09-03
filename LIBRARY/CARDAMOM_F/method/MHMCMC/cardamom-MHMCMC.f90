@@ -281,7 +281,7 @@ contains
       ! to multivariate proposal.
       ! NOTE 1: 2.38/sqrt(npars) sometimes used when applied to the Cholesky factor
       ! NOTE 2: 2.381204**2 = 5.670132
-      opt_scaling = MCO%opt_scaling_const/dble(PI%npars)
+      opt_scaling = sqrt(MCO%opt_scaling_const/dble(PI%npars))
 
       if (MCO%restart) then
          ! For aborted simulations
