@@ -429,7 +429,7 @@ contains
             ACCRATE = ACCLOC/dble(MCO%nadapt)
 
             ! Second, are we still in the adaption phase?
-            if (burn_in_period > ITER .or. (ACC_first/ITER) < 0.05d0 .or. .not. MCOUT%use_multivariate) then
+            if (burn_in_period > ITER .or. .not. MCOUT%use_multivariate) then
 
                ! Cardamom quirk : initial estimate comes from first, middle, and last 3 states out of the last
                ! period of nadapt steps only.
