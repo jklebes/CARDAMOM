@@ -23,7 +23,7 @@ implicit none
       integer:: nwrite = 1000
       integer:: nprint = 1000
       integer:: nout
-      real:: P_target  
+      double precision:: P_target = 0d0 
       !! termination criterion-a loglikelihood to stop at (optional)
 !> file names
       character(350):: outfile = "parout.txt"
