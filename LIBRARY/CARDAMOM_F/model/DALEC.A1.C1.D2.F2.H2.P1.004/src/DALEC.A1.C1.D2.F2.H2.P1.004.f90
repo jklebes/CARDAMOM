@@ -1336,9 +1336,9 @@ type(model_working_variables), allocatable, dimension(:):: mVs
     acm_gpp_stage_2 = mV%light_limited_photosynthesis*pd/(mV%light_limited_photosynthesis+pd)
 
     ! Estimate ci as a function of the final combined GPP estimate
-    !pp = acm_gpp_stage_2*rc; mult = co2+qq-pp
-    !! calculate internal CO2 concentration (ppm or umol/mol)
-    !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+    pp = acm_gpp_stage_2*rc; mult = mV%co2+qq-pp
+    ! calculate internal CO2 concentration (ppm or umol/mol)
+    mV%ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(mV%co2*qq-pp*mv%co2_comp_point)))
 
     ! sanity check
     if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
@@ -2094,9 +2094,13 @@ type(model_working_variables), allocatable, dimension(:):: mVs
                 (canopy_iso_to_net_coef_SW * (mV%canopy_swrad_MJday*1d6*seconds_per_day_1)) + &
                 canopy_iso_to_net_const
     mV%canopy_lwrad_Wm2 = mV%canopy_lwrad_Wm2+delta_iso
-    ! Estimate the mean leaf temperature as a result of net radiation update
-    mV%leafT = (((((canopy_loss+canopy_loss) - delta_iso) / (canopy_release_fraction*2d0)) &
-             / emiss_boltz) ** (0.25d0)) - freeze
+    ! Estimate the mean leaf temperature as a result of net radiation update.
+    ! This can only be attempted if the canopy release fraction (an empirical fit) is greater than
+    ! zero. Otherwise the leafT defaults to infinity which is unrealistic.
+    if (canopy_release_fraction > 0d0) then
+      mV%leafT = (((((canopy_loss+canopy_loss) - delta_iso) / (canopy_release_fraction*2d0)) &
+               / emiss_boltz) ** (0.25d0)) - freeze
+    end if 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -2439,36 +2443,37 @@ type(model_working_variables), allocatable, dimension(:):: mVs
     ! Turn the output resistance into conductance
     Rcond_layer = Rcond_layer**(-1d0)
 
-    ! if freezing then assume soil surface is frozen, therefore no water flux
-    if (mV%soilT < 1d0) then
+    ! If freezing then assume soil surface is frozen, therefore no water flux
+    if (mv%soilT < 1d0) then
         mV%water_flux_mmolH2Om2s(1) = 0d0
         Rcond_layer(1) = 0d0
     end if
 
-    ! calculate sum value (mmolH2O.m-2.s-1)
+    ! Calculate sum value (mmolH2O.m-2.s-1)
     mV%total_water_flux = sum(mV%water_flux_mmolH2Om2s)
-    ! calculate effective resistance
+    ! Calculate effective resistance
     ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf/NaN
     ! through the model structure/
     mV%Reff = min(1d6, sum(mV%conductance_mmolH2OMPam2s)**(-1d0))
-
-    ! wSWP based on the conductance due to the roots themselves.
-    ! The idea being that the plant may hedge against growth based on the majority of the
-    ! profile being dry while not losing leaves within some toleration.
-    ! TODO sometimes divide by zero
-    mV%rSWP = sum(mV%SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
-    mV%rSWP = 0.00001
     if (mV%total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         mV%uptake_fraction = (mV%layer_thickness(1:nos_root_layers) / sum(mV%layer_thickness(1:nos_root_layers)))
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         mV%wSWP = sum(mV%SWP(1:nos_root_layers) * mV%uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! However, similar to the wSWP we need a special case calculation 
+        ! when there is no extraction from the soil. Here we use the ratio of root mass itself.
+        mV%rSWP = sum(mV%SWP(1:rooted_layer) * (root_mass(1:rooted_layer) / sum(root_mass(1:rooted_layer))))
         mV%total_water_flux = 0d0
       else
         ! calculate weighted SWP and uptake fraction
         mV%uptake_fraction(1:nos_root_layers) = mV%water_flux_mmolH2Om2s(1:nos_root_layers) / mV%total_water_flux
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         mV%wSWP = sum(mV%SWP(1:nos_root_layers) * mV%uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! The idea being that the plant may hedge against growth based on the majority of the
+        ! profile being dry while not losing leaves within some toleration.
+        mV%rSWP = sum(mV%SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
     endif
 
     ! and return
