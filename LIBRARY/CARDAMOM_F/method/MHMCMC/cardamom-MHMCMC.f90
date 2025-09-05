@@ -452,7 +452,6 @@ contains
                endif
 
             end if !  have enough parameter been accepted
-            ! TODO what if MCO%use_multivariate ???
 
             ! resets the local acceptance counter
             ACCLOC = 0
@@ -544,8 +543,6 @@ contains
 
          cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
-!        call increment_covariance_matrix(PARSALL(1:PI%npars, 1:nint(N%ACCLOC)), PI%meanpar, PI%npars &
-!                                        ,PI%Nparvar, nint(N%ACCLOC), PI%covariance)
          ! Have started hardcoding a maximum number of observations to be N_before_mv_target.
          ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
          ! this allows for the covariance matrix to be more responsive to its local environment.
@@ -558,6 +555,7 @@ contains
          ! Calculate the cholesky factor as this includes a determination of
          ! whether the covariance matrix is positive definite.
          cholesky = MCOUT%covariance
+! caution: writes to its second argument, in addition to checkinng positive definiteness
          call cholesky_factor(npars, cholesky, info)
          ! If the updated covariance matrix is not positive definite we should
          ! reject the update in favour of the existing matrix
@@ -565,14 +563,6 @@ contains
             ! Set multivariate sampling to true
             use_multivariate = .true.
             MCOUT%Nparvar = Nparvar_local
-            if (.not. MCOUT%covariance(1, 1) > 0.0d0) then
-               write(*,*) MCOUT%covariance(1, 1)
-               write(*,*) PARSALL(:, 1:ACCLOC)
-               write(*,*) MCOUT%meanpar
-               write(*,*) npars, Nparvar_local, ACCLOC
-               write(*,*) cov_backup(1, 1)
-               stop 1
-            end if
          else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive
