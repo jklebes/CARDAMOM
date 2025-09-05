@@ -12,7 +12,7 @@ set(FILES2
                   general/model_likelihood_wrapper.f90
                   #general/wrappers_for_R.f90
                   general/cardamom_main_utils.f90
-                  general/MHMCMC_StressTests.f90
+                  #general/MHMCMC_StressTests.f90
                   #general/stresstest_wrappers_for_R.f90
                 )
 set(MODELLIKELIHOODFILE

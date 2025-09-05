@@ -53,7 +53,7 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public:: model_likelihood, scaled_model_likelihood, edc_model_likelihood
+  public:: model_likelihood, scaled_model_likelihood, edc_model_likelihood, model_sanity_check, sanity_check
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -185,6 +185,7 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     ! Compare outputs
     flux_error = sum(abs(M_FLUXES-local_fluxes))
     pool_error = sum(abs(M_POOLS-local_pools))
+    !write(*,*) "mpools", m_pools
     diags_error = sum(abs(M_DIAGS-local_diags))
     ! If error between runs exceeds precision error then we have a problem
     if (diags_error > (tiny(0d0)*(DATAin%nodiags*DATAin%nodays)) .or. &
@@ -399,7 +400,7 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                  C_etol = 0.20d0,    & ! 0.20d0 lots of AGB  ! 0.10d0 global/site more data  ! 0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.10d0,    & ! 0.20d0 lots of AGB  ! 0.10d0 global/site more data  ! 0.05d0 global 1 or 2 AGB estimates
                                 H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
@@ -542,26 +543,6 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
         EDC2 = 0d0; EDCD%PASSFAIL(10) = 0
     end if
 
-!    ! Specific for dealing with needleleaf forests in the northern hemisphere.
-!    ! Assesses whether the mean LAI in the summer months (June, July, August)
-!    ! is greater than the mean outwith. This ensures the peak LAI in the season
-!    ! is summer time.
-!    if ((EDC2 == 1 .or. DIAG == 1)) then
-!        ! Set values for vectors used to select summer vs non-summer time points.
-!        tmp1 = 0d0; tmp2 = 1d0
-!        ! Where condition sets tmp1 == 1 for days of year for JJA
-!        where (met(6, :) > 150d0 .and. met(6, :) < 245d0) tmp1 = 1d0
-!        ! As tmp2 initially == 1, by subtracting tmp1 that means tmp2 will have value 0
-!        ! during summer but 1 elsewhere
-!        tmp2 = tmp2-tmp1
-!        ! Which means we can filter the LAI timeseries by multiplying by tmp1 and tmp2.
-!        ! The sum of each of these variables is also conveniently the number of values to 
-!        ! be averaged over.
-!        if (sum(M_LAI*tmp1) / sum(tmp1) < sum(M_LAI*tmp2) / sum(tmp2)) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(10) = 0
-!        end if 
-!    end if
-
     ! Equilibrium factor (in comparison with initial conditions)
 !    EQF = 10d0  ! TLS 06/11/2019  ! 10d0  ! JFE replaced 10 by 2-27/06/2018
     ! Pool exponential decay tolerance
@@ -632,29 +613,16 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
 !               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
 !           ! Restrict rates from deviating unrealistically from the mean
-!!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!!           end if
 !           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
 !                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
 !               EDC2 = 0d0; EDCD%PASSFAIL(30+n-1) = 0
 !           end if
-!           ! Restrict exponential behaviour at initialisation
-!           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!           !    EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!           !end if
 !        end do
-        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
+!        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 2
 !        ! Restrict mean rates of increase
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
-!        ! Restrict rates from deviating unrealistically from the mean
-!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(30+n-1) = 0
 !        end if
 !        ! Restrict exponential behaviour at initialisation         
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
@@ -671,10 +639,6 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
             EDC2 = 0d0; EDCD%PASSFAIL(30+n-1) = 0
         end if
-!        ! Restrict exponential behaviour at initialisation         
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
 !        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
@@ -687,43 +651,27 @@ double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
                EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
                EDC2 = 0d0; EDCD%PASSFAIL(30+n-1) = 0
            end if
-!           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!               EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!           end if
         end do
 
         ! Water pool(s)
         n = 7  ! surface water pool
         ! Restrict rates of increase
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
             EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Restrict rates from deviating unrealistically from the mean
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!             EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
             EDC2 = 0d0; EDCD%PASSFAIL(30+n-1) = 0
         end if
-!        ! Restrict exponential behaviour at initialisation
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
-!            EDC2 = 0d0; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
 
     end if  ! EDC2 == 1 .or. DIAG == 1
 

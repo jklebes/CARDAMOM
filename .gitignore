@@ -25,7 +25,6 @@ LIBRARY/zbrent-testcompile/
 examine/
 **/*.RData
 *notes*.md
-test/data/
 doc/
 **/*_editted
 gprof*

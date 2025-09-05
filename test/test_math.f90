@@ -49,9 +49,9 @@ function approx(a, b, rel_tol) result(eq)
     rel_tol_ = rel_tol
   endif 
   ! check close to zero
-  if (a == 0d0) then 
+  if (abs(a) <= epsilon(0d0)) then 
     eq = (abs(b) <= epsilon(0d0))
-  else if (b == 0d0) then
+  else if (abs(b) <= epsilon(0d0)) then
     eq = (abs(a) <= epsilon(0d0))
   else 
   ! else check relative difference
@@ -75,11 +75,11 @@ subroutine test_par2nor(error)
   type(error_type), allocatable, intent(out):: error
   double precision, dimension(npars):: pars_norm, pars2
   integer:: i
-  pars_norm = par2nor(npars, pars1, parmin, parmax)
+  pars_norm = par2nor( pars1, parmin, parmax)
   ! expect values between 0 and 1
   call check(error, all(pars_norm >= 0d0) .and. all(pars_norm <= 1d0))
   ! try converting back 
-  pars2 = nor2par(npars, pars_norm, parmin, parmax)
+  pars2 = nor2par(pars_norm, parmin, parmax)
   ! expect approximately equal to the original
   call check(error, all ([(approx(pars1(i), pars2(i)), i = 1, npars)] ))
 end subroutine 
@@ -90,7 +90,7 @@ subroutine test_nor2par(error)
   type(error_type), allocatable, intent(out):: error
   double precision, dimension(npars):: pars_real
   integer:: i
-  pars_real = nor2par(npars, pars_norm1, parmin, parmax)
+  pars_real = nor2par(pars_norm1, parmin, parmax)
   ! expect values in bounds parmin, parmax
   call check(error, all(pars_real >= parmin) .and. all(pars_real <= parmax))
 end subroutine 
@@ -101,11 +101,11 @@ subroutine test_log_par2nor(error)
   type(error_type), allocatable, intent(out):: error
   double precision, dimension(npars):: pars_norm, pars2
   integer:: i
-  pars_norm = log_par2nor(npars, pars1, parmin, parmax, paradj)
+  pars_norm = log_par2nor(pars1, parmin, parmax, paradj)
   ! expect values between 0 and 1
   call check(error, all(pars_norm >= 0d0) .and. all(pars_norm <= 1d0))
   ! try converting back 
-  pars2 = log_nor2par(npars, pars_norm, parmin, parmax, paradj)
+  pars2 = log_nor2par(pars_norm, parmin, parmax, paradj)
   ! expect approximately equal to the original
   call check(error, all ([(approx(pars1(i), pars2(i)), i = 1, npars)] ))
 end subroutine 
@@ -115,7 +115,7 @@ subroutine test_log_nor2par(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   double precision, dimension(npars):: pars_real
-  pars_real = log_nor2par(npars, pars_norm1, parmin, parmax, paradj)
+  pars_real = log_nor2par(pars_norm1, parmin, parmax, paradj)
   ! expect values in bounds parmin, parmax
   call check(error, all(pars_real >= parmin) .and. all(pars_real <= parmax))
 end subroutine 

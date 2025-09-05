@@ -46,26 +46,18 @@ module cardamom_io
   private
 
   ! allow access to specific functions
-  public::  update_for_restart_simulation   &
-           ,update_obs_scaling_normal       &
+  public::  update_obs_scaling_normal       &
            ,update_obs_scaling_nsamples     &
            ,update_obs_scaling_sqrt_nsamples&
            ,update_obs_scaling_log_nsamples &
-           ,check_for_existing_output_files &
            ,open_output_files               &
-           ,close_output_files              &
            ,cardamom_model_library          &
            ,read_options                    &
            ,read_binary_data                &
            ,initialize
 
-  ! allow access to needed variable
-  public:: restart_flag
-
   ! declare module level variables
   integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
-  ! default assumption is that this is not a restart fun
-  logical:: restart_flag = .false.
 
   ! parameters
   integer, parameter:: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision
@@ -307,92 +299,6 @@ module cardamom_io
   end subroutine cardamom_model_library
   !
   !------------------------------------------------------------------
-  !
-  subroutine check_for_existing_output_files(npars, nOUT, nWRITE, sub_fraction &
-                                            ,parname, stepname, covname, covinfoname)
-
-    ! subroutine checks whether both the parameter and step files exist for this
-    ! job. If they do we will assume that this is a restart job that we want to
-    ! finish off. Important for large jobs or running on machines with may crash
-    ! / have runtime limits
-    implicit none
-    ! declare input variables
-    integer, intent(in):: npars, nOUT, nWRITE
-    double precision, intent(in):: sub_fraction
-    character(350), intent(in):: parname, stepname, covname, covinfoname
-    ! local variables
-    logical:: par_exists, step_exists, cov_exists, covinfo_exists
-    double precision:: dummy
-    integer:: num_lines, status
-
-    ! Check that all files exist
-    inquire(file = trim(parname),     exist = par_exists)
-    inquire(file = trim(stepname),    exist = step_exists)
-    inquire(file = trim(covname),     exist = cov_exists)
-    inquire(file = trim(covinfoname), exist = covinfo_exists)
-
-    ! now determine the correct response
-    if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
-
-        ! All files exist therefore this might be a restart run.
-        ! lets see if there is anything in the files that we might use
-        ! count the number of remaining lines in the file..
-        ! open the relevant output files
-        call open_output_files(parname, stepname, covname, covinfoname)
-        status = 0; num_lines = 0
-        do
-          read(pfile_unit, iostat = status) dummy
-          if ( status .ne. 0 ) exit
-          num_lines = num_lines+1
-        enddo
-        ! Re-use dummy to calculate the target file size to be considered for
-        ! restart
-        dummy = ((dble(nOUT)/dble(nWRITE)) * sub_fraction) * dble(npars+1)
-        if (num_lines > dummy) then
-            ! Then there is something in the file we we can use it
-            restart_flag = .true.
-            print*,"...have found parameter file = ",trim(parname)
-            print*,"...have found step file = ",trim(stepname)
-            print*,"...have found cov file = ",trim(covname)
-            print*,"...have found cov_info file = ",trim(covinfoname)
-        else
-            ! The file exists but is empty/no enough so treat it as a fresh start
-            restart_flag = .false.
-            print*,"Output files are present, however they are too small for a restart"
-        endif
-        ! Either way we open the file up later on so now we need to close them
-        call close_output_files
-
-    else  ! par_exists .and. step_exists
-
-        ! Then or of these files exists and the other does not so it is
-        ! ambiguous whether or not this is a restart
-        print*,"One or more of the analysis files cannot be found."
-        print*,"CARDAMOM must start from scratch... "
-        restart_flag = .false.
-
-    endif  ! par_exists .and. step_exists
-
-  end subroutine check_for_existing_output_files
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine close_output_files
-
-    ! where you open a file you've got to make sure that you close them too. It
-    ! just tidy
-
-    implicit none
-
-    ! close the files we have in memory
-    close(pfile_unit)
-    close(sfile_unit)
-    close(cfile_unit)
-    close(cifile_unit)
-
-  end subroutine close_output_files
-  !
-  !--------------------------------------------------------------------
   !
   subroutine open_output_files(parname, stepname, covname, covinfoname)
 
@@ -970,7 +876,7 @@ module cardamom_io
 
    subroutine initialize(infile)  ! formerly read_pari_data
       ! 3 steps must be called in this order
-      use cardamom_structures, only: DATA_type, set_datain
+      use cardamom_structures, only: DATA_type, set_datain, set_datain_original
       use model_shared, only: initialize_parinfo
       implicit none
       character(350), intent(in):: infile
@@ -979,6 +885,9 @@ module cardamom_io
       call initialize_parinfo()  ! TODO not really a file reading thing
       call read_check_binary_data(infile, DATAin)
       call initialize_model(DATAin)
+      ! Save the DATAin from file to cardamom_structures : DATAin_original
+      call set_datain_original(DATAin)
+      ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
       call set_datain(DATAin)
    end subroutine
 
@@ -1050,8 +959,8 @@ module cardamom_io
    end subroutine
   !------------------------------------------------------------------
   !
-  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO, MCOUT)
-    use cardamom_MHMCMC, only: MCMC_OPTIONS, MCMC_OUTPUT
+  subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
+    use cardamom_MHMCMC, only: MCMC_OPTIONS
 
     ! loads required options about the MHMCMC either form hardcoded sources or
     ! from variables which were read form the command line
@@ -1062,7 +971,6 @@ module cardamom_io
     character(350), intent(in):: outfile
     integer, intent(in):: solutions_wanted, freq_print, freq_write
     class(MCMC_OPTIONS), intent(out):: MCO
-    type(MCMC_OUTPUT), intent(inout):: MCOUT
 
 
     ! defining hardcoded MCMC options
@@ -1100,7 +1008,7 @@ module cardamom_io
     ! Assume that sub-sampling process, if completed, will use 10 % of the
     ! simulation time therefore we want to adjust the output frequency to
     ! correct for this
-    MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
+    ! MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
     ! construct file names
     write(MCO%outfile, fmt='(A)')trim(outfile)//"PARS"
@@ -1112,202 +1020,16 @@ module cardamom_io
   !
   !-------------------------------------------------------------------
   !
-   subroutine update_for_restart_simulation(MCO, MCOUT)
-    !! subroutine is responsible for loading previous parameter and step size
-    !! information into the current
-    !! modifies: arg MCOUT%pars. To be used as starting point for next run.
-      use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS
-      use model_shared, only: PI
-      use cardamom_structures, only: DATAin  ! read-only
-      use math_functions, only: std, covariance_matrix, inverse_matrix, par2nor
-
-      implicit none
-
-      ! local variables
-      class(MCMC_OPTIONS), intent(inout):: MCO
-      type(MCMC_OUTPUT), intent(inout):: MCOUT
-      integer:: a, b, c, i, j, num_lines, status
-      double precision:: dummy
-      double precision, dimension(:, :), allocatable:: tmp
-
-      ! the parameter and step files should have already been openned so
-      ! read the parameter and step files to get to the end
-
-      ! rewind to the beginning
-      rewind (pfile_unit); rewind (sfile_unit); rewind (cifile_unit)
-
-      !
-      ! As this subroutine will only be called once reading each file will occur
-      ! separately to improve simplicity.
-      !
-
-      !
-      ! Parameter file-stored as non-normalised values
-      !
-
-      ! count the number of lines in the file..
-      status = 0; num_lines = 0
-      do
-         read (pfile_unit, iostat = status) dummy
-         if (status .ne. 0) exit
-         num_lines = num_lines+1
-      end do
-      ! Determine the number of complete parameter vectors stored. Note that the +
-      ! 1 is due to the log-likelihood score being saved as well.
-      num_lines = num_lines/(DATAin%nopars+1)
-
-      ! Allocate memory to our temperary variable and the normalised parameter
-      ! vector equivalent.
-      allocate (tmp(num_lines, (DATAin%nopars+1)))
-      ! rewind so that we can read the contents now correctly
-      rewind (pfile_unit)
-
-      ! Read the data for real
-      do i = 1, num_lines
-         do j = 1, (DATAin%nopars+1)
-            read (pfile_unit) tmp(i, j)
-         end do  ! j for parameter
-      end do  ! i for combinations
-
-      ! Determine the total number of iterations processed so far
-      MCOUT%nos_iterations = num_lines*MCO%nWRITE
-      ! Extract the final parameter set and load into the initial parameter vector
-      ! for the analysis. NOTE: This parameter set will be normalised on entry
-      ! into the MHMCMC subroutine
-      MCOUT%pars = tmp(num_lines, 1:DATAin%nopars)
-
-      ! free up variable for new file
-      deallocate (tmp)
-
-      !
-      ! Variance file-stores output of the current parameter variance
-      !
-
-      ! count the number of remaining lines in the file..
-      status = 0; num_lines = 0
-      do
-         read (sfile_unit, iostat = status) dummy
-         if (status .ne. 0.) exit
-         num_lines = num_lines+1
-      end do
-
-      ! Determine the number of actual stepsize vectors present.
-      ! The+1 is due to the local acceptance rate being provided too.
-      num_lines = num_lines/(DATAin%nopars+1)
-      ! allocate memory
-      allocate (tmp(num_lines, (DATAin%nopars+1)))
-      ! rewind, for actual reading
-      rewind (sfile_unit)
-
-      ! now read the data for real
-      do i = 1, num_lines
-         do j = 1, (DATAin%nopars+1)
-            read (sfile_unit) tmp(i, j)
-         end do  ! j for parameter
-      end do  ! i for combinations
-      ! Save the current acceptance_rate
-      MCOUT%acceptance_rate = MCOUT%nos_iterations*MCO%nWRITE
-
-      ! tidy up for the next file
-      deallocate (tmp)
-
-      !
-      ! Covariance matrix file
-      !
-
-      ! The covariance matrix may contain either 1 or 2 complete matrices. We will
-      ! just want to the latest one.
-
-      ! count the number of remaining lines in the file..
-      status = 0; num_lines = 1
-      do
-         read (cfile_unit, iostat = status, rec = num_lines) dummy
-         if (status .ne. 0.) exit
-         num_lines = num_lines+1
-      end do
-
-      ! Determine whether there is 1 or more matrice here
-      if ((num_lines/DATAin%nopars)/DATAin%nopars == 1) then
-         ! the size of the file is consistent with a single matrix having been
-         ! saved
-         a = 1
-      else if ((num_lines/DATAin%nopars)/DATAin%nopars == 2) then
-         !
-         a = 2
-      else
-         ! something has gone wrong-best stop
-         print *, "Error reading COV file"
-         print *, "DATAin%nopars = ", DATAin%nopars, "COV length = ", num_lines*DATAin%nopars
-         stop
-      end if
-
-      ! now read the data for real
-      c = 1
-      do b = 1, a
-         do i = 1, DATAin%nopars
-            do j = 1, DATAin%nopars
-               read (cfile_unit, rec = c) MCOUT%covariance(i, j)
-               c = c+1
-            end do  ! j for parameter
-         end do  ! i for combinations
-      end do
-
-      ! extract current variance information
-      do i = 1, PI%npars
-         MCOUT%parvar(i) = MCOUT%covariance(i, i)
-      end do
-      ! estimate status of the inverse covariance matrix-iC never used
-      ! call inverse_matrix( PI%npars, MCOUT%covariance, PI%iC )
-
-      !
-      ! Covariance information file
-      !
-
-      ! The number of parameters on which the covariance matrix is based must be
-      ! known to allow for correct updating. Similarly the mean normalised
-      ! parameter values are also needed
-
-      ! count the number of remaining lines in the file..
-      status = 0; num_lines = 0
-      do
-         read (cifile_unit, iostat = status) dummy
-         if (status .ne. 0.) exit
-         num_lines = num_lines+1
-      end do
-
-      ! how many parameter vectors have been output. Note the+1 is accounting
-      ! for the number of samples underlying the mean
-      num_lines = num_lines/(PI%npars+1)
-      ! allocate memory
-      allocate (tmp(num_lines, (DATAin%nopars+1)))
-      ! rewind, for actual reading
-      rewind (cifile_unit)
-
-      ! now read the data for real
-      do i = 1, num_lines
-         do j = 1, (DATAin%nopars+1)
-            read (cifile_unit) tmp(i, j)
-         end do  ! j for parameter
-      end do  ! i for combinations
-      ! Store the most recent step size, which corresponds with the saved
-      ! parmeters (above) and covariance matrix (below)
-      MCOUT%meanpar = tmp(num_lines, 1:DATAin%nopars)
-      MCOUT%Nparvar = tmp(num_lines, DATAin%nopars+1)
-
-      return
-
-   end subroutine update_for_restart_simulation
-
      !
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_normal
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
       ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
       ! - but I made it requires more deliberate steps to stop accidental updates
       ! from concurrent parts
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case set all to one where the weight of each
@@ -1345,36 +1067,36 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sample size
     ! giving equal weight to each datastream
 
-    DATAin_tmp%GPP_scaling               = 1d0/dble(DATAin%ngpp)
-    DATAin_tmp%NEE_scaling               = 1d0/dble(DATAin%nnee)
-    DATAin_tmp%Fire_scaling              = 1d0/dble(DATAin%nfire)
-    DATAin_tmp%LAI_scaling               = 1d0/dble(DATAin%nlai)
-    DATAin_tmp%Cwood_inc_scaling         = 1d0/dble(DATAin%nCwood_inc)
-    DATAin_tmp%Cwood_growth_scaling      = 1d0/dble(DATAin%nCwood_growth)
-    DATAin_tmp%Cwood_mortality_scaling   = 1d0/dble(DATAin%nCwood_mortality)
-    DATAin_tmp%foliage_to_litter_scaling = 1d0/dble(DATAin%nfoliage_to_litter)
-    DATAin_tmp%Reco_scaling              = 1d0/dble(DATAin%nreco)
-    DATAin_tmp%Cfol_stock_scaling        = 1d0/dble(DATAin%nCfol_stock)
-    DATAin_tmp%Cwood_stock_scaling       = 1d0/dble(DATAin%nCwood_stock)
-    DATAin_tmp%Croots_stock_scaling      = 1d0/dble(DATAin%nCroots_stock)
-    DATAin_tmp%Csom_stock_scaling        = 1d0/dble(DATAin%nCsom_stock)
-    DATAin_tmp%Cagb_stock_scaling        = 1d0/dble(DATAin%nCagb_stock)
-    DATAin_tmp%Clit_stock_scaling        = 1d0/dble(DATAin%nClit_stock)
-    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/dble(DATAin%nCcoarseroot_stock)
-    DATAin_tmp%Evap_scaling              = 1d0/dble(DATAin%nEvap)
-    DATAin_tmp%SWE_scaling               = 1d0/dble(DATAin%nSWE)
-    DATAin_tmp%NBE_scaling               = 1d0/dble(DATAin%nnbe)
-    DATAin_tmp%fAPAR_scaling             = 1d0/dble(DATAin%nfAPAR)
-    DATAin_tmp%harvest_scaling           = 1d0/dble(DATAin%nharvest)
-    DATAin_tmp%soilwater_scaling         = 1d0/dble(DATAin%nsoilwater)
+    DATAin_tmp%GPP_scaling               = 1d0/dble(DATAin_original%ngpp)
+    DATAin_tmp%NEE_scaling               = 1d0/dble(DATAin_original%nnee)
+    DATAin_tmp%Fire_scaling              = 1d0/dble(DATAin_original%nfire)
+    DATAin_tmp%LAI_scaling               = 1d0/dble(DATAin_original%nlai)
+    DATAin_tmp%Cwood_inc_scaling         = 1d0/dble(DATAin_original%nCwood_inc)
+    DATAin_tmp%Cwood_growth_scaling      = 1d0/dble(DATAin_original%nCwood_growth)
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0/dble(DATAin_original%nCwood_mortality)
+    DATAin_tmp%foliage_to_litter_scaling = 1d0/dble(DATAin_original%nfoliage_to_litter)
+    DATAin_tmp%Reco_scaling              = 1d0/dble(DATAin_original%nreco)
+    DATAin_tmp%Cfol_stock_scaling        = 1d0/dble(DATAin_original%nCfol_stock)
+    DATAin_tmp%Cwood_stock_scaling       = 1d0/dble(DATAin_original%nCwood_stock)
+    DATAin_tmp%Croots_stock_scaling      = 1d0/dble(DATAin_original%nCroots_stock)
+    DATAin_tmp%Csom_stock_scaling        = 1d0/dble(DATAin_original%nCsom_stock)
+    DATAin_tmp%Cagb_stock_scaling        = 1d0/dble(DATAin_original%nCagb_stock)
+    DATAin_tmp%Clit_stock_scaling        = 1d0/dble(DATAin_original%nClit_stock)
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/dble(DATAin_original%nCcoarseroot_stock)
+    DATAin_tmp%Evap_scaling              = 1d0/dble(DATAin_original%nEvap)
+    DATAin_tmp%SWE_scaling               = 1d0/dble(DATAin_original%nSWE)
+    DATAin_tmp%NBE_scaling               = 1d0/dble(DATAin_original%nnbe)
+    DATAin_tmp%fAPAR_scaling             = 1d0/dble(DATAin_original%nfAPAR)
+    DATAin_tmp%harvest_scaling           = 1d0/dble(DATAin_original%nharvest)
+    DATAin_tmp%soilwater_scaling         = 1d0/dble(DATAin_original%nsoilwater)
 
     call set_datain(DATAin_tmp)
 
@@ -1385,9 +1107,9 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_sqrt_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp  
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sqrt of the 
@@ -1395,28 +1117,28 @@ module cardamom_io
     ! to contribute more to the lost function but penalised to reduce 
     ! bias' introduced by unbalanced observations
 
-    DATAin_tmp%GPP_scaling               = 1d0/sqrt(dble(DATAin%ngpp))
-    DATAin_tmp%NEE_scaling               = 1d0/sqrt(dble(DATAin%nnee))
-    DATAin_tmp%Fire_scaling              = 1d0/sqrt(dble(DATAin%nfire))
-    DATAin_tmp%LAI_scaling               = 1d0/sqrt(dble(DATAin%nlai))
-    DATAin_tmp%Cwood_inc_scaling         = 1d0/sqrt(dble(DATAin%nCwood_inc))
-    DATAin_tmp%Cwood_growth_scaling      = 1d0/sqrt(dble(DATAin%nCwood_growth))
-    DATAin_tmp%Cwood_mortality_scaling   = 1d0/sqrt(dble(DATAin%nCwood_mortality))
-    DATAin_tmp%foliage_to_litter_scaling = 1d0/sqrt(dble(DATAin%nfoliage_to_litter))
-    DATAin_tmp%Reco_scaling              = 1d0/sqrt(dble(DATAin%nreco))
-    DATAin_tmp%Cfol_stock_scaling        = 1d0/sqrt(dble(DATAin%nCfol_stock))
-    DATAin_tmp%Cwood_stock_scaling       = 1d0/sqrt(dble(DATAin%nCwood_stock))
-    DATAin_tmp%Croots_stock_scaling      = 1d0/sqrt(dble(DATAin%nCroots_stock))
-    DATAin_tmp%Csom_stock_scaling        = 1d0/sqrt(dble(DATAin%nCsom_stock))
-    DATAin_tmp%Cagb_stock_scaling        = 1d0/sqrt(dble(DATAin%nCagb_stock))
-    DATAin_tmp%Clit_stock_scaling        = 1d0/sqrt(dble(DATAin%nClit_stock))
-    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/sqrt(dble(DATAin%nCcoarseroot_stock))
-    DATAin_tmp%Evap_scaling              = 1d0/sqrt(dble(DATAin%nEvap))
-    DATAin_tmp%SWE_scaling               = 1d0/sqrt(dble(DATAin%nSWE))
-    DATAin_tmp%NBE_scaling               = 1d0/sqrt(dble(DATAin%nnbe))
-    DATAin_tmp%fAPAR_scaling             = 1d0/sqrt(dble(DATAin%nfAPAR))
-    DATAin_tmp%harvest_scaling           = 1d0/sqrt(dble(DATAin%nharvest))
-    DATAin_tmp%soilwater_scaling         = 1d0/sqrt(dble(DATAin%nsoilwater))
+    DATAin_tmp%GPP_scaling               = 1d0/sqrt(dble(DATAin_original%ngpp))
+    DATAin_tmp%NEE_scaling               = 1d0/sqrt(dble(DATAin_original%nnee))
+    DATAin_tmp%Fire_scaling              = 1d0/sqrt(dble(DATAin_original%nfire))
+    DATAin_tmp%LAI_scaling               = 1d0/sqrt(dble(DATAin_original%nlai))
+    DATAin_tmp%Cwood_inc_scaling         = 1d0/sqrt(dble(DATAin_original%nCwood_inc))
+    DATAin_tmp%Cwood_growth_scaling      = 1d0/sqrt(dble(DATAin_original%nCwood_growth))
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0/sqrt(dble(DATAin_original%nCwood_mortality))
+    DATAin_tmp%foliage_to_litter_scaling = 1d0/sqrt(dble(DATAin_original%nfoliage_to_litter))
+    DATAin_tmp%Reco_scaling              = 1d0/sqrt(dble(DATAin_original%nreco))
+    DATAin_tmp%Cfol_stock_scaling        = 1d0/sqrt(dble(DATAin_original%nCfol_stock))
+    DATAin_tmp%Cwood_stock_scaling       = 1d0/sqrt(dble(DATAin_original%nCwood_stock))
+    DATAin_tmp%Croots_stock_scaling      = 1d0/sqrt(dble(DATAin_original%nCroots_stock))
+    DATAin_tmp%Csom_stock_scaling        = 1d0/sqrt(dble(DATAin_original%nCsom_stock))
+    DATAin_tmp%Cagb_stock_scaling        = 1d0/sqrt(dble(DATAin_original%nCagb_stock))
+    DATAin_tmp%Clit_stock_scaling        = 1d0/sqrt(dble(DATAin_original%nClit_stock))
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0/sqrt(dble(DATAin_original%nCcoarseroot_stock))
+    DATAin_tmp%Evap_scaling              = 1d0/sqrt(dble(DATAin_original%nEvap))
+    DATAin_tmp%SWE_scaling               = 1d0/sqrt(dble(DATAin_original%nSWE))
+    DATAin_tmp%NBE_scaling               = 1d0/sqrt(dble(DATAin_original%nnbe))
+    DATAin_tmp%fAPAR_scaling             = 1d0/sqrt(dble(DATAin_original%nfAPAR))
+    DATAin_tmp%harvest_scaling           = 1d0/sqrt(dble(DATAin_original%nharvest))
+    DATAin_tmp%soilwater_scaling         = 1d0/sqrt(dble(DATAin_original%nsoilwater))
 
     call set_datain(DATAin_tmp)
     return
@@ -1426,9 +1148,9 @@ module cardamom_io
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_log_nsamples
-      use cardamom_structures, only: DATA_type, DATAin, set_datain
+      use cardamom_structures, only: DATA_type, DATAin_original, set_datain
       type(DATA_type):: DATAin_tmp
-    DATAin_tmp = DATAin
+    DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
     ! in this case are all normalised by the sqrt of the 
@@ -1436,28 +1158,28 @@ module cardamom_io
     ! to contribute more to the lost function but penalised to reduce 
     ! bias' introduced by unbalanced observations
 
-    DATAin_tmp%GPP_scaling               = 1d0 / (1d0+log(dble(DATAin%ngpp)))
-    DATAin_tmp%NEE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnee)))
-    DATAin_tmp%Fire_scaling              = 1d0 / (1d0+log(dble(DATAin%nfire)))
-    DATAin_tmp%LAI_scaling               = 1d0 / (1d0+log(dble(DATAin%nlai)))
-    DATAin_tmp%Cwood_inc_scaling         = 1d0 / (1d0+log(dble(DATAin%nCwood_inc)))
-    DATAin_tmp%Cwood_growth_scaling      = 1d0 / (1d0+log(dble(DATAin%nCwood_growth)))
-    DATAin_tmp%Cwood_mortality_scaling   = 1d0 / (1d0+log(dble(DATAin%nCwood_mortality)))
-    DATAin_tmp%foliage_to_litter_scaling = 1d0 / (1d0+log(dble(DATAin%nfoliage_to_litter)))
-    DATAin_tmp%Reco_scaling              = 1d0 / (1d0+log(dble(DATAin%nreco)))
-    DATAin_tmp%Cfol_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCfol_stock)))
-    DATAin_tmp%Cwood_stock_scaling       = 1d0 / (1d0+log(dble(DATAin%nCwood_stock)))
-    DATAin_tmp%Croots_stock_scaling      = 1d0 / (1d0+log(dble(DATAin%nCroots_stock)))
-    DATAin_tmp%Csom_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCsom_stock)))
-    DATAin_tmp%Cagb_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCagb_stock)))
-    DATAin_tmp%Clit_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nClit_stock)))
-    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0 / (1d0+log(dble(DATAin%nCcoarseroot_stock)))
-    DATAin_tmp%Evap_scaling              = 1d0 / (1d0+log(dble(DATAin%nEvap)))
-    DATAin_tmp%SWE_scaling               = 1d0 / (1d0+log(dble(DATAin%nSWE)))
-    DATAin_tmp%NBE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnbe)))
-    DATAin_tmp%fAPAR_scaling             = 1d0 / (1d0+log(dble(DATAin%nfAPAR)))
-    DATAin_tmp%harvest_scaling           = 1d0 / (1d0+log(dble(DATAin%nharvest)))
-    DATAin_tmp%soilwater_scaling         = 1d0 / (1d0+log(dble(DATAin%nsoilwater)))
+    DATAin_tmp%GPP_scaling               = 1d0 / (1d0+log(dble(DATAin_original%ngpp)))
+    DATAin_tmp%NEE_scaling               = 1d0 / (1d0+log(dble(DATAin_original%nnee)))
+    DATAin_tmp%Fire_scaling              = 1d0 / (1d0+log(dble(DATAin_original%nfire)))
+    DATAin_tmp%LAI_scaling               = 1d0 / (1d0+log(dble(DATAin_original%nlai)))
+    DATAin_tmp%Cwood_inc_scaling         = 1d0 / (1d0+log(dble(DATAin_original%nCwood_inc)))
+    DATAin_tmp%Cwood_growth_scaling      = 1d0 / (1d0+log(dble(DATAin_original%nCwood_growth)))
+    DATAin_tmp%Cwood_mortality_scaling   = 1d0 / (1d0+log(dble(DATAin_original%nCwood_mortality)))
+    DATAin_tmp%foliage_to_litter_scaling = 1d0 / (1d0+log(dble(DATAin_original%nfoliage_to_litter)))
+    DATAin_tmp%Reco_scaling              = 1d0 / (1d0+log(dble(DATAin_original%nreco)))
+    DATAin_tmp%Cfol_stock_scaling        = 1d0 / (1d0+log(dble(DATAin_original%nCfol_stock)))
+    DATAin_tmp%Cwood_stock_scaling       = 1d0 / (1d0+log(dble(DATAin_original%nCwood_stock)))
+    DATAin_tmp%Croots_stock_scaling      = 1d0 / (1d0+log(dble(DATAin_original%nCroots_stock)))
+    DATAin_tmp%Csom_stock_scaling        = 1d0 / (1d0+log(dble(DATAin_original%nCsom_stock)))
+    DATAin_tmp%Cagb_stock_scaling        = 1d0 / (1d0+log(dble(DATAin_original%nCagb_stock)))
+    DATAin_tmp%Clit_stock_scaling        = 1d0 / (1d0+log(dble(DATAin_original%nClit_stock)))
+    DATAin_tmp%Ccoarseroot_stock_scaling = 1d0 / (1d0+log(dble(DATAin_original%nCcoarseroot_stock)))
+    DATAin_tmp%Evap_scaling              = 1d0 / (1d0+log(dble(DATAin_original%nEvap)))
+    DATAin_tmp%SWE_scaling               = 1d0 / (1d0+log(dble(DATAin_original%nSWE)))
+    DATAin_tmp%NBE_scaling               = 1d0 / (1d0+log(dble(DATAin_original%nnbe)))
+    DATAin_tmp%fAPAR_scaling             = 1d0 / (1d0+log(dble(DATAin_original%nfAPAR)))
+    DATAin_tmp%harvest_scaling           = 1d0 / (1d0+log(dble(DATAin_original%nharvest)))
+    DATAin_tmp%soilwater_scaling         = 1d0 / (1d0+log(dble(DATAin_original%nsoilwater)))
 
     call set_datain(DATAin_tmp)
     return

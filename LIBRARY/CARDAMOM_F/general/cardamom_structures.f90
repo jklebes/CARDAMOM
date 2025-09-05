@@ -4,7 +4,7 @@
 ! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh,
+! Copyright (C) 2024  University of Edinburgh, 
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
@@ -43,7 +43,7 @@ module cardamom_structures
 
    private
 
-   public:: data_type, DATAin, set_datain, emulator_parameters, emulator_pars
+   public:: data_type, DATAin, DATAin_original, set_datain, set_datain_original, emulator_parameters, emulator_pars
 
    type DATA_type
 
@@ -239,7 +239,14 @@ module cardamom_structures
          , otherpriorweight   ! other prior weighting
 
    end type  ! DATA_type
-   type(DATA_type), protected, save:: DATAin  ! Cannot not have all parallel threads writing model calculation intermediate values to this
+   
+   ! These are protected so it's not possible to write to individual elements, 
+   ! accidentally by using DATAin arrays as model calculation working variables.
+   ! They can only be set via copy constructor set_DATAin, set_DATAin_original
+   type(DATA_type), protected, save:: DATAin_original 
+     !! Saving a copy of DATAin as initially read from file, to never change or scale 
+   type(DATA_type), protected, save:: DATAin  
+     !! DATAin to reference thoughtout the simulation phase-may hold a scaled version
    ! shared object !  Protected (read-only), can only be set via set_datain
 
    type emulator_parameters
@@ -260,10 +267,18 @@ module cardamom_structures
    type(emulator_parameters), protected, save:: emulator_pars  ! TODO make sure not shared, or read-only
 contains
 
+   subroutine set_datain_original(datain_source)
+      !! A setter, copying the argument to cardamom_structures:: DATAin_original
+      !! The central DATAin in module cardamom_structures can ONLY be set by the constructor, 
+      !! this ensures that no model calculations are writing to its elements from different parallel threads
+      type(DATA_type), intent(in):: datain_source
+      DATAin_original = datain_source
+   end subroutine set_datain_original
+ 
    subroutine set_datain(datain_source)
-      ! A setter, copying the argument to cardamom_structures:: DATAin
-      ! The central DATAin in module cardamom_structures can ONLY be set by the constructor, 
-      ! this ensures that no model calculations are writing to its elements from different parallel threads
+      !! A setter, copying the argument to cardamom_structures:: DATAin
+      !! The central DATAin in module cardamom_structures can ONLY be set by the constructor, 
+      !! this ensures that no model calculations are writing to its elements from different parallel threads
       type(DATA_type), intent(in):: datain_source
       DATAin = datain_source
    end subroutine set_datain
