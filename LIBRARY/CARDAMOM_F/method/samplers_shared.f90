@@ -1,5 +1,7 @@
 module samplers_shared
-implicit none
+   implicit none(type, external)
+   public
+
 !> A collection of info about the model's parameters
 !> npars and min, max bounds as two arrays
 !> Closely related to model fct; model fct must take this number
@@ -87,7 +89,6 @@ implicit none
       !! Covariance matrix exists and is positive definite
    end type MCMC_OUTPUT
 
-
 contains
 
 !! utilities
@@ -112,7 +113,7 @@ contains
       call random_number(r)
 ! TODO add optional pregen random
 ! l1/l2 > r  <=> logl1-logl2 > log(r)
-      metropolis_choice = ((new_loglikelihood-old_loglikelihood) > log(r))
+      metropolis_choice = ((new_loglikelihood - old_loglikelihood) > log(r))
    end function metropolis_choice
 
 !!!! routines for random initialization
@@ -120,12 +121,12 @@ contains
    subroutine init_pars_random(PI, pars0, fix_pars_flag, uniform_random_vector)
       use random_uniform, only: UNIF_VECTOR, next_random_uniform
       use samplers_math, only: log_nor2par
-      implicit none
+      implicit none(type, external)
       type(PARINFO), intent(in):: PI  ! give number, bounds of params
       double precision, dimension(PI%npars), intent(inout):: pars0  ! return random initial values-nonnormalized
       logical, dimension(PI%npars), optional, intent(in):: fix_pars_flag  ! flags .true. to keep inidividual pars
       logical, dimension(PI%npars):: fix_pars_flag_  ! internal version
-      type(UNIF_VECTOR), optional:: uniform_random_vector  ! object supplying pre-generated randoms 0 to 1  ! TODO make optional
+      type(UNIF_VECTOR), optional, intent(inout):: uniform_random_vector  ! object supplying pre-generated randoms 0 to 1  ! TODO make optional
       integer:: i
 
       if (.not. (present(fix_pars_flag))) then
@@ -155,7 +156,7 @@ contains
 
    subroutine init_latin_square(PI, pars0, n_chains)  ! TODO
       use samplers_math, only: nor2par
-      implicit none
+      implicit none(type, external)
       type(PARINFO), intent(in):: PI  ! give number, bounds, and potentially current value of params
       integer, intent(in):: n_chains
       double precision, dimension(PI%npars, n_chains), intent(out):: pars0  ! return initial values-nonnormalized
@@ -188,13 +189,13 @@ contains
       integer, intent(in):: chainid
       character(4):: chainid_str
       !! internal char version of chainid number, for filenames
-         ! internal write to convert int -> str
-         write (chainid_str, '(i0)') chainid
-         ! append number to file names
-         outfile = trim(outfile)//"_"//trim(chainid_str)
-         stepfile = trim(stepfile)//"_"//trim(chainid_str)
-         covfile = trim(covfile)//"_"//trim(chainid_str)
-         covifile = trim(covifile)//"_"//trim(chainid_str)
+      ! internal write to convert int -> str
+      write (chainid_str, '(i0)') chainid
+      ! append number to file names
+      outfile = trim(outfile)//"_"//trim(chainid_str)
+      stepfile = trim(stepfile)//"_"//trim(chainid_str)
+      covfile = trim(covfile)//"_"//trim(chainid_str)
+      covifile = trim(covifile)//"_"//trim(chainid_str)
    end subroutine number_filenames
 
 end module samplers_shared

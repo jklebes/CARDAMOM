@@ -1,5 +1,5 @@
 module cardamom_main_utils
-   implicit none
+   implicit none (type, external)
    public
 
 contains
@@ -42,7 +42,7 @@ contains
       use model_likelihood_wrapper  ! TODO next refactoring step
       use cardamom_structures, only: DATAin
 
-      implicit none
+      implicit none (type, external)
 
       ! declare local variables
       integer, intent(in):: nchains

@@ -1,5 +1,5 @@
 set(FILES1 misc/math_functions.f90
-                  misc/oksofar.f90
+  #misc/oksofar.f90
                   misc/brent_zero/brent_zero.f90
                   general/cardamom_structures.f90
                 )

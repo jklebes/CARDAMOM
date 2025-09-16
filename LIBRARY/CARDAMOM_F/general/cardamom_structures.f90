@@ -39,7 +39,7 @@
 
 module cardamom_structures
 
-   implicit none
+   implicit none (type, external)
 
    private
 

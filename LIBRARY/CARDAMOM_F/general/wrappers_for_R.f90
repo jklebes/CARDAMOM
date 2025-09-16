@@ -1,4 +1,6 @@
 module cardamom_Rinterfaces
+   implicit none(external)
+   public
 
 contains
 ! helpers for use from R-
@@ -9,7 +11,7 @@ contains
       use iso_c_binding
       !use model_parameters, only: pars_info
       use model_shared, only: PI
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(out)  :: npars
       !call pars_info(PI)
       npars = PI%npars
@@ -20,7 +22,7 @@ contains
       use iso_c_binding
       !use model_parameters, only: pars_info
       use model_shared, only: PI
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(in):: npars
       real(c_double), dimension(npars), intent(out)  :: parmin
       !call pars_info(PI)
@@ -31,7 +33,7 @@ contains
       use iso_c_binding
       !use model_parameters, only: pars_info
       use model_shared, only: PI
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(in):: npars
       real(c_double), dimension(npars), intent(out)  :: parmax
       !call pars_info(PI)
@@ -52,8 +54,8 @@ contains
       ! later do this better
       use iso_c_binding
       use cardamom_io, only: initialize
-      implicit none
-      character(kind = c_char, len = 350)  :: filename
+      implicit none(type, external)
+      character(kind=c_char, len=350)  :: filename
       filename = "/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin"
       call initialize(filename)
    end subroutine initialize_example_FI_Hyy
@@ -62,9 +64,9 @@ contains
       use iso_c_binding
       use cardamom_io, only: initialize
       use CARBON_MODEL_MOD, only: initialize_carbon_model
-      implicit none
+      implicit none(type, external)
       !character(kind = c_char, len = *), intent(in):: datain_filename
-      character(kind = c_char, len = 350):: filename
+      character(kind=c_char, len=350):: filename
       integer(c_int), intent(in), optional:: nchains
       integer(c_int):: nchains_
       if (.not. present(nchains)) then
@@ -83,8 +85,8 @@ contains
    subroutine initialize_stresstest_circle() bind(c, name="C_initialize_stresstest_circle")
       use model_shared, only: PI, initialize_parinfo
       use MHMCMC_StressTests
-      implicit none
-      character(len = 350):: infile, outfile
+      implicit none(type, external)
+      character(len=350):: infile, outfile
       infile = ""
       outfile = "Circle"
       call prepare_for_stress_test(infile, outfile)

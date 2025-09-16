@@ -22,7 +22,7 @@ program main
 !
   use brent_zero, only: zero
   use cardamom_zbrent, only: zbrent
-  implicit none
+  implicit none (type, external)
 
   call timestamp ( )
   write ( *, '(a)' ) ' '
@@ -60,7 +60,7 @@ subroutine test_zero_all ( )
 !
 !    John Burkardt
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: a
   real ( kind = 8 ) :: b
@@ -187,7 +187,7 @@ subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
 !
   use brent_zero, only: zero
   use cardamom_zbrent, only: zbrent
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: a
   real ( kind = 8 ) :: b
@@ -258,7 +258,7 @@ pure function f_01 ( x )
 !
 !    Output, real ( kind = 8 ) F_01, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: f_01
   real ( kind = 8 ), intent(in) ::  x
@@ -291,7 +291,7 @@ pure function f_02 ( x )
 !
 !    Output, real ( kind = 8 ) F_02, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: f_02
   real ( kind = 8 ), intent(in):: x
@@ -320,7 +320,7 @@ pure function f_03 ( x )
 !
 !    Output, real ( kind = 8 ) F_03, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: f_03
   real ( kind = 8 ), intent(in):: x
@@ -353,7 +353,7 @@ pure function f_04 ( x )
 !
 !    Output, real ( kind = 8 ) F_04, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: f_04
   real ( kind = 8 ), intent(in):: x
@@ -386,7 +386,7 @@ pure function f_05 ( x )
 !
 !    Output, real ( kind = 8 ) F_05, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
   real ( kind = 8 ) :: f_05
   real ( kind = 8 ), intent(in):: x
@@ -421,7 +421,7 @@ subroutine timestamp ( )
 !
 !    None
 !
-  implicit none
+  implicit none (type, external)
 
   character ( len = 8 ) :: ampm
   integer ( kind = 4 ) :: d

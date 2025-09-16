@@ -36,7 +36,7 @@ module samplers_math
    ! NOTE: that minimum number of values to be returned is 100
    !#
 
-   implicit none
+   implicit none (type, external)
 
    ! assume default private
    private
@@ -68,7 +68,7 @@ contains
       ! (contact abloom@jpl.nasa.gov for access)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: naccepted
@@ -113,7 +113,7 @@ contains
       ! University of Edinburgh, t.l.smallman@ed.ac.uk
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: new
@@ -162,7 +162,7 @@ contains
       ! University of Edinburgh, t.l.smallman@ed.ac.uk
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: npars, naccepted
@@ -211,7 +211,7 @@ contains
       ! (contact abloom@jpl.nasa.gov for access)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: npars
@@ -284,7 +284,7 @@ contains
       !===========================================================
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: n
@@ -676,7 +676,7 @@ contains
       ! inputs are the vector of values and number of values included
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! declare inputs
       integer, intent(in):: n  ! number of values in vector
@@ -714,7 +714,7 @@ contains
     ! un-normalised value.
 
     ! converting parameters on log scale between 0-1 for min/max values
-    implicit none
+    implicit none (type, external)
     double precision, intent(in):: min_par, max_par
     double precision, intent(in):: initial_par
     double precision:: out_par
@@ -729,7 +729,7 @@ contains
       ! Converting values back from normalised (0-1) to 'real' numbers
       !#
 
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -750,7 +750,7 @@ contains
       !#
 
       ! Converting parameters on log scale between 0-1 for min/max values
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par, par_adj
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -777,7 +777,7 @@ contains
       ! Converting values back from log-normalised (0-1) to 'real' numbers
       !#
 
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par, par_adj  ! adjustment prevents negative values being fed into the analysis
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -809,7 +809,7 @@ contains
       ! (https://jblevins.org/mirror/amiller/rnorm.f90, last updated February 2004)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       double precision, intent(out):: fn_val
@@ -889,7 +889,7 @@ contains
       !
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: m, & ! number of parameters
@@ -1008,7 +1008,7 @@ contains
       !
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: n

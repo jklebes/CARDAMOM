@@ -69,7 +69,7 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !         - MACHEP-brent had input argument, cardamom had hard-coded 6d-8,
 !                    I use intrinsic
 !       - argument t halved on entry to match cardamom zbrent
-  implicit none
+  implicit none (type, external)
   integer, parameter:: dp = kind(1.d0)
   real ( kind = dp )  :: zbrent
   character(len=*), intent(in):: called_from  ! name of procedure calling (used to pass through for errors)

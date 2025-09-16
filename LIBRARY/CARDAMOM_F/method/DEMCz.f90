@@ -27,7 +27,7 @@ module DEMCz
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
-   implicit none
+   implicit none(type, external)
 
    public
 
@@ -58,7 +58,7 @@ contains
    subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains)
       use samplers_shared, only: metropolis_choice
       use samplers_io, only: write_mcmc_output, open_output_files
-      implicit none
+      implicit none(type, external)
 
       !! input and output structs
       type(PARINFO), intent(in):: PI
@@ -70,12 +70,12 @@ contains
       type(MCMC_OUTPUT):: MCOUT
       !! A single thread's output object
 
-      integer, optional:: nchains
+      integer, optional, intent(in) :: nchains
       !! number chains optional, default 1
 
       !> Matrix X, (npars x nchains), holding current state of the n chains
       double precision, allocatable, dimension(:, :):: PARS_current
-      double precision, dimension(PI%npars ):: norPARS
+      double precision, dimension(PI%npars):: norPARS
       ! and their current loglikelihood values
       double precision, allocatable, dimension(:):: l0
       ! and their best likelihood values and best pars so far
@@ -115,7 +115,7 @@ contains
       !> given the inputted parameter values.
       interface
          subroutine model_likelihood(param_vector, n, ML, id)
-            implicit none
+            implicit none(type, external)
             double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
             integer, intent(in):: n
             double precision, intent(out):: ML
@@ -133,7 +133,6 @@ contains
 
       ! Argument processing  !!!!!!!!!!!!!!!
 
-
       if (.not. present(nchains)) then
          MCO%nchains = 3  ! at least 3 are mandatory for this method to work
       else
@@ -149,7 +148,6 @@ contains
          model_likelihood_write => model_likelihood
       end if
 
-
       ! Extract from types
       differential_weight = MCO%differential_weight
 
@@ -158,7 +156,7 @@ contains
       P_target = MCO%P_target
 
       ! prepare outputs
-      if (.not.allocated(MCOUT_list)) allocate(MCOUT_list(mco%nchains))
+      if (.not. allocated(MCOUT_list)) allocate (MCOUT_list(mco%nchains))
 
       ! Allocate arrays
 
@@ -183,48 +181,48 @@ contains
 !$OMP PARALLEL DO private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
       do j = 1, mco%nchains
 
-      MCOUT = MCOUT_list(j)
-      ! initialize output fields
-      if (.not. allocated(MCOUT%parvar)) then
-         ! we recieved blank new MCOUT, start new stats collection
-         MCOUT%Nparvar = 0
-         allocate (MCOUT%parvar(npars))
-         allocate (MCOUT%meanpar(npars))
-         allocate (MCOUT%covariance(npars, npars))
-      end if
-      MCOUT_list(j) = MCOUT
+         MCOUT = MCOUT_list(j)
+         ! initialize output fields
+         if (.not. allocated(MCOUT%parvar)) then
+            ! we recieved blank new MCOUT, start new stats collection
+            MCOUT%Nparvar = 0
+            allocate (MCOUT%parvar(npars))
+            allocate (MCOUT%meanpar(npars))
+            allocate (MCOUT%covariance(npars, npars))
+         end if
+         MCOUT_list(j) = MCOUT
 
     !!! prepare file writing
-      if (MCO%nwrite > 0) then
+         if (MCO%nwrite > 0) then
 
-         ! process file names
-         outfile = MCO%outfile
-         stepfile = MCO%stepfile
-         covfile = MCO%covfile
-         covifile = MCO%covifile
-         call number_filenames(outfile, stepfile, covfile, covifile, j)
+            ! process file names
+            outfile = MCO%outfile
+            stepfile = MCO%stepfile
+            covfile = MCO%covfile
+            covifile = MCO%covifile
+            call number_filenames(outfile, stepfile, covfile, covifile, j)
 
             ! allocate buffers io_space (different one for each chain)
-         call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
-         call open_output_files(outfile, stepfile, covfile, covifile, j)
-      end if
+            call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
+            call open_output_files(outfile, stepfile, covfile, covifile, j)
+         end if
 
-      ! Initialize pregenerated random numbers, if using-local to this chain
-      seed = irand()  ! TODO record later  ! TODO always the same ?
-        call random_uniform_vectors(j)%initialize_random(seed)
+         ! Initialize pregenerated random numbers, if using-local to this chain
+         seed = irand()  ! TODO record later  ! TODO always the same ?
+         call random_uniform_vectors(j)%initialize_random(seed)
          ! choose initial values
          ! TODO better function for initial state : latin square
          if (.not. MCO%restart) then
-         call init_pars_random(PI, pars_current(:,j), PI%fix_pars, random_uniform_vectors(j))
-      else
-         pars_current(:,j) =  mcout_list(j)%pars
-      end if
+            call init_pars_random(PI, pars_current(:, j), PI%fix_pars, random_uniform_vectors(j))
+         else
+            pars_current(:, j) = mcout_list(j)%pars
+         end if
          ! also set the loglikelihoof of the state generated
          call model_likelihood(PARS_current(:, j), npars, l0(j), j)
          l_best(j) = l0(j)
-         PARS_best(:,j) = PARS_current(:,j)
+         PARS_best(:, j) = PARS_current(:, j)
 
-         write(*,*) "start", j, l0(j), PARS_current(:,j)
+         write (*, *) "start", j, l0(j), PARS_current(:, j)
          ! potential burnin steps
          ! ... TODO
 
@@ -234,11 +232,11 @@ contains
       end do
 !$OMP END PARALLEL DO
 
-      len_history = len_history+mco%nchains
+      len_history = len_history + mco%nchains
 
       !!! Main "time" loop
 
-      do i = 2, MAXITER/mco%nadapt+2
+      do i = 2, MAXITER/mco%nadapt + 2
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
 !$OMP PARALLEL DO private(ITER, R1, R2, l, proposed_vector, output_loglikelihood, MCOUT)
@@ -246,69 +244,68 @@ contains
             MCOUT = MCOUT_list(j)
             ACCLOC(j) = 0
             do k = 1, mco%nadapt
-                     ITER = i*mco%nadapt+k
+               ITER = i*mco%nadapt + k
 !               call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
 !                               PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
 
-                     R1 = random_int(len_history)
-                     R2 = random_int(len_history)
-                     do while (R1 == R2)  ! should not equal R1 ("without replacement")
-                        R2 = random_int(len_history)
-                     end do
-                     call step_real(proposed_vector, PARS_current(:,j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
-                        & random_uniform_vectors(j), PI)
-                     if (bounds_check(PI, proposed_vector)) then
-                     call model_likelihood(proposed_vector, PI%npars, l, j)
-                     if (metropolis_choice(l, l0(j))) then
-                        PARS_current(:,j) = proposed_vector
-                        l0(j) = l
-                        ACCLOC(j) = ACCLOC(j) + 1
-                        ! check for new best
-                        if (l > l_best(j)) then
-                           l_best(j) = l
-                           pars_best(:,j) = proposed_vector
-                        endif
+               R1 = random_int(len_history)
+               R2 = random_int(len_history)
+               do while (R1 == R2)  ! should not equal R1 ("without replacement")
+                  R2 = random_int(len_history)
+               end do
+               call step_real(proposed_vector, PARS_current(:, j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
+                       & random_uniform_vectors(j), PI)
+               if (bounds_check(PI, proposed_vector)) then
+                  call model_likelihood(proposed_vector, PI%npars, l, j)
+                  if (metropolis_choice(l, l0(j))) then
+                     PARS_current(:, j) = proposed_vector
+                     l0(j) = l
+                     ACCLOC(j) = ACCLOC(j) + 1
+                     ! check for new best
+                     if (l > l_best(j)) then
+                        l_best(j) = l
+                        pars_best(:, j) = proposed_vector
+                     end if
                      !else
-                        ! else-no accept
-                     end if
-                     endif
+                     ! else-no accept
+                  end if
+               end if
 
+               if (mod(ITER, MCO%nprint) == 0) then
+                  write (*, *) "Chain ", j, "of", mco%nchains
+                  write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
+                  write (*, *) "Total accepted = ", ACC(j)
+                  write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
+                  write (*, *) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
+                  write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
+                  write (*, *) "Maximum likelihood = ", l_best(j)
+               end if
+            end do  ! nadapt
 
-                    if (mod(ITER, MCO%nprint) == 0) then
-                     write (*, *) "Chain ", j, "of", mco%nchains
-                     write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
-                     write (*, *) "Total accepted = ", ACC(j)
-                     write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
-                     write (*, *) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
-                     write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
-                     write (*, *) "Maximum likelihood = ", l_best(j)
-                    endif
-                  end do  ! nadapt
+            if (MCO%nwrite > 0) then
+               if (mod(ITER, MCO%nwrite) == 0) then
+                  ! calculate the likelihood for the actual uncertainties-this avoid
+                  ! issues with different phases of the MCMC which may use sub-samples
+                  ! of observations or inflated uncertainties to aid parameter
+                  ! searching
+                  call model_likelihood_write(PARS_current(:, j), npars, output_loglikelihood, j)
+                  ! Now write out to files
+                  call write_mcmc_output(MCOUT%parvar, dble(ACC(j))/dble(MAXITER), &
+                                         MCOUT%covariance, &
+                                         MCOUT%meanpar, MCOUT%Nparvar, &
+                                         PARS_current(:, j), output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                         io_space(j), j)
+               end if
+            end if  ! write or not to write
 
-                  if (MCO%nwrite > 0) then
-                     if (mod(ITER, MCO%nwrite) == 0) then
-                        ! calculate the likelihood for the actual uncertainties-this avoid
-                        ! issues with different phases of the MCMC which may use sub-samples
-                        ! of observations or inflated uncertainties to aid parameter
-                        ! searching
-                        call model_likelihood_write(PARS_current(:,j), npars, output_loglikelihood, j)
-                        ! Now write out to files
-                        call write_mcmc_output(MCOUT%parvar,  dble(ACC(j))/dble(MAXITER), &
-                                               MCOUT%covariance, &
-                                               MCOUT%meanpar, MCOUT%Nparvar, &
-                                               PARS_current(:,j), output_loglikelihood, npars, ITER == MCO%nOUT, &
-                                               io_space(j), j)
-                     end if
-                  end if  ! write or not to write
-
-                  ACC(j) = ACC(j) + ACCLOC(j)
-                  ! write the chain's state after nadapt steps to Z
-                  PARS_history(:, len_history+j) = PARS_current(:, j)
-               end do  ! nchains
-      !$OMP END PARALLEL DO !!Barrier implicit
+            ACC(j) = ACC(j) + ACCLOC(j)
+            ! write the chain's state after nadapt steps to Z
+            PARS_history(:, len_history + j) = PARS_current(:, j)
+         end do  ! nchains
+         !$OMP END PARALLEL DO !!Barrier implicit
 
          ! increment length M (filled so far) of Z
-         len_history = len_history+mco%nchains
+         len_history = len_history + mco%nchains
 
          ! check convergence
 
@@ -319,12 +316,12 @@ contains
       ! Final summary output from each chain individually
       !$OMP PARALLEL DO
       do j = 1, mco%nchains
-      ! completed
-      write (*, *) "chain ",j, ": DEMCZ completed"
-      write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
-      !write (*, *) "Final local acceptance rate = ", ACCRATE
-      write (*, *) "Best log-likelihood = ", l_best(j)
-      write (*, *) "Best parameters = ", pars_best(:,j)
+         ! completed
+         write (*, *) "chain ", j, ": DEMCZ completed"
+         write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
+         !write (*, *) "Final local acceptance rate = ", ACCRATE
+         write (*, *) "Best log-likelihood = ", l_best(j)
+         write (*, *) "Best parameters = ", pars_best(:, j)
       end do
       !$OMP END PARALLEL DO
 
@@ -345,7 +342,6 @@ contains
 
    end subroutine init_random
 
-
    !> Thin wrapper on "step" which takes three vectors in the space of raw parameter values;
    !> they are converted to lognormalized parameters (0, 1) before being lineraly combined in
    !> the core "step" function.  After cardamom-MHMCMC and
@@ -360,11 +356,11 @@ contains
       double precision, dimension(PI%npars), intent(in):: v1, v2, v3
       !! input: current and two random states from history on parameter space
       type(UNIF_VECTOR), intent(inout):: random_uniform_vector
-      double precision:: differential_weight
-      call step(vout_lognorm,  log_par2nor(v1, PI%parmin, PI%parmax, PI%paradj), &
-                 log_par2nor(v2, PI%parmin, PI%parmax, PI%paradj), &
+      double precision, intent(in):: differential_weight
+      call step(vout_lognorm, log_par2nor(v1, PI%parmin, PI%parmax, PI%paradj), &
+                log_par2nor(v2, PI%parmin, PI%parmax, PI%paradj), &
                 log_par2nor(v3, PI%parmin, PI%parmax, PI%paradj), &
-               differential_weight, random_uniform_vector, PI%npars)
+                differential_weight, random_uniform_vector, PI%npars)
       vout = log_nor2par(vout_lognorm, PI%parmin, PI%parmax, PI%paradj)
    end subroutine step_real
 
@@ -376,14 +372,14 @@ contains
       double precision, dimension(:), intent(out):: vout
       double precision, dimension(:), intent(in):: v1, v2, v3
       type(UNIF_VECTOR), intent(inout):: random_uniform_vector
-      double precision:: differential_weight
+      double precision, intent(in):: differential_weight
       double precision:: rn(npars)
       integer:: p
       ! get differential_weight, corssover_probability from module data
       do p = 1, npars
          call random_normal(random_uniform_vector, rn(p))
       end do
-      vout = v1+differential_weight*(v2-v3)  + .000001*rn
+      vout = v1 + differential_weight*(v2 - v3) + .000001*rn
    end subroutine step
 
    integer function random_int(N)

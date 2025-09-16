@@ -9,9 +9,10 @@ module model_likelihood_wrapper
 
    use model_likelihood_module, only: model_likelihood, &
                                       edc_model_likelihood, scaled_model_likelihood
-                                      !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
+   !sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
    use iso_c_binding
-   implicit none
+   implicit none(type, external)
+   public
 
 contains
 
@@ -20,7 +21,7 @@ contains
 ! For R : has to be subroutine ( -> C void function), have to give npars
    subroutine model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_modellikelihood")
       use iso_c_binding
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(in)  :: npars
       real(c_double), intent(inout), dimension(npars):: params
       real(c_double), intent(out):: loglikelihood
@@ -32,14 +33,14 @@ contains
       call model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
       ! for the purpose of running samplers we are only interested in the sum
-      loglikelihood = ML_obs_out+ML_prior_out
+      loglikelihood = ML_obs_out + ML_prior_out
 
    end subroutine model_likelihood_fct
 
 ! Wrapper for all scaled model likelihood function variants
    subroutine scaled_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_scaledmodellikelihood")
       use iso_c_binding
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(in)  :: npars
       real(c_double), intent(inout), dimension(npars):: params
       real(c_double), intent(out):: loglikelihood
@@ -51,16 +52,15 @@ contains
       call scaled_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
       ! for the purpose of running samplers we are only interested in the sum
-      loglikelihood = ML_obs_out+ML_prior_out
+      loglikelihood = ML_obs_out + ML_prior_out
 
    end subroutine scaled_model_likelihood_fct
-
 
 ! Wrapper for EDC function, which finds a set of parameters fulfilling otherwise
 ! hard boundary conditions with a softer stepped potential
    subroutine edc_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_edcmodellikelihood")
       use iso_c_binding
-      implicit none
+      implicit none(type, external)
       integer(c_int), intent(in)  :: npars
       real(c_double), intent(inout), dimension(npars):: params
       real(c_double), intent(out):: loglikelihood
@@ -70,7 +70,7 @@ contains
 
       call edc_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
-      loglikelihood = ML_obs_out+ML_prior_out
+      loglikelihood = ML_obs_out + ML_prior_out
    end subroutine edc_model_likelihood_fct
 
 end module model_likelihood_wrapper

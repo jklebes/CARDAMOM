@@ -19,7 +19,7 @@ module cardamom_zbrent
     ! 5) The root of the function does now lie between supplied bounds    !
     ! For a full description see Press et al. (1986).                     !
 
-    implicit none
+    implicit none (type, external)
 
     ! arguments..
     character(len=*), intent(in):: called_from    ! name of procedure calling (used to pass through for errors)

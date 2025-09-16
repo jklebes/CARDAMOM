@@ -25,7 +25,7 @@ program cardamom_DEMCz
    ! 6) 0/1 flag to use normalised log-likelihood pre-mcmc
    ! 7) Flag to select the cost function normalisation approach
 
-   implicit none
+   implicit none (type, external)
 
    ! declare local variables
    character(350):: infile, outfile, solution_wanted_char, freq_print_char, &

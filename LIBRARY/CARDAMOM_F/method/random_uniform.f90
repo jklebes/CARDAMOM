@@ -4,7 +4,8 @@ module random_uniform
    !! Checking for need to re-fill and re-filling in a getter seems neater than checking
    !! and potentially refilling in each place it's used
 
-   implicit none
+   implicit none(type, external)
+   public
    integer, parameter  :: kk = 100, ll = 37, mm = 2**30, tt = 70, kkk = kk + kk - 1
 
    public UNIF_VECTOR, get_random_uniform, next_random_uniform
@@ -30,7 +31,7 @@ module random_uniform
 contains
 
    subroutine initialize_random(this, seed, length)
-      class(UNIF_VECTOR):: this
+      class(UNIF_VECTOR), intent(inout):: this
       integer, intent(in):: seed
       integer, intent(in), optional:: length
       this%seed = seed
@@ -48,7 +49,7 @@ contains
     !! from UNIF_VECTOR's array of pre-generated random numbers,
     !! triggering re-filling of the array when needed.
     !! Type-bound procedure.
-      class(UNIF_VECTOR):: this
+      class(UNIF_VECTOR), intent(inout):: this
       integer, intent(in)  :: n
         !! number of random values to get
       double precision, dimension(:), allocatable:: x
@@ -72,7 +73,7 @@ contains
     !! from UNIF_VECTOR's array of pre-generated random numbers,
     !! triggering re-filling of the array when needed.
     !! Type-bound procedure.
-      class(UNIF_VECTOR):: this
+      class(UNIF_VECTOR), intent(inout):: this
 
       if (this%index + 1 > this%length) then  ! refill if running out of random values
          call fill_random_uniform(this%u, this%length, this%ranx)
