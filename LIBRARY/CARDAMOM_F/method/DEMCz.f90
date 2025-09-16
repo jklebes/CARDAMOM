@@ -1,14 +1,14 @@
 module DEMCz
    !-
-   ! Differential evolution sampler (with history z), see ter Braak & Vrugt, Stat Comput 2008, 
+   ! Differential evolution sampler (with history z), see ter Braak & Vrugt, Stat Comput 2008,
    ! "Differential Evolution Markov Chain with snooker updater and fewer chains".
    !
    !  jklebes 2024-2025
    !
-   !  See also R BayesianSamplers DEMCz ... we implement a similar algorithm so that behavior can be 
+   !  See also R BayesianSamplers DEMCz ... we implement a similar algorithm so that behavior can be
    ! compared.
    !
-   !  This sampler should function similarly to other cardamom-samplers in terms of 
+   !  This sampler should function similarly to other cardamom-samplers in terms of
    !  invocation, printing and file writing behavior.
    !
    !
@@ -35,9 +35,9 @@ module DEMCz
    !> contains default values
    type, extends(MCMC_options):: DEMCZOPT
 ! DEMcz algorithm parameters
-      double precision:: differential_weight = 0.8  
+      double precision:: differential_weight = 0.8
 !! differential weight gamma, [0, 2]
-      double precision:: crossover_probability = 0.9  
+      double precision:: crossover_probability = 0.9
 !! crossover probability CR, [0, 1]
    end type DEMCzOPT
 
@@ -81,7 +81,7 @@ contains
       ! and their best likelihood values and best pars so far
       double precision, allocatable, dimension(:):: l_best
       double precision, allocatable, dimension(:, :):: PARS_best
-      double precision             :: l  
+      double precision             :: l
       double precision             :: output_loglikelihood
         !! likelihood of proposed values (private on each thread)
       double precision, dimension(PI%npars):: proposed_vector
@@ -99,12 +99,12 @@ contains
       integer, dimension(:), allocatable:: ACC
       !! acceptance counter for each thread
       integer, dimension(:), allocatable:: ACCLOC
-      !! acceptance counter for each thread, local to each nadapt phase 
+      !! acceptance counter for each thread, local to each nadapt phase
       integer:: i, j, k, ITER, len_history  ! counters
-      integer:: R1, R2 
+      integer:: R1, R2
       !!random indices in history
 
-      type(io_buffer_space), dimension(:), allocatable:: io_space  
+      type(io_buffer_space), dimension(:), allocatable:: io_space
       !! collection of io_space objects holding file writing buffers, one for each chain
       character(350):: outfile, stepfile, covfile, covifile
       !! file names tagges with chainid, private to each chain
@@ -123,10 +123,10 @@ contains
          end subroutine model_likelihood
       end interface
 
-      !> optionally  give a second function with same shape as model_likelihood, 
+      !> optionally  give a second function with same shape as model_likelihood,
       !> for writing to file.  model_likelihood_write_in is the input arg, which may not be present.
       procedure(model_likelihood), optional:: model_likelihood_write_in
-      !> A second function with same shape as model_likelihood, 
+      !> A second function with same shape as model_likelihood,
       !> for writing to file.  Internal variable equal to model_likelihood_write_in if present
       !> or (default) same as main model_likelihood function
       procedure(model_likelihood), pointer:: model_likelihood_write
@@ -214,7 +214,7 @@ contains
         call random_uniform_vectors(j)%initialize_random(seed)
          ! choose initial values
          ! TODO better function for initial state : latin square
-         if (.not. MCO%restart) then 
+         if (.not. MCO%restart) then
          call init_pars_random(PI, pars_current(:,j), PI%fix_pars, random_uniform_vectors(j))
       else
          pars_current(:,j) =  mcout_list(j)%pars
@@ -268,21 +268,21 @@ contains
                            l_best(j) = l
                            pars_best(:,j) = proposed_vector
                         endif
-                     !else 
-                        ! else-no accept 
+                     !else
+                        ! else-no accept
                      end if
                      endif
-                        
+
 
                     if (mod(ITER, MCO%nprint) == 0) then
-                     write (*, *) "Chain ", j, "of", mco%nchains 
+                     write (*, *) "Chain ", j, "of", mco%nchains
                      write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
                      write (*, *) "Total accepted = ", ACC(j)
                      write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
                      write (*, *) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
                      write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
                      write (*, *) "Maximum likelihood = ", l_best(j)
-                    endif 
+                    endif
                   end do  ! nadapt
 
                   if (MCO%nwrite > 0) then
@@ -313,13 +313,13 @@ contains
          ! check convergence
 
          ! Reorder for best chains ?  Then write to Z later.
-         
+
       end do
-      
+
       ! Final summary output from each chain individually
       !$OMP PARALLEL DO
       do j = 1, mco%nchains
-      ! completed 
+      ! completed
       write (*, *) "chain ",j, ": DEMCZ completed"
       write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
       !write (*, *) "Final local acceptance rate = ", ACCRATE
@@ -328,7 +328,7 @@ contains
       end do
       !$OMP END PARALLEL DO
 
-   end subroutine
+   end subroutine run_DEMCz
 
    !> Initialize the chain's state with random values from
    !> parameter ranges.
@@ -343,12 +343,12 @@ contains
       end do
       ! also output the loglikelihood of the state generated
 
-   end subroutine
+   end subroutine init_random
 
 
-   !> Thin wrapper on "step" which takes three vectors in the space of raw parameter values; 
-   !> they are converted to lognormalized parameters (0, 1) before being lineraly combined in 
-   !> the core "step" function.  After cardamom-MHMCMC and 
+   !> Thin wrapper on "step" which takes three vectors in the space of raw parameter values;
+   !> they are converted to lognormalized parameters (0, 1) before being lineraly combined in
+   !> the core "step" function.  After cardamom-MHMCMC and
    !> sampling is observed to be better when this is done on lognormalized parameters.
    subroutine step_real(vout, v1, v2, v3, differential_weight, random_uniform_vector, PI)
       use samplers_math, only: log_nor2par, log_par2nor
@@ -366,7 +366,7 @@ contains
                 log_par2nor(v3, PI%parmin, PI%parmax, PI%paradj), &
                differential_weight, random_uniform_vector, PI%npars)
       vout = log_nor2par(vout_lognorm, PI%parmin, PI%parmax, PI%paradj)
-   end subroutine
+   end subroutine step_real
 
    !> Generate new proposed state from currect state and history
    !> ter Braak & Vrugt eq 2
@@ -384,13 +384,13 @@ contains
          call random_normal(random_uniform_vector, rn(p))
       end do
       vout = v1+differential_weight*(v2-v3)  + .000001*rn
-   end subroutine
+   end subroutine step
 
    integer function random_int(N)
       integer, intent(in):: N
       double precision:: r
       call random_number(r)
       random_int = floor(N*r) + 1
-   end function
+   end function random_int
 
 end module DEMCz

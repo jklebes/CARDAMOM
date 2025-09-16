@@ -10,7 +10,7 @@ contains
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       allocate (MCOUT%covariance(npars, npars), MCOUT%parvar(npars), MCOUT%meanpar(npars))
       call reset_stats(MCOUT, npars)
-   end subroutine
+   end subroutine initialize_stats
 
 
    subroutine reset_stats(MCOUT, npars)
@@ -26,7 +26,7 @@ contains
       do n = 1, npars
          MCOUT%covariance(n, n) = 1d0
       end do
-   end subroutine
+   end subroutine reset_stats
 
    !
    !------------------------------------------------------------------
@@ -112,7 +112,7 @@ contains
              do while (success_count < nchains)!(PEDC < 0d0)
                ! call the MHMCMC directing to the appropriate likelihood function
             call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, chainid = i)
-               MCO%fixedpars = .true. !continue from this position next round, until resetting every 5 attempts 
+               MCO%fixedpars = .true. !continue from this position next round, until resetting every 5 attempts
 
                ! turn off random selection for initial values
                write (*, *) "...intermediate EDC search progress check"
@@ -120,7 +120,7 @@ contains
                ! store the best parameters from that loop
                PEDC(i) = MCOUT_list_tmp(i)%bestll
                write (*, *) "Found best loglikelihood", PEDC(i)
-               ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
+               ! if any chains's MCOUT object is success (reached loglikelihood = 0),
                ! copy it to MCOUT_list
                !$omp critical
                if (MCOUT_list_tmp(i)%ll >= (0d0-10*epsilon(1.0d0))) then
@@ -167,5 +167,5 @@ contains
       ! PI%parfix(1:PI%npars) = 0  ! TODO
       !MCOUT%bestpars = 0d0
 
-      end subroutine
-end module
+      end subroutine find_edc_initial_values
+end module cardamom_main_utils

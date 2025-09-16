@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
-! Copyright (C) 2024  University of Edinburgh, 
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+! used as a fully integrated component of CARDAMOM or independently.
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 !
@@ -14,7 +14,7 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful, 
+! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
@@ -24,7 +24,7 @@
 !
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Code responsible for input/output operations for CARDAMOM
-! 
+!
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
 ! All code translation into Fortran, integration into the University of
@@ -37,7 +37,7 @@
 
 module cardamom_io
 
-  ! Module contains subroutines and variables needed to output parameter, 
+  ! Module contains subroutines and variables needed to output parameter,
   ! likelihood and step size information from the MCMC algorithms.
 
   implicit none
@@ -72,7 +72,7 @@ module cardamom_io
     use cardamom_structures, only: DATA_type
     implicit none
     type(DATA_type), intent(inout):: DATAin
-    !! a local DATAin object as argument 
+    !! a local DATAin object as argument
 
     ! don't forget to update values found in the relevant model*_PARS.f90
 
@@ -278,7 +278,7 @@ module cardamom_io
         DATAin%nopools = 7
         DATAin%nopars = 46
         DATAin%nofluxes = 49
-        DATAin%nodiags = 30       
+        DATAin%nodiags = 30
     else if (DATAin%ID == 34) then
         ! ID = 34 -
     else if (DATAin%ID == 35) then
@@ -325,7 +325,7 @@ module cardamom_io
     if (ios /= 0) print*,"error ",ios, " opening file",trim(stepname)
     open(cifile_unit, file = trim(covinfoname), form="UNFORMATTED",access="stream",status="UNKNOWN",iostat = ios)
     if (ios /= 0) print*,"error ",ios, " opening file",trim(covinfoname)
-    ! for the covariance matrix we have a fixed size containing two matrices, 
+    ! for the covariance matrix we have a fixed size containing two matrices,
     ! the initial and the current output-therefore we use
     inquire(iolength = reclen) a !; print*,reclen
     open(cfile_unit, file = trim(covname), form="UNFORMATTED",access="direct",recl = reclen, iostat = ios)
@@ -356,7 +356,7 @@ module cardamom_io
     type(DATA_type), intent(inout):: DATAin
     !! This is a temporary local DATAin object whose fields we are allowed to modify.
     !! After everything is read, the (protected) global DATAin object
-    !! is set by copying this object.  
+    !! is set by copying this object.
 
     ! declare input variables
     character(350):: infile
@@ -428,7 +428,7 @@ module cardamom_io
        read(ifile_unit) DATAin%parpriors(a)
        a = a+1
     end do
-    
+
     ! read in parameter uncertainty (100 elements)
     a = 1
     do i = 151, 250
@@ -472,11 +472,11 @@ module cardamom_io
     ! it to allocate to the module variables
     allocate(mettemp(DATAin%nomet), obstemp(DATAin%noobs) &
             ,DATAin%met(DATAin%nomet, DATAin%nodays)      &
-            ,DATAin%GPP(DATAin%nodays), DATAin%GPP_unc(DATAin%nodays), DATAin%GPP_lag(DATAin%nodays)                            & 
-            ,DATAin%NEE(DATAin%nodays), DATAin%NEE_unc(DATAin%nodays), DATAin%NEE_lag(DATAin%nodays)                            & 
+            ,DATAin%GPP(DATAin%nodays), DATAin%GPP_unc(DATAin%nodays), DATAin%GPP_lag(DATAin%nodays)                            &
+            ,DATAin%NEE(DATAin%nodays), DATAin%NEE_unc(DATAin%nodays), DATAin%NEE_lag(DATAin%nodays)                            &
             ,DATAin%LAI(DATAin%nodays), DATAin%LAI_unc(DATAin%nodays), DATAin%LAI_lag(DATAin%nodays)                            &
             ,DATAin%Reco(DATAin%nodays), DATAin%Reco_unc(DATAin%nodays), DATAin%Reco_lag(DATAin%nodays)                         &
-            ,DATAin%Cfol_stock(DATAin%nodays), DATAin%Cfol_stock_unc(DATAin%nodays), DATAin%Cfol_stock_lag(DATAin%nodays)       & 
+            ,DATAin%Cfol_stock(DATAin%nodays), DATAin%Cfol_stock_unc(DATAin%nodays), DATAin%Cfol_stock_lag(DATAin%nodays)       &
             ,DATAin%Cwood_stock(DATAin%nodays), DATAin%Cwood_stock_unc(DATAin%nodays), DATAin%Cwood_stock_lag(DATAin%nodays)    &
             ,DATAin%Croots_stock(DATAin%nodays), DATAin%Croots_stock_unc(DATAin%nodays), DATAin%Croots_stock_lag(DATAin%nodays) &
             ,DATAin%Clit_stock(DATAin%nodays), DATAin%Clit_stock_unc(DATAin%nodays), DATAin%Clit_stock_lag(DATAin%nodays)       &
@@ -575,7 +575,7 @@ module cardamom_io
        DATAin%met(1:DATAin%nomet, day) = mettemp
 
        ! Reset counter for extracting observations
-       a = 1 
+       a = 1
 
        ! Gross Primary Productivity (GPP, gC/m2/day)
        DATAin%GPP(day) = obstemp(a); a = a+1
@@ -661,7 +661,7 @@ module cardamom_io
        if (obstemp(a-1) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
        DATAin%Evap_unc(day) = obstemp(a); a = a+1
        DATAin%Evap_lag(day) = nint(obstemp(a)); a = a+1
-    
+
        ! Snow water equivalent-added for future use, not currently coded
        DATAin%SWE(day) = obstemp(a); a = a+1
        if (obstemp(a-1) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
@@ -846,7 +846,7 @@ module cardamom_io
        endif  ! data present condition
        if (DATAin%soilwater(day) > -9998d0) then
            DATAin%soilwaterpts(v) = day; v = v+1
-       endif  ! data present condition              
+       endif  ! data present condition
     end do  ! day loop
 
     ! timestep mean temperature (oC)
@@ -889,7 +889,7 @@ module cardamom_io
       call set_datain_original(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
       call set_datain(DATAin)
-   end subroutine
+   end subroutine initialize
 
    subroutine read_check_binary_data(infile, DATAin)
   !! Read infile, modify fields of a (local) DATA_type struct
@@ -956,7 +956,7 @@ module cardamom_io
 
     ! alert the user
     write(*,*)"Created fields for model output"
-   end subroutine
+   end subroutine initialize_model
   !------------------------------------------------------------------
   !
   subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
@@ -975,7 +975,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = .true.
-    MCO%nADAPT = 1000 
+    MCO%nADAPT = 1000
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
@@ -1057,12 +1057,12 @@ module cardamom_io
     DATAin_tmp%fAPAR_scaling             = 1d0
     DATAin_tmp%harvest_scaling           = 1d0
     DATAin_tmp%soilwater_scaling         = 1d0
-    
+
     call set_datain(DATAin_tmp)  ! copy the tmp object to shared cardamom_structures DATAin
 
     return
 
-  end subroutine update_obs_scaling_normal    
+  end subroutine update_obs_scaling_normal
   !
   !------------------------------------------------------------------
   !
@@ -1102,19 +1102,19 @@ module cardamom_io
 
     return
 
-  end subroutine update_obs_scaling_nsamples      
+  end subroutine update_obs_scaling_nsamples
   !
   !------------------------------------------------------------------
   !
   subroutine update_obs_scaling_sqrt_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type):: DATAin_tmp  
+      type(DATA_type):: DATAin_tmp
     DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
-    ! in this case are all normalised by the sqrt of the 
-    ! sample size. This allows datastreams with more observations 
-    ! to contribute more to the lost function but penalised to reduce 
+    ! in this case are all normalised by the sqrt of the
+    ! sample size. This allows datastreams with more observations
+    ! to contribute more to the lost function but penalised to reduce
     ! bias' introduced by unbalanced observations
 
     DATAin_tmp%GPP_scaling               = 1d0/sqrt(dble(DATAin_original%ngpp))
@@ -1143,7 +1143,7 @@ module cardamom_io
     call set_datain(DATAin_tmp)
     return
 
-  end subroutine update_obs_scaling_sqrt_nsamples     
+  end subroutine update_obs_scaling_sqrt_nsamples
   !
   !------------------------------------------------------------------
   !
@@ -1153,9 +1153,9 @@ module cardamom_io
     DATAin_tmp = DATAin_original
 
     ! Subroutine sets the data specific scaling factors
-    ! in this case are all normalised by the sqrt of the 
-    ! sample size. This allows datastreams with more observations 
-    ! to contribute more to the lost function but penalised to reduce 
+    ! in this case are all normalised by the sqrt of the
+    ! sample size. This allows datastreams with more observations
+    ! to contribute more to the lost function but penalised to reduce
     ! bias' introduced by unbalanced observations
 
     DATAin_tmp%GPP_scaling               = 1d0 / (1d0+log(dble(DATAin_original%ngpp)))

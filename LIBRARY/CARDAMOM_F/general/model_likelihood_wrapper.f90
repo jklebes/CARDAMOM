@@ -34,7 +34,7 @@ contains
       ! for the purpose of running samplers we are only interested in the sum
       loglikelihood = ML_obs_out+ML_prior_out
 
-   end subroutine
+   end subroutine model_likelihood_fct
 
 ! Wrapper for all scaled model likelihood function variants
    subroutine scaled_model_likelihood_fct(params, npars, loglikelihood, id) bind(c, name="C_scaledmodellikelihood")
@@ -53,7 +53,7 @@ contains
       ! for the purpose of running samplers we are only interested in the sum
       loglikelihood = ML_obs_out+ML_prior_out
 
-   end subroutine
+   end subroutine scaled_model_likelihood_fct
 
 
 ! Wrapper for EDC function, which finds a set of parameters fulfilling otherwise
@@ -71,6 +71,6 @@ contains
       call edc_model_likelihood(params, ML_obs_out, ML_prior_out, id)
 
       loglikelihood = ML_obs_out+ML_prior_out
-   end subroutine
+   end subroutine edc_model_likelihood_fct
 
-end module
+end module model_likelihood_wrapper

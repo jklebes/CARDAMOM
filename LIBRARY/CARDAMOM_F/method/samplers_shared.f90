@@ -23,7 +23,7 @@ implicit none
       integer:: nwrite = 1000
       integer:: nprint = 1000
       integer:: nout
-      double precision:: P_target = 0d0 
+      double precision:: P_target = 0d0
       !! termination criterion-a loglikelihood to stop at (optional)
 !> file names
       character(350):: outfile = "parout.txt"
@@ -33,7 +33,7 @@ implicit none
       logical:: append
       real:: fadapt  ! TODO fraction adapt-move to outside
       logical:: randparini
-      logical:: returnpars  
+      logical:: returnpars
       !! a variable that is never used and has no effect, needs deleting in all model likelihood files
       logical:: restart = .false.
       !! is it a restart ?
@@ -59,7 +59,7 @@ implicit none
    type MCMC_OUTPUT
       double precision:: bestll
       !! best (maximum) loglikelihood value found so far
-      double precision:: ll 
+      double precision:: ll
       !! latest loglikelihood value
       double precision, allocatable, dimension(:):: bestpars
       !! best (loglikelihood-maximizing) parameter values found so far
@@ -98,12 +98,12 @@ contains
       double precision, intent(in):: ll
 ! undo the log
       is_infinity = (ll <= log(epsilon(1d0)))  ! check approx zero
-   end function
+   end function is_infinity
 
 !! core sampler math
 
 !> Accept or reject
-!> First argument is new/proposed log(!)likelihood, 
+!> First argument is new/proposed log(!)likelihood,
 !> second is old log likelihood
 !> return logical
    logical function metropolis_choice(new_loglikelihood, old_loglikelihood)
@@ -113,7 +113,7 @@ contains
 ! TODO add optional pregen random
 ! l1/l2 > r  <=> logl1-logl2 > log(r)
       metropolis_choice = ((new_loglikelihood-old_loglikelihood) > log(r))
-   end function
+   end function metropolis_choice
 
 !!!! routines for random initialization
 
@@ -151,7 +151,7 @@ contains
       end do  ! for PI%npar loop
       !TODO test
       !TODO merge, optional uniform_random_vector arg
-   end subroutine
+   end subroutine init_pars_random
 
    subroutine init_latin_square(PI, pars0, n_chains)  ! TODO
       use samplers_math, only: nor2par
@@ -171,7 +171,7 @@ contains
          end do
       end do
 
-   end subroutine
+   end subroutine init_latin_square
 
    pure logical function bounds_check(PI, PARS)
       type(PARINFO), intent(in):: PI
@@ -181,7 +181,7 @@ contains
       ! or check directly against real boundary values
       bounds_check = all((PARS > PI%parmin) .and. (PARS < PI%parmax))
 
-   end function
+   end function bounds_check
 
    subroutine number_filenames(outfile, stepfile, covfile, covifile, chainid)
       character(len=*), intent(inout):: outfile, stepfile, covfile, covifile
@@ -195,6 +195,6 @@ contains
          stepfile = trim(stepfile)//"_"//trim(chainid_str)
          covfile = trim(covfile)//"_"//trim(chainid_str)
          covifile = trim(covifile)//"_"//trim(chainid_str)
-   end subroutine
+   end subroutine number_filenames
 
-end module
+end module samplers_shared

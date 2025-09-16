@@ -25,7 +25,7 @@ module random_uniform
       procedure:: initialize_random
       procedure:: get_random_uniform
       procedure:: next_random_uniform
-   end type
+   end type UNIF_VECTOR
 
 contains
 
@@ -41,7 +41,7 @@ contains
       end if
       call fill_random_uniform(this%u, this%length, this%ranx)
       this%index = 1
-   end subroutine
+   end subroutine initialize_random
 
    function get_random_uniform(this, n) result(x)
     !! Getter to get array of n values
@@ -65,7 +65,7 @@ contains
       ! update the index pointer
       this%index = this%index + n
 
-   end function
+   end function get_random_uniform
 
    double precision function next_random_uniform(this) result(x)
     !! Getter for one (scalar) random value
@@ -83,7 +83,7 @@ contains
       ! update the index pointer
       this%index = this%index + 1
 
-   end function
+   end function next_random_uniform
 
    subroutine fill_random_uniform(u, n, ranx)
       !#
@@ -252,4 +252,4 @@ contains
 
       return
    end subroutine rnstrt
-end module
+end module random_uniform

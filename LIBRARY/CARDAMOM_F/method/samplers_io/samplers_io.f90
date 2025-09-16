@@ -16,7 +16,7 @@ module samplers_io
    ! See function/subroutine specific comments for exceptions and contributors
   !!!!!!!!!!!
 
-   ! Module contains subroutines and variables needed to output parameter, 
+   ! Module contains subroutines and variables needed to output parameter,
    ! likelihood and step size information from the MHMCMC.
 
    implicit none
@@ -52,7 +52,7 @@ module samplers_io
          nsample_buffer, &
          accept_rate_buffer, &
          prob_buffer
-   end type
+   end type io_buffer_space
    ! allow access to needed variable
    public:: io_buffer_space
 
@@ -115,7 +115,7 @@ contains
          status = 0; num_lines = 0
          do
             read (pfile_unit, iostat = status) dummy
-            if (status .ne. 0) exit
+            if (status /= 0) exit
             num_lines = num_lines+1
          end do
          ! Re-use dummy to calculate the target file size to be considered for
@@ -186,7 +186,7 @@ contains
       status = 0; num_lines = 0
       do
          read (pfile_unit, iostat = status) dummy
-         if (status .ne. 0) exit
+         if (status /= 0) exit
          num_lines = num_lines+1
       end do
       ! Determine the number of complete parameter vectors stored. Note that the +
@@ -223,7 +223,7 @@ contains
       status = 0; num_lines = 0
       do
          read (sfile_unit, iostat = status) dummy
-         if (status .ne. 0.) exit
+         if (status /= 0.) exit
          num_lines = num_lines+1
       end do
 
@@ -258,7 +258,7 @@ contains
       status = 0; num_lines = 1
       do
          read (cfile_unit, iostat = status, rec = num_lines) dummy
-         if (status .ne. 0.) exit
+         if (status /= 0.) exit
          num_lines = num_lines+1
       end do
 
@@ -307,7 +307,7 @@ contains
       status = 0; num_lines = 0
       do
          read (cifile_unit, iostat = status) dummy
-         if (status .ne. 0.) exit
+         if (status /= 0.) exit
          num_lines = num_lines+1
       end do
 
@@ -382,7 +382,7 @@ contains
       if (ios /= 0) print *, "error ", ios, " opening file", trim(stepname)
       open (cifile_unit+offset, file = trim(covinfoname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat = ios)
       if (ios /= 0) print *, "error ", ios, " opening file", trim(covinfoname)
-      ! for the covariance matrix we have a fixed size containing two matrices, 
+      ! for the covariance matrix we have a fixed size containing two matrices,
       ! the initial and the current output-therefore we use
       inquire (iolength = reclen) a !; print*,reclen
       write (*, *) "covname", covname
@@ -401,7 +401,7 @@ contains
       io_space%io_buffer_count = 0
       io_space%io_buffer = min(1000, max(10, nwrite_events/10))
 
-      ! Allocate variables used in io buffering, 
+      ! Allocate variables used in io buffering,
       ! these could probably be moved to a more sensible place within cardamom_io.f90
       allocate (io_space%variance_buffer(npars, io_space%io_buffer), &
                 io_space%meanpars_buffer(npars, io_space%io_buffer), &
@@ -412,7 +412,7 @@ contains
 
       return
 
-   end subroutine
+   end subroutine initialize_buffers
 
    !
    !------------------------------------------------------------------

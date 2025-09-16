@@ -4,8 +4,8 @@
 ! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently.
-! Copyright (C) 2024  University of Edinburgh, 
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -14,7 +14,7 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful, 
+! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
@@ -104,10 +104,10 @@ program cardamom_framework
              nOUT_save, do_inflate_dble, cost_func_scaling_dble
    logical:: do_inflate = .false.
    logical:: sub_sample_complete = .false.
-   double precision:: sub_fraction = 0.2d0 
+   double precision:: sub_fraction = 0.2d0
     !! run this percentage of simulation with variant function
-   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list 
-    !! array of output objects from each thread 
+   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
+    !! array of output objects from each thread
    type(MCMC_OPTIONS):: MCO
      !! options for sampler
    logical:: restart
@@ -181,13 +181,13 @@ program cardamom_framework
    if (trim(infile) == "StressTest") then
      !call run_stresstest()
      ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
-     stop 
+     stop
    endif
 
    ! read input data file
-   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  
+   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model
                            ! sets cardamom_structures:: DATAin
-   
+
    call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
@@ -207,12 +207,12 @@ program cardamom_framework
    !if all nchains files were found, read them to get a starting point
    if (MCO%restart) then
      call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
-   endif 
+   endif
    end do
 
    ! Report which model ID we are using
-   write (*, *) "Running model version ", DATAin%ID  
-  
+   write (*, *) "Running model version ", DATAin%ID
+
       if (.not. MCO%restart) then
         ! Begin search for initial conditions
         write (*, *) "Beginning search for initial parameter conditions"
@@ -254,16 +254,16 @@ program cardamom_framework
          ! Report to the user
          write (*, *) "Beginning parameter search on sample size normalised likelihoods"
 
-         MCO%nOUT = nint(dble(nout_save)*sub_fraction) 
-         MCO%fADAPT = 1d0 
+         MCO%nOUT = nint(dble(nout_save)*sub_fraction)
+         MCO%fADAPT = 1d0
          MCO%fixedpars = .true. ! start from end points of EDC phase
-         ! Second phase, run Mcmc with sub scaling 
+         ! Second phase, run Mcmc with sub scaling
          call update_obs_scaling_nsamples
          call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
          MCO%fixedpars = .true.
          do i = 1, nchains
          ! Use the best parameter set as the starting point for the next stage
-         MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
+         MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars)
 
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
@@ -281,7 +281,7 @@ program cardamom_framework
 
          MCOUT_list(i)%nos_iterations = 0
 
-      end if 
+      end if
 
       ! Restore module variables needed for the run-these components could be split
       ! into two subroutines to avoid double calling of file name creation
@@ -298,7 +298,7 @@ program cardamom_framework
       ! Call the main MCMC
       ! The specific normalisation of the cost function is determined here.
       ! But to avoid getting through the EDC do_inflate sections before finding
-      ! out that the cost_function_scaling has not been set correctly, 
+      ! out that the cost_function_scaling has not been set correctly,
       ! ensure code after the command line read (above) has been correctly maintained
       if (cost_func_scaling_dble == 0) then
          call update_obs_scaling_normal

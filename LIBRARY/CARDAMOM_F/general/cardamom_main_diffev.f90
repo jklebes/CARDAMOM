@@ -179,7 +179,7 @@ program cardamom_DEMCz
       ! into two subroutines to avoid double calling of file name creation
       ! components.
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-      ! Since they all get the same nout setting, assume all sub_model phase simulation 
+      ! Since they all get the same nout setting, assume all sub_model phase simulation
       ! were same length  ! TODO
 
       ! Update the user
@@ -191,7 +191,7 @@ program cardamom_DEMCz
       ! Call the main MCMC
       ! The specific normalisation of the cost function is determined here.
       ! But to avoid getting through the EDC do_inflate sections before finding
-      ! out that the cost_function_scaling has not been set correctly, 
+      ! out that the cost_function_scaling has not been set correctly,
       ! ensure code after the command line read (above) has been correctly maintained
       if (cost_func_scaling_dble == 0) then
          call update_obs_scaling_normal

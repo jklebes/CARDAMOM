@@ -23,11 +23,11 @@ module MHMCMC
 
    ! Relevant source references:
    ! Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
-   ! Haario et al., (2006) Stat. Comput., 16:339–354, DOI 10.1007/s11222-006-9438-0, 
+   ! Haario et al., (2006) Stat. Comput., 16:339–354, DOI 10.1007/s11222-006-9438-0,
    ! Roberts and Rosenthal (2009), Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367
 !
    ! On normalized parameters:
-   ! "raw" values, as convenient for loglikelihood calculation and file writing, 
+   ! "raw" values, as convenient for loglikelihood calculation and file writing,
    ! are the default  For function arguments, internal saved data.  Parameters
    ! are converted to normalized values as needed by adaptive statistics functions.  History matrix
    !  PARSALL and covariance matrix work refer to the normalized parameter space.
@@ -61,7 +61,7 @@ contains
       !/* ***********INPUTS************
       ! *
       ! * model_likelihood : A function wholly responsible for
-      ! * (a) running the model given the DATA and parameters, 
+      ! * (a) running the model given the DATA and parameters,
       ! * (b) comparing it to observations, and
       ! * (c) returning  the (log) likelihood.
       ! * The subroutine will be run as MODEL_LIKELIHOOD(PARS, npars, loglikelihood, chainid)
@@ -119,10 +119,10 @@ contains
          end subroutine model_likelihood
       end interface
 
-      !> optionally  give a second function with same shape as model_likelihood, 
+      !> optionally  give a second function with same shape as model_likelihood,
       !> for writing to file.  model_likelihood_write_in is the input arg, which may not be present.
       procedure(model_likelihood), optional:: model_likelihood_write_in
-      !> A second function with same shape as model_likelihood, 
+      !> A second function with same shape as model_likelihood,
       !> for writing to file.  Internal variable equal to model_likelihood_write_in if present
       !> or (default) same as main model_likelihood function
       procedure(model_likelihood), pointer:: model_likelihood_write
@@ -183,7 +183,7 @@ contains
       integer:: chainid_
       integer:: seed
 
-      type(io_buffer_space):: io_space  
+      type(io_buffer_space):: io_space
       !! buffer for writing to out files, private to this chain
       character(350):: outfile, stepfile, covfile, covifile
       !! filenames
@@ -229,8 +229,8 @@ contains
          end subroutine model_likelihood
       end interface
 
-      ! optionally give a second function with same shape as model_likelihood, 
-      ! for writing to file; 
+      ! optionally give a second function with same shape as model_likelihood,
+      ! for writing to file;
       procedure(model_likelihood), optional:: model_likelihood_write_in
       ! Going forwards this pointer is the alternateive likelihood function for writing to file
       procedure(model_likelihood), pointer:: model_likelihood_write
@@ -254,7 +254,7 @@ contains
       beta = MCO%beta
       par_minstepsize = MCO%par_minstepsize
 
-   
+
       if (present(chainid)) then
          chainid_ = chainid
       else
@@ -297,7 +297,7 @@ contains
          ! keep MCOUT, starting point, counters statistics collection
          ! implies start from last state
       else
-         ! Not a restart from aborted simulation 
+         ! Not a restart from aborted simulation
          ! start new counters
 
          ! init MCOUT
@@ -326,7 +326,7 @@ contains
                allocate (MCOUT%covariance(npars, npars))
             end if
 
-          else 
+          else
           ! ((.not. restart) .and. fixedpars) : keep MCOUT%pars and statistics from previous phase
           ! write "initial" covariance matrix that we inherited from previous phase to file
           if (MCO%nwrite > 0) then
@@ -344,18 +344,18 @@ contains
          write (*, *) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
       else  ! restart or fixedpars case-from aborted simulation or from previous phase-use pars in MCOUT as stating point
          PARS_previous = MCOUT%PARS
-         ! start statistics from previous statistics in MCOUT 
+         ! start statistics from previous statistics in MCOUT
       end if
 
       if (.not. MCO%restart) then  ! if new simulation, from fixedpars or random pars
-         ! calculate initial ll 
+         ! calculate initial ll
          call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
 
          BESTPARS = PARS_previous
          llmax = loglikelihood_previous
-      else 
+      else
          loglikelihood_previous = MCOUT%ll
-      endif 
+      endif
 
       if (loglikelihood_previous < -999999) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
@@ -392,7 +392,7 @@ contains
             ! Store accepted parameter proposals (unnormalized values)
             ! keep record of all parameters accepted since step adaption
             ! (this chain)
-            ! Because this history matrix is used for (normalized) statistics for adaptiveness, 
+            ! Because this history matrix is used for (normalized) statistics for adaptiveness,
             ! store normalized version of pars
             PARSALL(1:npars, ACCLOC+1) = log_par2nor(PARS_proposed, PI%parmin, PI%parmax, PI%paradj)  ! add row in history matrix
             ! Keep count of the number of accepted proposals in this local period
@@ -408,7 +408,7 @@ contains
                llmax = loglikelihood_previous
 	    endif
          else
-            ! write to history  
+            ! write to history
             PARSALL(1:npars, ACCLOC+1) = log_par2nor(PARS_previous, PI%parmin, PI%parmax, PI%paradj)
          end if  ! accept or reject proposed pars
 
@@ -448,11 +448,11 @@ contains
             if (burn_in_period > ITER .or. .not. MCOUT%use_multivariate) then
 
                ! adapt the covariance matrix for multivariate proposal
-               ! PARSALL-all states in this phase, i.e. since last (mod(ITER, MCO%nadapt) == 0), 
+               ! PARSALL-all states in this phase, i.e. since last (mod(ITER, MCO%nadapt) == 0),
                ! to be added to running statistacs calculations
 	       ! there should be MCO%nadapt new rows in this matrix
                call update_statistics(PARSALL, npars, MCOUT, MCOUT%use_multivariate, MCO%nadapt, ITER, N_before_mv_target)
-            end if 
+            end if
 
 	    ! TODO write_covariance_matrix if this is the fist time, switched .cov. from false to true
 
@@ -504,7 +504,7 @@ contains
       write (*, *) "Best log-likelihood = ", llmax
       write (*, *) "Best parameters = ", MCOUT%bestpars
 
-   end subroutine
+   end subroutine run_mcmc
 
    !
    !------------------------------------------------------------------
@@ -525,12 +525,12 @@ contains
       integer, intent(in):: nadapt
       !! number of recent states to be added
       integer:: cur
-      !! number of states that went into running statistics previously, 
+      !! number of states that went into running statistics previously,
       !! i.e. ITER-nadapt
-      double precision, intent(in):: PARSALL(npars, nadapt)  
+      double precision, intent(in):: PARSALL(npars, nadapt)
 	!! collection of recent normalised parameter vectors
       ! declare local variables
-      integer p, info  ! counters
+      integer :: p, info  ! counters
       double precision, dimension(npars, npars):: cov_backup
       double precision, dimension(npars, npars):: cholesky
       double precision, dimension(npars):: meanpar_backup
@@ -545,9 +545,9 @@ contains
          cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
 	! update statistics : increment_covariance matrix adjusts running mean and covariance
-! with th nadapt new states in PARSALL   
-! caution : it changes not just its last argument 'covariance', but also its second arguemtn 'mean' and its 
-! 4th arguement 'cur' .      
+! with th nadapt new states in PARSALL
+! caution : it changes not just its last argument 'covariance', but also its second arguemtn 'mean' and its
+! 4th arguement 'cur' .
 	! here we have length of history (weighting of history in running avg and cov calculation)
          ! = ITER-nadapt instead of being artificially capped at 100
          cur = ITER-nadapt
@@ -643,7 +643,7 @@ contains
       call step_pars(pars0_norm, pars_norm, PI%npars, multivariate, covariance, beta, opt_scaling, par_minstepsize, &
                      random_uniform_vector)
       pars = log_nor2par(pars_norm, PI%parmin, PI%parmax, PI%paradj)
-   end subroutine
+   end subroutine step_pars_real
 
    !-
    !------------------------------------------------------------------
@@ -668,9 +668,9 @@ contains
       ! declare input variables
       !double precision, dimension(PI%npars), intent(inout):: !norpars0 & ! normalised current parameters
       !,norpars  & ! normalised proposal
-      double precision, dimension(:), intent(in):: pars0    
+      double precision, dimension(:), intent(in):: pars0
          !! current parameters
-      double precision, dimension(:), intent(out):: pars       
+      double precision, dimension(:), intent(out):: pars
          !! proposed new parameters to generate
       integer, intent(in):: npars
          !! length of pars vectors
@@ -703,9 +703,9 @@ contains
          call random_normal(random_uniform_vector, rn2(p))
       end do
 
-      if (multivariate) then 
+      if (multivariate) then
 
-         ! Draw a vector from multivariate distribution 
+         ! Draw a vector from multivariate distribution
          ! NOTE: if covariance matrix provided is not positive definite
          !       a sample from normal distribution is returned
          call random_multivariate(npars, 1, covariance, mu, rn, random_uniform_vector)
