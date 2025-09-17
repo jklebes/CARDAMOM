@@ -293,8 +293,8 @@ contains
          stop 1
       end if
 
-      ! Now we have used the infile to determine that this is going to be stress test, 
-      ! and the specific one has been determined from the outfile, 
+      ! Now we have used the infile to determine that this is going to be stress test,
+      ! and the specific one has been determined from the outfile,
       ! we will now overwrite the outfile to give a default output location
       outfile = "stress_test_output_"
 
@@ -351,7 +351,7 @@ contains
       call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
 
       loglikelihood = ML_obs_out+ML_prior_out
-   end subroutine
+   end subroutine stresstest_likelihood_fct
 
    !
    !------------------------------------------------------------------
@@ -410,7 +410,7 @@ contains
 
       loglikelihood = ML_obs_out+ML_prior_out
 
-   end subroutine
+   end subroutine stresstest_sublikelihood_fct
 
    !
    !------------------------------------------------------------------
@@ -458,4 +458,4 @@ contains
    !
    !--------------------------------------------------------------------
    !
-end module  ! MHMCMC_StressTests
+end module MHMCMC_StressTests  ! MHMCMC_StressTests

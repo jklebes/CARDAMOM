@@ -20,7 +20,7 @@ program tester
 
   stat = 0
 
-  ! set the seed for all the irand() calls in tests, which 
+  ! set the seed for all the irand() calls in tests, which
   ! in turn seed the cardmom-native random number generator.
   ! To not always have the same test behavior.
     call SYSTEM_CLOCK(COUNT = clock)

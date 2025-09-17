@@ -49,14 +49,14 @@ subroutine test_step_pars(error)
   logical:: multivariate = .true.
   double precision, dimension(npars, npars):: covariance
   double precision:: beta = 0.05d0  ! recommended constant, only relevant in multivariate phase
-  double precision:: opt_scaling = 5.67/dble(npars)  ! recommended constant 
+  double precision:: opt_scaling = 5.67/dble(npars)  ! recommended constant
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
   seed = irand()  ! this test with a  different seed each time
   call random_uniform%initialize_random(seed)
   call init_PI()
-  pars0 = (/0d0, 0d0/)
+  pars0 = [0d0, 0d0]
   covariance = reshape(source = [1d0, 0d0, 0d0, 1d0], shape = [2, 2])  ! uncorellated with large variance
   call step_pars(pars0, pars, npars, multivariate, covariance, beta, opt_scaling, par_minstepsize, random_uniform)
   ! expect pars is close to, but not equal pars0
@@ -76,7 +76,7 @@ subroutine test_step_pars_real(error)
   logical:: multivariate = .true.
   double precision, dimension(PI_xy%npars, PI_xy%npars):: covariance
   double precision:: beta = 0.05d0  ! recommended constant, only relevant in multivariate phase
-  double precision:: opt_scaling  ! recommended constant 
+  double precision:: opt_scaling  ! recommended constant
   double precision:: par_minstepsize = 0.001d0 ! ?? what does this do ?
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
@@ -84,7 +84,7 @@ subroutine test_step_pars_real(error)
   opt_scaling = 5.67/dble(PI_xy%npars)
   call random_uniform%initialize_random(seed)
   call init_PI()
-  pars0 = (/0d0, 3.0d0/)  ! within bounds of PI_xy
+  pars0 = [0d0, 3.0d0]  ! within bounds of PI_xy
   covariance = reshape(source = [1d0, 0d0, 0d0, 1d0], shape = [2, 2])  ! uncorellated with large variance
   call step_pars_real(pars0, pars, PI_xy, multivariate, covariance, beta, opt_scaling, par_minstepsize, random_uniform)
   ! expect pars is close to, but not equal pars0
@@ -108,21 +108,21 @@ subroutine test_increment_covariance_matrix(error)
   type(error_type), allocatable, intent(out):: error
   ! call increment_covariance_matrix(history, mean, N_local, N_history, cov)
   ! expect changes to mean, cov
-  ! and n_local +=1 
-end subroutine
+  ! and n_local +=1
+end subroutine test_increment_covariance_matrix
 
 subroutine test_cholesky_factor(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   !call cholesky_factor(N, cov, posdef)
-end subroutine
+end subroutine test_cholesky_factor
 
 subroutine test_covariance_matrix(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   !call covariance_matrix(history, mean, npars, N_history, cov)
   ! expect output at mean, cov
-end subroutine
+end subroutine test_covariance_matrix
 
 subroutine test_mcmc_output_type(error)
   use MHMCMC, only: MCMC_OUTPUT
@@ -130,7 +130,7 @@ subroutine test_mcmc_output_type(error)
   type(error_type), allocatable, intent(out):: error
   ! test declare an object of type MCMC_OUTPUT
   type(MCMC_OUTPUT):: MCOUT
-end subroutine
+end subroutine test_mcmc_output_type
 
 ! TODO code to run before tests, such as init_pi
 
@@ -139,25 +139,25 @@ subroutine test_run_mcmc_len0(error)
   type(error_type), allocatable, intent(out):: error
   type(mcmc_output):: mcout
   type(mcmc_options):: mcopt  ! filled with defaults only
-  ! zero length run : takes expected input arguments, setup works, 
+  ! zero length run : takes expected input arguments, setup works,
   ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call init_pi()
   mcopt%nout = 0
   call run_mcmc(ll_normal, pi_xy, mcopt, mcout)
-  ! expect values in mcout : a random initial state (within given parameter bounds) 
+  ! expect values in mcout : a random initial state (within given parameter bounds)
   ! and its loglikelihood
   ! call check(error, mcout%ll > 0d0, .true. )
   write(*,*) mcout%ll, mcout%pars
   call check(error, mcout%pars(1) >= pi_xy%parmin(1) .and. mcout%pars(1) <= pi_xy%parmax(1))
   call check(error, mcout%pars(2) >= pi_xy%parmin(2) .and. mcout%pars(2) <= pi_xy%parmax(2) )
-  ! given starting values which happen to be the correct (min loglik) solution, 
-  ! expect after zero run steps mcout has these initial values and 
+  ! given starting values which happen to be the correct (min loglik) solution,
+  ! expect after zero run steps mcout has these initial values and
   ! lolglik is low.
   !call check(error, mcout%pars(1), x_ideal )
   !call check(error, mcout%pars(2), y_ideal)
   !call check(error, MCOUT% ll, 0.0 )
-end subroutine 
+end subroutine test_run_mcmc_len0
 
 subroutine test_not_static(error)
   implicit none
@@ -184,7 +184,7 @@ subroutine test_not_static(error)
   write(*,*) "states", state1, state2
   write(*,*) "variances", mcout%parvar
   call check(error, state2(1) /= state1(1) .and. state2(2) /= state1(2))
-end subroutine 
+end subroutine test_not_static
 
 subroutine test_run_mcmc_len1000(error)
   implicit none
@@ -204,7 +204,7 @@ subroutine test_run_mcmc_len1000(error)
   !call check(error, mcout%pars(1), x_ideal )
   !call check(error, mcout%pars(2), y_ideal)
   !call check(error, MCOUT%ll, 50.0 )
-end subroutine 
+end subroutine test_run_mcmc_len1000
 
 subroutine test_run_parallel_mcmc_nchains1_len0(error)
   implicit none
@@ -213,18 +213,18 @@ subroutine test_run_parallel_mcmc_nchains1_len0(error)
   type(mcmc_output), dimension(:), allocatable:: mcout
   type(mcmc_output):: mcout1
   type(mcmc_options):: mcopt  ! filled with defaults only
-  ! zero length run : takes expected input arguments, setup works, 
+  ! zero length run : takes expected input arguments, setup works,
   ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call init_pi()
   mcopt%nout = 0
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout)
-  ! expect values in mcout : a random initial state (within given parameter bounds) 
+  ! expect values in mcout : a random initial state (within given parameter bounds)
   ! and its loglikelihood
   mcout1 = mcout(1)
   call check(error, mcout1%pars(1) >= pi_xy%parmin(1) .and. mcout1%pars(1) <= pi_xy%parmax(1))
   call check(error, mcout1%pars(2) >= pi_xy%parmin(2) .and. mcout1%pars(2) <= pi_xy%parmax(2) )
-end subroutine 
+end subroutine test_run_parallel_mcmc_nchains1_len0
 
 subroutine test_run_parallel_mcmc_nchains4_len0(error)
   implicit none
@@ -234,14 +234,14 @@ subroutine test_run_parallel_mcmc_nchains4_len0(error)
   type(mcmc_output):: mcout1
   type(mcmc_options):: mcopt  ! filled with defaults only
   integer:: i
-  ! zero length run : takes expected input arguments, setup works, 
+  ! zero length run : takes expected input arguments, setup works,
   ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call init_pi()
   mcopt%nout = 0
   write(*,*) "calling"
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout, nchains = nchains)
-  ! expect values in mcout : a random initial state (within given parameter bounds) 
+  ! expect values in mcout : a random initial state (within given parameter bounds)
   ! and its loglikelihood
   do i = 1, nchains
     mcout1 = mcout(i)
@@ -249,7 +249,7 @@ subroutine test_run_parallel_mcmc_nchains4_len0(error)
     call check(error, mcout1%pars(1) >= pi_xy%parmin(1) .and. mcout1%pars(1) <= pi_xy%parmax(1))
     call check(error, mcout1%pars(2) >= pi_xy%parmin(2) .and. mcout1%pars(2) <= pi_xy%parmax(2) )
   end do
-end subroutine 
+end subroutine test_run_parallel_mcmc_nchains4_len0
 
 
 subroutine test_run_parallel_mcmc_nchains4_enforceomp_len0(error)
@@ -260,28 +260,28 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len0(error)
   type(mcmc_options):: mcopt  ! filled with defaults only
   type(mcmc_output):: mcout1
   integer:: i
-  ! zero length run : takes expected input arguments, setup works, 
+  ! zero length run : takes expected input arguments, setup works,
   ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call omp_set_num_threads(4)
   call init_pi()
   mcopt%nout = 0
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout, nchains = nchains)
-  ! expect values in mcout : a random initial state (within given parameter bounds) 
+  ! expect values in mcout : a random initial state (within given parameter bounds)
   ! and its loglikelihood
   do i = 1, nchains
     mcout1 = mcout(i)
     write(*,*) i, mcout1%pars(1), mcout1%pars(2)
     call check(error, mcout1%pars(1) >= pi_xy%parmin(1) .and. mcout1%pars(1) <= pi_xy%parmax(1))
     call check(error, mcout1%pars(2) >= pi_xy%parmin(2) .and. mcout1%pars(2) <= pi_xy%parmax(2) )
-  end do 
-end subroutine 
+  end do
+end subroutine test_run_parallel_mcmc_nchains4_enforceomp_len0
 
 subroutine test_run_parallel_mcmc_len1000(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   type(MCMC_OUTPUT):: MCOUT
-  type(MCMC_OPTIONS):: MCOPT 
+  type(MCMC_OPTIONS):: MCOPT
   ! all on defaults, without optional arguments
   MCOPT%nout = 1000
   call run_mcmc(ll_normal, PI_xy, MCOPT, MCOUT)
@@ -292,7 +292,7 @@ subroutine test_run_parallel_mcmc_len1000(error)
   call check(error, MCOUT%pars(2)== y_ideal)
   call check(error, MCOUT%ll == 0.0 )
   ! This is an easy problem, expect convergence was reached long before MAXITER.
-end subroutine
+end subroutine test_run_parallel_mcmc_len1000
 
 subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
   implicit none
@@ -304,14 +304,14 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
   double precision:: ll_current, ll_best
   integer:: i
   integer, parameter:: dp = kind(1d0)
-  ! zero length run : takes expected input arguments, setup works, 
+  ! zero length run : takes expected input arguments, setup works,
   ! outputs/writes unchanged state
   ! all on defaults, without optional arguments
   call omp_set_num_threads(4)  ! error if not compiled with omp library
   call init_pi()
   mcopt%nout = 10000
   call run_parallel_mcmc(ll_normal, pi_xy, mcopt, mcout, nchains = nchains)
-  ! expect values in mcout : a random initial state (within given parameter bounds) 
+  ! expect values in mcout : a random initial state (within given parameter bounds)
   ! and its loglikelihood
   do i = 1, nchains
     mcout1 = mcout(i)
@@ -326,8 +326,8 @@ subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000(error)
     ! outputs complete and nos_iterations
     call check(error, mcout1%complete)  ! expect .true.
     call check(error, mcout1%nos_iterations, mcopt%nout)  ! because no convergence checks implemented at the moment
-  end do 
-end subroutine 
+  end do
+end subroutine test_run_parallel_mcmc_nchains4_enforceomp_len100000
 
 subroutine test_mcmc_stop_condition(error)
   !! stops on MCMC stop criterion of reaching loglikelihood threshold
@@ -339,19 +339,19 @@ subroutine test_mcmc_stop_condition(error)
   integer:: maxsteps
   call init_pi()
   maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
-  mcopt%nout = maxsteps 
+  mcopt%nout = maxsteps
   mcopt%P_target = -0.0d0  ! convergence criteria : loglikelood reached 0
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect we have optimized the values to the correct ranges
-  call check(error, mcout%bestpars(1) == mcout%pars(1) .and. mcout%bestpars(2) == mcout%pars(2) )  
-  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )  
+  call check(error, mcout%bestpars(1) == mcout%pars(1) .and. mcout%bestpars(2) == mcout%pars(2) )
+  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )
   call check(error, mcout%pars(2) >= y_lower  .and. mcout%pars(2) <= y_upper )
   ! Expect the optimization stopped early
   call check(error, mcout%nos_iterations < maxsteps)
   ! Expect bestll is exactly 0 and current ll is exactly zero
   call check(error, approx(mcout%bestll, 0d0))
   call check(error, approx(mcout%ll, 0d0))
-end subroutine 
+end subroutine test_mcmc_stop_condition
 
 subroutine test_mcmc_stop_condition_exact(error)
   !! stops on MCMC stop criterion of reaching loglikelihood threshold
@@ -364,18 +364,18 @@ subroutine test_mcmc_stop_condition_exact(error)
   integer:: maxsteps
   call init_pi()
   maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
-  mcopt%nout = maxsteps 
+  mcopt%nout = maxsteps
   mcopt%P_target = -0.0d0  ! convergence criteria : loglikelood reached 0
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect we have optimized the values to the correct ranges
-  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )  
+  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )
   call check(error, mcout%pars(2) >= y_lower  .and. mcout%pars(2) <= y_upper )
   ! Expect the optimization stopped early
   call check(error, mcout%nos_iterations < maxsteps)
   ! Expect bestll is exactly 0 and current ll is exactly zero
   call check(error, approx(mcout%bestll, 0d0))
   call check(error, approx(mcout%ll, 0d0))
-end subroutine 
+end subroutine test_mcmc_stop_condition_exact
 
 subroutine test_mcmc_stop_condition_initial(error)
   !! stops on MCMC stop criterion of reaching loglikelihood threshold
@@ -389,7 +389,7 @@ subroutine test_mcmc_stop_condition_initial(error)
   integer:: maxsteps
   call init_pi()
   maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
-  mcopt%nout = maxsteps 
+  mcopt%nout = maxsteps
   mcopt%P_target = -10000.0d0  ! Extremely broad convergence criterion, already fulfilled
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect the optimization stopped early, immediately
@@ -397,12 +397,12 @@ subroutine test_mcmc_stop_condition_initial(error)
   call check(error, mcout%nos_iterations <= 0)
   ! Expect bestll is current ll
   call check(error, approx(mcout%bestll, mcout%ll, 0d0))
-end subroutine 
+end subroutine test_mcmc_stop_condition_initial
 
 subroutine test_mcmc_two_phase(error)
   !! Reproducing find_edc+main MCMC cardamom run.
-  !! First find a point in ll = 0 region of ll_step potential, then 
-  !! start at this point with ll_bounded potential, which returns 
+  !! First find a point in ll = 0 region of ll_step potential, then
+  !! start at this point with ll_bounded potential, which returns
   !! -Infinity if started at points outside of this region
   implicit none
   type(error_type), allocatable, intent(out):: error
@@ -413,17 +413,17 @@ subroutine test_mcmc_two_phase(error)
   call init_pi()
   maxsteps = 1000000  ! don't expect to actually run for this long before convergence ll = 0.0
   mcopt%nout = maxsteps
-  mcopt%P_target = 0.0d0 
+  mcopt%P_target = 0.0d0
   call run_mcmc(ll_step, pi_xy, mcopt, mcout)
   ! Expect we have optimized the values to the correct ranges
-  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )  
+  call check(error, mcout%pars(1) >= x_lower .and. mcout%pars(1) <= x_upper )
   call check(error, mcout%pars(2) >= y_lower  .and. mcout%pars(2) <= y_upper )
   ! remember point found by the first round
   startingpars = mcout%pars
-  ! Now put the previously found point mcout$pars as starting point for another run with 
+  ! Now put the previously found point mcout$pars as starting point for another run with
   ! ll_bounded potential
   ! Keep McOUT, but reset step counter and statistics
-  mcopt%nout = 0  ! run for zero steps 
+  mcopt%nout = 0  ! run for zero steps
   ! pass optional restart=.true. argument to not generate new random starting point
   mcopt%restart = .true.
   call run_mcmc(ll_bounded, pi_xy, mcopt, mcout)
@@ -438,30 +438,30 @@ subroutine test_mcmc_two_phase(error)
   call run_mcmc(ll_bounded, pi_xy, mcopt, mcout)
   ! Expect we continue to be in the "allowed" region
   call check(error, mcout%ll > -999999 )
-end subroutine 
+end subroutine test_mcmc_two_phase
 
 subroutine test_mcmc_two_phase_parallel(error)
   !! Reproducing find_edc+main MCMC cardamom run.
-  !! Repoducing parallel structure in main:  find_edc is called in top level omp parallel do, 
+  !! Repoducing parallel structure in main:  find_edc is called in top level omp parallel do,
   !! then run_parallel_mcmc is called.
-  !! First find starting points point in ll = 0 region of ll_step potential, then 
-  !! start at these points with ll_bounded potential, which returns 
+  !! First find starting points point in ll = 0 region of ll_step potential, then
+  !! start at these points with ll_bounded potential, which returns
   !! -Infinity if started at points outside of this region
   implicit none
   integer, parameter:: nchains = 4
   type(error_type), allocatable, intent(out):: error
   type(mcmc_output), dimension(:), allocatable:: mcout_list
-  type(mcmc_options):: mcopt  
+  type(mcmc_options):: mcopt
   integer:: maxsteps
   double precision, dimension(nchains, 2):: startingpars
   integer:: i
-  call omp_set_num_threads(nchains)  
+  call omp_set_num_threads(nchains)
   allocate(mcout_list(nchains))
   call init_pi()
-  maxsteps = 1000000  
+  maxsteps = 1000000
   ! shared MCopt struct
-  mcopt%nout = maxsteps  
-  mcopt%P_target = 0.0d0 
+  mcopt%nout = maxsteps
+  mcopt%P_target = 0.0d0
 
   !$omp parallel do
   do i = 1, nchains
@@ -475,13 +475,13 @@ subroutine test_mcmc_two_phase_parallel(error)
   call check(error, mcout_list(i)%pars(2) >= y_lower .and. mcout_list(i)%pars(2) <= y_upper )
   ! remember points found by the first round
   startingpars(i, :) = mcout_list(i)%pars
-  end do 
+  end do
   call check(error, mcout_list(1)%pars(2) /= mcout_list(2)%pars(2))
 
-  ! Now put the previously found point mcout$pars as starting point for another run with 
+  ! Now put the previously found point mcout$pars as starting point for another run with
   ! ll_bounded potential
   ! Keep McOUT, but reset step counter and statistics
-  mcopt%nout = 0  ! run for zero steps 
+  mcopt%nout = 0  ! run for zero steps
   ! pass optional restart=.true. argument to not generate new random starting points
   mcopt%restart = .true.
   call run_parallel_mcmc(ll_bounded, pi_xy, mcopt, mcout_list)
@@ -493,7 +493,7 @@ subroutine test_mcmc_two_phase_parallel(error)
   call check(error, mcout_list(i)%pars(2) == startingpars(i, 2) )
   ! expect the loglikelihood is never-Infinity
   call check(error, mcout_list(i)%ll > -999999 )
-  end do 
+  end do
   ! Run for a few more rounds
   mcopt%nout = 100000
   mcopt%restart = .true.
@@ -505,6 +505,6 @@ subroutine test_mcmc_two_phase_parallel(error)
   call check(error, mcout_list(i)%pars(2) >= y_lower .and. mcout_list(i)%pars(2) <= y_upper )
   call check(error, mcout_list(i)%ll > -999999 )
   end do
-end subroutine 
+end subroutine test_mcmc_two_phase_parallel
 
 end module test_MCMC

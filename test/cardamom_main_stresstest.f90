@@ -20,7 +20,7 @@ subroutine run_stresstest()
  ! Edinburgh CARDAMOM code and subsequent modifications by:
  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
  ! J. F. Exbrayat (University of Edinburgh)
- ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
+ ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)
  ! See function/subroutine specific comments for exceptions and contributors
  !!!!!!!!!!!
 
@@ -108,7 +108,7 @@ subroutine run_stresstest()
 
  ! user update
  write(*,*)"Command line options read, moving on now"
- 
+
  ! seed the random number generator
  ! determine unique (sort of) seed value; based on system time
  call system_clock(time1, time2, time3)
@@ -137,11 +137,11 @@ subroutine run_stresstest()
  call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
 
  ! Initialise counters used to track the output of parameter sets
- !TODO now each chain has its own 
+ !TODO now each chain has its own
  io_space%io_buffer_count = 0
  io_space%io_buffer = min(1000, max(10, (MCO%nOUT/MCO%nWRITE) / 10))
 
- ! Allocate variables used in io buffering, 
+ ! Allocate variables used in io buffering,
  ! these could probably be moved to a more sensible place within cardamom_io.f90 DONE
  allocate(io_space%variance_buffer(PI%npars, io_space%io_buffer), &
           io_space%meanpars_buffer(PI%npars, io_space%io_buffer), &
@@ -250,5 +250,5 @@ subroutine run_stresstest()
  write(*,*)"=========================Honestly=========================="
 
 
-end subroutine
-end module
+end subroutine run_stresstest
+end module cardamom_main_stresstest

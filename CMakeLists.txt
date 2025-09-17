@@ -14,11 +14,9 @@ set (
 )
 # I put a lot of extra flags here to try to make gprof work, but it turned out to be
 # related to shared libraries - gprof can't do shared libraries
+# so we need two build types - shared libraries for R 
+#                            - static libraries for gprof
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg -g")
-
-## Code coverage analysis
-#add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
-#add_link_options(-lgcov --coverage) 
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF) #different needs for grpof and R
 
@@ -33,6 +31,11 @@ set_target_properties(
   SOVERSION "${PROJECT_VERSION_MAJOR}"
   Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/include"
 )
+
+## Code coverage analysis
+#target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+#target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
+
 target_include_directories(
   "cardamom-lib"
   PUBLIC

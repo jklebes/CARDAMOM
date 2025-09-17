@@ -23,15 +23,15 @@ end subroutine collect_modeltests
 
 subroutine test_consistency(error)
   !! As in _likelihood.f90 model_sanity_check  :
-  !! Calling carbon_model twice with same input, 
+  !! Calling carbon_model twice with same input,
   !! we expect same output
- 
+
   ! variables for carbon_model intent(in)
 
   ! arrays for carbon_model intent(out)
 
   ! second set for second run
-end subroutine 
+end subroutine test_consistency
 
 
 end module test_random

@@ -31,10 +31,10 @@ end subroutine collect_DEMCztests
 
 subroutine test_MCO(error)
   type(error_type), allocatable, intent(out):: error
-  !Having imported DEMCz_module, we should have a type(DEMCzOpt) 
+  !Having imported DEMCz_module, we should have a type(DEMCzOpt)
   ! and access a module-level object holding default options
   type(DEMCzOPT):: options
-end subroutine
+end subroutine test_MCO
 
 ! TODO move to common
 subroutine test_random_int(error)
@@ -58,7 +58,7 @@ subroutine test_metropolis_choice(error)
     call check(error, metropolis_choice(log(1.0_dp), log(1e-15_dp)), .true. )
     ! certain rejection of state with probability 0 vs 1
     call check(error, metropolis_choice(log(1e-15_dp), log(1.0_dp)), .false. )
-  
+
   end subroutine test_metropolis_choice
 
   subroutine test_metropolis_increase(error)
@@ -81,16 +81,16 @@ subroutine test_metropolis_stochastic(error)
     double precision:: new_loglikelihood, old_loglikelihood, accept_ratio
     integer:: i, N, accept_count
     ! Something with a likelihood l1 = 1/2 l2 should be acceped
-    ! 50% of the time.  
-    new_loglikelihood = log(.3) 
+    ! 50% of the time.
+    new_loglikelihood = log(.3)
     old_loglikelihood = log(.6)
-    ! get acceptance N times  - expect about 50% true 
+    ! get acceptance N times  - expect about 50% true
     N = 500
     accept_count = 0
     do i = 1, N
       if (metropolis_choice(new_loglikelihood, old_loglikelihood)) then
-        accept_count = accept_count+1 
-      end if 
+        accept_count = accept_count+1
+      end if
     end do
     accept_ratio  = accept_count/real(N)
     write (*,*) accept_count
@@ -99,38 +99,38 @@ subroutine test_metropolis_stochastic(error)
   end subroutine test_metropolis_stochastic
 
   subroutine test_DEMCz_runs(error)
-    use DEMCz, only: run_DEMCz, PARINFO  
+    use DEMCz, only: run_DEMCz, PARINFO
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
 
     type(DEMCzOPT):: options
      !! new DEMCZ options struct with default values
-    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT 
+    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT
      !! new (blank) struct to write results to
-    
+
     ! PI: use the PI_xy struct from test_functions quadratic potential
     call init_pi()
 
     options%nout = 10
 
     call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
-    
+
   end subroutine test_DEMCz_runs
 
   subroutine test_DEMCz_runs_enforce_omp(error)
-    use DEMCz, only: run_DEMCz, PARINFO  
+    use DEMCz, only: run_DEMCz, PARINFO
     implicit none
     type(error_type), allocatable, intent(out):: error
     ! test the main DEMCz function just runs when given a function
 
     type(DEMCzOPT):: options
      !! new DEMCZ options struct with default values
-    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT 
+    type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT
      !! new (blank) struct to write results to
      integer:: nchains
      nchains = 4
-    
+
     ! PI: use the PI_xy struct from test_functions quadratic potential
     call init_pi()
 
@@ -138,7 +138,7 @@ subroutine test_metropolis_stochastic(error)
     options%nout = 10
 
     call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
-    
+
   end subroutine test_DEMCz_runs_enforce_omp
 
 end module test_DEMCz

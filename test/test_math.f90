@@ -12,7 +12,7 @@ module test_math
   integer, parameter:: npars = 5
   double precision, dimension(npars):: parmax = [1d0, 0d0, 1.20d0, -13.5d0, 0.00000043d0]
   double precision, dimension(npars):: parmin = [0.00d0, -0.3d0, -1.20d0,  -190.5d0, 0.00000042d0]
-  double precision, dimension(npars):: paradj = [1.0d0, 1.3d0, 2.20d0,  191.5d0, 0.0d0] ! abs(parmin1 if nonpositive 
+  double precision, dimension(npars):: paradj = [1.0d0, 1.3d0, 2.20d0,  191.5d0, 0.0d0] ! abs(parmin1 if nonpositive
   double precision, dimension(npars):: pars1 = [1.0d0, -.01d0, 0.0d0, -100d0, 0.000000421d0]
   double precision, dimension(npars):: pars_norm1 = [0.0d0, 0.99d0, 0.32d0, 1.0d0, 0.000001d0]
 contains
@@ -47,17 +47,17 @@ function approx(a, b, rel_tol) result(eq)
     rel_tol_ = rel_tol_default
   else
     rel_tol_ = rel_tol
-  endif 
+  endif
   ! check close to zero
-  if (abs(a) <= epsilon(0d0)) then 
+  if (abs(a) <= epsilon(0d0)) then
     eq = (abs(b) <= epsilon(0d0))
   else if (abs(b) <= epsilon(0d0)) then
     eq = (abs(a) <= epsilon(0d0))
-  else 
+  else
   ! else check relative difference
-    eq = (abs(a-b) <= rel_tol_*abs(a))  .or.   (abs(a-b) <= rel_tol*abs(b)) 
+    eq = (abs(a-b) <= rel_tol_*abs(a))  .or.   (abs(a-b) <= rel_tol*abs(b))
   endif
-end function
+end function approx
 
 
 subroutine test_approx(error)
@@ -68,7 +68,7 @@ subroutine test_approx(error)
   call check(error, approx(0d0, -1d0), .false.)
   call check(error, approx(0d0, 0d0), .true.)
   call check(error, approx(27d0/9d0, 3d0), .true.)
-end subroutine 
+end subroutine test_approx
 
 subroutine test_par2nor(error)
   implicit none
@@ -78,11 +78,11 @@ subroutine test_par2nor(error)
   pars_norm = par2nor( pars1, parmin, parmax)
   ! expect values between 0 and 1
   call check(error, all(pars_norm >= 0d0) .and. all(pars_norm <= 1d0))
-  ! try converting back 
+  ! try converting back
   pars2 = nor2par(pars_norm, parmin, parmax)
   ! expect approximately equal to the original
   call check(error, all ([(approx(pars1(i), pars2(i)), i = 1, npars)] ))
-end subroutine 
+end subroutine test_par2nor
 
 
 subroutine test_nor2par(error)
@@ -93,7 +93,7 @@ subroutine test_nor2par(error)
   pars_real = nor2par(pars_norm1, parmin, parmax)
   ! expect values in bounds parmin, parmax
   call check(error, all(pars_real >= parmin) .and. all(pars_real <= parmax))
-end subroutine 
+end subroutine test_nor2par
 
 
 subroutine test_log_par2nor(error)
@@ -104,11 +104,11 @@ subroutine test_log_par2nor(error)
   pars_norm = log_par2nor(pars1, parmin, parmax, paradj)
   ! expect values between 0 and 1
   call check(error, all(pars_norm >= 0d0) .and. all(pars_norm <= 1d0))
-  ! try converting back 
+  ! try converting back
   pars2 = log_nor2par(pars_norm, parmin, parmax, paradj)
   ! expect approximately equal to the original
   call check(error, all ([(approx(pars1(i), pars2(i)), i = 1, npars)] ))
-end subroutine 
+end subroutine test_log_par2nor
 
 
 subroutine test_log_nor2par(error)
@@ -118,7 +118,7 @@ subroutine test_log_nor2par(error)
   pars_real = log_nor2par(pars_norm1, parmin, parmax, paradj)
   ! expect values in bounds parmin, parmax
   call check(error, all(pars_real >= parmin) .and. all(pars_real <= parmax))
-end subroutine 
+end subroutine test_log_nor2par
 
 
 subroutine test_running_avg_scalar(error)
@@ -135,7 +135,7 @@ subroutine test_running_avg_scalar(error)
   ! insert some higher values towards the end
   series(80:90) = series(80:90)* 5.0d0
   series(90:100) = series(80:90)* 10.0d0
-  ! true average of the numbers 
+  ! true average of the numbers
   mean(1) = sum(series)/size(series)
   ! mean up to 75
   mean75(1) = sum(series(1:75))/size(series(1:75))
@@ -147,20 +147,20 @@ subroutine test_running_avg_scalar(error)
   call increment_covariance_matrix(series(76:85), running_mean85, 1, cur, 10, covariance)
   call check(error, cur, 85)
   call check(error, approx(mean85(1), running_mean85(1)))
-end subroutine 
+end subroutine test_running_avg_scalar
 
 
 subroutine test_running_covariance(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   double precision, dimension(2, 100):: series  ! random series
-  double precision, dimension(2):: mean, mean10  
+  double precision, dimension(2):: mean, mean10
   double precision, dimension(2, 2):: covariance, covariance_10   ! 2 x 2 covariance matrix
-  double precision, dimension(2, 2):: covariance_running   
+  double precision, dimension(2, 2):: covariance_running
   integer:: cur
   covariance = 0
   call random_number(series)
-  
+
   ! true covariance of whole series
   call covariance_matrix(series, mean, 2, 100, covariance)
   ! covariance up to 10
@@ -172,13 +172,13 @@ subroutine test_running_covariance(error)
   ! try getting covariance by incrementing
   cur = 10
   call increment_covariance_matrix(series(1:2, 11:100), mean10, 2, cur, 90, covariance_running)
-  ! expect values in 
+  ! expect values in
   write(*,*) covariance
   write(*,*) covariance_10
-  write(*,*) covariance_running 
+  write(*,*) covariance_running
   call check(error, approx(covariance(1, 1), covariance_running(1, 1)))
   call check(error, approx(covariance(2, 1), covariance_running(2, 1)))
-end subroutine 
+end subroutine test_running_covariance
 
 subroutine test_zero_variance(error)
   implicit none
@@ -186,14 +186,14 @@ subroutine test_zero_variance(error)
   double precision, dimension(2, 500000):: series  ! a very static series
   double precision, dimension(2):: mean  ! irrelevant mean
   double precision, dimension(2, 2):: covariance, covariance_10   ! 2 x 2 covariance matrix
-  double precision, dimension(2, 2):: covariance_running   
+  double precision, dimension(2, 2):: covariance_running
   integer:: cur
   covariance = 0
   series = 0.5d0  ! then constant
   series(1:2, 2) = 0.1d0  ! some initial movement
-  series(1:2, 4) = 0.9d0  
-  series(1:2, 1) = 0.1d0  
-  
+  series(1:2, 4) = 0.9d0
+  series(1:2, 1) = 0.1d0
+
   ! true covariance of whole series
   call covariance_matrix(series, mean, 2, 500000, covariance)
   ! covariance up to 10
@@ -203,15 +203,15 @@ subroutine test_zero_variance(error)
   covariance_running = covariance_10
   cur = 10
   call increment_covariance_matrix(series(1:2, 11:500000), mean, 2, cur, 499990, covariance_running)
-  ! expect values in 
+  ! expect values in
   write(*,*) covariance
   write(*,*) covariance_10
-  write(*,*) covariance_running 
+  write(*,*) covariance_running
   call check(error,  covariance(2, 2) < .000001d0)
   call check(error,  covariance_running(1, 1) < .000001d0)
   call check(error, approx(covariance(1, 1), covariance_running(1, 1)))
   call check(error, approx(covariance(2, 1), covariance_running(2, 1)))
-end subroutine 
+end subroutine test_zero_variance
 
 
 end module test_math
