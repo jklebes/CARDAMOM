@@ -1,0 +1,4 @@
+[check]
+exclude = ["LIBRARY/CARDAMOM_F/model/", "LIBRARY/CARDAMOM_F/misc/math_functions.f90", "LIBRARY/CARDAMOM_F/misc/brent_zero/"]
+ignore = ["S001","C003","C072","C121"]
+line-length = 132
