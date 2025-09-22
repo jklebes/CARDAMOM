@@ -74,13 +74,14 @@ module MODEL_PARAMETERS
 
     ! Potential rate of labile to foliage (gC/m2/day)
     PI%parmin(3) = 0.01d0
-    PI%parmax(3) = 10d0
+    PI%parmax(3) = 20d0
 
     ! Potential rate of labile to fine root (gC/m2/day)
     PI%parmin(4) = 0.01d0
     PI%parmax(4) = 20d0
 
-    ! Minimum foliar loss proposal gC/m2/day
+    ! Minimum foliar loss proposal (gC/m2/day)
+    ! for dNCCE calculation
     PI%parmin(5) = 0.01d0   
     PI%parmax(5) = 4d0     
 
@@ -102,7 +103,7 @@ module MODEL_PARAMETERS
 !    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
@@ -122,7 +123,7 @@ module MODEL_PARAMETERS
     PI%parmax(14) = 10d0 
 
     ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
-    PI%parmin(15) = 0d0
+    PI%parmin(15) =-0.1d0 ! allow losses if losses are small negative, accounts for lack of leaf aging model
     PI%parmax(15) = 0.1d0
     ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
     PI%parmin(16) = 0d0
@@ -181,7 +182,7 @@ module MODEL_PARAMETERS
 
     ! Potential growth rate of wood (gC/m2/day)
     PI%parmin(38) = 0.01d0
-    PI%parmax(38) = 10d0
+    PI%parmax(38) = 20d0
 
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0
@@ -210,14 +211,26 @@ module MODEL_PARAMETERS
 !    PI%parmin(45) = 0.01d0
 !    PI%parmax(45) = 20d0
     ! Potential loss rate for foliage to litter (fraction/day)
+    ! for environmental factors
     PI%parmin(45) = 0.0003424658 ! 8 years
     PI%parmax(45) = 0.0333333333 ! 30 days
- 
-    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
+
+    !! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
+    !! This is a hack to account for the model representing whole ecosystem,
+    !! within which competing leaf stratagies will be at play.
+    !PI%parmin(46) = 0.1d0
+    !PI%parmax(46) = 1d0 
+    ! Gradient for logistic function controlling limiting / suppression of 
+    ! leaf area index (m2/m2) turnover.
     ! This is a hack to account for the model representing whole ecosystem,
     ! within which competing leaf stratagies will be at play.
     PI%parmin(46) = 0.1d0
-    PI%parmax(46) = 1d0
+    PI%parmax(46) = 5d0
+    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
+    ! This is a hack to account for the model representing whole ecosystem,
+    ! within which competing leaf stratagies will be at play.
+    PI%parmin(47) = 0.1d0
+    PI%parmax(47) = 1d0
 
     !
     ! INITIAL VALUES DECLARED HERE

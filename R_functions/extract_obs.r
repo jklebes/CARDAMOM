@@ -1023,7 +1023,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
     if (frac_Cwood_coarse_root_prior > -9999) { 
-        frac_Cwood_coarse_root_prior_unc = max(10,sqrt(frac_Cwood_coarse_root_prior_unc**2 + (0.1*frac_Cwood_coarse_root_prior)**2)) 
+        frac_Cwood_coarse_root_prior_unc = max(0.1,sqrt(frac_Cwood_coarse_root_prior_unc**2 + (0.1*frac_Cwood_coarse_root_prior)**2)) 
     }
 
     ###

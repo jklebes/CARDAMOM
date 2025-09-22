@@ -824,6 +824,18 @@ module model_likelihood_module
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 
+    ! Leaf fall has a logistic function to suppress turnover at a parameterisable low LAI value.
+    ! This is to account for the lack of explicit over- and understores which may have contrasting 
+    ! phenologies. However, we must make sure that the retrieved parameters do not allow complete 
+    ! suppression of the canopy turnover
+    if (EDC2 == 1 .or. DIAG == 1) then
+        tmp = (1d0 - (1d0+exp(pars(46)*(0d0-pars(47))))**(-1d0))   
+        if (tmp < 0.1d0) then
+            ! We assume suppression is probably too great and reject parameter combination
+            EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
+
     !
     ! EDCs done, below are additional fault detection conditions
     !

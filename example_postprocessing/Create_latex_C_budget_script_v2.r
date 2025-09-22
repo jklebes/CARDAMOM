@@ -27,14 +27,8 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 ## Load files from which C-budget is extracted, prepare C-budget values
 
 # Load information file
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_kilwa_nhambita_1km/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Forests2020_Mexico_Kiuic_chronosequence_rerun/infofile.RData")
+load("~/gcel_ceph/cardamom_analyses/lsmallma/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR/infofile.RData")
+
 # If this is a site analysis 
 # which site are we using?
 site_nos = 1
@@ -44,11 +38,11 @@ site_nos = 1
 
 # The caption must be written in correct latex syntax
 # NOTE: if the latex language requires use of "\" ensure it is a "\\".
-figure_caption = "CARDAMOM \\emph{single} analysis of the global terrestrial ecosystem C-budget (2003-2021). Numbers show median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are MgC ha$^{-1}$ for stocks and MgC ha$^{-1}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown in a fractional form with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production ($NPP$), mortality ($Mort$), autotrophic respiration ($Ra$) and heterotrophic respiration ($Rh$). $NEE = Ra + Rh - GPP$. $NBP = -NEE - E_{total} - Forest_loss$ (not shown). Red fluxes are fire-driven emissions ($E$)."
+figure_caption = "CARDAMOM analysis of the global terrestrial ecosystem C-budget (2003-2024). Numbers show median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are MgC ha$^{-1}$ for stocks and MgC ha$^{-1}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown in a fractional form with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production (NPP), mortality (Mort), autotrophic respiration (R$_a$) and heterotrophic respiration (R$_h$). NEE = R$_a$ + R$_h$ - GPP. NBP = -NEE - E$_{total}$ - Forest$_{loss}$ (not shown). Red fluxes are fire-driven emissions ($E$)."
 # The label will be used for referencing the figure in the latex document
-figure_label = "SIFig:global_budget_single"
+figure_label = "SIFig:global_budget"
 # Desired precision, i.e. decimal places
-dp = 1
+dp = 2
 
 # Define the output file name for the created script
 outfilename_prefix = paste(PROJECT$name,"_latex_C_budget", sep="")
@@ -66,49 +60,56 @@ if (PROJECT$spatial_type == "grid") {
     # Load the processed site file
     load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 
+    # Calculate the pixel area weightings for the spatial average
+    area_weighting = grid_output$land_fraction
+    area_weighting[is.na(grid_output$mean_gpp_gCm2day[,,1])] = 0 # filters for missing pixels
+    area_weighting = area_weighting*PROJECT$area_m2 # multiple by the pixel areas
+    area_weighting = area_weighting / sum(area_weighting) # complete scaling to make this a product scaler for aggregating with sum
+    area_weighting = array(area_weighting, dim = c(dim(area_weighting),length(quantiles_wanted)))
+
     # Extract or calculate required derived values
     # NOTE: unit conversion from gC/m2/day to MgC/ha/yr
 
     # NATURAL FLUXES
-    gpp_gCm2yr = format(round(apply(grid_output$mean_gpp_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    rauto_gCm2yr = format(round(apply(grid_output$mean_rauto_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    rhet_litter_gCm2yr = format(round(apply(grid_output$mean_rhet_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    rhet_som_gCm2yr = format(round(apply(grid_output$mean_rhet_som_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    rhet_gCm2yr = format(round(apply(grid_output$mean_rhet_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    npp_gCm2yr = format(round(apply(grid_output$mean_npp_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    npp_labile_gCm2yr = format(round(apply(grid_output$mean_alloc_labile_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    npp_foliage_gCm2yr = format(round(apply(grid_output$mean_alloc_foliage_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    labile_to_foliage_gCm2yr = format(round(apply(grid_output$mean_labile_to_foliage_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    npp_roots_gCm2yr = format(round(apply(grid_output$mean_alloc_roots_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    npp_wood_gCm2yr = format(round(apply(grid_output$mean_alloc_wood_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    foliage_to_litter_gCm2yr = format(round(apply(grid_output$mean_foliage_to_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    roots_to_litter_gCm2yr = format(round(apply(grid_output$mean_roots_to_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    wood_to_litter_gCm2yr = format(round(apply(grid_output$mean_wood_to_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    litter_to_som_gCm2yr = format(round(apply(grid_output$mean_litter_to_som_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    gpp_gCm2yr = format(round(apply(grid_output$mean_gpp_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    rauto_gCm2yr = format(round(apply(grid_output$mean_rauto_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    rhet_litter_gCm2yr = format(round(apply(grid_output$mean_rhet_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    rhet_som_gCm2yr = format(round(apply(grid_output$mean_rhet_som_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    rhet_gCm2yr = format(round(apply(grid_output$mean_rhet_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    npp_gCm2yr = format(round(apply(grid_output$mean_npp_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    npp_labile_gCm2yr = format(round(apply(grid_output$mean_alloc_labile_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    npp_foliage_gCm2yr = format(round(apply(grid_output$mean_alloc_foliage_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    labile_to_foliage_gCm2yr = format(round(apply(grid_output$mean_labile_to_foliage_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    npp_roots_gCm2yr = format(round(apply(grid_output$mean_alloc_roots_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    npp_wood_gCm2yr = format(round(apply(grid_output$mean_alloc_wood_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    foliage_to_litter_gCm2yr = format(round(apply(grid_output$mean_foliage_to_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    roots_to_litter_gCm2yr = format(round(apply(grid_output$mean_roots_to_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    wood_to_litter_gCm2yr = format(round(apply(grid_output$mean_wood_to_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    litter_to_som_gCm2yr = format(round(apply(grid_output$mean_litter_to_som_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
     # FIRE FLUXES
-    FIRElitter_labile_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_labile_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIRElitter_foliage_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_foliage_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIRElitter_roots_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_roots_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIRElitter_wood_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_wood_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIRElitter_litter_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_labile_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_labile_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_foliage_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_foliage_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_roots_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_roots_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_wood_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_wood_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_litter_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_litter_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    FIREemiss_som_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_som_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    fire_gCm2yr = format(round(apply(grid_output$mean_fire_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIRElitter_labile_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_labile_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIRElitter_foliage_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_foliage_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIRElitter_roots_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_roots_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIRElitter_wood_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_wood_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIRElitter_litter_gCm2yr = format(round(apply(grid_output$mean_FIRElitter_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_labile_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_labile_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_foliage_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_foliage_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_roots_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_roots_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_wood_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_wood_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_litter_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_litter_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    FIREemiss_som_gCm2yr = format(round(apply(grid_output$mean_FIREemiss_som_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    fire_gCm2yr = format(round(apply(grid_output$mean_fire_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
     # Net fluxes
-    nbe_gCm2yr = format(round(apply(grid_output$mean_nbe_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    nee_gCm2yr = format(round(apply(grid_output$mean_nee_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
-    nbp_gCm2yr = format(round(apply(grid_output$mean_nbp_gCm2day[,,quantiles_wanted],3,mean, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    nbe_gCm2yr = format(round(apply(grid_output$mean_nbe_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    nee_gCm2yr = format(round(apply(grid_output$mean_nee_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
+    nbp_gCm2yr = format(round(apply(grid_output$mean_nbp_gCm2day[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 365.25 * 1e-2, digits = dp), nsmall = dp)
     # STOCKS
-    labile_gCm2 = format(round(apply(grid_output$mean_labile_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
-    foliage_gCm2 = format(round(apply(grid_output$mean_foliage_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
-    roots_gCm2 = format(round(apply(grid_output$mean_roots_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
-    wood_gCm2 = format(round(apply(grid_output$mean_wood_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
-    litter_gCm2 = format(round(apply(grid_output$mean_litter_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
-    som_gCm2 = format(round(apply(grid_output$mean_som_gCm2[,,quantiles_wanted],3,mean, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    labile_gCm2 = format(round(apply(grid_output$mean_labile_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    foliage_gCm2 = format(round(apply(grid_output$mean_foliage_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    roots_gCm2 = format(round(apply(grid_output$mean_roots_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    wood_gCm2 = format(round(apply(grid_output$mean_wood_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    litter_gCm2 = format(round(apply(grid_output$mean_litter_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
+    som_gCm2 = format(round(apply(grid_output$mean_som_gCm2[,,quantiles_wanted]*area_weighting,3,sum, na.rm=TRUE) * 1e-2, digits = dp), nsmall = dp)
   
 } else if (PROJECT$spatial_type == "site") {
     # A site analysis

@@ -97,6 +97,7 @@ module MODEL_PARAMETERS
     PI%parmax(8) = 0.0001d0 
 
     ! T factor (Q10) [0.018,  0.08]
+    ! TLS: THIS NEEDS CHECKING WITH THE CODE
     PI%parmin(9) = 0.01d0 
     PI%parmax(9) = 0.2d0 
 

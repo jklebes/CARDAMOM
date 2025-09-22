@@ -107,6 +107,7 @@ module MODEL_PARAMETERS
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Exponential coefficient for Rhet temperature response
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 

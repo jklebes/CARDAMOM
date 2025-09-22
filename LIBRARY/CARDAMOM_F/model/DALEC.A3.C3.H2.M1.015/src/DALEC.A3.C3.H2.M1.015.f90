@@ -578,12 +578,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ! some hardcoded crop parameters
   !
 
-  double precision, parameter :: resp_rate_temp_coeff = 0.0693d0, & ! defines Q10 = 2 in exponential temperature response for heterotrophic respiration
-                                               lv_res = 0.1d0,    & ! residue fraction of leaves left post harvest
-                                               st_res = 0.1d0,    & ! residue fraction of stem left post harvest 
-                                                LAICR = 4d0,      & ! LAI above which self shading turnover occurs
-                                          rel_gso_max = 0.35d0,   & ! allocation to storage organ relative to GPP
-                               resp_cost_labile_trans = 0.21875d0   ! labile lost to respiration per gC labile to GPP
+  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0 & ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
+                                               lv_res = 0.1d0,      & ! residue fraction of leaves left post harvest
+                                               st_res = 0.1d0,      & ! residue fraction of stem left post harvest 
+                                                LAICR = 4d0,        & ! LAI above which self shading turnover occurs
+                                          rel_gso_max = 0.35d0,     & ! allocation to storage organ relative to GPP
+                               resp_cost_labile_trans = 0.21875d0     ! labile lost to respiration per gC labile to GPP
 
   save
 

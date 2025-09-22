@@ -275,10 +275,28 @@ post_process_dalec<-cmpfun(post_process_dalec)
 
 # This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE)
 
-assess_ensemble_fit_to_calibration_data<-function(states_all,drivers,PROJECT) {
+assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,PROJECT) {
 
   ###
   ## Comparison with assimilated observation - to what extent does the ensemble overlap?
+
+  ## Parameter prior informatoin
+  # Initise array
+  states_all$priors_assim_data_overlap_fraction = rep(NA, max(PROJECT$model$nopars))
+  for (p in seq(1, max(PROJECT$model$nopars))) {
+       if (drivers$parpriors[p] != -9999) {
+           # Loop through time to assess model overlap with observations
+           states_all$priors_assim_data_overlap_fraction[p] = 0
+           # Estimate the min / max values for the observations
+           obs_max = drivers$parpriors[p] + drivers$parpriorunc[p]
+           obs_min = drivers$parpriors[p] - drivers$parpriorunc[p]
+           # Create list object containing each observations distributions
+           hist_list = list(o = c(obs_min,obs_max), m = as.vector(parameters[p,,]))
+           # Estimate average model ensemble within observated range
+           states_all$priors_assim_data_overlap_fraction[p] = ensemble_within_range(hist_list$o,hist_list$m)
+           # Average the overlap
+       } # was the obs assimilated?
+  } # parameter loop
 
   ## GPP (gC/m2/day)
   obs_id = 1 ; unc_id = obs_id+1 ; lag_id = unc_id+1

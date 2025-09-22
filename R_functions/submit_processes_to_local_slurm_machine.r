@@ -169,7 +169,6 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     print("Command issued to local slurm machine")
 
 } # end of function submit_processes_to_local_slurm_machine
-
 ## Use byte compile
 submit_processes_to_local_slurm_machine<-cmpfun(submit_processes_to_local_slurm_machine)
 

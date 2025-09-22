@@ -108,7 +108,7 @@ module MODEL_PARAMETERS
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
     PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 

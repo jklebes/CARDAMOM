@@ -159,7 +159,7 @@ request_compile_local = TRUE   # Compile local executable even if not running on
 request_runtime = 48           # How many hours of compute to request per job for stage 2. For Slurm and remote server. 
 # MCMC specific options
 request_nos_chains = 3         # Number of chains CARDAMOM should run for each location
-request_nos_samples = 50e6     # Total number of parameter samples / iterations to be explored
+request_nos_samples = 100e6    # Total number of parameter samples / iterations to be explored
 request_nos_subsamples = 1e3   # Number of parameter sets to be sub-sampled from the chain
 request_use_EDCs = TRUE        # Use EDCs
 request_extended_mcmc = FALSE  # Extend the current MCMC by adding a further request_nos_extended_samples + request_nos_samples

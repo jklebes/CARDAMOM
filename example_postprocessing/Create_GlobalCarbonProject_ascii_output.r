@@ -18,16 +18,7 @@ print("Begin creation of GCP compatible ascii file for annual NBP / NBE / NEE / 
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP_NBE"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_oneAGB"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_GPP"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS//DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_C7_GCP_AGB_NBE"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -79,8 +70,8 @@ if (length(which(quantiles_wanted == 0.025)) == 1) {
 } else {
     stop("Desired min quantile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.25)) == 1) {
-    low_quant = which(quantiles_wanted == 0.25)
+if (length(which(quantiles_wanted == 0.16)) == 1) {
+    low_quant = which(quantiles_wanted == 0.16)
 } else {
     stop("Desired low quantile cannot be found")
 }
@@ -89,8 +80,8 @@ if (length(which(quantiles_wanted == 0.5)) == 1) {
 } else {
     stop("Median quantile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.75)) == 1) {
-    high_quant = which(quantiles_wanted == 0.75)
+if (length(which(quantiles_wanted == 0.84)) == 1) {
+    high_quant = which(quantiles_wanted == 0.84)
 } else {
     stop("Desired high quantile cannot be found")
 }
@@ -1162,8 +1153,8 @@ wSWP_south_MPa_maxCI = wSWP_south_MPa_maxCI / nos_south
 
 output = data.frame(Year = years, Global = NBP_global_PgCyr, North = NBP_north_PgCyr, Tropics = NBP_tropics_PgCyr, South = NBP_south_PgCyr,
                                   Global_2.5pc = NBP_global_PgCyr_minCI, North_2.5pc = NBP_north_PgCyr_minCI, Tropics_2.5pc = NBP_tropics_PgCyr_minCI, South_2.5pc = NBP_south_PgCyr_minCI,
-                                  Global_25pc = NBP_global_PgCyr_lowCI, North_25pc = NBP_north_PgCyr_lowCI, Tropics_25pc = NBP_tropics_PgCyr_lowCI, South_25pc = NBP_south_PgCyr_lowCI,
-                                  Global_75pc = NBP_global_PgCyr_highCI, North_75pc = NBP_north_PgCyr_highCI, Tropics_75pc = NBP_tropics_PgCyr_highCI, South_75pc = NBP_south_PgCyr_highCI,
+                                  Global_16pc = NBP_global_PgCyr_lowCI, North_16pc = NBP_north_PgCyr_lowCI, Tropics_16pc = NBP_tropics_PgCyr_lowCI, South_16pc = NBP_south_PgCyr_lowCI,
+                                  Global_84pc = NBP_global_PgCyr_highCI, North_84pc = NBP_north_PgCyr_highCI, Tropics_84pc = NBP_tropics_PgCyr_highCI, South_84pc = NBP_south_PgCyr_highCI,
                                   Global_97.5pc = NBP_global_PgCyr_maxCI, North_97.5pc = NBP_north_PgCyr_maxCI, Tropics_97.5pc = NBP_tropics_PgCyr_maxCI, South_97.5pc = NBP_south_PgCyr_maxCI)
                                   
 ###
@@ -1176,8 +1167,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"NBP",output_suffix,".
 
 output = data.frame(Year = years, Global = NBE_global_PgCyr, North = NBE_north_PgCyr, Tropics = NBE_tropics_PgCyr, South = NBE_south_PgCyr,
                                   Global_2.5pc = NBE_global_PgCyr_minCI, North_2.5pc = NBE_north_PgCyr_minCI, Tropics_2.5pc = NBE_tropics_PgCyr_minCI, South_2.5pc = NBE_south_PgCyr_minCI,
-                                  Global_25pc = NBE_global_PgCyr_lowCI, North_25pc = NBE_north_PgCyr_lowCI, Tropics_25pc = NBE_tropics_PgCyr_lowCI, South_25pc = NBE_south_PgCyr_lowCI,
-                                  Global_75pc = NBE_global_PgCyr_highCI, North_75pc = NBE_north_PgCyr_highCI, Tropics_75pc = NBE_tropics_PgCyr_highCI, South_75pc = NBE_south_PgCyr_highCI,
+                                  Global_16pc = NBE_global_PgCyr_lowCI, North_16pc = NBE_north_PgCyr_lowCI, Tropics_16pc = NBE_tropics_PgCyr_lowCI, South_16pc = NBE_south_PgCyr_lowCI,
+                                  Global_84pc = NBE_global_PgCyr_highCI, North_84pc = NBE_north_PgCyr_highCI, Tropics_84pc = NBE_tropics_PgCyr_highCI, South_84pc = NBE_south_PgCyr_highCI,
                                   Global_97.5pc = NBE_global_PgCyr_maxCI, North_97.5pc = NBE_north_PgCyr_maxCI, Tropics_97.5pc = NBE_tropics_PgCyr_maxCI, South_97.5pc = NBE_south_PgCyr_maxCI)
                                   
 ###
@@ -1190,8 +1181,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"NBE",output_suffix,".
 
 output = data.frame(Year = years, Global = NEE_global_PgCyr, North = NEE_north_PgCyr, Tropics = NEE_tropics_PgCyr, South = NEE_south_PgCyr,
                                   Global_2.5pc = NEE_global_PgCyr_minCI, North_2.5pc = NEE_north_PgCyr_minCI, Tropics_2.5pc = NEE_tropics_PgCyr_minCI, South_2.5pc = NEE_south_PgCyr_minCI,
-                                  Global_25pc = NEE_global_PgCyr_lowCI, North_25pc = NEE_north_PgCyr_lowCI, Tropics_25pc = NEE_tropics_PgCyr_lowCI, South_25pc = NEE_south_PgCyr_lowCI,
-                                  Global_75pc = NEE_global_PgCyr_highCI, North_75pc = NEE_north_PgCyr_highCI, Tropics_75pc = NEE_tropics_PgCyr_highCI, South_75pc = NEE_south_PgCyr_highCI,
+                                  Global_16pc = NEE_global_PgCyr_lowCI, North_16pc = NEE_north_PgCyr_lowCI, Tropics_16pc = NEE_tropics_PgCyr_lowCI, South_16pc = NEE_south_PgCyr_lowCI,
+                                  Global_84pc = NEE_global_PgCyr_highCI, North_84pc = NEE_north_PgCyr_highCI, Tropics_84pc = NEE_tropics_PgCyr_highCI, South_84pc = NEE_south_PgCyr_highCI,
                                   Global_97.5pc = NEE_global_PgCyr_maxCI, North_97.5pc = NEE_north_PgCyr_maxCI, Tropics_97.5pc = NEE_tropics_PgCyr_maxCI, South_97.5pc = NEE_south_PgCyr_maxCI)
                                   
 ###
@@ -1204,8 +1195,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"NEE",output_suffix,".
 
 output = data.frame(Year = years, Global = NPP_global_PgCyr, North = NPP_north_PgCyr, Tropics = NPP_tropics_PgCyr, South = NPP_south_PgCyr,
                                   Global_2.5pc = NPP_global_PgCyr_minCI, North_2.5pc = NPP_north_PgCyr_minCI, Tropics_2.5pc = NPP_tropics_PgCyr_minCI, South_2.5pc = NPP_south_PgCyr_minCI,
-                                  Global_25pc = NPP_global_PgCyr_lowCI, North_25pc = NPP_north_PgCyr_lowCI, Tropics_25pc = NPP_tropics_PgCyr_lowCI, South_25pc = NPP_south_PgCyr_lowCI,
-                                  Global_75pc = NPP_global_PgCyr_highCI, North_75pc = NPP_north_PgCyr_highCI, Tropics_75pc = NPP_tropics_PgCyr_highCI, South_75pc = NPP_south_PgCyr_highCI,
+                                  Global_16pc = NPP_global_PgCyr_lowCI, North_16pc = NPP_north_PgCyr_lowCI, Tropics_16pc = NPP_tropics_PgCyr_lowCI, South_16pc = NPP_south_PgCyr_lowCI,
+                                  Global_84pc = NPP_global_PgCyr_highCI, North_84pc = NPP_north_PgCyr_highCI, Tropics_84pc = NPP_tropics_PgCyr_highCI, South_84pc = NPP_south_PgCyr_highCI,
                                   Global_97.5pc = NPP_global_PgCyr_maxCI, North_97.5pc = NPP_north_PgCyr_maxCI, Tropics_97.5pc = NPP_tropics_PgCyr_maxCI, South_97.5pc = NPP_south_PgCyr_maxCI)
                                   
 ###
@@ -1218,8 +1209,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"NPP",output_suffix,".
 
 output = data.frame(Year = years, Global = GPP_global_PgCyr, North = GPP_north_PgCyr, Tropics = GPP_tropics_PgCyr, South = GPP_south_PgCyr,
                                   Global_2.5pc = GPP_global_PgCyr_minCI, North_2.5pc = GPP_north_PgCyr_minCI, Tropics_2.5pc = GPP_tropics_PgCyr_minCI, South_2.5pc = GPP_south_PgCyr_minCI,
-                                  Global_25pc = GPP_global_PgCyr_lowCI, North_25pc = GPP_north_PgCyr_lowCI, Tropics_25pc = GPP_tropics_PgCyr_lowCI, South_25pc = GPP_south_PgCyr_lowCI,
-                                  Global_75pc = GPP_global_PgCyr_highCI, North_75pc = GPP_north_PgCyr_highCI, Tropics_75pc = GPP_tropics_PgCyr_highCI, South_75pc = GPP_south_PgCyr_highCI,
+                                  Global_16pc = GPP_global_PgCyr_lowCI, North_16pc = GPP_north_PgCyr_lowCI, Tropics_16pc = GPP_tropics_PgCyr_lowCI, South_16pc = GPP_south_PgCyr_lowCI,
+                                  Global_84pc = GPP_global_PgCyr_highCI, North_84pc = GPP_north_PgCyr_highCI, Tropics_84pc = GPP_tropics_PgCyr_highCI, South_84pc = GPP_south_PgCyr_highCI,
                                   Global_97.5pc = GPP_global_PgCyr_maxCI, North_97.5pc = GPP_north_PgCyr_maxCI, Tropics_97.5pc = GPP_tropics_PgCyr_maxCI, South_97.5pc = GPP_south_PgCyr_maxCI)
 
 ###
@@ -1232,8 +1223,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"GPP",output_suffix,".
 
 output = data.frame(Year = years, Global = RECO_global_PgCyr, North = RECO_north_PgCyr, Tropics = RECO_tropics_PgCyr, South = RECO_south_PgCyr,
                                   Global_2.5pc = RECO_global_PgCyr_minCI, North_2.5pc = RECO_north_PgCyr_minCI, Tropics_2.5pc = RECO_tropics_PgCyr_minCI, South_2.5pc = RECO_south_PgCyr_minCI,
-                                  Global_25pc = RECO_global_PgCyr_lowCI, North_25pc = RECO_north_PgCyr_lowCI, Tropics_25pc = RECO_tropics_PgCyr_lowCI, South_25pc = RECO_south_PgCyr_lowCI,
-                                  Global_75pc = RECO_global_PgCyr_highCI, North_75pc = RECO_north_PgCyr_highCI, Tropics_75pc = RECO_tropics_PgCyr_highCI, South_75pc = RECO_south_PgCyr_highCI,
+                                  Global_16pc = RECO_global_PgCyr_lowCI, North_16pc = RECO_north_PgCyr_lowCI, Tropics_16pc = RECO_tropics_PgCyr_lowCI, South_16pc = RECO_south_PgCyr_lowCI,
+                                  Global_84pc = RECO_global_PgCyr_highCI, North_84pc = RECO_north_PgCyr_highCI, Tropics_84pc = RECO_tropics_PgCyr_highCI, South_84pc = RECO_south_PgCyr_highCI,
                                   Global_97.5pc = RECO_global_PgCyr_maxCI, North_97.5pc = RECO_north_PgCyr_maxCI, Tropics_97.5pc = RECO_tropics_PgCyr_maxCI, South_97.5pc = RECO_south_PgCyr_maxCI)
 
 ###
@@ -1246,8 +1237,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"RECO",output_suffix,"
 
 output = data.frame(Year = years, Global = RHET_global_PgCyr, North = RHET_north_PgCyr, Tropics = RHET_tropics_PgCyr, South = RHET_south_PgCyr,
                                   Global_2.5pc = RHET_global_PgCyr_minCI, North_2.5pc = RHET_north_PgCyr_minCI, Tropics_2.5pc = RHET_tropics_PgCyr_minCI, South_2.5pc = RHET_south_PgCyr_minCI,
-                                  Global_25pc = RHET_global_PgCyr_lowCI, North_25pc = RHET_north_PgCyr_lowCI, Tropics_25pc = RHET_tropics_PgCyr_lowCI, South_25pc = RHET_south_PgCyr_lowCI,
-                                  Global_75pc = RHET_global_PgCyr_highCI, North_75pc = RHET_north_PgCyr_highCI, Tropics_75pc = RHET_tropics_PgCyr_highCI, South_75pc = RHET_south_PgCyr_highCI,
+                                  Global_16pc = RHET_global_PgCyr_lowCI, North_16pc = RHET_north_PgCyr_lowCI, Tropics_16pc = RHET_tropics_PgCyr_lowCI, South_16pc = RHET_south_PgCyr_lowCI,
+                                  Global_84pc = RHET_global_PgCyr_highCI, North_84pc = RHET_north_PgCyr_highCI, Tropics_84pc = RHET_tropics_PgCyr_highCI, South_84pc = RHET_south_PgCyr_highCI,
                                   Global_97.5pc = RHET_global_PgCyr_maxCI, North_97.5pc = RHET_north_PgCyr_maxCI, Tropics_97.5pc = RHET_tropics_PgCyr_maxCI, South_97.5pc = RHET_south_PgCyr_maxCI)
 
 ###
@@ -1260,8 +1251,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"RHET",output_suffix,"
 
 output = data.frame(Year = years, Global = RAUTO_global_PgCyr, North = RAUTO_north_PgCyr, Tropics = RAUTO_tropics_PgCyr, South = RAUTO_south_PgCyr,
                                   Global_2.5pc = RAUTO_global_PgCyr_minCI, North_2.5pc = RAUTO_north_PgCyr_minCI, Tropics_2.5pc = RAUTO_tropics_PgCyr_minCI, South_2.5pc = RAUTO_south_PgCyr_minCI,
-                                  Global_25pc = RAUTO_global_PgCyr_lowCI, North_25pc = RAUTO_north_PgCyr_lowCI, Tropics_25pc = RAUTO_tropics_PgCyr_lowCI, South_25pc = RAUTO_south_PgCyr_lowCI,
-                                  Global_75pc = RAUTO_global_PgCyr_highCI, North_75pc = RAUTO_north_PgCyr_highCI, Tropics_75pc = RAUTO_tropics_PgCyr_highCI, South_75pc = RAUTO_south_PgCyr_highCI,
+                                  Global_16pc = RAUTO_global_PgCyr_lowCI, North_16pc = RAUTO_north_PgCyr_lowCI, Tropics_16pc = RAUTO_tropics_PgCyr_lowCI, South_16pc = RAUTO_south_PgCyr_lowCI,
+                                  Global_84pc = RAUTO_global_PgCyr_highCI, North_84pc = RAUTO_north_PgCyr_highCI, Tropics_84pc = RAUTO_tropics_PgCyr_highCI, South_84pc = RAUTO_south_PgCyr_highCI,
                                   Global_97.5pc = RAUTO_global_PgCyr_maxCI, North_97.5pc = RAUTO_north_PgCyr_maxCI, Tropics_97.5pc = RAUTO_tropics_PgCyr_maxCI, South_97.5pc = RAUTO_south_PgCyr_maxCI)
 
 ###
@@ -1269,8 +1260,8 @@ output = data.frame(Year = years, Global = RAUTO_global_PgCyr, North = RAUTO_nor
 
 output = data.frame(Year = years, Global = RHET_LIT_global_PgC, North = RHET_LIT_north_PgC, Tropics = RHET_LIT_tropics_PgC, South = RHET_LIT_south_PgC,
                                   Global_2.5pc = RHET_LIT_global_PgC_minCI, North_2.5pc = RHET_LIT_north_PgC_minCI, Tropics_2.5pc = RHET_LIT_tropics_PgC_minCI, South_2.5pc = RHET_LIT_south_PgC_minCI,
-                                  Global_25pc = RHET_LIT_global_PgC_lowCI, North_25pc = RHET_LIT_north_PgC_lowCI, Tropics_25pc = RHET_LIT_tropics_PgC_lowCI, South_25pc = RHET_LIT_south_PgC_lowCI,
-                                  Global_75pc = RHET_LIT_global_PgC_highCI, North_75pc = RHET_LIT_north_PgC_highCI, Tropics_75pc = RHET_LIT_tropics_PgC_highCI, South_75pc = RHET_LIT_south_PgC_highCI,
+                                  Global_16pc = RHET_LIT_global_PgC_lowCI, North_16pc = RHET_LIT_north_PgC_lowCI, Tropics_16pc = RHET_LIT_tropics_PgC_lowCI, South_16pc = RHET_LIT_south_PgC_lowCI,
+                                  Global_84pc = RHET_LIT_global_PgC_highCI, North_84pc = RHET_LIT_north_PgC_highCI, Tropics_84pc = RHET_LIT_tropics_PgC_highCI, South_84pc = RHET_LIT_south_PgC_highCI,
                                   Global_97.5pc = RHET_LIT_global_PgC_maxCI, North_97.5pc = RHET_LIT_north_PgC_maxCI, Tropics_97.5pc = RHET_LIT_tropics_PgC_maxCI, South_97.5pc = RHET_LIT_south_PgC_maxCI)
                                   
 ###
@@ -1283,8 +1274,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"RHET_LIT",output_suff
 
 output = data.frame(Year = years, Global = RHET_SOM_global_PgC, North = RHET_SOM_north_PgC, Tropics = RHET_SOM_tropics_PgC, South = RHET_SOM_south_PgC,
                                   Global_2.5pc = RHET_SOM_global_PgC_minCI, North_2.5pc = RHET_SOM_north_PgC_minCI, Tropics_2.5pc = RHET_SOM_tropics_PgC_minCI, South_2.5pc = RHET_SOM_south_PgC_minCI,
-                                  Global_25pc = RHET_SOM_global_PgC_lowCI, North_25pc = RHET_SOM_north_PgC_lowCI, Tropics_25pc = RHET_SOM_tropics_PgC_lowCI, South_25pc = RHET_SOM_south_PgC_lowCI,
-                                  Global_75pc = RHET_SOM_global_PgC_highCI, North_75pc = RHET_SOM_north_PgC_highCI, Tropics_75pc = RHET_SOM_tropics_PgC_highCI, South_75pc = RHET_SOM_south_PgC_highCI,
+                                  Global_16pc = RHET_SOM_global_PgC_lowCI, North_16pc = RHET_SOM_north_PgC_lowCI, Tropics_16pc = RHET_SOM_tropics_PgC_lowCI, South_16pc = RHET_SOM_south_PgC_lowCI,
+                                  Global_84pc = RHET_SOM_global_PgC_highCI, North_84pc = RHET_SOM_north_PgC_highCI, Tropics_84pc = RHET_SOM_tropics_PgC_highCI, South_84pc = RHET_SOM_south_PgC_highCI,
                                   Global_97.5pc = RHET_SOM_global_PgC_maxCI, North_97.5pc = RHET_SOM_north_PgC_maxCI, Tropics_97.5pc = RHET_SOM_tropics_PgC_maxCI, South_97.5pc = RHET_SOM_south_PgC_maxCI)
                                   
 ###
@@ -1302,8 +1293,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"RAUTO",output_suffix,
 
 output = data.frame(Year = years, Global = FIRE_global_PgCyr, North = FIRE_north_PgCyr, Tropics = FIRE_tropics_PgCyr, South = FIRE_south_PgCyr,
                                   Global_2.5pc = FIRE_global_PgCyr_minCI, North_2.5pc = FIRE_north_PgCyr_minCI, Tropics_2.5pc = FIRE_tropics_PgCyr_minCI, South_2.5pc = FIRE_south_PgCyr_minCI,
-                                  Global_25pc = FIRE_global_PgCyr_lowCI, North_25pc = FIRE_north_PgCyr_lowCI, Tropics_25pc = FIRE_tropics_PgCyr_lowCI, South_25pc = FIRE_south_PgCyr_lowCI,
-                                  Global_75pc = FIRE_global_PgCyr_highCI, North_75pc = FIRE_north_PgCyr_highCI, Tropics_75pc = FIRE_tropics_PgCyr_highCI, South_75pc = FIRE_south_PgCyr_highCI,
+                                  Global_16pc = FIRE_global_PgCyr_lowCI, North_16pc = FIRE_north_PgCyr_lowCI, Tropics_16pc = FIRE_tropics_PgCyr_lowCI, South_16pc = FIRE_south_PgCyr_lowCI,
+                                  Global_84pc = FIRE_global_PgCyr_highCI, North_84pc = FIRE_north_PgCyr_highCI, Tropics_84pc = FIRE_tropics_PgCyr_highCI, South_84pc = FIRE_south_PgCyr_highCI,
                                   Global_97.5pc = FIRE_global_PgCyr_maxCI, North_97.5pc = FIRE_north_PgCyr_maxCI, Tropics_97.5pc = FIRE_tropics_PgCyr_maxCI, South_97.5pc = FIRE_south_PgCyr_maxCI)
 
 ###
@@ -1316,8 +1307,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"FIRE",output_suffix,"
 
 output = data.frame(Year = years, Global = HARV_global_PgCyr, North = HARV_north_PgCyr, Tropics = HARV_tropics_PgCyr, South = HARV_south_PgCyr,
                                   Global_2.5pc = HARV_global_PgCyr_minCI, North_2.5pc = HARV_north_PgCyr_minCI, Tropics_2.5pc = HARV_tropics_PgCyr_minCI, South_2.5pc = HARV_south_PgCyr_minCI,
-                                  Global_25pc = HARV_global_PgCyr_lowCI, North_25pc = HARV_north_PgCyr_lowCI, Tropics_25pc = HARV_tropics_PgCyr_lowCI, South_25pc = HARV_south_PgCyr_lowCI,
-                                  Global_75pc = HARV_global_PgCyr_highCI, North_75pc = HARV_north_PgCyr_highCI, Tropics_75pc = HARV_tropics_PgCyr_highCI, South_75pc = HARV_south_PgCyr_highCI,
+                                  Global_16pc = HARV_global_PgCyr_lowCI, North_16pc = HARV_north_PgCyr_lowCI, Tropics_16pc = HARV_tropics_PgCyr_lowCI, South_16pc = HARV_south_PgCyr_lowCI,
+                                  Global_84pc = HARV_global_PgCyr_highCI, North_84pc = HARV_north_PgCyr_highCI, Tropics_84pc = HARV_tropics_PgCyr_highCI, South_84pc = HARV_south_PgCyr_highCI,
                                   Global_97.5pc = HARV_global_PgCyr_maxCI, North_97.5pc = HARV_north_PgCyr_maxCI, Tropics_97.5pc = HARV_tropics_PgCyr_maxCI, South_97.5pc = HARV_south_PgCyr_maxCI)
 
 ###
@@ -1330,8 +1321,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"HARV",output_suffix,"
 
 output = data.frame(Year = years, Global = LAI_global_m2m2, North = LAI_north_m2m2, Tropics = LAI_tropics_m2m2, South = LAI_south_m2m2,
                                   Global_2.5pc = LAI_global_m2m2_minCI, North_2.5pc = LAI_north_m2m2_minCI, Tropics_2.5pc = LAI_tropics_m2m2_minCI, South_2.5pc = LAI_south_m2m2_minCI,
-                                  Global_25pc = LAI_global_m2m2_lowCI, North_25pc = LAI_north_m2m2_lowCI, Tropics_25pc = LAI_tropics_m2m2_lowCI, South_25pc = LAI_south_m2m2_lowCI,
-                                  Global_75pc = LAI_global_m2m2_highCI, North_75pc = LAI_north_m2m2_highCI, Tropics_75pc = LAI_tropics_m2m2_highCI, South_75pc = LAI_south_m2m2_highCI,
+                                  Global_16pc = LAI_global_m2m2_lowCI, North_16pc = LAI_north_m2m2_lowCI, Tropics_16pc = LAI_tropics_m2m2_lowCI, South_16pc = LAI_south_m2m2_lowCI,
+                                  Global_84pc = LAI_global_m2m2_highCI, North_84pc = LAI_north_m2m2_highCI, Tropics_84pc = LAI_tropics_m2m2_highCI, South_84pc = LAI_south_m2m2_highCI,
                                   Global_97.5pc = LAI_global_m2m2_maxCI, North_97.5pc = LAI_north_m2m2_maxCI, Tropics_97.5pc = LAI_tropics_m2m2_maxCI, South_97.5pc = LAI_south_m2m2_maxCI)
                                   
 ###
@@ -1344,8 +1335,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"LAI",output_suffix,".
 
 output = data.frame(Year = years, Global = BIO_global_PgC, North = BIO_north_PgC, Tropics = BIO_tropics_PgC, South = BIO_south_PgC,
                                   Global_2.5pc = BIO_global_PgC_minCI, North_2.5pc = BIO_north_PgC_minCI, Tropics_2.5pc = BIO_tropics_PgC_minCI, South_2.5pc = BIO_south_PgC_minCI,
-                                  Global_25pc = BIO_global_PgC_lowCI, North_25pc = BIO_north_PgC_lowCI, Tropics_25pc = BIO_tropics_PgC_lowCI, South_25pc = BIO_south_PgC_lowCI,
-                                  Global_75pc = BIO_global_PgC_highCI, North_75pc = BIO_north_PgC_highCI, Tropics_75pc = BIO_tropics_PgC_highCI, South_75pc = BIO_south_PgC_highCI,
+                                  Global_16pc = BIO_global_PgC_lowCI, North_16pc = BIO_north_PgC_lowCI, Tropics_16pc = BIO_tropics_PgC_lowCI, South_16pc = BIO_south_PgC_lowCI,
+                                  Global_84pc = BIO_global_PgC_highCI, North_84pc = BIO_north_PgC_highCI, Tropics_84pc = BIO_tropics_PgC_highCI, South_84pc = BIO_south_PgC_highCI,
                                   Global_97.5pc = BIO_global_PgC_maxCI, North_97.5pc = BIO_north_PgC_maxCI, Tropics_97.5pc = BIO_tropics_PgC_maxCI, South_97.5pc = BIO_south_PgC_maxCI)
 
 ###
@@ -1358,8 +1349,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"BIO",output_suffix,".
 
 output = data.frame(Year = years, Global = DOM_global_PgC, North = DOM_north_PgC, Tropics = DOM_tropics_PgC, South = DOM_south_PgC,
                                   Global_2.5pc = DOM_global_PgC_minCI, North_2.5pc = DOM_north_PgC_minCI, Tropics_2.5pc = DOM_tropics_PgC_minCI, South_2.5pc = DOM_south_PgC_minCI,
-                                  Global_25pc = DOM_global_PgC_lowCI, North_25pc = DOM_north_PgC_lowCI, Tropics_25pc = DOM_tropics_PgC_lowCI, South_25pc = DOM_south_PgC_lowCI,
-                                  Global_75pc = DOM_global_PgC_highCI, North_75pc = DOM_north_PgC_highCI, Tropics_75pc = DOM_tropics_PgC_highCI, South_75pc = DOM_south_PgC_highCI,
+                                  Global_16pc = DOM_global_PgC_lowCI, North_16pc = DOM_north_PgC_lowCI, Tropics_16pc = DOM_tropics_PgC_lowCI, South_16pc = DOM_south_PgC_lowCI,
+                                  Global_84pc = DOM_global_PgC_highCI, North_84pc = DOM_north_PgC_highCI, Tropics_84pc = DOM_tropics_PgC_highCI, South_84pc = DOM_south_PgC_highCI,
                                   Global_97.5pc = DOM_global_PgC_maxCI, North_97.5pc = DOM_north_PgC_maxCI, Tropics_97.5pc = DOM_tropics_PgC_maxCI, South_97.5pc = DOM_south_PgC_maxCI)
 
 ###
@@ -1372,8 +1363,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"DOM",output_suffix,".
 
 output = data.frame(Year = years, Global = ET_global_PgH2Oyr, North = ET_north_PgH2Oyr, Tropics = ET_tropics_PgH2Oyr, South = ET_south_PgH2Oyr,
                                   Global_2.5pc = ET_global_PgH2Oyr_minCI, North_2.5pc = ET_north_PgH2Oyr_minCI, Tropics_2.5pc = ET_tropics_PgH2Oyr_minCI, South_2.5pc = ET_south_PgH2Oyr_minCI,
-                                  Global_25pc = ET_global_PgH2Oyr_lowCI, North_25pc = ET_north_PgH2Oyr_lowCI, Tropics_25pc = ET_tropics_PgH2Oyr_lowCI, South_25pc = ET_south_PgH2Oyr_lowCI,
-                                  Global_75pc = ET_global_PgH2Oyr_highCI, North_75pc = ET_north_PgH2Oyr_highCI, Tropics_75pc = ET_tropics_PgH2Oyr_highCI, South_75pc = ET_south_PgH2Oyr_highCI,
+                                  Global_16pc = ET_global_PgH2Oyr_lowCI, North_16pc = ET_north_PgH2Oyr_lowCI, Tropics_16pc = ET_tropics_PgH2Oyr_lowCI, South_16pc = ET_south_PgH2Oyr_lowCI,
+                                  Global_84pc = ET_global_PgH2Oyr_highCI, North_84pc = ET_north_PgH2Oyr_highCI, Tropics_84pc = ET_tropics_PgH2Oyr_highCI, South_84pc = ET_south_PgH2Oyr_highCI,
                                   Global_97.5pc = ET_global_PgH2Oyr_maxCI, North_97.5pc = ET_north_PgH2Oyr_maxCI, Tropics_97.5pc = ET_tropics_PgH2Oyr_maxCI, South_97.5pc = ET_south_PgH2Oyr_maxCI)
 
 ###
@@ -1386,8 +1377,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"ET",output_suffix,".t
 
 output = data.frame(Year = years, Global = LAB_global_PgC, North = LAB_north_PgC, Tropics = LAB_tropics_PgC, South = LAB_south_PgC,
                                   Global_2.5pc = LAB_global_PgC_minCI, North_2.5pc = LAB_north_PgC_minCI, Tropics_2.5pc = LAB_tropics_PgC_minCI, South_2.5pc = LAB_south_PgC_minCI,
-                                  Global_25pc = LAB_global_PgC_lowCI, North_25pc = LAB_north_PgC_lowCI, Tropics_25pc = LAB_tropics_PgC_lowCI, South_25pc = LAB_south_PgC_lowCI,
-                                  Global_75pc = LAB_global_PgC_highCI, North_75pc = LAB_north_PgC_highCI, Tropics_75pc = LAB_tropics_PgC_highCI, South_75pc = LAB_south_PgC_highCI,
+                                  Global_16pc = LAB_global_PgC_lowCI, North_16pc = LAB_north_PgC_lowCI, Tropics_16pc = LAB_tropics_PgC_lowCI, South_16pc = LAB_south_PgC_lowCI,
+                                  Global_84pc = LAB_global_PgC_highCI, North_84pc = LAB_north_PgC_highCI, Tropics_84pc = LAB_tropics_PgC_highCI, South_84pc = LAB_south_PgC_highCI,
                                   Global_97.5pc = LAB_global_PgC_maxCI, North_97.5pc = LAB_north_PgC_maxCI, Tropics_97.5pc = LAB_tropics_PgC_maxCI, South_97.5pc = LAB_south_PgC_maxCI)
                                   
 ###
@@ -1400,8 +1391,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"LAB",output_suffix,".
 
 output = data.frame(Year = years, Global = FOL_global_PgC, North = FOL_north_PgC, Tropics = FOL_tropics_PgC, South = FOL_south_PgC,
                                   Global_2.5pc = FOL_global_PgC_minCI, North_2.5pc = FOL_north_PgC_minCI, Tropics_2.5pc = FOL_tropics_PgC_minCI, South_2.5pc = FOL_south_PgC_minCI,
-                                  Global_25pc = FOL_global_PgC_lowCI, North_25pc = FOL_north_PgC_lowCI, Tropics_25pc = FOL_tropics_PgC_lowCI, South_25pc = FOL_south_PgC_lowCI,
-                                  Global_75pc = FOL_global_PgC_highCI, North_75pc = FOL_north_PgC_highCI, Tropics_75pc = FOL_tropics_PgC_highCI, South_75pc = FOL_south_PgC_highCI,
+                                  Global_16pc = FOL_global_PgC_lowCI, North_16pc = FOL_north_PgC_lowCI, Tropics_16pc = FOL_tropics_PgC_lowCI, South_16pc = FOL_south_PgC_lowCI,
+                                  Global_84pc = FOL_global_PgC_highCI, North_84pc = FOL_north_PgC_highCI, Tropics_84pc = FOL_tropics_PgC_highCI, South_84pc = FOL_south_PgC_highCI,
                                   Global_97.5pc = FOL_global_PgC_maxCI, North_97.5pc = FOL_north_PgC_maxCI, Tropics_97.5pc = FOL_tropics_PgC_maxCI, South_97.5pc = FOL_south_PgC_maxCI)
                                   
 ###
@@ -1414,8 +1405,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"FOL",output_suffix,".
 
 output = data.frame(Year = years, Global = ROOT_global_PgC, North = ROOT_north_PgC, Tropics = ROOT_tropics_PgC, South = ROOT_south_PgC,
                                   Global_2.5pc = ROOT_global_PgC_minCI, North_2.5pc = ROOT_north_PgC_minCI, Tropics_2.5pc = ROOT_tropics_PgC_minCI, South_2.5pc = ROOT_south_PgC_minCI,
-                                  Global_25pc = ROOT_global_PgC_lowCI, North_25pc = ROOT_north_PgC_lowCI, Tropics_25pc = ROOT_tropics_PgC_lowCI, South_25pc = ROOT_south_PgC_lowCI,
-                                  Global_75pc = ROOT_global_PgC_highCI, North_75pc = ROOT_north_PgC_highCI, Tropics_75pc = ROOT_tropics_PgC_highCI, South_75pc = ROOT_south_PgC_highCI,
+                                  Global_16pc = ROOT_global_PgC_lowCI, North_16pc = ROOT_north_PgC_lowCI, Tropics_16pc = ROOT_tropics_PgC_lowCI, South_16pc = ROOT_south_PgC_lowCI,
+                                  Global_84pc = ROOT_global_PgC_highCI, North_84pc = ROOT_north_PgC_highCI, Tropics_84pc = ROOT_tropics_PgC_highCI, South_84pc = ROOT_south_PgC_highCI,
                                   Global_97.5pc = ROOT_global_PgC_maxCI, North_97.5pc = ROOT_north_PgC_maxCI, Tropics_97.5pc = ROOT_tropics_PgC_maxCI, South_97.5pc = ROOT_south_PgC_maxCI)
                                   
 ###
@@ -1428,8 +1419,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"ROOT",output_suffix,"
 
 output = data.frame(Year = years, Global = WOOD_global_PgC, North = WOOD_north_PgC, Tropics = WOOD_tropics_PgC, South = WOOD_south_PgC,
                                   Global_2.5pc = WOOD_global_PgC_minCI, North_2.5pc = WOOD_north_PgC_minCI, Tropics_2.5pc = WOOD_tropics_PgC_minCI, South_2.5pc = WOOD_south_PgC_minCI,
-                                  Global_25pc = WOOD_global_PgC_lowCI, North_25pc = WOOD_north_PgC_lowCI, Tropics_25pc = WOOD_tropics_PgC_lowCI, South_25pc = WOOD_south_PgC_lowCI,
-                                  Global_75pc = WOOD_global_PgC_highCI, North_75pc = WOOD_north_PgC_highCI, Tropics_75pc = WOOD_tropics_PgC_highCI, South_75pc = WOOD_south_PgC_highCI,
+                                  Global_16pc = WOOD_global_PgC_lowCI, North_16pc = WOOD_north_PgC_lowCI, Tropics_16pc = WOOD_tropics_PgC_lowCI, South_16pc = WOOD_south_PgC_lowCI,
+                                  Global_84pc = WOOD_global_PgC_highCI, North_84pc = WOOD_north_PgC_highCI, Tropics_84pc = WOOD_tropics_PgC_highCI, South_84pc = WOOD_south_PgC_highCI,
                                   Global_97.5pc = WOOD_global_PgC_maxCI, North_97.5pc = WOOD_north_PgC_maxCI, Tropics_97.5pc = WOOD_tropics_PgC_maxCI, South_97.5pc = WOOD_south_PgC_maxCI)
                                   
 ###
@@ -1442,8 +1433,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"WOOD",output_suffix,"
 
 output = data.frame(Year = years, Global = LIT_global_PgC, North = LIT_north_PgC, Tropics = LIT_tropics_PgC, South = LIT_south_PgC,
                                   Global_2.5pc = LIT_global_PgC_minCI, North_2.5pc = LIT_north_PgC_minCI, Tropics_2.5pc = LIT_tropics_PgC_minCI, South_2.5pc = LIT_south_PgC_minCI,
-                                  Global_25pc = LIT_global_PgC_lowCI, North_25pc = LIT_north_PgC_lowCI, Tropics_25pc = LIT_tropics_PgC_lowCI, South_25pc = LIT_south_PgC_lowCI,
-                                  Global_75pc = LIT_global_PgC_highCI, North_75pc = LIT_north_PgC_highCI, Tropics_75pc = LIT_tropics_PgC_highCI, South_75pc = LIT_south_PgC_highCI,
+                                  Global_16pc = LIT_global_PgC_lowCI, North_16pc = LIT_north_PgC_lowCI, Tropics_16pc = LIT_tropics_PgC_lowCI, South_16pc = LIT_south_PgC_lowCI,
+                                  Global_84pc = LIT_global_PgC_highCI, North_84pc = LIT_north_PgC_highCI, Tropics_84pc = LIT_tropics_PgC_highCI, South_84pc = LIT_south_PgC_highCI,
                                   Global_97.5pc = LIT_global_PgC_maxCI, North_97.5pc = LIT_north_PgC_maxCI, Tropics_97.5pc = LIT_tropics_PgC_maxCI, South_97.5pc = LIT_south_PgC_maxCI)
                                   
 ###
@@ -1456,8 +1447,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"LIT",output_suffix,".
 
 output = data.frame(Year = years, Global = SOM_global_PgC, North = SOM_north_PgC, Tropics = SOM_tropics_PgC, South = SOM_south_PgC,
                                   Global_2.5pc = SOM_global_PgC_minCI, North_2.5pc = SOM_north_PgC_minCI, Tropics_2.5pc = SOM_tropics_PgC_minCI, South_2.5pc = SOM_south_PgC_minCI,
-                                  Global_25pc = SOM_global_PgC_lowCI, North_25pc = SOM_north_PgC_lowCI, Tropics_25pc = SOM_tropics_PgC_lowCI, South_25pc = SOM_south_PgC_lowCI,
-                                  Global_75pc = SOM_global_PgC_highCI, North_75pc = SOM_north_PgC_highCI, Tropics_75pc = SOM_tropics_PgC_highCI, South_75pc = SOM_south_PgC_highCI,
+                                  Global_16pc = SOM_global_PgC_lowCI, North_16pc = SOM_north_PgC_lowCI, Tropics_16pc = SOM_tropics_PgC_lowCI, South_16pc = SOM_south_PgC_lowCI,
+                                  Global_84pc = SOM_global_PgC_highCI, North_84pc = SOM_north_PgC_highCI, Tropics_84pc = SOM_tropics_PgC_highCI, South_84pc = SOM_south_PgC_highCI,
                                   Global_97.5pc = SOM_global_PgC_maxCI, North_97.5pc = SOM_north_PgC_maxCI, Tropics_97.5pc = SOM_tropics_PgC_maxCI, South_97.5pc = SOM_south_PgC_maxCI)
                                   
 ###
@@ -1470,8 +1461,8 @@ write.table(output,file = paste(out_dir,"/",output_prefix,"SOM",output_suffix,".
 
 output = data.frame(Year = years, Global = wSWP_global_MPa, North = wSWP_north_MPa, Tropics = wSWP_tropics_MPa, South = wSWP_south_MPa,
                                   Global_2.5pc = wSWP_global_MPa_minCI, North_2.5pc = wSWP_north_MPa_minCI, Tropics_2.5pc = wSWP_tropics_MPa_minCI, South_2.5pc = wSWP_south_MPa_minCI,
-                                  Global_25pc = wSWP_global_MPa_lowCI, North_25pc = wSWP_north_MPa_lowCI, Tropics_25pc = wSWP_tropics_MPa_lowCI, South_25pc = wSWP_south_MPa_lowCI,
-                                  Global_75pc = wSWP_global_MPa_highCI, North_75pc = wSWP_north_MPa_highCI, Tropics_75pc = wSWP_tropics_MPa_highCI, South_75pc = wSWP_south_MPa_highCI,
+                                  Global_16pc = wSWP_global_MPa_lowCI, North_16pc = wSWP_north_MPa_lowCI, Tropics_16pc = wSWP_tropics_MPa_lowCI, South_16pc = wSWP_south_MPa_lowCI,
+                                  Global_84pc = wSWP_global_MPa_highCI, North_84pc = wSWP_north_MPa_highCI, Tropics_84pc = wSWP_tropics_MPa_highCI, South_84pc = wSWP_south_MPa_highCI,
                                   Global_97.5pc = wSWP_global_MPa_maxCI, North_97.5pc = wSWP_north_MPa_maxCI, Tropics_97.5pc = wSWP_tropics_MPa_maxCI, South_97.5pc = wSWP_south_MPa_maxCI)
                                   
 ###

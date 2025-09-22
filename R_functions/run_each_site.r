@@ -43,7 +43,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
   # Set dummy output variable, the value may be changes by the code below
   dummy = 0
 
-  if (file.exists(outfile_parameters) == FALSE | repair == 1) {
+  if ((file.exists(outfile_stock_fluxes) == FALSE & file.exists(outfile_parameters) == FALSE) | repair == 1) {
 
       # Determine which parameter chains we will be using
       output = determine_parameter_chains_to_run(PROJECT,n)
@@ -61,7 +61,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
 #drivers$met[,5] = drivers$met[1,5]
-## HACK to create S2 simulations for GCP / Trendy v13
+# HACK to create S2 simulations for GCP / Trendy v14
 #drivers$met[,8] = 0
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
@@ -84,7 +84,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,n)
           # Determine how many ensemble members are within the observational uncertainties
           # of the calibration datasets
-          states_all = assess_ensemble_fit_to_calibration_data(states_all,drivers,PROJECT)
+          states_all = assess_ensemble_fit_to_calibration_data(states_all,parameters,drivers,PROJECT)
 
       } # DALEC model or not?
 

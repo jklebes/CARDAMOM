@@ -106,9 +106,9 @@ module MODEL_PARAMETERS
 !    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-1.8
     PI%parmin(10) = 0.019d0
-    PI%parmax(10) = 0.08d0
+    PI%parmax(10) = 0.059d0
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.

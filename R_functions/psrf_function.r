@@ -83,15 +83,15 @@ psrf<- function (X) {
       # D = nos_parameters
 
       # Therefore X = N,D,M
-      N=dim(X)[1] ; D=dim(X)[2] ; M=dim(X)[3]
+      N = dim(X)[1] ; D = dim(X)[2] ; M = dim(X)[3]
 
       # must have more than 1 time step for variance to be assessed
       if (N < 1) {stop('Too few samples')}
 
       # Calculate means W of the variances
-      W = array(0,dim=c(1,D))
-      for (n in seq(1,M)) { ####arrays don't match here try in matlab first
-	       x = X[,,n] - matrix(colMeans(X[,,n]),nrow=N,ncol=length(colMeans(X[,,n])),byrow=TRUE)
+      W = array(0, dim = c(1,D))
+      for (n in seq(1,M)) { 
+	       x = X[,,n] - matrix(colMeans(X[,,n]), nrow = N, ncol = length(colMeans(X[,,n])), byrow = TRUE)
 	       W = W + colSums(x*x)
       }
       W = W / ((N-1) * M)
@@ -107,12 +107,14 @@ psrf<- function (X) {
 
       # Calculate reduction factors
       S = (N-1)/N * W + Bpn
-      R = (M+1)/M * S / W - (N-1)/M/N
+      R = (M+1)/M * S / W - (N-1)/M/N # Ratio of variability between chains to that within
       V = R * W
       R = sqrt(R)
       B = Bpn*N
       neff = min(M*N*V/B,M*N)
-      output = list(R=R,neff=neff,V=V,W=W,B=B)
+      output = list(R = R, neff = neff, V = V, W = W, B = B)
+
+      # Return output
       return(output)
 
 } # end function psrf

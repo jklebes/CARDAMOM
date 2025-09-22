@@ -107,8 +107,9 @@ module MODEL_PARAMETERS
 !   PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
    ! Exponential coefficient for Rhet temperature response
-   PI%parmin(10) = 0.018d0
-   PI%parmax(10) = 0.06d0
+   ! Temp factor* = Q10 = 1.2-1.8
+   PI%parmin(10) = 0.019d0
+   PI%parmax(10) = 0.059d0
 
    ! log10 avg foliar N (gN.m-2)
    ! Kattge et al., (2011) (Quantiles 25% / 75%)

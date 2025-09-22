@@ -271,9 +271,10 @@ module CARBON_MODEL_MOD
   ! some hardcoded crop parameters
   !
 
-  ! defines Q10 = 2 in exponential temperature response for heterotrophic
-  ! respiration
-  double precision, parameter :: resp_rate_temp_coeff = 0.0693d0
+  !! defines Q10 = 2 in exponential temperature response for heterotrophic respiration
+  !double precision, parameter :: resp_rate_temp_coeff = 0.0693d0
+  ! defines Q10 = 1.4 in exponential temperature response for heterotrophic respiration
+  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0
   ! residue fraction of leaves left post harvest
   double precision, parameter :: lv_res = 0.1d0
   ! residue fraction of stem left post harvest
