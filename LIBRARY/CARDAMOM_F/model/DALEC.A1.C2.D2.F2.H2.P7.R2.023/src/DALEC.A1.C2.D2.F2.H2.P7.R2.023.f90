@@ -2715,23 +2715,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         Rcond_layer(1) = 0d0
     end if
 
-    ! calculate sum value (mmolH2O.m-2.s-1)
+    ! Calculate sum value (mmolH2O.m-2.s-1)
     total_water_flux = sum(water_flux_mmolH2Om2s)
-    ! wSWP based on the conductance due to the roots themselves.
-    ! The idea being that the plant may hedge against growth based on the majority of the
-    ! profile being dry while not losing leaves within some toleration.
-    rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
+    ! Calculate effective resistance
+    ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
+    ! through the model structure/
+    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! However, similar to the wSWP we need a special case calculation 
+        ! when there is no extraction from the soil. Here we use the ratio of root mass itself.
+        rSWP = sum(SWP(1:rooted_layer) * (root_mass(1:rooted_layer) / sum(root_mass(1:rooted_layer))))
         total_water_flux = 0d0
       else
         ! calculate weighted SWP and uptake fraction
         uptake_fraction(1:nos_root_layers) = water_flux_mmolH2Om2s(1:nos_root_layers) / total_water_flux
         ! Estimate weighted soil water potential based on fractional extraction from soil layers
         wSWP = sum(SWP(1:nos_root_layers) * uptake_fraction(1:nos_root_layers))
+        ! rSWP based on the conductance due to the roots themselves.
+        ! The idea being that the plant may hedge against growth based on the majority of the
+        ! profile being dry while not losing leaves within some toleration.
+        rSWP = sum(SWP(1:rooted_layer) * (Rcond_layer(1:rooted_layer) / sum(Rcond_layer(1:rooted_layer))))
     endif
 
     ! and return

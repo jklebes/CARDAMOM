@@ -116,6 +116,9 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  # Get timing variable...
                  if (length(which(names(data1$var) == "doy")) > 0 | length(which(names(data1$dim) == "doy"))) {
                      doy_in = ncvar_get(data1, "doy") 
+                     # If the doy variable has only a single time step, the data variables will likely 
+                     # be converted into 2D arrays rather than 3D. Set flag for correction
+                     if (length(doy_in) == 1) {twodim = TRUE} # flag to allow for correction to the dimension in the read variable
                  } else {
                      # We don't have the desired time variable
                      print(paste("......doy variable missing from ",est_var_name_in," Gridded_nc variable",sep=""))
