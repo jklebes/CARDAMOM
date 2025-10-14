@@ -10,9 +10,10 @@ set(FILES2
                   general/cardamom_io.f90
                   general/model_likelihood_wrapper.f90
                   general/cardamom_main_utils.f90
+                  general/MHMCMC_StressTests.f90
                 )
 if(${CMAKE_BUILD_TYPE} STREQUAL "RELEASE")
-  list(APPEND FILES2 general/wrappers_forR.f90)
+  list(APPEND FILES2 general/wrappers_for_R.f90)
 endif()
 
 set(MODELLIKELIHOODFILE

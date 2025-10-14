@@ -20,7 +20,7 @@ IF(NOT CMAKE_BUILD_TYPE)
         PROPERTY HELPSTRING
     )
     set(
-        CMAKE_BUILD_TYPE "Release" CACHE STRING
+      CMAKE_BUILD_TYPE "RELEASE" CACHE STRING
         "${CMAKE_BUILD_TYPE_HELPSTRING}" FORCE
     )
 ENDIF()
@@ -43,9 +43,6 @@ set_target_properties(
   Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/include"
 )
 
-## Code coverage analysis
-#target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
-#target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
 
 target_include_directories(
   "cardamom-lib"
@@ -62,6 +59,11 @@ endif()
 
 if(ENABLE_TESTING)
   # add the testsuite
+  # Code coverage analysis # TODO improve
+target_compile_options(cardamom-samplers-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+target_link_options(cardamom-samplers-lib PRIVATE -lgcov --coverage) 
+target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
   enable_testing()
   add_subdirectory("test")
 endif()

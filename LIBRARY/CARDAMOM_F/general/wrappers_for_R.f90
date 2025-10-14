@@ -63,7 +63,7 @@ contains
    subroutine initialize_cardamom(nchains) bind(c, name="C_initialize_model")
       use iso_c_binding
       use cardamom_io, only: initialize
-      use CARBON_MODEL_MOD, only: initialize_carbon_model
+      use model_shared, only: initialize_carbon_model
       implicit none(type, external)
       !character(kind = c_char, len = *), intent(in):: datain_filename
       character(kind=c_char, len=350):: filename

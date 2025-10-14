@@ -73,17 +73,17 @@ contains
       double precision, intent(out):: output
       ! local variables
       integer:: i
-      double precision, dimension(nopars-1):: area
+      double precision, dimension(nopars - 1):: area
 
       ! Determine the area of the circle for the current parameters
       do i = 2, nopars
-         area(i-1) = pars(1)*pars(i)**2d0
+         area(i - 1) = pars(1)*pars(i)**2d0
       end do
       if (isnan(pars(1))) then
          stop 1
       end if
       ! Convert into log-likelihood
-      output = sum(-0.5d0*(((area-circle_obs)/circle_obs_unc)**2))
+      output = sum(-0.5d0*(((area - circle_obs)/circle_obs_unc)**2))
 
    end subroutine circle
    !
@@ -167,7 +167,7 @@ contains
       output = pars(1)*pars(2)**2d0
 
       ! Convert into log-likelihood
-      output = sum(-0.5d0*(((output-single_circle_obs)/single_circle_obs_unc)**2))
+      output = sum(-0.5d0*(((output - single_circle_obs)/single_circle_obs_unc)**2))
 
    end subroutine single_circle
    !
@@ -301,7 +301,7 @@ contains
       ! need to allocate memory to the model output variables
       ! ->They are now local variables of model likelihood fcts
       if (.not. allocated(DATAin%M_FLUXES)) allocate (DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes))
-      if (.not. allocated(DATAin%M_POOLS)) allocate (DATAin%M_POOLS(DATAin%nodays+1, DATAin%nopools))
+      if (.not. allocated(DATAin%M_POOLS)) allocate (DATAin%M_POOLS(DATAin%nodays + 1, DATAin%nopools))
 
       ! alert the user
       write (*, *) "Created fields for model output"
@@ -350,7 +350,7 @@ contains
       real(c_double):: ML_obs_out, ML_prior_out
       call stresstest_likelihood(params, ML_obs_out, ML_prior_out)
 
-      loglikelihood = ML_obs_out+ML_prior_out
+      loglikelihood = ML_obs_out + ML_prior_out
    end subroutine stresstest_likelihood_fct
 
    !
@@ -408,7 +408,7 @@ contains
 
       call stresstest_sublikelihood(params, ML_obs_out, ML_prior_out)
 
-      loglikelihood = ML_obs_out+ML_prior_out
+      loglikelihood = ML_obs_out + ML_prior_out
 
    end subroutine stresstest_sublikelihood_fct
 
@@ -428,7 +428,7 @@ contains
       double precision, dimension(PI%npars), intent(inout):: PARS  ! current parameter vector
       double precision, dimension(DATAin%nodays):: M_LAI, M_NEE, M_GPP
       double precision, dimension(DATAin%nodays, DATAin%nofluxes):: M_FLUXES
-      double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+      double precision, dimension((DATAin%nodays + 1), DATAin%nopools):: M_POOLS
       ! output
       double precision, intent(inout):: ML_obs_out, &  ! observation+EDC log-likelihood
          ML_prior_out   ! prior log-likelihood

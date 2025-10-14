@@ -78,7 +78,10 @@ bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikel
                                      )
 
 # sampler AM works with this outer-level parallelization only.  We run N
-# separate single-chain samplers on N cores.
+# separate single-chain samplers on N cores of a cluser.
+# This is N completely independednt AM runs.  Could be handled by taskarray,
+# here parallelism is instead handled by R parallel cluster.  This runs on 
+# multiple CPUs .
 
 parallel::clusterEvalQ(cl, library(BayesianTools))
 parallel::clusterExport(cl, "cardamom_dll" )
@@ -88,11 +91,12 @@ parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
 parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
 iter = 100000
 
+# one chain within each core
 settings = list(iterations = iter, nrChains=1, message = TRUE)
 #parallel::clusterExport(cl, "bayesianSetup")
 #parallel::clusterExport(cl, "settings")
 
-# This will be useful for when you want to pass chainId X to function:
+# This parLapply will be useful for when you want to pass chainId X to function:
 out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
     bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
 

@@ -76,9 +76,11 @@ bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikel
                                      upper = model_parmax)
 
 # ============= RUN MCMC ===========
+# This runs a single-thread adaptive metropolis sampling
 # can try different BayesianTools samplers (with no parallelism) here
 iter = 100000
 settings = list(iterations = iter, startValue=initial , message = TRUE)
 out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
+
 
 plot(out)

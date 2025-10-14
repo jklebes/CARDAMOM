@@ -1,11 +1,13 @@
+
 ## Alternative cardamom stresstest as R script !
 #
 # jklebes 2025
 #
 #
-# this version demonstrates simplest automatic R parallelism using R bayesianTools DEMcz and 
-# CARDAMOM stresstest, which unlike cardamom main model is not stateful.  For
-# Cardamom main model different parallelism will be required.
+# R parallelism using R bayesianTools DEMcz - Option b
+# similar to parallel_AM demo, this versio uses an R-cluster
+# which is given parallel function over a matrix containting N
+# prpoposed paramter vectors as loglikelihood function.
 
 # very slow version - lots of communication overhead
 
@@ -66,14 +68,17 @@ nchains <- 4
 
 cl <- parallel::makeCluster(nchains)
 parallel::clusterEvalQ(cl, library(BayesianTools))
+# pass the variables on to cluster
 parallel::clusterExport(cl, "cardamom_dll" )
 parallel::clusterExport(cl, "model_npars" )
 parallel::clusterExport(cl, "model_parmax" )
 parallel::clusterExport(cl, "model_parmin" )
 parallel::clusterExport(cl, "filename" )
+# load cardamom library on each cluster node
 parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
 parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
-parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
+# initialize a model on each cluster node
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle", filename) )
 parallel::clusterExport(cl, "get_initial")
 parallel::clusterEvalQ(cl,  initial <- get_initial())
 
@@ -96,12 +101,19 @@ bayesianSetup <- createBayesianSetup(likelihood = plikelihood,
                                      upper = model_parmax, 
                                      parallel='external', # use the cluster
                                      )
+
+# note this will be interpreted as iter/nchains iterations per chain
+# while in cardamom-samplers each chain does n_out number of steps
 iter = 10000
 
+# only one chain per cluster core
 settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
 #test
 plikelihood(initialMatrix)
 plikelihood(bayesianSetup$prior$sampler(nchains))
 
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
+plot(out_parallel$chain[,'LL'])
 
+#expect convergence on approx. pi :
+plot(out_parallel$chain[,1])

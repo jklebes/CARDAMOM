@@ -3,9 +3,9 @@
 # jklebes 2025
 #
 #
-# this version demonstrates simplest automatic R parallelism using R bayesianTools DEMcz and 
-# CARDAMOM stresstest, which unlike cardamom main model is not stateful.  For
-# Cardamom main model different parallelism will be required.
+# Demo of parallel cardamom model evaluation from R, option c 
+# this version works with a R cluster and a parallel likelihood function and 
+# seems to be the same as option b
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
 

@@ -60,7 +60,7 @@ print(ll)
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-nchains <- 8
+nchains <- 4
 
 cl <- parallel::makeCluster(nchains)
 parallel::clusterEvalQ(cl, library(BayesianTools))
@@ -71,7 +71,7 @@ parallel::clusterExport(cl, "model_parmin" )
 parallel::clusterExport(cl, "filename" )
 parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
 parallel::clusterExport(cl, "cardamom_edc_modellikelihood")
-parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model") )
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model", filename) )
 parallel::clusterExport(cl, "get_initial")
 parallel::clusterEvalQ(cl,  initial <- get_initial())
 
@@ -94,7 +94,7 @@ bayesianSetup <- createBayesianSetup(likelihood = plikelihood,
                                      upper = model_parmax, 
                                      parallel='external', # use the cluster
                                      )
-iter = 100000
+iter = 10000
 
 settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
 #test
@@ -103,6 +103,5 @@ plikelihood(bayesianSetup$prior$sampler(nchains))
 
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-plot(out_parallel[["chain"]][[1]][,'LL'])
+plot(out_parallel$chain[,'LL'])
 
-out_parallel <- runMCMC(out_parallel, sampler="DEzs", settings=settings)
