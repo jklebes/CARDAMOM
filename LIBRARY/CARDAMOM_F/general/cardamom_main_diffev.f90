@@ -5,8 +5,8 @@ program cardamom_DEMCz
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
-                        update_obs_scaling_normal, update_obs_scaling_nsamples, &
-                        update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
+                          update_obs_scaling_normal, update_obs_scaling_nsamples, &
+                          update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
    use samplers_io, only: open_output_files, &
                           check_for_existing_output_files, &
                           update_for_restart_simulation, &
@@ -25,7 +25,7 @@ program cardamom_DEMCz
    ! 6) 0/1 flag to use normalised log-likelihood pre-mcmc
    ! 7) Flag to select the cost function normalisation approach
 
-   implicit none (type, external)
+   implicit none(type, external)
 
    ! declare local variables
    character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
@@ -39,7 +39,7 @@ program cardamom_DEMCz
    type(DEMCZOPT):: MCO
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 4
+   integer:: nchains = 16
    integer:: i
 
    allocate (MCOUT_list(nchains))
@@ -107,13 +107,13 @@ program cardamom_DEMCz
    if (trim(infile) == "StressTest") then
       ! call special functions to prepare for stress test
       !call run_stresstest()
-      write(*,*) "Stresstest currently not implemented, moving to tests"
+      write (*, *) "Stresstest currently not implemented, moving to tests"
       return
       !call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
-   endif
+   end if
 
-      call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
-      call initialize_carbon_model(nchains)
+   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
+   call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
    end do
@@ -137,77 +137,72 @@ program cardamom_DEMCz
    ! Report which model ID we are using
    write (*, *) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
 
+   ! Begin search for initial conditions
+   write (*, *) "Beginning search for initial parameter conditions"
+   ! Determine initial values, this requires using the AP-MCMC
+   call find_edc_initial_values(edc_MCO, MCOUT_list, nchains)
 
+   ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
+   mco%mcmc_options = edc_mco
+   do i = 1, nchains
 
-      ! Begin search for initial conditions
-      write (*, *) "Beginning search for initial parameter conditions"
-      ! Determine initial values, this requires using the AP-MCMC
-      call find_edc_initial_values(edc_MCO, MCOUT_list, nchains)
-
-      ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
-      mco%mcmc_options = edc_mco
-      do i = 1, nchains
-
-         ! Reset the MCMC parameters for the next stage
-         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-
-         ! Reset stepsize and covariance for main DRAM-MCMC
-         call reset_stats(MCOUT_list(i), PI%npars)
-
-         if (MCO%restart) then
-            ! Restarting an old one
-            print *, "beginning restart simulation"
-            ! now begin update of model timing variables and parameter values if this is a
-            ! restart. NOTE that this include information determining the number of
-            ! iterations already completed...
-            call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
-         else
-            ! Brand new analysis
-            !print*,"writing initial covariance matrix"
-            ! write out first covariance matrix, this will be compared with the final covariance matrix
-            !if (MCO%nWRITE > 0) then %TODO problem because files not opened yet?
-                !call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
-                !call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
-            !endif
-            !...so the reset for nos_iterations must only occur when not a restart run
-            MCOUT_list(i)%nos_iterations = 0
-         end if  ! restart run or not
-      end do
-
-
-      ! Restore module variables needed for the run-these components could be split
-      ! into two subroutines to avoid double calling of file name creation
-      ! components.
+      ! Reset the MCMC parameters for the next stage
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-      ! Since they all get the same nout setting, assume all sub_model phase simulation
-      ! were same length  ! TODO
 
-      ! Update the user
-      write (*, *) "Beginning parameter search in real likelihoods"
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
-      MCO%restart = .true.
+      ! Reset stepsize and covariance for main DRAM-MCMC
+      call reset_stats(MCOUT_list(i), PI%npars)
 
+      if (MCO%restart) then
+         ! Restarting an old one
+         print *, "beginning restart simulation"
+         ! now begin update of model timing variables and parameter values if this is a
+         ! restart. NOTE that this include information determining the number of
+         ! iterations already completed...
+         call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
+      else
+         ! Brand new analysis
+         !print*,"writing initial covariance matrix"
+         ! write out first covariance matrix, this will be compared with the final covariance matrix
+         !if (MCO%nWRITE > 0) then %TODO problem because files not opened yet?
+         !call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
+         !call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
+         !endif
+         !...so the reset for nos_iterations must only occur when not a restart run
+         MCOUT_list(i)%nos_iterations = 0
+      end if  ! restart run or not
+   end do
 
-      ! Call the main MCMC
-      ! The specific normalisation of the cost function is determined here.
-      ! But to avoid getting through the EDC do_inflate sections before finding
-      ! out that the cost_function_scaling has not been set correctly,
-      ! ensure code after the command line read (above) has been correctly maintained
-      if (cost_func_scaling_dble == 0) then
-         call update_obs_scaling_normal
-      else if (cost_func_scaling_dble == 1) then
-         call update_obs_scaling_nsamples
-      else if (cost_func_scaling_dble == 2) then
-         call update_obs_scaling_sqrt_nsamples
-      else if (cost_func_scaling_dble == 3) then
-         call update_obs_scaling_log_nsamples
-      end if  ! cost_func_scaling_dble ==
-      ! TODO scaled model likelihood fct
-      call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
+   ! Restore module variables needed for the run-these components could be split
+   ! into two subroutines to avoid double calling of file name creation
+   ! components.
+   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
+   ! Since they all get the same nout setting, assume all sub_model phase simulation
+   ! were same length  ! TODO
 
-      ! Let the user know we are done
-      write (*, *) "AP-MCMC done now, moving on ..."
+   ! Update the user
+   write (*, *) "Beginning parameter search in real likelihoods"
+   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
+   MCO%restart = .true.
 
+   ! Call the main MCMC
+   ! The specific normalisation of the cost function is determined here.
+   ! But to avoid getting through the EDC do_inflate sections before finding
+   ! out that the cost_function_scaling has not been set correctly,
+   ! ensure code after the command line read (above) has been correctly maintained
+   if (cost_func_scaling_dble == 0) then
+      call update_obs_scaling_normal
+   else if (cost_func_scaling_dble == 1) then
+      call update_obs_scaling_nsamples
+   else if (cost_func_scaling_dble == 2) then
+      call update_obs_scaling_sqrt_nsamples
+   else if (cost_func_scaling_dble == 3) then
+      call update_obs_scaling_log_nsamples
+   end if  ! cost_func_scaling_dble ==
+   ! TODO scaled model likelihood fct
+   call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+
+   ! Let the user know we are done
+   write (*, *) "AP-MCMC done now, moving on ..."
 
    ! tidy up by closing all files
    do i = 1, nchains

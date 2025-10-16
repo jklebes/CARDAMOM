@@ -56,8 +56,18 @@ contains
       ! PI: use the PI_xy struct from test_functions quadratic potential
       call init_pi()
 
+      ! with MAXITER < nadapt
       options%nout = 10
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
 
+      ! with MAXITER = N*nadapt
+      options%nout = 50
+      options%nadapt = 10
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+
+      ! with MAXITER /= N*nadapt
+      options%nout = 53
+      options%nadapt = 10
       call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
 
    end subroutine test_DEMCz_runs

@@ -100,7 +100,7 @@ contains
       !! acceptance counter for each thread
       integer, dimension(:), allocatable:: ACCLOC
       !! acceptance counter for each thread, local to each nadapt phase
-      integer:: i, j, k, ITER, len_history  ! counters
+      integer:: i, j, k, ITER, len_history, kinit  ! counters
       integer:: R1, R2
       !!random indices in history
 
@@ -167,7 +167,7 @@ contains
       allocate (ACC(mco%nchains))
       allocate (ACCLOC(mco%nchains))
       allocate (PARS_best(npars, mco%nchains))
-      allocate (PARS_history(npars, MAXITER*mco%nchains))
+      allocate (PARS_history(npars, max(1, (MAXITER/mco%nadapt + 1))*mco%nchains))
 
       allocate (random_uniform_vectors(mco%nchains))
 
@@ -222,7 +222,6 @@ contains
          l_best(j) = l0(j)
          PARS_best(:, j) = PARS_current(:, j)
 
-         write (*, *) "start", j, l0(j), PARS_current(:, j)
          ! potential burnin steps
          ! ... TODO
 
@@ -235,16 +234,19 @@ contains
       len_history = len_history + mco%nchains
 
       !!! Main "time" loop
+      ITER = 1
+      kinit = 2
 
-      do i = 2, MAXITER/mco%nadapt + 2
+      do while (ITER + mco%nadapt < MAXITER) !TODO could add convergence criteria for early stop
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO private(ITER, R1, R2, l, proposed_vector, output_loglikelihood, MCOUT)
+!$OMP PARALLEL DO private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)
          do j = 1, mco%nchains
             MCOUT = MCOUT_list(j)
             ACCLOC(j) = 0
-            do k = 1, mco%nadapt
-               ITER = i*mco%nadapt + k
+            do k = kinit, min(mco%nadapt, MAXITER - ITER)
+
+               ITER = ITER + 1
 !               call step_chain(PARS_current(:, j), l0(j), model_likelihood, &
 !                               PI, PARS_history, len_history, differential_weight, j, random_uniform_vectors(j))
 
@@ -271,6 +273,7 @@ contains
                   end if
                end if
 
+               if (MCO%nprint > 0) then
                if (mod(ITER, MCO%nprint) == 0) then
                   write (*, *) "Chain ", j, "of", mco%nchains
                   write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
@@ -280,29 +283,35 @@ contains
                   write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
                   write (*, *) "Maximum likelihood = ", l_best(j)
                end if
-            end do  ! nadapt
-
-            if (MCO%nwrite > 0) then
-               if (mod(ITER, MCO%nwrite) == 0) then
-                  ! calculate the likelihood for the actual uncertainties-this avoid
-                  ! issues with different phases of the MCMC which may use sub-samples
-                  ! of observations or inflated uncertainties to aid parameter
-                  ! searching
-                  call model_likelihood_write(PARS_current(:, j), npars, output_loglikelihood, j)
-                  ! Now write out to files
-                  call write_mcmc_output(MCOUT%parvar, dble(ACC(j))/dble(MAXITER), &
-                                         MCOUT%covariance, &
-                                         MCOUT%meanpar, MCOUT%Nparvar, &
-                                         PARS_current(:, j), output_loglikelihood, npars, ITER == MCO%nOUT, &
-                                         io_space(j), j)
                end if
-            end if  ! write or not to write
+
+               if (MCO%nwrite > 0) then
+                  if (mod(ITER, MCO%nwrite) == 0) then
+                     ! calculate the likelihood for the actual uncertainties-this avoid
+                     ! issues with different phases of the MCMC which may use sub-samples
+                     ! of observations or inflated uncertainties to aid parameter
+                     ! searching
+                     call model_likelihood_write(PARS_current(:, j), npars, output_loglikelihood, j)
+                     ! Now write out to files
+                     call write_mcmc_output(MCOUT%parvar, dble(ACC(j))/dble(MAXITER), &
+                                            MCOUT%covariance, &
+                                            MCOUT%meanpar, MCOUT%Nparvar, &
+                                            PARS_current(:, j), output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                            io_space(j), j)
+                  end if
+               end if  ! write or not to write
+            end do  ! nadapt
 
             ACC(j) = ACC(j) + ACCLOC(j)
             ! write the chain's state after nadapt steps to Z
             PARS_history(:, len_history + j) = PARS_current(:, j)
          end do  ! nchains
          !$OMP END PARALLEL DO !!Barrier implicit
+
+         ! each thread's ITER update are not brought back ot the shared one -
+         ! now update the public one
+         ITER = ITER + (mco%nadapt - kinit + 1)
+         kinit = 1
 
          ! increment length M (filled so far) of Z
          len_history = len_history + mco%nchains
@@ -311,7 +320,7 @@ contains
 
          ! Reorder for best chains ?  Then write to Z later.
 
-      end do
+      end do !end while ITER < MAXITER
 
       ! Final summary output from each chain individually
       !$OMP PARALLEL DO

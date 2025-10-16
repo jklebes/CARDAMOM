@@ -129,7 +129,7 @@ parallel::clusterExport(cl, "cardamom_edc_modellikelihood")
 parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model") )
 parallel::clusterExport(cl, "get_initial")
 parallel::clusterEvalQ(cl,  intial <- get_initial())
-iter = 1000
+iter = 10000
 
 settings = list(iterations = iter, nrChains=1, message = TRUE)
 parallel::clusterExport(cl, "bayesianSetup")
@@ -137,8 +137,8 @@ parallel::clusterExport(cl, "settings")
 # This will be useful for when you want to pass chainId X to function:
 out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
     bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
-
-
 out <- createMcmcSamplerList(out)
 summary(out)
 plot(out[[3]][["chain"]][,'LL'])
+
+

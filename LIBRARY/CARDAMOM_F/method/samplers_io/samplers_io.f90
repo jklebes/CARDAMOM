@@ -570,6 +570,10 @@ contains
    subroutine write_mcmc_output(variance, accept_rate, &
                                 covariance, meanpars, nsample, &
                                 pars, prob, npars, dump_now, io_space, chainid)
+      !#
+      ! Write current state of the sampler to file.
+      ! Actually writes to buffer and dumps to file at intervals.
+      ! io_space object is a group of buffers spcific to this chain.
 
       ! Arguments
       integer, intent(in):: npars
