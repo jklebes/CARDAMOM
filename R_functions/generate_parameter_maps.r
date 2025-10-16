@@ -36,11 +36,21 @@ generate_parameter_maps<-function(PROJECT) {
 
    # Which quantiles will we extract
    na_flag = TRUE
-   median_loc = 4 ; upper_loc = 7 ; lower_loc = 1 # 0.50, 0.025, 0.975 assumed
 
    # Loaded the grid aggregated dataset into memory
    infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
    load(infile)
+
+   # determine the array value for the median,
+   if (length(grid_output$num_quantiles ) == 9) {
+       # then we assume we are dealing with 0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975 quantiles
+       median_loc = 5 ; lower_loc = 1 ; upper_loc = 9 # if == 9
+       #median_loc = 4 ; lower_loc = 1 ; upper_loc = 7 # if == 7
+   } else {
+       # Approximate
+       median_loc = grid_output$num_quantiles[median(c(1:length(grid_output$num_quantiles)))]
+       lower_loc = 1 ; upper_loc = length(grid_output$num_quantiles)
+   }
 
    # Extract the lat / long information
    grid_lat = grid_output$lat ; grid_long = grid_output$long
@@ -448,11 +458,11 @@ generate_parameter_maps<-function(PROJECT) {
        par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.3), omi=c(0.2, 0.2, 0.2, 0.40))
        var = grid_output$parameters[,,p,median_loc]
        zrange = range(pretty(c(min(var, na.rm=TRUE),max(var,na.rm=TRUE))))
-       if (zrange[1] > 0 & zrange[2] > 0) {
+       if (zrange[1] >= 0 & zrange[2] > 0) {
            colour_choices = colour_choices_gain
        } else if (zrange[1] < 0 & zrange[2] > 0) {
            colour_choices = colour_choices_sign
-       } else if (zrange[1] < 0 & zrange[2] < 0) {
+       } else if (zrange[1] < 0 & zrange[2] <= 0) {
            colour_choices = rev(colour_choices_loss)
        } else {
            colour_choices = colour_choices_default
@@ -488,11 +498,11 @@ generate_parameter_maps<-function(PROJECT) {
            if (length(which(is.na(grid_output$parameter_priors_array[,,p]) != TRUE)) > 0) {
                zrange = c(min(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE),max(as.vector(grid_output$parameter_priors_array[,,p]),na.rm=TRUE))
                zrange = sort(zrange + (c(-0.01,0.01) * zrange))
-               if (zrange[1] > 0 & zrange[2] > 0) {
+               if (zrange[1] >= 0 & zrange[2] > 0) {
                    colour_choices = colour_choices_gain
                } else if (zrange[1] < 0 & zrange[2] > 0) {
                    colour_choices = colour_choices_sign
-               } else if (zrange[1] < 0 & zrange[2] < 0) {
+               } else if (zrange[1] < 0 & zrange[2] <= 0) {
                    colour_choices = rev(colour_choices_loss)
                } else {
                    colour_choices = colour_choices_default

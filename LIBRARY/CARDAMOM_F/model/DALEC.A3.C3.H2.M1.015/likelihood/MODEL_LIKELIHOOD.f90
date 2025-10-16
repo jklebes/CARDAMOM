@@ -855,10 +855,10 @@ module model_likelihood_module
 
         ! call EDCs which can be evaluated prior to running the model
         call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
+
     endif !
 
     ! run the dalec model
@@ -1110,16 +1110,6 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,21))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
-    if (DATAin%nnbe > 0) then
-        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
-            + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
-            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
-                                             DATAin%NBE_scaling,mod)
-    endif ! nnbe > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto

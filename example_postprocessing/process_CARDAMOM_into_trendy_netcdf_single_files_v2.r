@@ -245,19 +245,20 @@ write_to_nc_analysis_timestep<-function(var_est,var_name,var_unit,var_long) {
    # Quantiles for uncertainty
    var_q1 = ncvar_def(paste(var_name,"_",q1_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q1_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   var_q2 = ncvar_def(paste(var_name,"_",q2_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q2_quant_longlab,sep=""), 
-                      dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+#   var_q2 = ncvar_def(paste(var_name,"_",q2_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q2_quant_longlab,sep=""), 
+#                      dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    var_q3 = ncvar_def(paste(var_name,"_",q3_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q3_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    var_q4 = ncvar_def(paste(var_name,"_",q4_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q4_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
-   var_q5 = ncvar_def(paste(var_name,"_",q5_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q5_quant_longlab,sep=""), 
-                      dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
+#   var_q5 = ncvar_def(paste(var_name,"_",q5_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q5_quant_longlab,sep=""), 
+#                      dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    var_q6 = ncvar_def(paste(var_name,"_",q6_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q6_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,time_dimen), missval = -99999, prec="double",compression = 9)
    
    # Create the empty file space
-   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_mid,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+#   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_mid,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_mid,var_q1,var_q3,var_q4,var_q6), force_v4 = TRUE)
 
    # Load first variable into the file
    # TIMING
@@ -269,17 +270,18 @@ write_to_nc_analysis_timestep<-function(var_est,var_name,var_unit,var_long) {
    # VARIABLE
    ncvar_put(new_file, var_mid, var_est[,,mid_quant,])
    ncvar_put(new_file, var_q1, var_est[,,q1_quant,])
-   ncvar_put(new_file, var_q2, var_est[,,q2_quant,])
+#   ncvar_put(new_file, var_q2, var_est[,,q2_quant,])
    ncvar_put(new_file, var_q3, var_est[,,q3_quant,])
    ncvar_put(new_file, var_q4, var_est[,,q4_quant,])   
-   ncvar_put(new_file, var_q5, var_est[,,q5_quant,])
+#   ncvar_put(new_file, var_q5, var_est[,,q5_quant,])
    ncvar_put(new_file, var_q6, var_est[,,q6_quant,])   
 
    # Close the existing file to ensure its written to file
    nc_close(new_file)
    
    # Tidy
-   rm(var_q1,var_q2,var_q3,var_q4,var_q5,var_q6,var_mid)
+#   rm(var_q1,var_q2,var_q3,var_q4,var_q5,var_q6,var_mid)
+   rm(var_q1,var_q3,var_q4,var_q6,var_mid)   
 
 } # end function write_to_nc_analysis_timestep
 
@@ -297,20 +299,20 @@ write_to_nc_analysis_annual<-function(var_est,var_name,var_unit,var_long) {
    # Quantiles for uncertainty
    var_q1 = ncvar_def(paste(var_name,"_",q1_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q1_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
-   var_q2 = ncvar_def(paste(var_name,"_",q2_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q2_quant_longlab,sep=""), 
-                      dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+#   var_q2 = ncvar_def(paste(var_name,"_",q2_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q2_quant_longlab,sep=""), 
+#                      dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    var_q3 = ncvar_def(paste(var_name,"_",q3_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q3_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    var_q4 = ncvar_def(paste(var_name,"_",q4_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q4_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
-   var_q5 = ncvar_def(paste(var_name,"_",q5_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q5_quant_longlab,sep=""), 
-                      dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
+#   var_q5 = ncvar_def(paste(var_name,"_",q5_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q5_quant_longlab,sep=""), 
+#                      dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    var_q6 = ncvar_def(paste(var_name,"_",q6_quant_lab,sep=""), unit = var_unit, longname = paste(var_long," - ",q6_quant_longlab,sep=""), 
                       dim = list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="double",compression = 9)
    
-   # Create the empty file space
-   new_file = nc_create(filename = output_name, vars = list(var1,var2,var_mid,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
-
+#   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_mid,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_mid,var_q1,var_q3,var_q4,var_q6), force_v4 = TRUE)
+   
    # Load first variable into the file
    ## Year information will come with the dimension being used
    # Grid area 
@@ -320,17 +322,18 @@ write_to_nc_analysis_annual<-function(var_est,var_name,var_unit,var_long) {
    # VARIABLE
    ncvar_put(new_file, var_mid, var_est[,,mid_quant,])
    ncvar_put(new_file, var_q1, var_est[,,q1_quant,])
-   ncvar_put(new_file, var_q2, var_est[,,q2_quant,])
+#   ncvar_put(new_file, var_q2, var_est[,,q2_quant,])
    ncvar_put(new_file, var_q3, var_est[,,q3_quant,])
    ncvar_put(new_file, var_q4, var_est[,,q4_quant,])   
-   ncvar_put(new_file, var_q5, var_est[,,q5_quant,])
+#   ncvar_put(new_file, var_q5, var_est[,,q5_quant,])
    ncvar_put(new_file, var_q6, var_est[,,q6_quant,])   
 
    # Close the existing file to ensure its written to file
    nc_close(new_file)
 
    # Tidy
-   rm(var_q1,var_q2,var_q3,var_q4,var_q5,var_q6,var_mid)
+#   rm(var_q1,var_q2,var_q3,var_q4,var_q5,var_q6,var_mid)
+   rm(var_q1,var_q3,var_q4,var_q6,var_mid)   
 
 } # end function write_to_nc_analysis_annual
 
@@ -353,54 +356,38 @@ quantiles_wanted = grid_output$num_quantiles
 nos_quantiles = length(quantiles_wanted)
 # Check that the quantiles we want to use are available
 # Minimum quantiles
-if (length(which(quantiles_wanted == 0.025)) == 1) {
-    q1_quant = which(quantiles_wanted == 0.025)
+if (length(which(round(quantiles_wanted,digits=3) == 0.025)) == 1) {
+    q1_quant = which(round(quantiles_wanted,digits=3) == 0.025)
     q1_quant_lab = "2.5pc"
     q1_quant_longlab = "2.5 % quantile"
 } else {
     stop("Desired min quantile cannot be found")
 }
-# A lower quantile
-if (length(which(quantiles_wanted == 0.05)) == 1) {
-    q2_quant = which(quantiles_wanted == 0.05)
-    q2_quant_lab = "5pc"
-    q2_quant_longlab = "5 % quantile"
-} else {
-    stop("Desired low quantile cannot be found")
-}
 # A lower quartile
-if (length(which(quantiles_wanted == 0.160)) == 1) {
-    q3_quant = which(quantiles_wanted == 0.160)
+if (length(which(round(quantiles_wanted,digits=2) == 0.160)) == 1) {
+    q3_quant = which(round(quantiles_wanted,digits=2) == 0.160)
     q3_quant_lab = "16pc"
     q3_quant_longlab = "16 % quantile"
 } else {
     stop("Desired lower quartile cannot be found")
 }
 # The median estimate
-if (length(which(quantiles_wanted == 0.5)) == 1) {
-    mid_quant = which(quantiles_wanted == 0.5)
+if (length(which(round(quantiles_wanted,digits=2) == 0.5)) == 1) {
+    mid_quant = which(round(quantiles_wanted,digits=2) == 0.5)
 } else {
     stop("Median quantile cannot be found")
 }
 # A upper quartile
-if (length(which(quantiles_wanted == 0.84)) == 1) {
-    q4_quant = which(quantiles_wanted == 0.84)
+if (length(which(round(quantiles_wanted,digits=2) == 0.84)) == 1) {
+    q4_quant = which(round(quantiles_wanted,digits=2) == 0.84)
     q4_quant_lab = "84pc"
     q4_quant_longlab = "84 % quantile"
 } else {
     stop("Desired upper quartile cannot be found")
 }
-# A upper quantile
-if (length(which(quantiles_wanted == 0.95)) == 1) {
-    q5_quant = which(quantiles_wanted == 0.95)
-    q5_quant_lab = "95pc"
-    q5_quant_longlab = "95 % quantile"
-} else {
-    stop("Desired high quantile cannot be found")
-}
 # Maximum quantile
-if (length(which(quantiles_wanted == 0.975)) == 1) {
-    q6_quant = which(quantiles_wanted == 0.975)
+if (length(which(round(quantiles_wanted,digits=3) == 0.975)) == 1) {
+    q6_quant = which(round(quantiles_wanted,digits=3) == 0.975)
     q6_quant_lab = "97.5pc"
     q6_quant_longlab = "97.5 % quantile"
 } else {
@@ -1073,6 +1060,13 @@ if (exists(x = "mean_annual_cue", where = grid_output)) {
     est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_cue", bias_adj = 0, scale_adj = 1) 
     write_to_nc_analysis_annual(est, var_name = "cue", var_unit = "0-1", var_long = "Mean Annual Carbon Use Efficiency")
+}    
+## Annual mean transit times for total C (years)
+if (exists(x = "MTT_annual_Ctotal_years", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "MTT_annual_Ctotal_years", bias_adj = 0, scale_adj = 1) 
+    write_to_nc_analysis_annual(est, var_name = "MTT_total", var_unit = "years", var_long = "Annual mean transit (residence) time of total ecosystem C pool")
 }    
 ## Annual mean transit times for biomass (years)
 if (exists(x = "MTT_annual_biomass_years", where = grid_output)) {

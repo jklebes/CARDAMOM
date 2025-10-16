@@ -50,17 +50,14 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   rm(output)
 
   # determine the array value for the median,
-  num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
-  if (num_quantiles == 7) {
+  if (length(grid_output$num_quantiles ) == 9) {
       # then we assume we are dealing with 0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975 quantiles
-      median_loc = 4 ; loc_25 = 3 ; loc_75 = 5; lower_loc = 1 ; upper_loc = 7
+      median_loc = 5 ; lower_loc = 1 ; upper_loc = 9 # if == 9
+      #median_loc = 4 ; lower_loc = 1 ; upper_loc = 7 # if == 7
   } else {
-      # otherwise we need to approximate it...
-      median_loc = round(num_quantiles / 2,digits=0)
-      lower_loc = ceiling(num_quantiles * 0.025)
-      upper_loc = floor(num_quantiles * 0.975)
-      loc_25 = ceiling(num_quantiles * 0.25)
-      loc_75 = floor(num_quantiles * 0.75)
+      # Approximate
+      median_loc = grid_output$num_quantiles[median(c(1:length(grid_output$num_quantiles)))]
+      lower_loc = 1 ; upper_loc = length(grid_output$num_quantiles)
   }
 
   # calculate land mask
@@ -119,18 +116,14 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
            var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
            var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-           #var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
-           #var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
-           var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
+           var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) 
            info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
            zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
-           if (zrange[1] > 0 & zrange[2] > 0) {
+           if (zrange[1] >= 0 & zrange[2] > 0) {
                colour_choices = colour_choices_gain
            } else if (zrange[1] < 0 & zrange[2] > 0) {
                colour_choices = colour_choices_sign
-           } else if (zrange[1] < 0 & zrange[2] < 0) {
+           } else if (zrange[1] < 0 & zrange[2] <= 0) {
                colour_choices = rev(colour_choices_loss)
            } else {
                colour_choices = colour_choices_default
@@ -191,11 +184,11 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
        info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
        zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
-       if (zrange[1] > 0 & zrange[2] > 0) {
+       if (zrange[1] >= 0 & zrange[2] > 0) {
            colour_choices = colour_choices_gain
        } else if (zrange[1] < 0 & zrange[2] > 0) {
            colour_choices = colour_choices_sign
-       } else if (zrange[1] < 0 & zrange[2] < 0) {
+       } else if (zrange[1] < 0 & zrange[2] <= 0) {
            colour_choices = rev(colour_choices_loss)
        } else {
            colour_choices = colour_choices_default
@@ -228,11 +221,11 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
        info = paste("Steady State: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
        zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
-       if (zrange[1] > 0 & zrange[2] > 0) {
+       if (zrange[1] >= 0 & zrange[2] > 0) {
            colour_choices = colour_choices_gain
        } else if (zrange[1] < 0 & zrange[2] > 0) {
            colour_choices = colour_choices_sign
-       } else if (zrange[1] < 0 & zrange[2] < 0) {
+       } else if (zrange[1] < 0 & zrange[2] <= 0) {
            colour_choices = rev(colour_choices_loss)
        } else {
            colour_choices = colour_choices_default

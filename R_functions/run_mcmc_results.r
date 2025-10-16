@@ -127,6 +127,8 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           if (any(check_list == "MTT_litter_years") == TRUE) {grid_output$MTT_litter_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
           if (any(check_list == "MTT_woodlitter_years") == TRUE) {grid_output$MTT_woodlitter_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
           if (any(check_list == "MTT_som_years") == TRUE) {grid_output$MTT_som_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (any(check_list == "MTT_Ctotal_years") == TRUE) {grid_output$MTT_Ctotal_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
+          if (any(check_list == "MTT_annual_Ctotal_years") == TRUE) {grid_output$MTT_annual_Ctotal_years = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))}
           # Steady state C stock estimates (gC/m2)
           if (any(check_list == "SS_labile_gCm2") == TRUE) {grid_output$SS_labile_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
           if (any(check_list == "SS_foliage_gCm2") == TRUE) {grid_output$SS_foliage_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))}
@@ -200,6 +202,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$mean_annual_dfire_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
           grid_output$mean_annual_dnbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
           grid_output$mean_annual_dnbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+
+          # Periodically request garbage collection to maintain memory management - to avoid R's attempts to claim more memory than exists
+          gc() ; gc()
 
           # Based on the presence of each pool define the grids for the mean and final values.
           # Also, create the time varying but quantile based values and time
@@ -661,7 +666,7 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$final_dCdom_gCm2 = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_outflux_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               grid_output$mean_rhet_dom_gCm2day = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
-              grid_output$MTT_dom_years =array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
+              grid_output$MTT_dom_years = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,dim(site_output$labile_gCm2)[1]))
               # Time varying pixel specific with quantiles
               grid_output$dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
               grid_output$dCdom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],dim(site_output$labile_gCm2)[2]))
@@ -696,6 +701,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               }              
           }
 
+          # Periodically request garbage collection to maintain memory management - to avoid R's attempts to claim more memory than exists
+          gc() ; gc()
+          
           # Water cycle specific variables
           if (any(check_list == "ET_kgH2Om2day") == TRUE) {
               # currently water in the soil surface layer (0-30 cm)
@@ -925,7 +933,13 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$MTT_wood_years_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
               grid_output$MTT_wood_years_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
               grid_output$MTT_wood_years_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-              grid_output$MTT_wood_years_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))             
+              grid_output$MTT_wood_years_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_gpp_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_nee_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
           }
           # If Mean mean allocation to wood correlation exists, ensure we store it for the gridded run too
           if (any(check_list == "MTT_som_years_parameter_correlation") == TRUE) {
@@ -940,6 +954,13 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$MTT_som_years_to_lai_m2m2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
               grid_output$MTT_som_years_to_dCwood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
               grid_output$MTT_som_years_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))             
+              grid_output$dCsom_gCm2_to_gpp_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_rauto_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_nee_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCsom_gCm2_to_som_input_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
           }
           # Quantify the mean absolute magnitude of correlations between parameters
           grid_output$absolute_mean_parameter_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -962,7 +983,7 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           # Load the land mask...
           grid_output$landmask = array(0, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
           # ...and land fraction
-          grid_output$land_fraction = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
+          grid_output$land_fraction = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))         
 
       } else {
 
@@ -970,6 +991,9 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           load(outfile_grid)
 
       } # have we already an output file
+
+      # Periodically request garbage collection to maintain memory management - to avoid R's attempts to claim more memory than exists
+      gc() ; gc()
 
       # Return
       return(grid_output)
@@ -1002,7 +1026,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
   outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
 
   # now check which ones we need to calculate, but only if override not in play
-  keep_list = 0 ; existing_list = 0 ; existing_files = rep(NA, length(nos_plots))
+  existing_files = rep(NA, length(nos_plots)) ; existing_list = 0
   if (repair != 1) {
       # Inform the user
       print("...beginning filterings for sites we have already processed")
@@ -1014,24 +1038,18 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
       } else {
           stop("PROJECT$spatial_type not of valid value, i.e. grid or site")
       }
-      # Loop through the expected sites
-      #for (n in seq(1, length(nos_plots))) {
-      for (n in 1:length(nos_plots)) {
-           #outfile_stocks = paste(PROJECT$results_processedpath,PROJECT$sites[n],"_stock_fluxes.RData",sep="")
-           if (file.exists(outfile_stocks[n]) == FALSE) {
-               keep_list = append(keep_list,n)
-           } else {
-               existing_list = append(existing_list,n) ; existing_files[n] = outfile_stocks[n]
-           }
-      }
-      # filter out the sites we already have then
-      # Note conditional statments used later account for cases where no / all sites are removed.
-      keep_list = keep_list[-1]
-      existing_list = existing_list[-1]
+      # Determine whether each exists
+      outfile_stocks_exists = file.exists(outfile_stocks)
+      # Determine whether each exists
+      outfile_stocks_exists = file.exists(outfile_stocks)
+      keep_list = which(outfile_stocks_exists == FALSE) # i.e. keep in the to do list
+      existing_list = which(outfile_stocks_exists)
+      existing_files[which(outfile_stocks_exists)] = outfile_stocks[which(outfile_stocks_exists)] # already existing output files
       # Update user
       print(paste("......removing ",length(nos_plots)-length(keep_list)," sites out of ",length(nos_plots)," from the analysis",sep=""))
       nos_plots = nos_plots[keep_list]
   } # repair !=1
+  existing_list = existing_list[-1] # do not remove - see below useage for why
 
   # now request the creation of the plots
   if (length(nos_plots) > 1 & request_use_local_slurm) {
@@ -1100,8 +1118,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
   # Check whether we have some existing files...
   if (length(existing_list) > 0) {
       if (existing_list[1] > 0) {
-          # ...then insert them into the overall output file list
-          #for (n in seq(1, length(existing_list))) {
+          # ...we do, so insert them into the overall output file list
           for (n in 1:length(existing_list)) {
                site_output_all[[existing_list[n]]] = existing_files[existing_list[n]]
           }

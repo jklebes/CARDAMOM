@@ -43,7 +43,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
   # Set dummy output variable, the value may be changes by the code below
   dummy = 0
 
-  if ((file.exists(outfile_stock_fluxes) == FALSE & file.exists(outfile_parameters) == FALSE) | repair == 1) {
+  if (repair == 1 | (file.exists(outfile_stock_fluxes) == FALSE & file.exists(outfile_parameters) == FALSE)) {
 
       # Determine which parameter chains we will be using
       output = determine_parameter_chains_to_run(PROJECT,n)
@@ -124,13 +124,16 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           # store the parameters and driver information
           save(kept_chains,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
-#          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
-#               file=outfile_parameters, compress="gzip", compression_level = 6)
           # Return
           dummy = 0 ; return(dummy)
+
       } else {
+
           # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-          num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          # The current quantiles allow for calculation of the 95 % CI (0.975-0.025) and the standard deviation equivalent (0.839-0.1607)
+          # The other quantiles provide a equal description of the distribution.
+          #num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          num_quantiles = c(0.025,0.1607143,0.2964286,0.4321429,0.5,0.5678571,0.7035714,0.8392857,0.975)
           na_flag = TRUE
 
           # Run post-processing for gridded analysis

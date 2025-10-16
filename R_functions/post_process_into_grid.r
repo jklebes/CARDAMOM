@@ -102,6 +102,8 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "MTT_litter_years")) {grid_output$MTT_litter_years[slot_i,slot_j,] = site_output$MTT_litter_years}
            if (any(check_list == "MTT_woodlitter_years")) {grid_output$MTT_woodlitter_years[slot_i,slot_j,] = site_output$MTT_woodlitter_years}
            if (any(check_list == "MTT_som_years")) {grid_output$MTT_som_years[slot_i,slot_j,] = site_output$MTT_som_years}
+           if (any(check_list == "MTT_Ctotal_years")) {grid_output$MTT_Ctotal_years[slot_i,slot_j,] = site_output$MTT_Ctotal_years}
+           if (any(check_list == "MTT_annual_Ctotal_years")) {grid_output$MTT_annual_Ctotal_years[n,,] = site_output$MTT_annual_Ctotal_years}
            # Steady state C stock estimates (gC/m2)
            if (any(check_list == "SS_labile_gCm2")) {grid_output$SS_labile_gCm2[slot_i,slot_j,] = site_output$SS_labile_gCm2}
            if (any(check_list == "SS_foliage_gCm2")) {grid_output$SS_foliage_gCm2[slot_i,slot_j,] = site_output$SS_foliage_gCm2}
@@ -921,6 +923,12 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$MTT_wood_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_lai_m2m2_correlation     
                grid_output$MTT_wood_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCwood_gCm2_correlation
                grid_output$MTT_wood_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCsom_gCm2_correlation
+               grid_output$dCwood_gCm2_to_gpp_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_gpp_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_rauto_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_rauto_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_nee_gCm2day_correlation[slot_i,slot_j]  = site_output$dCwood_gCm2_to_nee_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_rhet_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_rhet_gCm2day_correlation
+               grid_output$dCwood_gCm2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_wood_gCm2_correlation 
+               grid_output$dCwood_gCm2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_som_gCm2_correlation
            }
            if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation") == TRUE) {
                grid_output$MTT_som_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_som_years_parameter_correlation
@@ -934,6 +942,13 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$MTT_som_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_lai_m2m2_correlation
                grid_output$MTT_som_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCwood_gCm2_correlation     
                grid_output$MTT_som_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCsom_gCm2_correlation
+               grid_output$dCsom_gCm2_to_gpp_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_gpp_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_rauto_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_rauto_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_nee_gCm2day_correlation[slot_i,slot_j]  = site_output$dCsom_gCm2_to_nee_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_rhet_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_rhet_gCm2day_correlation
+               grid_output$dCsom_gCm2_to_wood_gCm2_correlation[slot_i,slot_j]  = site_output$dCsom_gCm2_to_wood_gCm2_correlation 
+               grid_output$dCsom_gCm2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_som_gCm2_correlation   
+               grid_output$dCsom_gCm2_to_som_input_gCm2_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_som_input_gCm2_correlation   
            }            
 
            # Tidy up

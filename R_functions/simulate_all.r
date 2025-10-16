@@ -98,7 +98,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       APAR_MJm2day = output[,,9], gb_total_canopy = output[,,10],
                       CiCa = output[,,11])
   } else if (model_name == "DALEC.C3.M1.014") {
-      output_dim = 58 ; MTT_dim = 8 ; SS_dim = 8
+      output_dim = 62 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       #crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       crop_type = 1 # Winter Wheat
@@ -115,7 +115,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                               ,lat=as.double(lat)
                               ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                               ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                              ,nodays=as.integer(dim(met)[1])
+                              ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                               ,nos_years=as.integer(noyears)
                               ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
                               ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
@@ -125,8 +125,8 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
       output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))
-      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+      MTT_years = tmp$out_var2     ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3       ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc() ; setwd(wd_old)
@@ -315,35 +315,35 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A3.C3.H2.M1.015") {
-      output_dim = 62 ; MTT_dim = 8 ; SS_dim = 8
+      output_dim = 63 ; MTT_dim = 8 ; SS_dim = 8
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       #crop_file_location=paste(PROJECT$exepath,"winter_wheat_development.csv", sep="")
       crop_type = 1 # Winter Wheat
       wd_old = getwd() ; setwd(PROJECT$exepath)
       tmp=.Fortran( "rdalec15",output_dim=as.integer(output_dim)
-                             ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
-                             ,met=as.double(t(met))
-                             ,pars=as.double(pars_in)
-                             ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                             ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                             ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                             ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
-                             ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                             
-                             ,lat=as.double(lat)
-                             ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                             ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                             ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
-                             ,nos_years=as.integer(noyears)
-                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-                             ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
-                             ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2]))
-                             ,pathlength=as.integer(crop_type))
-                             #,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
+                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                              ,met=as.double(t(met))
+                              ,pars=as.double(pars_in)
+                              ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                              ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                              ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                              ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
+                              ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                             
+                              ,lat=as.double(lat)
+                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                              ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
+                              ,nos_years=as.integer(noyears)
+                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                              ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
+                              ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2]))
+                              ,pathlength=as.integer(crop_type))
+                              #,exepath=as.character(crop_file_location),pathlength=as.integer(nchar(crop_file_location)))
       output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
       output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))
-      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+      MTT_years = tmp$out_var2     ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3       ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc() ; setwd(wd_old)
@@ -544,6 +544,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       DevelopmentStage = output[,,62],
                       mean_DevelopmentStage = output_mean[,62],
                       mean_annual_DevelopmentStage = output_annual[,,62],
+                      DevelopmentStage = output[,,62],
+                      mean_DevelopmentStage = output_mean[,62],
+                      mean_annual_DevelopmentStage = output_annual[,,62],
+                      FoliarN_gNm2 = output[,,63],
+                      mean_FoliarN_gNm2  = output_mean[,63],
+                      mean_annual_FoliarN_gNm2  = output_annual[,,63],                      
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

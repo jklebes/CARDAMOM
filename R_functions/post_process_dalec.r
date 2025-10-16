@@ -128,13 +128,23 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   # Determine the mean of the absolute correlations from the matrix
   states_all$absolute_mean_parameter_correlation = mean(abs(states_all$absolute_mean_parameter_correlation[lower.tri(states_all$absolute_mean_parameter_correlation,diag=FALSE)]))
 
+  # Determine multi-use variables for the correlation analysis below
+  ensLAI = rowMeans(states_all$lai_m2m2)
+  ensNBP = rowMeans(states_all$nbp_gCm2day)
+  ensNEE = rowMeans(states_all$nee_gCm2day)
+  ensGPP = rowMeans(states_all$gpp_gCm2day)
+  ensRauto = rowMeans(states_all$rauto_gCm2day)
+  ensRhet = rowMeans(states_all$rhet_gCm2day)
+  ensWood = rowMeans(states_all$wood_gCm2)
+  ensSOM = rowMeans(states_all$som_gCm2)
+
   # Determine correlations between parameter values and various state variables
-  states_all$lai_parameter_correlation = cor(tmp,rowMeans(states_all$lai_m2m2))
-  states_all$nbp_parameter_correlation = cor(tmp,rowMeans(states_all$nbp_gCm2day))
-  states_all$nee_parameter_correlation = cor(tmp,rowMeans(states_all$nee_gCm2day))
-  states_all$gpp_parameter_correlation = cor(tmp,rowMeans(states_all$gpp_gCm2day))
-  states_all$rauto_parameter_correlation = cor(tmp,rowMeans(states_all$rauto_gCm2day))
-  states_all$rhet_parameter_correlation = cor(tmp,rowMeans(states_all$rhet_gCm2day))
+  states_all$lai_parameter_correlation = cor(tmp,ensLAI)
+  states_all$nbp_parameter_correlation = cor(tmp,ensNBP)
+  states_all$nee_parameter_correlation = cor(tmp,ensNEE)
+  states_all$gpp_parameter_correlation = cor(tmp,ensGPP)
+  states_all$rauto_parameter_correlation = cor(tmp,ensRauto)
+  states_all$rhet_parameter_correlation = cor(tmp,ensRhet)
   # Avoid error flag when no fire
   if (any(check_list == "fire_gCm2day")) {
       if (max(as.vector(states_all$fire_gCm2day)) > 0) {
@@ -153,86 +163,98 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   }
 
   # Correlations between LAI and key gross and net fluxes
-  states_all$lai_m2m2_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$gpp_gCm2day))
-  states_all$lai_m2m2_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$nee_gCm2day))
-  states_all$lai_m2m2_to_NBP_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$nbp_gCm2day))
-  states_all$lai_m2m2_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$rauto_gCm2day))
-  states_all$lai_m2m2_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$rhet_gCm2day))
-  states_all$lai_m2m2_to_wood_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$wood_gCm2))
-  states_all$lai_m2m2_to_som_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$som_gCm2))
+  states_all$lai_m2m2_to_GPP_gCm2day_correlation = cor(ensLAI,ensGPP)
+  states_all$lai_m2m2_to_NEE_gCm2day_correlation = cor(ensLAI,ensNEE)
+  states_all$lai_m2m2_to_NBP_gCm2day_correlation = cor(ensLAI,ensNBP)
+  states_all$lai_m2m2_to_Rauto_gCm2day_correlation = cor(ensLAI,ensRauto)
+  states_all$lai_m2m2_to_Rhet_gCm2day_correlation = cor(ensLAI,ensRhet)
+  states_all$lai_m2m2_to_wood_gCm2_correlation = cor(ensLAI,ensWood)
+  states_all$lai_m2m2_to_som_gCm2_correlation = cor(ensLAI,ensSOM)
   dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-  states_all$lai_m2m2_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(dCbio))
+  states_all$lai_m2m2_to_dCwood_gCm2_correlation = cor(ensLAI,rowMeans(dCbio))
   dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-  states_all$lai_m2m2_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(dCbio))
+  states_all$lai_m2m2_to_dCsom_gCm2_correlation = cor(ensLAI,rowMeans(dCbio))
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
-      states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$lai_m2m2),rowMeans(states_all$harvest_gCm2day))
+      states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(ensLAI,rowMeans(states_all$harvest_gCm2day))
   }
 
   # Correlations between NBP and key gross and net fluxes
-  states_all$NBP_gCm2day_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$gpp_gCm2day))
-  states_all$NBP_gCm2day_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$nee_gCm2day))
-  states_all$NBP_gCm2day_to_lai_m2m2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$lai_m2m2))
-  states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rauto_gCm2day))
-  states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$rhet_gCm2day))
-  states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$wood_gCm2))
-  states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$som_gCm2))
+  states_all$NBP_gCm2day_to_GPP_gCm2day_correlation = cor(ensNBP,ensGPP)
+  states_all$NBP_gCm2day_to_NEE_gCm2day_correlation = cor(ensNBP,ensNEE)
+  states_all$NBP_gCm2day_to_lai_m2m2_correlation = cor(ensNBP,ensLAI)
+  states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation = cor(ensNBP,ensRauto)
+  states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation = cor(ensNBP,ensRhet)
+  states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(ensNBP,ensWood)
+  states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(ensNBP,ensSOM)
   dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-  states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(ensNBP,rowMeans(dCbio))
   dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-  states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(dCbio))
+  states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(ensNBP,rowMeans(dCbio))
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
-      states_all$NBP_gCm2day_to_harvest_gCm2day_correlation = cor(rowMeans(states_all$nbp_gCm2day),rowMeans(states_all$harvest_gCm2day))
+      states_all$NBP_gCm2day_to_harvest_gCm2day_correlation = cor(ensNBP,rowMeans(states_all$harvest_gCm2day))
   }
 
   # Determine whether have have both mean transit time and allocation to wood
   if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
+      # Multi-use variable
+      ensAwood = rowMeans(states_all$alloc_wood_gCm2day)
       # As both exist determine their correlations with parameters...
       states_all$MTT_wood_years_parameter_correlation = cor(tmp,states_all$MTT_wood_years)
-      states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
-      states_all$NPP_wood_fraction_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
+      states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,ensAwood)
+      states_all$NPP_wood_fraction_parameter_correlation = cor(tmp,ensAwood)
       # ...against key other observables
       # NPP wood - Flux
-      states_all$NPP_wood_gCm2day_to_GPP_gCm2day_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$gpp_gCm2day))
-      states_all$NPP_wood_gCm2day_to_NEE_gCm2day_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$nee_gCm2day))
-      states_all$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$rauto_gCm2day))
-      states_all$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$rhet_gCm2day))   
-      states_all$NPP_wood_gCm2day_to_wood_gCm2_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$wood_gCm2))   
-      states_all$NPP_wood_gCm2day_to_som_gCm2_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$som_gCm2))   
-      states_all$NPP_wood_gCm2day_to_lai_m2m2_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(states_all$lai_m2m2))   
+      states_all$NPP_wood_gCm2day_to_GPP_gCm2day_correlation = cor(ensAwood,ensGPP)
+      states_all$NPP_wood_gCm2day_to_NEE_gCm2day_correlation = cor(ensAwood,ensNEE)
+      states_all$NPP_wood_gCm2day_to_Rauto_gCm2day_correlation = cor(ensAwood,ensRauto)
+      states_all$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation = cor(ensAwood,ensRhet)   
+      states_all$NPP_wood_gCm2day_to_wood_gCm2_correlation = cor(ensAwood,ensWood)   
+      states_all$NPP_wood_gCm2day_to_som_gCm2_correlation = cor(ensAwood,ensSOM)   
+      states_all$NPP_wood_gCm2day_to_lai_m2m2_correlation = cor(ensAwood,ensLAI)   
       dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$NPP_wood_gCm2day_to_dCwood_gCm2_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(dCbio))         
+      states_all$NPP_wood_gCm2day_to_dCwood_gCm2_correlation = cor(ensAwood,rowMeans(dCbio))         
       dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      states_all$NPP_wood_gCm2day_to_dCsom_gCm2_correlation = cor(rowMeans(states_all$alloc_wood_gCm2day),rowMeans(dCbio))         
+      states_all$NPP_wood_gCm2day_to_dCsom_gCm2_correlation = cor(ensAwood,rowMeans(dCbio))         
       # NPP wood - fraction
-      states_all$NPP_wood_fraction_to_GPP_gCm2day_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$gpp_gCm2day))
-      states_all$NPP_wood_fraction_to_NEE_gCm2day_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$nee_gCm2day))
-      states_all$NPP_wood_fraction_to_Rauto_gCm2day_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$rauto_gCm2day))
-      states_all$NPP_wood_fraction_to_Rhet_gCm2day_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$rhet_gCm2day))   
-      states_all$NPP_wood_fraction_to_wood_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$wood_gCm2))   
-      states_all$NPP_wood_fraction_to_som_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$som_gCm2))   
-      states_all$NPP_wood_fraction_to_lai_m2m2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(states_all$lai_m2m2))     
+      states_all$NPP_wood_fraction_to_GPP_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensGPP)
+      states_all$NPP_wood_fraction_to_NEE_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensNEE)
+      states_all$NPP_wood_fraction_to_Rauto_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensRauto)
+      states_all$NPP_wood_fraction_to_Rhet_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensRhet)   
+      states_all$NPP_wood_fraction_to_wood_gCm2_correlation = cor(states_all$NPP_wood_fraction,ensWood)   
+      states_all$NPP_wood_fraction_to_som_gCm2_correlation = cor(states_all$NPP_wood_fraction,ensSOM)   
+      states_all$NPP_wood_fraction_to_lai_m2m2_correlation = cor(states_all$NPP_wood_fraction,ensLAI)     
       dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
       states_all$NPP_wood_fraction_to_dCwood_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(dCbio))         
       dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
       states_all$NPP_wood_fraction_to_dCsom_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(dCbio))                   
       # MTT wood
-      states_all$MTT_wood_years_to_GPP_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$gpp_gCm2day))
-      states_all$MTT_wood_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$nee_gCm2day))
-      states_all$MTT_wood_years_to_Rauto_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$rauto_gCm2day))
-      states_all$MTT_wood_years_to_Rhet_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$rhet_gCm2day))
-      states_all$MTT_wood_years_to_wood_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$wood_gCm2))   
-      states_all$MTT_wood_years_to_som_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$som_gCm2))   
-      states_all$MTT_wood_years_to_lai_m2m2_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$lai_m2m2))      
+      states_all$MTT_wood_years_to_GPP_gCm2day_correlation = cor(states_all$MTT_wood_years,ensGPP)
+      states_all$MTT_wood_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_wood_years,ensNEE)
+      states_all$MTT_wood_years_to_Rauto_gCm2day_correlation = cor(states_all$MTT_wood_years,ensRauto)
+      states_all$MTT_wood_years_to_Rhet_gCm2day_correlation = cor(states_all$MTT_wood_years,ensRhet)
+      states_all$MTT_wood_years_to_wood_gCm2_correlation = cor(states_all$MTT_wood_years,ensWood)   
+      states_all$MTT_wood_years_to_som_gCm2_correlation = cor(states_all$MTT_wood_years,ensSOM)   
+      states_all$MTT_wood_years_to_lai_m2m2_correlation = cor(states_all$MTT_wood_years,ensLAI)      
       dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
       states_all$MTT_wood_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(dCbio))         
       dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
       states_all$MTT_wood_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(dCbio))                            
       # ...and with each other
-      states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation = cor(states_all$MTT_wood_years,rowMeans(states_all$alloc_wood_gCm2day))
+      states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation = cor(states_all$MTT_wood_years,ensAwood)
       states_all$MTT_wood_years_to_NPP_wood_fraction_correlation = cor(states_all$MTT_wood_years,states_all$NPP_wood_fraction)
       states_all$MTT_wood_years_to_MTT_som_years_correlation = cor(states_all$MTT_wood_years,states_all$MTT_som_years)      
+      # As MTT wood exists we must also be able to work out the correlations for change in wood over time
+      dCbio = rowMeans(states_all$wood_gCm2 - states_all$wood_gCm2[,1]) # difference in som from initial
+      states_all$dCwood_gCm2_to_gpp_gCm2day_correlation = cor(dCbio,ensGPP) 
+      states_all$dCwood_gCm2_to_rauto_gCm2day_correlation = cor(dCbio,ensRauto) 
+      states_all$dCwood_gCm2_to_nee_gCm2day_correlation = cor(dCbio,ensNEE)    
+      states_all$dCwood_gCm2_to_rhet_gCm2day_correlation = cor(dCbio,ensRhet)    
+      states_all$dCwood_gCm2_to_wood_gCm2_correlation = cor(dCbio,ensWood)          
+      states_all$dCwood_gCm2_to_som_gCm2_correlation = cor(dCbio,ensSOM)      
+      # Remove multi-use variable
+      rm(ensAwood)
   } else {
       # Both are not present, so we will determine whether we can generate one of the correlation estimates
 
@@ -249,18 +271,31 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   if (any(check_list == "MTT_som_years") == TRUE) {
       states_all$MTT_som_years_parameter_correlation = cor(tmp,states_all$MTT_som_years)  
       # Assess within pixel correlations with soil turnover
-      states_all$MTT_som_years_to_GPP_gCm2day_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$gpp_gCm2day))
-      states_all$MTT_som_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$nee_gCm2day))
-      states_all$MTT_som_years_to_Rauto_gCm2day_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$rauto_gCm2day))
-      states_all$MTT_som_years_to_Rhet_gCm2day_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$rhet_gCm2day))
-      states_all$MTT_som_years_to_wood_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$wood_gCm2))   
-      states_all$MTT_som_years_to_som_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$som_gCm2))   
-      states_all$MTT_som_years_to_lai_m2m2_correlation = cor(states_all$MTT_som_years,rowMeans(states_all$lai_m2m2))      
+      states_all$MTT_som_years_to_GPP_gCm2day_correlation = cor(states_all$MTT_som_years,ensGPP)
+      states_all$MTT_som_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_som_years,ensNEE)
+      states_all$MTT_som_years_to_Rauto_gCm2day_correlation = cor(states_all$MTT_som_years,ensRauto)
+      states_all$MTT_som_years_to_Rhet_gCm2day_correlation = cor(states_all$MTT_som_years,ensRhet)
+      states_all$MTT_som_years_to_wood_gCm2_correlation = cor(states_all$MTT_som_years,ensWood)   
+      states_all$MTT_som_years_to_som_gCm2_correlation = cor(states_all$MTT_som_years,ensSOM)   
+      states_all$MTT_som_years_to_lai_m2m2_correlation = cor(states_all$MTT_som_years,ensLAI)      
       dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(dCbio))         
-      dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      states_all$MTT_som_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(dCbio))                            
+      states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(dCbio)) 
+      dCbio = rowMeans(states_all$som_gCm2 - states_all$som_gCm2[,1]) # difference in som from initial
+      states_all$MTT_som_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_som_years,dCbio)
+      # As MTT som exists we must also be able to work out the correlations for change in som over time
+      # Note reuse of dCbio
+      states_all$dCsom_gCm2_to_gpp_gCm2day_correlation = cor(dCbio,ensGPP) 
+      states_all$dCsom_gCm2_to_rauto_gCm2day_correlation = cor(dCbio,ensRauto) 
+      states_all$dCsom_gCm2_to_nee_gCm2day_correlation = cor(dCbio,ensNEE)    
+      states_all$dCsom_gCm2_to_rhet_gCm2day_correlation = cor(dCbio,ensRhet)    
+      states_all$dCsom_gCm2_to_wood_gCm2_correlation = cor(dCbio,ensWood)          
+      states_all$dCsom_gCm2_to_som_gCm2_correlation = cor(dCbio,ensSOM)
+      tmp = rowMeans(states_all$wood_to_litter_gCm2day + states_all$litter_to_som_gCm2day)
+      states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCbio,tmp)
   }   
+
+  # Tidy multi-use variables
+  rm(ensLAI,ensNBP,ensNEE,ensGPP,ensRauto,ensRhet,ensWood,ensSOM)
 
   # Return back to user
   return(states_all)

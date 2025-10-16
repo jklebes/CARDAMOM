@@ -2118,7 +2118,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! canopy?
     transmitted_fraction = exp(decay * lai * clump)
     ! Estimate the integral of light interception for use as a leaf to canopy
-    ! scaler for photoynthesis, transpiration, and gs
+    ! scaler for photosynthesis, transpiration, and gs
     ! Based on the canopy scaling of photosynthetic capacity due to light from 
     ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_light_scaling = (1d0-transmitted_fraction) / (-decay*clump)

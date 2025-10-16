@@ -1,4 +1,4 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+7!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -558,7 +558,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                         foliage_to_labile, & !
                            stem_to_labile, & !
                          root_frac_intpol, & !
-                                   avtemp, & !
                    alloc_to_storage_organ, & !
                        litterfall_foliage, & !
                           litterfall_stem, & !
@@ -806,7 +805,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! pair incoming variables to local module levels
     ! finally set some initial conditions
-    avtemp = 0d0
     yield = 0d0
     DS = -1d0
     DR = 0d0
@@ -915,7 +913,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       co2 = met(5,n)   ! CO2 (ppm)
       doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
       rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
-      meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
+      meant = met(14,n)   ! mean air temperature (oC)
       if (mint > 0d0) then
           airt_zero_fraction = 1d0
       else if (maxt < 0d0) then
@@ -960,6 +958,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       end if
       ! Update to canopy efficiency (gC/m2leaf/day)
       ceff = avN * NUE
+      ! Update output to DIAGS the average foliar N (gN/m2)
+      DIAGS(n,16) = avN
+
 
       !!!!!!!!!!
       ! Adjust snow balance balance based on temperture
@@ -1083,23 +1084,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
       DIAGS(n,9) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
 
-      ! pass relevant variables into crop module memory
-      avtemp = met(14,n) !meant
-
       ! calculate weighted air temperature value based on daily minimum, maximum
       ! and means. This minimises the error introduced when scaling between
       ! daily and sub-daily timesteps
-      !airt_weighting(1) = abs(met(3,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! maximum temperature weighting
+      !airt_weighting(1) = abs(met(3,n)-meant) / (met(3,n)-met(2,n))*0.5d0 ! maximum temperature weighting
       !airt_weighting(2) = 0.5d0                                            ! mean temperature
-      !airt_weighting(3) = abs(met(2,n)-avtemp) / (met(3,n)-met(2,n))*0.5d0 ! minimum temperature weighting
+      !airt_weighting(3) = abs(met(2,n)-meant) / (met(3,n)-met(2,n))*0.5d0 ! minimum temperature weighting
 
       ! Heterotrophic respiration rate (Q10):  doubles with
       ! 10 degree temperature rise resprate from soil file = 0.0693
       !resp_rate = 0d0
       !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(3,n) )) * airt_weighting(1))
-      !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * avtemp   )) * airt_weighting(2))
+      !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * meant   )) * airt_weighting(2))
       !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(2,n) )) * airt_weighting(3))
-      resp_rate = 0.5d0 * exp( resp_rate_temp_coeff * avtemp )
+      resp_rate = 0.5d0 * exp( resp_rate_temp_coeff * meant )
 
       ! reallocate day of year to the end of the time step for use in
       ! crop development model
@@ -1244,7 +1242,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !             print*,"DR stuff",fT,fV,fP
 !             print*,"leaf","stem","rootlitter",litterfall_foliage,litterfall_stem,litterfall_roots
 !             print*,"daylength",dayl_hours,"VD",VD,"VDh",VDh
-!             print*,"avtemp",avtemp
+!             print*,"meant",meant
 !             print*,"sown",sown,"emerged",emerged
 !             print*,"root_frac_intpol",root_frac_intpol
 !             print*,"npp_shoot",npp_shoot,"npp",npp
@@ -1274,7 +1272,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !                 print*,"DR stuff",fT,fV,fP
 !                 print*,"leaf","stem","rootlitter",litterfall_foliage,litterfall_stem,litterfall_roots
 !                 print*,"daylength",dayl_hours,"VD",VD,"VDh",VDh
-!                 print*,"avtemp",avtemp
+!                 print*,"meant",meant
 !                 print*,"sown",sown,"emerged",emerged
 !                 print*,"root_frac_intpol",root_frac_intpol
 !                 print*,"npp_shoot",npp_shoot,"npp",npp
@@ -1301,7 +1299,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !                 print*,"DR stuff",fT,fV,fP
 !                 print*,"leaf","stem","rootlitter",litterfall_foliage,litterfall_stem,litterfall_roots
 !                 print*,"daylength",dayl_hours,"VD",VD,"VDh",VDh
-!                 print*,"avtemp",avtemp
+!                 print*,"meant",meant
 !                 print*,"sown",sown,"emerged",emerged
 !                 print*,"root_frac_intpol",root_frac_intpol
 !                 print*,"npp_shoot",npp_shoot,"npp",npp
@@ -1338,7 +1336,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !          print*,"DR stuff",fT,fV,fP
 !          print*,"leaf","stem","rootlitter",litterfall_foliage,litterfall_stem,litterfall_roots
 !          print*,"daylength",dayl_hours,"VD",VD,"VDh",VDh
-!          print*,"avtemp",avtemp
+!          print*,"meant",meant
 !          print*,"sown",sown,"emerged",emerged
 !          print*,"root_frac_intpol",root_frac_intpol
 !          print*,"npp_shoot",npp_shoot,"npp",npp
@@ -3680,10 +3678,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     doptmin   = topt   - tmin   ! difference between optimal and minimum cardinal temperatures
     dmaxmin   = tmax   - tmin   ! difference between maximum and minimum cardinal temperatures
-    dttmin    = avtemp - tmin   ! difference between daily average and minimum cardinal temperatures
+    dttmin    = meant - tmin    ! difference between daily average and minimum cardinal temperatures
     doptmin_v = topt_v - tmin_v ! same as above,
     dmaxmin_v = tmax_v - tmin_v !       but for vernalization
-    dttmin_v  = avtemp - tmin_v ! cardinal temperatures
+    dttmin_v  = meant - tmin_v  ! cardinal temperatures
 
     ! Calculation of developmental function values: vernalization (fV),
     ! temperature (fT) and
@@ -3694,14 +3692,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Summation of vernalization days (VD), not before sowing and only if
     ! average temperature is within min and max cardinal temperatures..
-    if ( ( avtemp > tmin_v ) .and. ( avtemp < tmax_v ) .and. sown ) then
+    if ( ( meant > tmin_v ) .and. ( meant < tmax_v ) .and. sown ) then
         fV = vernalization( doptmin_v , dmaxmin_v , dttmin_v , days_in_step )
     endif
 
-    ! Only calculate temperature coefficient if avtemp lies within (tmin,tmax)
+    ! Only calculate temperature coefficient if meant lies within (tmin,tmax)
     ! range. NOTE: (doptmin+1d0) < dmaxmin added to allow for EDC search period when "not
     ! allowed" parameter sets will be tried anyway
-    if ( avtemp > tmin .and. avtemp < tmax .and. (doptmin+1d0) < dmaxmin ) then
+    if ( meant > tmin .and. meant < tmax .and. (doptmin+1d0) < dmaxmin ) then
         fT = temperature_impact( doptmin , dmaxmin , dttmin )
     else
         fT = 0d0
@@ -3791,7 +3789,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! estimate emergence date based on the accumulated phenological heat
             ! units (PHU)
             ! where PHU is the (positive) heat over tmin..
-            tmp = max( avtemp - tmin , 0d0 )*days_in_step
+            tmp = max( meant - tmin , 0d0 )*days_in_step
             PHU = PHU + tmp
 
             ! set the development stage and emergence..

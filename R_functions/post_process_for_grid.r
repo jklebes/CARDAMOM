@@ -300,6 +300,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   states_all$Ctotal_gCm2 = states_all$biomass_gCm2 + states_all$dom_gCm2
   states_all$mean_Ctotal_gCm2 = states_all$mean_biomass_gCm2 + states_all$mean_dom_gCm2
   states_all$mean_annual_Ctotal_gCm2 = states_all$mean_annual_biomass_gCm2 + states_all$mean_annual_dom_gCm2
+
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 
@@ -506,6 +507,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # C-cycle diagnostics which are mean annuals apply vs rowMeans
   site_output$mean_annual_cue      = apply(states_all$mean_annual_cue, 2, quantile, prob = num_quantiles, na.rm = na_flag)
   site_output$mean_cue             = quantile(rowMeans(states_all$mean_annual_cue, na.rm=na_flag), prob = num_quantiles, na.rm = na_flag)
+  # Estimate total ecosystem mean transit times for the analysis mean and the mean annual estimate (years)
+  site_output$MTT_Ctotal_years = quantile(apply(states_all$Ctotal_gCm2/((states_all$reco_gCm2day + states_all$harvest_gCm2day + states_all$fire_gCm2day)*365.25), 1, mean), prob=num_quantiles, na.rm = na_flag)
+  site_output$MTT_annual_Ctotal_years = apply((states_all$mean_annual_Ctotal_gCm2 / ((states_all$mean_annual_reco_gCm2day + states_all$mean_annual_harvest_gCm2day + states_all$mean_annual_fire_gCm2day)*365.25)),2,quantile, prob=num_quantiles, na.rm=na_flag)
 
   ###
   # Track net pool change over time
@@ -1684,6 +1688,12 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$MTT_wood_years_to_lai_m2m2_correlation = states_all$MTT_wood_years_to_lai_m2m2_correlation
       site_output$MTT_wood_years_to_dCwood_gCm2_correlation = states_all$MTT_wood_years_to_dCwood_gCm2_correlation
       site_output$MTT_wood_years_to_dCsom_gCm2_correlation = states_all$MTT_wood_years_to_dCsom_gCm2_correlation
+      site_output$dCwood_gCm2_to_gpp_gCm2day_correlation = states_all$dCwood_gCm2_to_gpp_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_rauto_gCm2day_correlation = states_all$dCwood_gCm2_to_rauto_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_nee_gCm2day_correlation  = states_all$dCwood_gCm2_to_nee_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_rhet_gCm2day_correlation = states_all$dCwood_gCm2_to_rhet_gCm2day_correlation
+      site_output$dCwood_gCm2_to_wood_gCm2_correlation  = states_all$dCwood_gCm2_to_wood_gCm2_correlation 
+      site_output$dCwood_gCm2_to_som_gCm2_correlation = states_all$dCwood_gCm2_to_som_gCm2_correlation
   }
   if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation")) {
       site_output$MTT_som_years_parameter_correlation = states_all$MTT_som_years_parameter_correlation
@@ -1697,6 +1707,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$MTT_som_years_to_lai_m2m2_correlation = states_all$MTT_som_years_to_lai_m2m2_correlation
       site_output$MTT_som_years_to_dCwood_gCm2_correlation = states_all$MTT_som_years_to_dCwood_gCm2_correlation     
       site_output$MTT_som_years_to_dCsom_gCm2_correlation = states_all$MTT_som_years_to_dCsom_gCm2_correlation
+      site_output$dCsom_gCm2_to_gpp_gCm2day_correlation = states_all$dCsom_gCm2_to_gpp_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_rauto_gCm2day_correlation = states_all$dCsom_gCm2_to_rauto_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_nee_gCm2day_correlation  = states_all$dCsom_gCm2_to_nee_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_rhet_gCm2day_correlation = states_all$dCsom_gCm2_to_rhet_gCm2day_correlation
+      site_output$dCsom_gCm2_to_wood_gCm2_correlation  = states_all$dCsom_gCm2_to_wood_gCm2_correlation 
+      site_output$dCsom_gCm2_to_som_gCm2_correlation = states_all$dCsom_gCm2_to_som_gCm2_correlation      
+      site_output$dCsom_gCm2_to_som_input_gCm2_correlation = states_all$dCsom_gCm2_to_som_input_gCm2_correlation
   }     
 
   # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid

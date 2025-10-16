@@ -89,7 +89,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
                   ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
                   ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
                        ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+                       ,lat                             ! site latitude (degrees)
 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
@@ -161,7 +161,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! begin iterations
   do i = 1, nos_iter
      ! call the model
-     call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
+     call carbon_model(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
                       ,FLUXES,POOLS,DIAGS,nopars,nomet,nopools,nofluxes &
                       ,nodiags,stock_seed_labile,DS_shoot,DS_root,fol_frac &
                       ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
@@ -246,6 +246,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      ! misc
      out_var1(i,1:nodays,61) = DIAGS(1:nodays,8)           ! rooting depth (m)
      out_var1(i,1:nodays,62) = DIAGS(1:nodays,13)          ! Development stage (0-2)
+     out_var1(i,1:nodays,63) = DIAGS(1:nodays,16)          ! Canopy average foliar nitrogen (gN/m2leaf)
 
      !
      ! Calculate long-term mean of out_var1

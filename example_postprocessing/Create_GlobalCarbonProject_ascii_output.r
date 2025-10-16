@@ -65,28 +65,33 @@ rm(output) ; gc(reset=TRUE,verbose=FALSE)
 quantiles_wanted = grid_output$num_quantiles
 nos_quantiles = length(quantiles_wanted)
 # Check that the quantiles we want to use are available
-if (length(which(quantiles_wanted == 0.025)) == 1) {
-    min_quant = which(quantiles_wanted == 0.025)
+# Minimum quantiles
+if (length(which(round(quantiles_wanted,digits=3) == 0.025)) == 1) {
+    min_quant = which(round(quantiles_wanted,digits=3) == 0.025)
 } else {
     stop("Desired min quantile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.16)) == 1) {
-    low_quant = which(quantiles_wanted == 0.16)
+# A lower quartile
+if (length(which(round(quantiles_wanted,digits=2) == 0.160)) == 1) {
+    low_quant = which(round(quantiles_wanted,digits=2) == 0.160)
 } else {
-    stop("Desired low quantile cannot be found")
+    stop("Desired lower quartile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.5)) == 1) {
-    mid_quant = which(quantiles_wanted == 0.5)
+# The median estimate
+if (length(which(round(quantiles_wanted,digits=2) == 0.5)) == 1) {
+    mid_quant = which(round(quantiles_wanted,digits=2) == 0.5)
 } else {
     stop("Median quantile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.84)) == 1) {
-    high_quant = which(quantiles_wanted == 0.84)
+# A upper quartile
+if (length(which(round(quantiles_wanted,digits=2) == 0.84)) == 1) {
+    high_quant = which(round(quantiles_wanted,digits=2) == 0.84)
 } else {
-    stop("Desired high quantile cannot be found")
+    stop("Desired upper quartile cannot be found")
 }
-if (length(which(quantiles_wanted == 0.975)) == 1) {
-    max_quant = which(quantiles_wanted == 0.975)
+# Maximum quantile
+if (length(which(round(quantiles_wanted,digits=3) == 0.975)) == 1) {
+    max_quant = which(round(quantiles_wanted,digits=3) == 0.975)
 } else {
     stop("Desired max quantile cannot be found")
 }
