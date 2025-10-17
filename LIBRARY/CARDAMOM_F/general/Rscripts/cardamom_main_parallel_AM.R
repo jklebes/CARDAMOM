@@ -24,80 +24,18 @@
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
 library(assert)
-
-# Run the "cmake ..", "make" of cardamom to generate the shared library
-cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
-dyn.load(cardamom_dll)
-
-# command line args : infile, outfile, solution_wanted_char, freq_print_char, &
-#                   freq_write_char, do_inflate_char, cost_func_scaling_char
-
-
-#derived variables:  5 of these as int, 
-# do_inflate flag 
-
-# some checks on input args 
-
-# ======= INIT ===========  
-# random seed - for R library sampler 
-
-
-# read_pari_data (also get npars and allocates arrays based on npars - shouldnt 
-#                 should instead just check npars in data matches npars in model)
-
-# read_options 
-# check files for restart
-# ~~initialise_mcmc_output~~
-# ~~open_output_files~~
-# ~~ buffering to prepare output streams~~ ... all to be outsourced to R mcmc data collection
+library(here)
 
 nchains <- as.integer(4)
-# TODO take from command line arg of Rscript
-# changing filename here currently has no effect :(
-filename <- "/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin"
-print("File exists:")
-print(file.exists(filename))
 
-## ----- Pass model to R ----------
-# this function triggers several initialization steps:
-# load PI , DATAin info from model file, input file into the 
-# type objects.  Plus initialize model_working_variables type objects x nchains 
-# in the model module.
-# WARNING filename ignored currently, hard-coded inside
- out_ <- .C("C_initialize_model", nchains)
+source(file.path(here(), "LIBRARY/CARDAMOM_F/general/Rscripts/load_cardamom_model.R"))
 
-# TODO keep R wrappers in a different file
-#model_name <- .C("getmodelname")
-out <- as.integer(0)
-model_npars <- .C("C_getmodelnpars", out)[[1]]
 assert(model_npars==32)
-
-out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
-print("Fetched model parmin")
-print(model_parmin)
-model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
-print("Fetched model parmax")
-print(model_parmax)
-
-
-get_initial <- function(){
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
-}
 
 # call modellikelihood once as a test
 print("random initial:")
 initial <- get_initial()
 print(initial)
-
-
-#wrap that .C function to a more usual R function
-cardamom_edc_modellikelihood <- function(pars){
-    out_ <- 0.0
-    ll <- .C("C_edcmodellikelihood", pars, model_npars, out_, as.integer(1))[[3]]
-}
-
-
 print("initial loglikelihood:")
 ll <- cardamom_edc_modellikelihood(initial)
 print(ll)

@@ -237,7 +237,7 @@ contains
       ITER = 1
       kinit = 2
 
-      do while (ITER + mco%nadapt < MAXITER) !TODO could add convergence criteria for early stop
+      do while (ITER + mco%nadapt <= MAXITER) !TODO could add convergence criteria for early stop
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
 !$OMP PARALLEL DO private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)

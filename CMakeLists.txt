@@ -9,7 +9,7 @@ include(CTest)
 
 
 # Debug mode with flags 
-set(CMAKE_Fortran_FLAGS_DEBUG "-ffree-line-length-0 -O0 -g -pg -Wall -no-pie") 
+set(CMAKE_Fortran_FLAGS_DEBUG "-ffree-line-length-0 -O2 -g -pg -Wall") 
 set(CMAKE_Fortran_FLAGS_RELEASE "-ffree-line-length-0 -O3")
 
 # Make Release the default CMAKE_BUILD_TYPE

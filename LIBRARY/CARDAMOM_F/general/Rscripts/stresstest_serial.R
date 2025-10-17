@@ -20,41 +20,10 @@
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
 library(assert)
+library(here)
 
-# if not present, run the "cmake ..", "make" of cardamom to generate the shared library
-dyn.load("/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
+source(file.path(here(), "LIBRARY/CARDAMOM_F/general/Rscripts/load_stresstest.R"))
 
-
-## ----- Pass model to R ----------
-
-# TODO wrap these functions from R side once 
-# Prompt initialization, i.e. allocation of arrays for stresstest
-out_ <- .C("C_initialize_stresstest_circle")
-
-# Fetch variables from fortran internals to R : npars, PI%parmin, PI%parmax
-out <- as.integer(0)
-model_npars <- .C("C_getmodelnpars", out)[[1]]
-assert(model_npars == 10)
-out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
-print("Fetched model parmin")
-print(model_parmin)
-model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
-print("Fetched model parmax")
-print(model_parmax)
-
-# a function to generate initial values in uniform distribution in range
-get_initial <- function(){
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
-}
-
-#wrap that .C loglikelihood function to a more usual-shaped R function
-cardamom_stresstestcirclelikelihood <- function(pars){
-    #print("Calling")
-    npars <- as.integer(11)
-    out_ <- 0.0
-    ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
-}
 
 # call modellikelihood once as a test
 print("random initial:")
@@ -81,6 +50,5 @@ bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikel
 iter = 100000
 settings = list(iterations = iter, startValue=initial , message = TRUE)
 out <- runMCMC(bayesianSetup, sampler="AM", settings=settings)
-
 
 plot(out)
