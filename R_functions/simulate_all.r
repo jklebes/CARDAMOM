@@ -6655,7 +6655,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.D1.F2.001") {
-      output_dim = 36 ; MTT_dim = 5 ; SS_dim = 5
+      output_dim = 37 ; MTT_dim = 5 ; SS_dim = 5
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec1",output_dim=as.integer(output_dim)
                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -6669,7 +6669,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                              ,lat=as.double(lat)
                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                             ,nodays=as.integer(dim(met)[1])
+                             ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                              ,nos_years=as.integer(noyears)
                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
@@ -6794,6 +6794,9 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       lai_m2m2 = output[,,36],
                       mean_lai_m2m2 = output_mean[,36],
                       mean_annual_lai_m2m2 = output_annual[,,36],
+                      CiCa = output[,,37],
+                      mean_CiCa = output_mean[,37],
+                      mean_annual_CiCa = output_annual[,,37],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_foliage_years = MTT_years[,1],

@@ -347,7 +347,7 @@ module model_likelihood_module
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
     ! subroutine assessed the current parameter sets for passing ecological and
-    ! steady state contraints (Bloom et al., 2015).
+    ! steady state contraints (Bloom & Williams 2015).
 
     implicit none
 
@@ -512,10 +512,6 @@ module model_likelihood_module
     EDC2 = 1
     infi = 0d0
 
-!    ! derive mean pools
-!    do n = 1, nopools
-!       mean_pools(n) = cal_mean_pools(M_POOLS,n,nodays+1,nopools)
-!    end do
     ! derive mean pools for first year
     do n = 1, nopools
        mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
@@ -761,7 +757,7 @@ module model_likelihood_module
                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
         end if
-!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+!        ! Wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0

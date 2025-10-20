@@ -181,6 +181,10 @@ module CARBON_MODEL_MOD
        canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
     canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
 
+  !!!!!!!!!
+  ! Module variables
+  !!!!!!!!!
+
   double precision :: minlwp = minlwp_default
 
   ! arrays for the emulator, just so we load them once and that is it cos they be

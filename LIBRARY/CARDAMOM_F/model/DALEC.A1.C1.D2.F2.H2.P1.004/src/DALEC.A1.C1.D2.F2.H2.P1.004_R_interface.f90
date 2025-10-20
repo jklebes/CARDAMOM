@@ -57,18 +57,18 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
                         ,nodays         & ! number of time steps in simulation
                         ,nos_years        ! number of years in simulation
 
-  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
-                  ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
-                  ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
-                       ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays) ! time step in decimal days
+  double precision, intent(in), dimension(nomet,nodays) :: met ! met drivers, note reverse of needed
+  double precision, intent(in), dimension(nos_soil_layers) :: soil_frac_clay_in, & ! clay in soil (%)
+                                                              soil_frac_sand_in    ! sand in soil (%)
+  double precision, intent(in), dimension(nopars,nos_iter) :: pars ! number of parameters
+  double precision, intent(in) :: lat ! site latitude (degrees)
 
   ! output declaration
-  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
-  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
-  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1    ! Variables at model time step
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2              ! Mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3               ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4           ! Long term mean of out_var1
   double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
@@ -85,7 +85,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
 
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
 
   ! update soil parameters
   soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)

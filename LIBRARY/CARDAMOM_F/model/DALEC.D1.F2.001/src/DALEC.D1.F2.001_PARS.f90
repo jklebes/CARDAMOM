@@ -91,8 +91,8 @@ module MODEL_PARAMETERS
     PI%parmax(5) = 8d0
 
     ! TOR wood* - 1% loss per year value
-    PI%parmin(6)=0.000009d0 ! 304  years
-    PI%parmax(6)=0.001d0    ! 2.74 years
+    PI%parmin(6) = 0.000009d0 ! 304  years
+    PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! Turnover fraction of roots
     ! Gill and Jackson (2000), New Phytol., 147, 13–31
@@ -101,8 +101,8 @@ module MODEL_PARAMETERS
     PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! TOR litter
-    PI%parmin(8)=0.0001d0 ! 24.00 years
-    PI%parmax(8)=0.01d0   !  0.13 years
+    PI%parmin(8) = 0.0001d0 ! 24.00 years
+    PI%parmax(8) = 0.01d0   !  0.13 years
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
@@ -134,7 +134,7 @@ module MODEL_PARAMETERS
     PI%parmin(21) = 0.001d0
     PI%parmax(21) = 0.1d0
     ! Combustion completeness factor for foliage + fine root litter
-    PI%parmin(22)= 0.01d0
+    PI%parmin(22) = 0.01d0
     PI%parmax(22) = 0.99d0
 
     !

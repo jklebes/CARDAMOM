@@ -57,30 +57,42 @@ public :: CARBON_MODEL     &
          ,nodepred         &
          ,bestvar
 
-! arrays for the emulator, just so we load them once and that is it cos they be
-! massive
-integer ::    dim_1, & ! dimension 1 of response surface
-              dim_2, & ! dimension 2 of response surface
-          nos_trees, & ! number of trees in randomForest
-         nos_inputs    ! number of driver inputs
+  !!!!!!!!!
+  ! Parameters
+  !!!!!!!!!
 
-double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                    rightDaughter, & ! right daughter for forets
-                                                       nodestatus, & ! nodestatus for forests
-                                                       xbestsplit, & ! for forest
-                                                         nodepred, & ! prediction value for each tree
-                                                          bestvar    ! for randomForests
+  ! for consisteny between requirements of different models
+  integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
+  double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
+  double precision, parameter :: pi = 3.1415927d0, &
+                         deg_to_rad = 0.01745329d0   ! pi/180d0
 
-! for consisteny between requirements of different models
-integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
-double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
+  !!!!!!!!!
+  ! Module variables
+  !!!!!!!!!
 
-contains
-!
-!--------------------------------------------------------------------
-!
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai,NEE,FLUXES,POOLS &
-                         ,nopars,nomet,nopools,nofluxes,GPP)
+  ! arrays for the emulator, just so we load them once and that is it cos they be
+  ! massive
+  integer ::    dim_1, & ! dimension 1 of response surface
+                dim_2, & ! dimension 2 of response surface
+            nos_trees, & ! number of trees in randomForest
+           nos_inputs    ! number of driver inputs
+
+  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                      rightDaughter, & ! right daughter for forets
+                                                         nodestatus, & ! nodestatus for forests
+                                                         xbestsplit, & ! for forest
+                                                           nodepred, & ! prediction value for each tree
+                                                            bestvar    ! for randomForests
+  ! Module level variables for ACM
+  double precision :: ci ! Internal CO2 concentration (ppm)
+
+  contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
+                         ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - EVERGREEN.
     ! The subroutine calls the Aggregated Canopy Model to simulate GPP
@@ -103,28 +115,25 @@ contains
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
-                          ,nodays     ! number of days in simulation
+                          ,nodays   & ! number of days in simulation
+                          ,nodiags    ! number of model diagnositic variables
 
     double precision, intent(in) :: met(nomet,nodays) & ! met drivers
                          ,deltat(nodays)    & ! time step in decimal days
                          ,pars(nopars)      & ! number of parameters
                          ,lat                 ! site latitude (degrees)
 
-    double precision, dimension(nodays), intent(inout) :: lai & ! leaf area index
-                                                         ,GPP & ! Gross primary productivity
-                                                         ,NEE   ! net ecosystem exchange of CO2
-
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
     ! declare local variables
-    double precision :: gpppars(12)            & ! ACM inputs (LAI+met)
+    double precision :: gpppars(10)            & ! ACM inputs (LAI+met)
                        ,constants(10)          & ! parameters for ACM
-                       ,pi,doy,fol_turn
+                       ,doy,fol_turn
 
     ! C pool specific combustion completeness and resilience factors
-    double precision :: cf(5), rfac(5), burnt_area
+    double precision :: cf(5), rfac(5), burnt_area, infi
     integer :: p, f, n, harvest_management
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
@@ -215,20 +224,16 @@ contains
     ! p(17) = initial soil C (gC/m2)
 
     ! Reset all POOLS and FLUXES to prevent precision errors
-    FLUXES = 0d0 ; POOLS = 0d0
-
-    ! set constants
-    pi = 3.1415927d0
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
 
     ! load some values
     gpppars(4) = 1d0 ! foliar N
-    gpppars(7) = lat
+    gpppars(7) = lat ! latitude in degrees
     gpppars(9) = -2d0 ! leafWP-soilWP
     gpppars(10) = 1d0 ! totaly hydraulic resistance
-    gpppars(11) = pi
 
     ! assign acm parameters
-    constants(1) = pars(11)
+    constants(1) = pars(11) ! canopy efficiency
     constants(2) = 0.0156935d0
     constants(3) = 4.22273d0
     constants(4) = 208.868d0
@@ -399,22 +404,22 @@ contains
     do n = start, finish
 
       ! calculate LAI value
-      lai(n) = POOLS(n,1)/pars(12)
+      DIAGS(n,1) = POOLS(n,1)/pars(12)
 
       ! estimate multiple use variable
       doy = met(6,n)-(deltat(n)*0.5d0) ! doy
 
       ! load next met / lai values for ACM
-      gpppars(1) = lai(n)
+      gpppars(1) = DIAGS(n,1)
       gpppars(2) = met(3,n) ! max temp
       gpppars(3) = met(2,n) ! min temp
       gpppars(5) = met(5,n) ! co2
       gpppars(6) = doy
       gpppars(8) = met(4,n) ! radiation
 
-      ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants)
-      ! temprate (i.e. temperature modified rate of metabolic activity))
+      ! GPP (gC.m-2.day-1) and Ci:Ca calculation
+      FLUXES(n,1) = acm(gpppars,constants) ; DIAGS(n,2) = ci / gpppars(5)
+      ! temprate (i.e. temperature modified rate of metabolic activity)
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
@@ -446,11 +451,6 @@ contains
       FLUXES(n,14) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
       ! litter to som
       FLUXES(n,15) = POOLS(n,4)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
-
-      ! calculate the NEE
-      NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
-      ! load GPP
-      GPP(n) = FLUXES(n,1)
 
       !
       ! update pools for next timestep
@@ -601,19 +601,16 @@ contains
     implicit none
 
     ! declare input variables
-    double precision, intent(in) :: drivers(12) & ! acm input requirements
+    double precision, intent(in) :: drivers(10) & ! acm input requirements
                          ,constants(10) ! ACM parameters
 
     ! declare local variables
-    double precision :: gc, pn, pd, pp, qq, ci, e0, dayl, cps, dec, nit &
-             ,trange, sinld, cosld,aob,pi, mult &
-             ,mint,maxt,radiation,co2,lai,doy,lat &
-             ,deltaWP,Rtot,NUE,temp_exponent,dayl_coef &
-             ,dayl_const,hydraulic_exponent,hydraulic_temp_coef &
-             ,co2_comp_point,co2_half_sat,lai_coef,lai_const
-
-    ! initial values
-    gc = 0d0 ; pp = 0d0 ; qq = 0d0 ; ci = 0d0 ; e0 = 0d0 ; dayl = 0d0 ; cps = 0d0 ; dec = 0d0 ; nit = 1d0
+    double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &
+                       ,trange, sinld, cosld,aob,pi, mult &
+                       ,mint,maxt,radiation,co2,lai,doy,lat &
+                       ,deltaWP,Rtot,NUE,temp_exponent,dayl_coef &
+                       ,dayl_const,hydraulic_exponent,hydraulic_temp_coef &
+                       ,co2_comp_point,co2_half_sat,lai_coef,lai_const
 
     ! load driver values to correct local vars
     lai = drivers(1)
@@ -626,7 +623,6 @@ contains
     lat = drivers(7)
 
     ! load parameters into correct local vars
-    pi = drivers(11)
     deltaWP = drivers(9)
     Rtot = drivers(10)
     NUE = constants(1)
@@ -654,37 +650,36 @@ contains
     e0 = lai_coef*lai**2d0/(lai**2d0+lai_const)
     ! calculate day length (hours)
 !    dec = - asin( sin( 23.45d0 * pi / 180d0 ) * cos( 2d0 * pi * ( doy + 10d0 ) /365d0 ) )
-!    sinld = sin( lat*(pi/180d0) ) * sin( dec )
-!    cosld = cos( lat*(pi/180d0) ) * cos( dec )
+!    sinld = sin( lat*deg_to_rad ) * sin( dec )
+!    cosld = cos( lat*deg_to_rad ) * cos( dec )
 !    aob = max(-1d0,min(1d0,sinld / cosld))
 !    dayl = 12d0 * ( 1d0 + 2d0 * asin( aob ) / pi )
 
 !--------------------------------------------------------------
-!    ! calculate day length (hours - not really hours)
-!    ! This is the old REFLEX project calculation but it is wrong so anyway here
-!    ! we go...
-    dec=-23.4*cos((360.0*(doy+10.0)/365.0)*pi/180.0)*pi/180.0
-    mult=tan(lat*pi/180.0)*tan(dec)
-    if (mult>=1.0) then
-      dayl=24.0
-    else if (mult<=-1.0) then
-      dayl=0.0
+    ! calculate day length (hours - not really hours)
+    ! This is the old REFLEX project calculation 
+    dec = -23.4*cos( (360d0*(doy+10d0)/365d0)*deg_to_rad ) * deg_to_rad
+    mult = tan(lat*deg_to_rad) * tan(dec)
+    if (mult >= 1d0) then
+        dayl = 24d0
+    else if (mult <= -1.0) then
+        dayl = 0d0
     else
-      dayl=24.0*acos(-mult)/pi
+        dayl = 24d0*acos(-mult)/pi
     end if
 ! ---------------------------------------------------------------
     ! calculate CO2 limited rate of photosynthesis
-    pd=gc*(co2-ci)
+    pd = gc*(co2-ci)
     ! calculate combined light and CO2 limited photosynthesis
-    cps=e0*radiation*pd/(e0*radiation+pd)
+    cps = e0*radiation*pd/(e0*radiation+pd)
     ! correct for day length variation
-    acm=cps*(dayl_coef*dayl+dayl_const)
+    acm = cps*(dayl_coef*dayl+dayl_const)
 
     ! don't forget to return
     return
 
   end function acm
-!
-!--------------------------------------------------------------------
-!
+  !
+  !--------------------------------------------------------------------
+  !
 end module CARBON_MODEL_MOD
