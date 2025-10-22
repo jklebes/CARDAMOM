@@ -478,7 +478,7 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
+    integer :: n, nn, nnn, DIAG, y, steps_per_month, nd, fl, fs, &
                io_start, io_finish
     double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
                         jan_sd_lai, jan_mean_lai, jan_first_lai

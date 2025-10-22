@@ -564,7 +564,6 @@ public :: CARBON_MODEL     &
               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! wood
               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! litter
               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! som
-
               ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
               FLUXES(n,23) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! foliar into litter
               FLUXES(n,24) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! roots into litter
@@ -606,7 +605,7 @@ public :: CARBON_MODEL     &
 
     ! declare local variables
     double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &
-                       ,trange, sinld, cosld,aob,pi, mult &
+                       ,trange, sinld, cosld,aob, mult &
                        ,mint,maxt,radiation,co2,lai,doy,lat &
                        ,deltaWP,Rtot,NUE,temp_exponent,dayl_coef &
                        ,dayl_const,hydraulic_exponent,hydraulic_temp_coef &

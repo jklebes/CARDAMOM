@@ -438,7 +438,7 @@ module model_likelihood_module
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
+    integer :: n, nn, nnn, DIAG, y, steps_per_month, nd, fl, fs, &
                io_start, io_finish
     double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
                         jan_sd_lai, jan_mean_lai, jan_first_lai
@@ -625,22 +625,26 @@ module model_likelihood_module
     ! EDCs done, below are additional fault detection conditions
     !
 
-    ! additional faults can be stored in locations 35 - 40 of the PASSFAIL array
+    ! additional faults can be stored in locations 55 - 660 of the PASSFAIL array
 
-    ! ensure minimum pool values are >= 0 and /= NaN
+    ! ensure minimum pool values are >= 0, /= NaN or Inf
     if (EDC2 == 1 .or. DIAG == 1) then
-       n=1
-       do while (n <= nopools .and. (EDC2 == 1 .or. DIAG == 1))
-          nn = 1 ; PEDC = 1
-          do while (nn <= (nodays+1) .and. PEDC == 1)
-             ! now check conditions
-             if (M_POOLS(nn,n) < 0d0 .or. M_POOLS(nn,n) /= M_POOLS(nn,n)) then
-                 EDC2 = 0d0 ; PEDC = 0 ; EDCD%PASSFAIL(35+n) = 0
-             end if ! less than zero and is NaN condition
-          nn = nn + 1
-          end do ! nn < nodays .and. PEDC == 1
-          n = n + 1
-       end do ! for nopools .and. EDC .or. DIAG condition
+
+       do n = 1, nopools
+          if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. &
+              maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
+              minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
+              EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
+          endif
+       end do
+
+       do n = 1, nofluxes
+          if (maxval(abs(M_FLUXES(:,n))) == abs(log(infi)) .or. &
+              minval(M_FLUXES(:,n)) /= minval(M_FLUXES(:,n))) then
+              EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+          endif
+       end do
+
     end if ! min pool assessment
 
   end subroutine assess_EDC2

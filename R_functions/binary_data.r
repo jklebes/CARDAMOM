@@ -960,6 +960,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
      } else if (modelname == "DALEC.D1.F2.001") {
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[11] = 16.9                 ; PARPRIORUNC[11] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+          PARPRIORS[12] = OBS$lca              ; PARPRIORUNC[12] = OBS$lca_unc #; PARPRIORWEIGHT[12] = noyears
           PARPRIORS[13] = OBS$Cfol_initial     ; PARPRIORUNC[13] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[14] = OBS$Croots_initial   ; PARPRIORUNC[14] = OBS$Croots_initial_unc # Croots prior
           PARPRIORS[15] = OBS$Cwood_initial    ; PARPRIORUNC[15] = OBS$Cwood_initial_unc # Cwood prior
@@ -967,6 +968,14 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[17] = OBS$Csom_initial     ; PARPRIORUNC[17] = OBS$Csom_initial_unc # Csom prior
           # Other priors
 #          OTHERPRIORS[5] =                    ; OTHERPRIORUNC[5] = # Steady state attractor for wood
+          # Hack to remove LAI observations out of growing season for high LCA areas
+          if (PARPRIORS[12] > 100) {
+#              if (lat_degrees > 50) {
+                  filter = which(MET[,6] < 175 | MET[,6] > 250)
+                  OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+#              }
+          }             
       } else if (modelname == "DALEC.C5.D1.F2.P1.013") {
           PARPRIORS[1]  = 0.54                 ; PARPRIORUNC[1] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[7]  = 16.9                 ; PARPRIORUNC[7] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
