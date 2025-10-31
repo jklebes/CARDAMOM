@@ -412,7 +412,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,
                hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,t])
            } else {
                hist_list = list(o = c(obs_min,obs_max), m = apply(states_all$nee_gCm2day[,tt:t],1,mean))
-           }           
+           }
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))
            states_all$nee_assim_data_overlap_fraction = states_all$nee_assim_data_overlap_fraction + tmp2
@@ -440,9 +440,9 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,
            obs_min = drivers$obs[t,obs_id] - drivers$obs[t,unc_id]
            # Create list object containing each observations distributions
            if (t == tt) {
-               hist_list = list(o = c(obs_min,obs_max), m = states_all$nee_gCm2day[,t])
+               hist_list = list(o = c(obs_min,obs_max), m = states_all$reco_gCm2day[,t])
            } else {
-               hist_list = list(o = c(obs_min,obs_max), m = apply(states_all$nee_gCm2day[,tt:t],1,mean))
+               hist_list = list(o = c(obs_min,obs_max), m = apply(states_all$reco_gCm2day[,tt:t],1,mean))
            }           
            # Estimate average model ensemble within observated range
            tmp2 = (ensemble_within_range(hist_list$o,hist_list$m))

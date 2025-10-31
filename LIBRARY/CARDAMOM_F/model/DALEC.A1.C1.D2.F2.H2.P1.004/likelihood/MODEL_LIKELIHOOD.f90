@@ -487,11 +487,6 @@ module model_likelihood_module
                                             mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-                       ,ffol  & ! Fraction of GPP to foliage
-                       ,flab  & ! Fraction of GPP to labile pool
-                       ,froot & ! Fraction of GPP to root
-                       ,fwood   ! Fraction of GPP to wood
 
     ! Steady State Attractor:
     ! Log ratio difference between inputs and outputs of the system.
@@ -590,18 +585,6 @@ module model_likelihood_module
     Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
 !    Fin_yr2(7)  = FT_yr2(47)
 !    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
-
-!    ! Determine the mean January pool sizes
-!    jan_mean_pools = 0d0 ; jan_first_pools = 0d0 ! reset before averaging
-!    do n = 1, nopools-1
-!      jan_first_pools(n) = sum(M_POOLS(1:steps_per_month,n)) / dble(steps_per_month)
-!      do y = 1, DATAin%nos_years
-!         nn = 1 + (steps_per_year * (y - 1)) ; nnn = nn + (steps_per_month - 1)
-!         jan_mean_pools(n) = jan_mean_pools(n) + sum(M_POOLS(nn:nnn,n))
-!      end do
-!      jan_mean_pools(n) = jan_mean_pools(n) / dble(steps_per_month*DATAin%nos_years)
-!    end do
-
 
     !
     ! Begin EDCs here
@@ -806,8 +789,6 @@ module model_likelihood_module
         tmp = sum(M_POOLS(:,2)) / dble(nodays)
         tmp1 = sum(M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)) / dble(nodays)
         tmp = (tmp / tmp1) * 0.002737851d0
-!        tmp = (sum((M_POOLS(:,2) / (M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)))) &
-!              / dble(nodays)) * 0.002737851d0
         ! determine the lower and upper bound of the LES .
         ! not for the upper bound, do not allow a value less than 1 years
         tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)

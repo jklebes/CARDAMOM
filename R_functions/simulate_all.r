@@ -2309,13 +2309,13 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                              ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
                              ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
                              ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
-                             ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                                 
+                             ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                    
                              ,lat=as.double(lat)
                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                             ,nodays=as.integer(dim(met)[1])
+                             ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                              ,nos_years=as.integer(noyears)
-                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter) )
+                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
       output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
       output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))
@@ -2356,7 +2356,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_annual_alloc_roots_gCm2day = output_annual[,,9],
                       alloc_wood_gCm2day = output[,,10],
                       mean_alloc_wood_gCm2day = output_mean[,10],
-                      mean_annual_alloc_wood_gCm2day = output_annual[,10],
+                      mean_annual_alloc_wood_gCm2day = output_annual[,,10],
                       labile_to_foliage_gCm2day = output[,,11],
                       mean_labile_to_foliage_gCm2day = output_mean[,11],
                       mean_annual_labile_to_foliage_gCm2day = output_annual[,,11],
@@ -2901,7 +2901,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Final tidy
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A1.C1.D2.F2.H1.P1.003") {
-      output_dim = 48 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 64 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec3",output_dim=as.integer(output_dim)
                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -2915,16 +2915,16 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                              ,lat=as.double(lat)
                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                             ,nodays=as.integer(dim(met)[1])
+                             ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                              ,nos_years=as.integer(noyears)
                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-                             ,soil_frac_clay_in=as.double(array(c(soil_info[3],soil_info[4],soil_info[4]),dim=c(3)))
-                             ,soil_frac_sand_in=as.double(array(c(soil_info[1],soil_info[2],soil_info[2]),dim=c(3))))
-      output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+                             ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
+                             ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2])))
+      output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
       output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))      
-      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+      MTT_years = tmp$out_var2     ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3       ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
@@ -2961,8 +2961,8 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       alloc_wood_gCm2day = output[,,10],
                       mean_alloc_wood_gCm2day = output_mean[,10],
                       mean_annual_alloc_wood_gCm2day = output_annual[,,10],
-                      labile_to_foliage_gCm2day = output_mean[,11],
-                      mean_labile_to_foliage_gCm2day = output[,,11],
+                      labile_to_foliage_gCm2day = output[,,11],
+                      mean_labile_to_foliage_gCm2day = output_mean[,11],
                       mean_annual_labile_to_foliage_gCm2day = output_annual[,,11],
                       foliage_to_litter_gCm2day = output[,,12],
                       mean_foliage_to_litter_gCm2day = output_mean[,12],
@@ -3001,7 +3001,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       FIRElitter_wood_gCm2day = output[,,23],
                       mean_FIRElitter_wood_gCm2day = output_mean[,23],
                       mean_annual_FIRElitter_wood_gCm2day = output_annual[,,23],
-                      FIREemiss_litter__annualgCm2day = output[,,24],
+                      FIREemiss_litter_gCm2day = output[,,24],
                       mean_FIREemiss_litter_gCm2day = output_mean[,24],
                       mean_annual_FIREemiss_litter_gCm2day = output_annual[,,24],
                       FIRElitter_litter_gCm2day = output[,,25],
@@ -3059,26 +3059,79 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       som_gCm2 = output[,,42],
                       mean_som_gCm2 = output_mean[,42],
                       mean_annual_som_gCm2 = output_annual[,,42],
+                      # Water cycle related
+                      ET_kgH2Om2day = output[,,43],
+                      mean_ET_kgH2Om2day = output_mean[,43],
+                      mean_annual_ET_kgH2Om2day = output_annual[,,43],
+                      Etrans_kgH2Om2day = output[,,44],
+                      mean_Etrans_kgH2Om2day = output_mean[,44],
+                      mean_annual_Etrans_kgH2Om2day = output_annual[,,44],
+                      Esoil_kgH2Om2day = output[,,45],
+                      mean_Esoil_kgH2Om2day = output_mean[,45],
+                      mean_annual_Esoil_kgH2Om2day = output_annual[,,45],
+                      Ewetcanopy_kgH2Om2day = output[,,46],
+                      mean_Ewetcanopy_kgH2Om2day = output_mean[,46],
+                      mean_annual_Ewetcanopy_kgH2Om2day = output_annual[,,46],
+                      runoff_kgH2Om2day = output[,,47],
+                      mean_runoff_kgH2Om2day = output_mean[,47],
+                      mean_annual_runoff_kgH2Om2day = output_annual[,,47],
+                      underflow_kgH2Om2day = output[,,48],
+                      mean_underflow_kgH2Om2day = output_mean[,48],
+                      mean_annual_underflow_kgH2Om2day = output_annual[,,48],
+                      SurfDrainage_kgH2Om2day = output[,,49],
+                      mean_SurfDrainage_kgH2Om2day = output_mean[,49],
+                      mean_annual_SurfDrainage_kgH2Om2day = output_annual[,,49],
+                      SurfInfiltrated_kgH2Om2day = output[,,50],
+                      mean_SurfInfiltrated_kgH2Om2day = output_mean[,50],
+                      mean_annual_SurfInfiltrated_kgH2Om2day = output_annual[,,50],
+                      Etrans_1st_root_layer_uptake_fraction = output[,,51],
+                      mean_Etrans_1st_root_layer_uptake_fraction = output_mean[,51],
+                      mean_annual_Etrans_1st_root_layer_uptake_fraction = output_annual[,,51],
+                      Etrans_2nd_root_layer_uptake_fraction = output[,,52],
+                      mean_Etrans_2nd_root_layer_uptake_fraction = output_mean[,52],
+                      mean_annual_Etrans_2nd_root_layer_uptake_fraction = output_annual[,,52],
+
+                      wSWP_MPa = output[,,53],
+                      mean_wSWP_MPa = output_mean[,53],
+                      mean_annual_wSWP_MPa = output_annual[,,53],
+                      snow_kgH2Om2 = output[,,54],
+                      mean_snow_kgH2Om2 = output_mean[,54],
+                      mean_annual_snow_kgH2Om2 = output_annual[,,54],
                       # Canopy (phenology) properties
-                      lai_m2m2 = output[,,43],
-                      mean_lai_m2m2 = output_mean[,43],
-                      mean_annual_lai_m2m2 = output_annual[,,43],
+                      lai_m2m2 = output[,,55],
+                      mean_lai_m2m2 = output_mean[,55],
+                      mean_annual_lai_m2m2 = output_annual[,,55],
                       # Photosynthesis / C~water coupling related
-                      gs_demand_supply_ratio = output[,,44],
-                      mean_gs_demand_supply_ratio = output_mean[,44],
-                      mean_annual_gs_demand_supply_ratio = output_annual[,,44],
-                      gs_mmolH2Om2s = output[,,45],
-                      mean_gs_mmolH2Om2s = output_mean[,45],
-                      mean_annual_gs_mmolH2Om2s = output_annual[,,45],
-                      APAR_MJm2day = output[,,46],
-                      mean_APAR_MJm2day = output_mean[,46],
-                      mean_annual_APAR_MJm2day = output_annual[,,46],
-                      gb_mmolH2Om2s = output[,,47],
-                      mean_gb_mmolH2Om2s = output_mean[,47],
-                      mean_annual_gb_mmolH2Om2s = output_annual[,,47],
-                      CiCa = output[,,48],
-                      mean_CiCa = output_mean[,48],
-                      mean_annual_CiCa = output_annual[,,48],
+                      gs_demand_supply_ratio = output[,,56],
+                      mean_gs_demand_supply_ratio = output_mean[,56],
+                      mean_annual_gs_demand_supply_ratio = output_annual[,,56],
+                      gs_mmolH2Om2s = output[,,57],
+                      mean_gs_mmolH2Om2s = output_mean[,57],
+                      mean_annual_gs_mmolH2Om2s = output_annual[,,57],
+                      APAR_MJm2day = output[,,58],
+                      mean_APAR_MJm2day = output_mean[,58],
+                      mean_annual_APAR_MJm2day = output_annual[,,58],
+                      gb_mmolH2Om2s = output[,,59],
+                      mean_gb_mmolH2Om2s = output_mean[,59],
+                      mean_annual_gb_mmolH2Om2s = output_annual[,,59],
+                      CiCa = output[,,60],
+                      mean_CiCa = output_mean[,60],
+                      mean_annual_CiCa = output_annual[,,60],
+                      # Misc
+                      RootDepth_m = output[,,61],
+                      mean_RootDepth_m = output_mean[,61],
+                      mean_annual_RootDepth_m = output_annual[,,61],
+                      # Leaf water potential
+                      LWP_MPa = output[,,62],
+                      mean_LWP_MPa = output_mean[,62],
+                      mean_annual_LWP_MPa = output_annual[,,62], 
+                      # Canopy aerodynamic diagnostics
+                      canopy_area_scaling_wind = output[,,63],
+                      mean_canopy_area_scaling_wind = output_mean[,63],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,63],
+                      canopy_area_scaling_light = output[,,64],
+                      mean_canopy_area_scaling_light = output_mean[,64],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,64],    
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -3094,7 +3147,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       SS_wood_gCm2 = SS_gCm2[,4],
                       SS_litter_gCm2 = SS_gCm2[,5],
                       SS_som_gCm2 = SS_gCm2[,6])
-      # Determine the NPP fraction of expressed NPPHARVESTextracted_roots_gCm2day = output[,,29],
+      # Determine the NPP fraction of expressed NPP
       # i.e. actual growth not GPP-Ra
       NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
                            states_all$alloc_foliage_gCm2day +

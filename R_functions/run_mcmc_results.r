@@ -1020,7 +1020,7 @@ run_mcmc_results <- function (PROJECT,repair,grid_override) {
   # Calculate the number of years
   PROJECT$nos_years = (as.numeric(PROJECT$end_year) - as.numeric(PROJECT$start_year))+1
   Sys.sleep(1) # wait to allow the memory to be updates?
-  save(PROJECT, file=paste(PROJECT$localpath,"infofile.RData",sep=""))
+  save(PROJECT, file = paste(PROJECT$localpath,"infofile.RData",sep=""))
 
   # determine what the output file name is here, so that we can check if one already exists
   outfile_grid = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")

@@ -226,13 +226,13 @@ public :: CARBON_MODEL     &
     ! Reset all POOLS and FLUXES to prevent precision errors
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
 
-    ! load some values
+    ! load acm inputs 
     gpppars(4) = 1d0 ! foliar N
     gpppars(7) = lat ! latitude in degrees
     gpppars(9) = -2d0 ! leafWP-soilWP
     gpppars(10) = 1d0 ! totaly hydraulic resistance
 
-    ! assign acm parameters
+    ! assign acm parameters (see Fox et al., 2009)
     constants(1) = pars(11) ! canopy efficiency
     constants(2) = 0.0156935d0
     constants(3) = 4.22273d0
@@ -244,14 +244,12 @@ public :: CARBON_MODEL     &
     constants(9) = 2.1001d0
     constants(10) = 0.789798d0
 
-    if (start == 1) then
-       ! assigning initial conditions
-       POOLS(1,1) = pars(13) ! foliar
-       POOLS(1,2) = pars(14) ! roots
-       POOLS(1,3) = pars(15) ! wood
-       POOLS(1,4) = pars(16) ! litter
-       POOLS(1,5) = pars(17) ! som
-    endif
+    ! assigning initial conditions
+    POOLS(1,1) = pars(13) ! foliar
+    POOLS(1,2) = pars(14) ! roots
+    POOLS(1,3) = pars(15) ! wood
+    POOLS(1,4) = pars(16) ! litter
+    POOLS(1,5) = pars(17) ! som
 
     ! Convert foliage age from years -> frac/day
     fol_turn = (pars(5) * 365.25d0) ** (-1d0)
@@ -263,139 +261,133 @@ public :: CARBON_MODEL     &
     ! to provide specific CC for litter and wood litter.
     ! NOTE: changes also result in the addition of further EDCs
 
-    ! if either of our disturbance drivers indicate disturbance will occur then
-    ! set up these components
-    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+    ! now load the hardcoded forest management parameters into their scenario locations
 
-        ! now load the hardcoded forest management parameters into their scenario locations
+    ! Deforestation process functions in a sequenctial way.
+    ! Thus, the pool_loss is first determined as a function of met(8,n) and
+    ! for fine and coarse roots whether this felling is associated with a mechanical
+    ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+    ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+    ! but allows for management activities such as grazing, mowing and coppice.
+    ! The pool_loss is then partitioned between the material which is left within the system
+    ! as a residue and thus direcly placed within one of the dead organic matter pools.
 
-        ! Deforestation process functions in a sequenctial way.
-        ! Thus, the pool_loss is first determined as a function of met(8,n) and
-        ! for fine and coarse roots whether this felling is associated with a mechanical
-        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
-        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
-        ! but allows for management activities such as grazing, mowing and coppice.
-        ! The pool_loss is then partitioned between the material which is left within the system
-        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    !! Parameter values for deforestation variables
+    !! Scenario 1
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(1)  = 0d0
+    rootcr_frac_removal(1) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(1) = 1d0
+    roots_frac_res(1)   = 1d0
+    rootcr_frac_res(1)  = 1d0
+    stem_frac_res(1)    = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+     post_harvest_burn(1) = 1d0
 
-        !! Parameter values for deforestation variables
-        !! Scenario 1
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(1) = 1d0
-        roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1)  = 1d0
-        stem_frac_res(1)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(1) = 1d0
+    !! Scenario 2
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(2)  = 0d0
+    rootcr_frac_removal(2) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(2) = 1d0
+    roots_frac_res(2)   = 1d0
+    rootcr_frac_res(2) = 1d0
+    stem_frac_res(2)   = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(2) = 0d0
 
-        !! Scenario 2
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(2)  = 0d0
-        rootcr_frac_removal(2) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(2) = 1d0
-        roots_frac_res(2)   = 1d0
-        rootcr_frac_res(2)  = 1d0
-        stem_frac_res(2)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(2) = 0d0
+    !! Scenario 3
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(3)  = 0d0
+    rootcr_frac_removal(3) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(3) = 0.5d0
+    roots_frac_res(3)   = 1d0
+    rootcr_frac_res(3) = 1d0
+    stem_frac_res(3)   = 0d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(3) = 0d0
 
-        !! Scenario 3
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(3)  = 0d0
-        rootcr_frac_removal(3) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(3) = 0.5d0
-        roots_frac_res(3)   = 1d0
-        rootcr_frac_res(3)  = 1d0
-        stem_frac_res(3)    = 0d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(3) = 0d0
+    !! Scenario 4
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(4)  = 1d0
+    rootcr_frac_removal(4) = 1d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(4) = 0.5d0
+    roots_frac_res(4)   = 1d0
+    rootcr_frac_res(4) = 0d0
+    stem_frac_res(4)   = 0d0
+    ! wood partitioning (fraction)
+    Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(4) = 0d0
 
-        !! Scenario 4
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(4)  = 1d0
-        rootcr_frac_removal(4) = 1d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(4) = 0.5d0
-        roots_frac_res(4)   = 1d0
-        rootcr_frac_res(4)  = 0d0
-        stem_frac_res(4)    = 0d0
-        ! wood partitioning (fraction)
-        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(4) = 0d0
+    !## Scenario 5 (grassland grazing / cutting)
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(5)  = 0d0
+    rootcr_frac_removal(5) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(5) = 0.1d0
+    roots_frac_res(5)   = 0d0
+    rootcr_frac_res(5)  = 0d0
+    stem_frac_res(5)    = 0.12d0
+    ! wood partitioning (fraction)
+    Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(5) = 0d0
 
-        !## Scenario 5 (grassland grazing / cutting)
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(5)  = 0d0
-        rootcr_frac_removal(5) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(5) = 0.1d0
-        roots_frac_res(5)   = 0d0
-        rootcr_frac_res(5)  = 0d0
-        stem_frac_res(5)    = 0.12d0
-        ! wood partitioning (fraction)
-        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(5) = 0d0
-
-        ! Assign proposed resilience factor
-        rfac(1:3) = pars(18)
-        rfac(4) = 0.1d0 ; rfac(5) = 0d0
-        ! Assign combustion completeness to foliage
-        cf(1) = pars(19) ! foliage
-        ! Assign combustion completeness to non-photosynthetic
-        cf(2) = pars(20) ; cf(3) = pars(20)
-        cf(5) = pars(21) ! soil
-        ! derived values for litter
-        cf(4) = pars(22)
-
-    end if ! disturbance ?
+    ! Assign proposed resilience factor
+    rfac(1:3) = pars(18)
+    rfac(4) = 0.1d0 ; rfac(5) = 0d0
+    ! Assign combustion completeness to foliage
+    cf(1) = pars(19) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    cf(2) = pars(20) ; cf(3) = pars(20)
+    cf(5) = pars(21) ! soil
+    ! derived values for litter
+    cf(4) = pars(22)
 
     !
     ! Begin looping through each time step

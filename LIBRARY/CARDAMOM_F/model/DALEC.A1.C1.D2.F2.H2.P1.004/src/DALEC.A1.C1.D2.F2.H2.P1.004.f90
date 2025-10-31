@@ -167,7 +167,8 @@ module CARBON_MODEL_MOD
                 minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
       soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
 !             orig             iWUE = 1.8d-7,        & ! Intrinsic water use efficiency (gC/mmolH2O-1/m2leaf/s-1)
-                          iWUE = 4.6875d-04,    & !1.5d-2 ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+! A credible iWUE range spans atleast 0.00001 -> 0.01
+                          iWUE = 4.6875d-04,    & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
          soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
          max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
         lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
@@ -271,7 +272,7 @@ module CARBON_MODEL_MOD
                                 canopy_storage, & ! water storage on canopy (kgH2O.m-2)
                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
-  ! Module level variables for ACM_GPP_ET parameters
+  ! Module level variables for ACM_GPP_ET variables
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/day
                             ceff, & ! Maximum rate of carboxylation (umolC/m2/s), Vcmax_ref = avN*NUE
 !                             avN, & ! average foliar N (gN/m2)
@@ -517,15 +518,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     root_k = pars(26) ; max_depth = pars(27)
 
     ! assigning initial conditions
-    if (start == 1) then
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
-       !POOLS(1,7) = assigned later ! soil water (0-10cm)
-    endif
+    POOLS(1,1) = pars(18) ! labile
+    POOLS(1,2) = pars(19) ! foliar
+    POOLS(1,3) = pars(20) ! roots
+    POOLS(1,4) = pars(21) ! wood
+    POOLS(1,5) = pars(22) ! litter
+    POOLS(1,6) = pars(23) ! som
+    !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
     ! Some time consuming variables we only want to set once
     if (.not.allocated(deltat_1)) then
@@ -968,7 +967,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
        ! Labile release and leaffall factors
-       FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
+       FLUXES(n,9)  = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
        FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
 
        !

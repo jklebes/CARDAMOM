@@ -111,8 +111,8 @@ module cardamom_io
     else if (DATAin%ID == 3 ) then
         ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.003
         DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 39
+        DATAin%nopars = 31
+        DATAin%nofluxes = 49
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 4) then
         ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.004

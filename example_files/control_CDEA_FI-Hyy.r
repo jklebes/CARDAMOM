@@ -36,7 +36,7 @@ sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote 
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.1."
+model="DALEC.4."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method

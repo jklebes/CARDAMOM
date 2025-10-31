@@ -93,9 +93,11 @@ module MODEL_PARAMETERS
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
