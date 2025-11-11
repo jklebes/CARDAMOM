@@ -360,26 +360,11 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
-    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
-             ,ffol  & ! Fraction of GPP to foliage
-             ,flab  & ! Fraction of GPP to labile pool
-             ,froot & ! Fraction of GPP to root
-             ,fwood & ! Fraction of GPP to wood
-             ,fsom    ! fraction of GPP som under eqilibrium conditions
-
     double precision :: torfol ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1
     DIAG = EDCD%DIAG
-
-    ! estimate GPP allocation fractions
-    fauto = pars(2)
-    ffol = (1d0-fauto)*pars(3)
-    flab = (1d0-fauto-ffol)*pars(13)
-    froot = (1d0-fauto-ffol-flab)*pars(4)
-    fwood = 1d0-fauto-ffol-flab-froot
-    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
 
     ! yearly leaf loss fraction
     torfol = 1d0/(pars(5)*365.25d0)
@@ -392,13 +377,12 @@ module model_likelihood_module
     ! begin checking EDCs
     !
 
-    ! Turnover of litter faster than turnover of som
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8) < pars(9))) then
+    ! Turnover of wood litter should be slower than foliage 
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(35) > pars(8))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
-
-    ! litter2som greater than som to atm rate
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
+    ! Turnover of wood litter should be slower than fine root 
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(35) > pars(9))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
 
@@ -407,36 +391,38 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
     end if
 
-    ! root turnover greater than som turnover at mean temperature
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-    endif
-
     ! Initial leaf area index should not be larger than ~10 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
     endif    
 
-    !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
-    !! difference from GPP allocation to roots
-    !if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
-    !    EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    !endif
+    ! Lignin fraction of foliage should be smaller than wood
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(41) > pars(43)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    endif    
+    ! Lignin fraction of fine root should be smaller than wood
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) > pars(43)) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+    endif    
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
-    ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
+    ! IMPLICIT Combustion completeness for wood litter and fol+root litter should be greater than soil
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater foliage
+    ! Combustion completeness for foliar + fine root litter should be greater than foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+       EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+    endif
+    ! Combustion completeness for wood litter should be greater than non-photosynthetic tissue
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(33) < pars(30)) then
+       EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif
 
     ! could always add more / remove some
@@ -481,7 +467,8 @@ module model_likelihood_module
     integer :: n, nn, nnn, DIAG, y, steps_per_month, nd, fl, fs, &
                io_start, io_finish
     double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
-                        jan_sd_lai, jan_mean_lai, jan_first_lai
+                        jan_sd_lai, jan_mean_lai, jan_first_lai, &
+                        SSwood, SSlitwood, SSsom
     !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
@@ -499,18 +486,15 @@ module model_likelihood_module
                                   C_etol = 0.10d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
                                 H2O_etol = 0.05d0       !
 
-!    ! Debugging print statements
-!    print*,"assess_EDC2: "
-
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
     infi = 0d0
 
-    ! derive mean pools for first year
-!    do n = 1, nopools
-!       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
-!    end do
+    ! derive mean pools
+    do n = 1, nopools
+       mean_pools(n) = cal_mean_pools(M_POOLS(1:nodays,n),nodays)
+    end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
@@ -526,8 +510,8 @@ module model_likelihood_module
                        *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
     ! Specific calculation of transpiration extraction from the soil surface layer
-    fl = 41 ! transpiration multiplied by ...
-    fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+    fl = 46 ! transpiration multiplied by ...
+    fs = 53 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
     FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
     FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
     FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
@@ -537,64 +521,81 @@ module model_likelihood_module
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
-    Fout(1) = FT(8)+FT(18)+FT(24)+FT(31)+FT(37)
+    Fout(1) = FT(8)+FT(18)+FT(24)+FT(34)+FT(41)+FT(55)
     Fin_yr1(1)  = FT_yr1(5)
-    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)
-!    Fin_yr2(1)  = FT_yr2(5)
-!    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
+    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(34)+FT_yr1(41)+FT_yr1(55)
     ! foliar
     Fin(2)  = FT(4)+FT(8)
-    Fout(2) = FT(10)+FT(19)+FT(25)+FT(32)+FT(38)
+    Fout(2) = FT(10)+FT(19)+FT(25)+FT(35)+FT(42)
     Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
-    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(32)+FT_yr1(38)
-!    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
-!    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
+    Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(35)+FT_yr1(42)
     ! root
     Fin(3)  = FT(6)
-    Fout(3) = FT(12)+FT(20)+FT(26)+FT(33)+FT(39)
+    Fout(3) = FT(12)+FT(20)+FT(26)+FT(36)+FT(43)
     Fin_yr1(3)  = FT_yr1(6)
-    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)+FT_yr1(33)+FT_yr1(39)
-!    Fin_yr2(3)  = FT_yr2(6)
-!    Fout_yr2(3) = FT_yr2(12)+FT_yr2(20)+FT_yr2(26)+FT_yr2(33)+FT_yr2(39)
+    Fout_yr1(3) = FT_yr1(12)+FT_yr1(20)+FT_yr1(26)+FT_yr1(36)+FT_yr1(43)
     ! wood
     Fin(4)  = FT(7)
-    Fout(4) = FT(11)+FT(21)+FT(27)+FT(34)+FT(40)
+    Fout(4) = FT(11)+FT(21)+FT(27)+FT(37)+FT(44)
     Fin_yr1(4)  = FT_yr1(7)
-    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)+FT_yr1(34)+FT_yr1(40)
-!    Fin_yr2(4)  = FT_yr2(7)
-!    Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(34)+FT_yr2(40)
-    ! litter
-    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
-    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(35)
-    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
-    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(35)
-!    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
-!    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
-    ! som
-    Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)+(36)
-    Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
-    Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
-!    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
-!    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+    Fout_yr1(4) = FT_yr1(11)+FT_yr1(21)+FT_yr1(27)+FT_yr1(37)+FT_yr1(44)
+    ! foliage litter
+    Fin(5)  = FT(10)+FT(42)+FT(25)
+    Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(38)
+    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(42)+FT_yr1(25)
+    Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(38)
+    ! fine root litter
+    Fin(6)  = FT(12)+FT(26)+FT(43)
+    Fout(6) = FT(56)+FT(57)+FT(63)+FT(65)
+    Fin_yr1(6)  = FT_yr1(12)+FT_yr1(26)+FT_yr1(43)
+    Fout_yr1(6) = FT_yr1(56)+FT_yr1(57)+FT_yr1(63)+FT_yr1(65)
+    ! wood litter
+    Fin(7)  = FT(11)+FT(27)+FT(44)
+    Fout(7) = FT(30)+FT(31)+FT(32)+FT(33)+FT(39)
+    Fin_yr1(7)  = FT_yr1(11)+FT_yr1(27)+FT_yr1(44)
+    Fout_yr1(7) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)+FT_yr1(39)
+    ! som - fast
+    Fin(8)  = FT(24)+FT(41)+FT(61)+ & 
+              (FT(15)*(1d0-pars(41)))+(FT(57)*(1d0-pars(42)))+(FT(31)*(1d0-pars(43)))+ &
+              (FT(28)*(1d0-pars(41)))+(FT(65)*(1d0-pars(42)))+(FT(33)*(1d0-pars(43)))
+    Fout(8) = FT(58)+FT(62)+FT(64)
+    Fin_yr1(8)  = FT_yr1(24)+FT_yr1(41)+FT_yr1(61)+ &
+                  (FT_yr1(15)*(1d0-pars(41)))+(FT_yr1(57)*(1d0-pars(42)))+(FT_yr1(31)*(1d0-pars(43)))+ &
+                  (FT_yr1(28)*(1d0-pars(41)))+(FT_yr1(65)*(1d0-pars(42)))+(FT_yr1(33)*(1d0-pars(43)))
+    Fout_yr1(8) = FT_yr1(58)+FT_yr1(62)+FT_yr1(64)
+    ! som - slow
+    Fin(9)  = FT(60)+ & 
+              (FT(15)*(pars(41)))+(FT(57)*(pars(42)))+(FT(31)*(pars(43)))+ &
+              (FT(28)*(pars(41)))+(FT(65)*(pars(42)))+(FT(33)*(pars(43)))
+    Fout(9) = FT(14)+FT(23)+FT(40)+FT(61)
+    Fin_yr1(9)  = FT_yr1(60)+ & 
+                  (FT_yr1(15)*(pars(41)))+(FT_yr1(57)*(pars(42)))+(FT_yr1(31)*(pars(43)))+ &
+                  (FT_yr1(28)*(pars(41)))+(FT_yr1(65)*(pars(42)))+(FT_yr1(33)*(pars(43)))
+    Fout_yr1(9) = FT_yr1(14)+FT_yr1(23)+FT_yr1(40)+FT_yr1(61)
+    ! microbial
+    Fin(10)  = FT(62)
+    Fout(10) = FT(59)+FT(60)
+    Fin_yr1(10)  = FT_yr1(62)
+    Fout_yr1(10) = FT_yr1(59)+FT_yr1(60)
     ! Surface water pool (0-30cm)
-    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
-    Fin(7)  = FT(47) 
-    Fout(7) = FT(42)+FT(41)+FT(46) 
-    Fin_yr1(7)  = FT_yr1(47) 
-    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
-!    Fin_yr2(7)  = FT_yr2(47)
-!    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
+    ! 52 = infiltrated, 47 = soil evaporation, 46 = transpiration from top soil, 51 = drainage from top soil
+    Fin(11)  = FT(52) 
+    Fout(11) = FT(47)+FT(46)+FT(51) 
+    Fin_yr1(11)  = FT_yr1(52) 
+    Fout_yr1(11) = FT_yr1(47)+FT_yr1(46)+FT_yr1(51) 
 
     !
     ! Begin EDCs here
     !
 
-!    ! ensure ratio between Cfoliar and Croot is less than 5
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-!        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
-!    end if
+    ! Turnover rate of foliage litter should be greater than slow som
+    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8) > Fout(5) ) then
+       EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    endif    
+    ! Turnover rate of fine root litter should be greater than slow som
+    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8) > Fout(7) ) then
+       EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+    endif    
 
     ! Determine the mean and standard deviation of January LAIs 
     jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
@@ -614,7 +615,7 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     end if
 
     ! Determine the mean and standard deviation of January wSWPs 
@@ -635,74 +636,43 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
     end if
 
-    ! Equilibrium factor (in comparison with initial conditions)
-!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
-    ! Pool exponential decay tolerance
-!    etol = 0.3d0 !0.1d0
-
-    ! first calculate total flux for the whole simulation period
-!    do fl = 1, nofluxes
-!        FT(fl) = 0
-!        do nd = 1, nodays
-!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
-!        end do
-!    end do
-
-    ! Iterate through C pools to determine whether they have their ratio of
-    ! input and outputs are outside of steady state approximation.
-    ! See Bloom et al., 2016 PNAS for details
-
-!    ! iterate to check whether Fin/Fout is within EQF limits
-!    Rm = Fin/Fout
-!    Rs = Rm * (jan_mean_pools / jan_first_pools)
-!    do n = 1, nopools-1
-!       ! Restrict rates of increase
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
-!       end if
-!       ! Restrict exponential decay
-!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
-!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!       end if
-!    end do
-
-     ! What are in effect the potential growth rates are modulated by the current 
-     ! fixed temperature sub-model used in the model. This means that the parameterised 
-     ! potential rates might never be achievable even if plausible. Thus the maximum 
-     ! parameter bound for the potential growth rates need to be increased. These EDCs 
-     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
-     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
-     if ((EDC2 == 1 .or. DIAG == 1)) then
-         ! Foliage
-         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-         end if
-         ! Fine roots
-         if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-         end if
-         ! Wood
-         if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
-         end if
-     end if
+    ! What are in effect the potential growth rates are modulated by the current 
+    ! fixed temperature sub-model used in the model. This means that the parameterised 
+    ! potential rates might never be achievable even if plausible. Thus the maximum 
+    ! parameter bound for the potential growth rates need to be increased. These EDCs 
+    ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+    ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+    if ((EDC2 == 1 .or. DIAG == 1)) then
+        ! Foliage
+        if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+        end if
+        ! Fine roots
+        if (maxval(M_FLUXES(:,6)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        end if
+        ! Wood
+        if (maxval(M_FLUXES(:,7)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        end if
+    end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
 
     if (EDC2 == 1 .or. DIAG == 1) then
@@ -749,8 +719,9 @@ module model_likelihood_module
 !                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
 !        end if
-        ! Dead pools
-        do n = 5, 6
+
+        ! Dead pools - foliar litter, root litter, wood litter, fast som, slow som, microbial
+        do n = 5, 10
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
                EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
@@ -763,7 +734,7 @@ module model_likelihood_module
         end do
 
         ! Water pool(s)
-        n = 7  ! surface water pool
+        n = 11  ! surface water pool
         ! Restrict rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
@@ -795,11 +766,11 @@ module model_likelihood_module
         tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
             ! The current leaf lifespan is shorter than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
         endif        
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -828,9 +799,6 @@ module model_likelihood_module
        end do
 
     end if ! min pool assessment
-
-!    ! Debugging print statements
-!    print*,"assess_EDC2: done"
 
   end subroutine assess_EDC2
   !
@@ -1094,7 +1062,6 @@ module model_likelihood_module
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
-
     endif !
 
     ! run the dalec model
@@ -1116,7 +1083,6 @@ module model_likelihood_module
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
-
     end if ! DATAin%EDC == 1
 
     ! Calculate log-likelihood associated with priors
@@ -1217,23 +1183,22 @@ module model_likelihood_module
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
-                 * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
                                              DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
-                                             1d0,mod)
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,5))
     endif ! nClit_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,6))
+                                             1d0, & 
+                                             (DATAin%M_POOLS(1:DATAin%nodays,8)+ & 
+                                              DATAin%M_POOLS(1:DATAin%nodays,9)+ &
+                                              DATAin%M_POOLS(1:DATAin%nodays,10)))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1:DATAin%nodays,11) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
                                              DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              1d0,mod)
@@ -1261,13 +1226,17 @@ module model_likelihood_module
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
-                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,30))
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,45))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net biome productivity 
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59) & ! Rhet microbial
             + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
@@ -1276,8 +1245,12 @@ module model_likelihood_module
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59) & ! Rhet microbial
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              1d0,mod)    
@@ -1285,8 +1258,12 @@ module model_likelihood_module
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59)   ! Rhet microbial
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              1d0,mod)
     endif ! nreco > 0
@@ -1369,23 +1346,22 @@ module model_likelihood_module
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
-                 * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
                                              DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
-                                             DATAin%Clit_stock_scaling,mod)
+                                             DATAin%Clit_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,5))
     endif ! nClit_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             DATAin%Csom_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,6))
+                                             DATAin%Csom_stock_scaling, &
+                                             (DATAin%M_POOLS(1:DATAin%nodays,8)+ & 
+                                              DATAin%M_POOLS(1:DATAin%nodays,9)+ &
+                                              DATAin%M_POOLS(1:DATAin%nodays,10)))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1:DATAin%nodays,11) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
                                              DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              DATAin%soilwater_scaling,mod)
@@ -1414,13 +1390,17 @@ module model_likelihood_module
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
-                                             DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,30))
+                                             DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,45))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net biome productivity 
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59) & ! Rhet microbial
             + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
@@ -1429,8 +1409,12 @@ module model_likelihood_module
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59) & ! Rhet microbial
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              DATAin%NEE_scaling,mod)    
@@ -1438,8 +1422,12 @@ module model_likelihood_module
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3)  & ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet foliage litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,56) & ! Rhet root litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,30) & ! Rhet wood litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som slow
+            + DATAin%M_FLUXES(1:DATAin%nodays,58) & ! Rhet som fast
+            + DATAin%M_FLUXES(1:DATAin%nodays,59)   ! Rhet microbial
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              DATAin%Reco_scaling,mod)
     endif ! nreco > 0
@@ -1489,7 +1477,7 @@ module model_likelihood_module
     if (DATAin%otherpriors(1) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (DATAin%M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1,11) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if
@@ -1507,8 +1495,6 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
         mod = sum(DATAin%M_FLUXES(1:DATAin%nodays,29)) / sum(DATAin%MET(7,1:DATAin%nodays) * 86400d0)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(4)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(4),DATAin%otherpriorunc(4),dummy_lag,dummy_scaling,mod))
@@ -1518,10 +1504,8 @@ module model_likelihood_module
     ! NOTE: this arrangement explicitly neglects the impact of disturbance on
     ! residence time (i.e. no fire and biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
         mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
-            * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) / dble(DATAin%nodays))
+            * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)))) / dble(DATAin%nodays))
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if

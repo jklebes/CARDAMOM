@@ -45,12 +45,13 @@ M = Managed Grassland / arable crops (Table 10)
 | 26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                    | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
-| 29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Unpublished |
+| 29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Published   |
 | 30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
 | 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 | 34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
+| 35 | DALEC.A1.C7.D2.F2.H2.P1.R4.035 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014     | Published   |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -73,6 +74,7 @@ M = Managed Grassland / arable crops (Table 10)
 | C4         | 3-pool representation (foliage, non-photosynthetic biomass, dead organic matter) | Published (Famiglietti et al., 2021)  |
 | C5         | 4-pool representation (labile, foliage, non-photosynthetic biomass, dead organic matter) where labile supplies foliage | Published (Famiglietti et al., 2021)  |
 | C6         | 6-pool representation (labile, foliage, fine root, wood, litter, som) where labile supplies foliage, root and wood | Published (Bloom & Williams 2015)  |
+| C7         | 11-pool representation (labile, foliage, fine root, wood, foliar litter, fine root litter, wood litter, slow som, fast som, microbial) | Published (Xenakis & Williams 2014)  |
 
 #### TABLE 4. Disturbance due to direct human mechanical intervention sub-models
 
@@ -99,7 +101,7 @@ M = Managed Grassland / arable crops (Table 10)
 | H1         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2). NOTE: that this model version assumes soil water content remains at field capacity but allows supply demand mechanisms. | Published (Smallman & Williams, 2019)  |
 | H2         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2,3,4) | Published (Smallman & Williams, 2019)  |
 | H3         | As H2 but min LWP parameterisable                                     | Unpublished (D. T. Milodowski) |
-| H4         | As H2 but Saxton pedotransfer functions replaced with van Genuchten  | Unpublished (L. Orci-Fernandez) |
+| H4         | As H2 but Saxton pedotransfer functions replaced with van Genuchten   | Unpublished (L. Orci-Fernandez)|
 
 #### TABLE 7. Nitrogen pools represented and connected structure sub-models
 
@@ -134,6 +136,7 @@ M = Managed Grassland / arable crops (Table 10)
 | R1         | Maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Bloom & Williams et al., 2015)  |
 | R2         | Leaf maintenance respiration estimated by the Reich et al., 2008 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Famiglietti et al., 2021)  |
 | R3         | Leaf maintenance respiration estimated by the Heskel et al., 2016 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Unpublished |
+| R4         | Autotrophic respiration as R0. Heterotrophic respiration following an implementation of microbial decomposition | Xenakis & Williams (2014) |
 
 #### TABLE 10. Managed agricultural ecosystem sub-models
 

@@ -94,13 +94,13 @@ module MODEL_PARAMETERS
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
     PI%parmax(7) = 0.01d0        ! 0.27 years
 
-    ! Turnover of litter (fraction; temperature adjusted)
+    ! Turnover of foliar litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
-    ! Turnover of som to Rhet (fraction; temperature adjusted)
-    PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
+    ! Turnover of fine root litter (fraction; temperature adjusted)
+    PI%parmin(9) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(9) = 0.02d0      ! 0.13 years at 0oC
 
     ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
@@ -176,6 +176,56 @@ module MODEL_PARAMETERS
     PI%parmin(35) = 1.368925d-05 ! 200.00 years at 0oC
     PI%parmax(35) = 0.001d0      !   2.74 years at 0oC
 
+    ! Initial microbial activity 
+    PI%parmin(39) = 0.01d0
+    PI%parmax(39) = 0.1d0
+    ! Inhibition constant for C dependant microbial activity 
+    PI%parmin(40) = 75d0
+    PI%parmax(40) = 250d0
+
+    ! Foliar lignin fraction 
+    PI%parmin(41) = 0.01d0
+    PI%parmax(41) = 0.40d0
+    ! Fine root lignin fraction 
+    PI%parmin(42) = 0.01d0
+    PI%parmax(42) = 0.40d0
+    ! Wood lignin fraction 
+    ! lignin fractions based on Cornwell et al (2009) GCB
+    PI%parmin(43) = 0.15d0
+    PI%parmax(43) = 0.40d0
+
+    ! Efficiency of substrate uptake by microbes 
+    ! original value from Xenakis & Williams (2014)
+    PI%parmin(44) = 0.62d0-(0.62d0*0.5d0)
+    PI%parmax(44) = 0.62d0+(0.62d0*0.5d0)
+
+    ! Maximum microbial death rate 
+    ! original value from Xenakis & Williams (2014)
+    PI%parmin(45) = 0.24d0-(0.24d0*0.d0)
+    PI%parmax(45) = 0.24d0+(0.24d0*0.5d0)
+    ! Inhibition constant for microbial death 
+    ! original value from Xenakis & Williams (2014)
+    PI%parmin(46) = 0.213d0-(0.213d0*0.5d0)
+    PI%parmax(46) = 0.213d0+(0.213d0*0.5d0)
+
+    ! Maintenance respiration coefficient 
+    PI%parmin(47) = 0.45d0
+    PI%parmax(47) = 0.55d0
+
+    ! Microbial decomposition efficiency
+    PI%parmin(48) = 0.01d0
+    PI%parmax(48) = 0.04d0
+
+    ! Turnover constant for slow som (fraction/day)
+    ! Slow som turnover is assumed to be a based on this fraction
+    ! applied to the microbial pool C and scaled by its activity.
+    PI%parmin(49) = 0.3688761d0*0.5d0
+    PI%parmax(49) = 0.3688761d0*1.5d0
+
+    ! 2nd order rate constant for microbial uptake from fast som pool (day-1)
+    PI%parmin(50) = 0.1129056d0*0.5d0
+    PI%parmax(50) = 0.1129056d0*1.5d0
+
     !
     ! INITIAL VALUES DECLARED HERE
     !
@@ -183,26 +233,22 @@ module MODEL_PARAMETERS
     ! C labile
     PI%parmin(18) = 1d0
     PI%parmax(18) = 2000d0
-
     ! C foliar
     PI%parmin(19) = 1d0
     PI%parmax(19) = 2000d0
-
     ! C roots
     PI%parmin(20) = 1.0d0
     PI%parmax(20) = 2000d0
-
     ! C_wood
     PI%parmin(21) = 1d0
     PI%parmax(21) = 30000d0
 
-    ! C litter
+    ! C foliar litter
     PI%parmin(22) = 1d0
     PI%parmax(22) = 2000d0
-
-    ! C_som
+    ! C som (slow)
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    PI%parmax(23) = 250000d0 
 
     ! Initial soil water fraction
     PI%parmin(24) = 0.05d0
@@ -211,6 +257,15 @@ module MODEL_PARAMETERS
     ! C wood litter
     PI%parmin(34) = 1d0
     PI%parmax(34) = 10000d0
+    ! C fine root litter
+    PI%parmin(36) = 1d0
+    PI%parmax(36) = 2000d0
+    ! C som (fast)
+    PI%parmin(37) = 1d0
+    PI%parmax(37) = 100d0
+    ! C microbial
+    PI%parmin(38) = 1d0
+    PI%parmax(38) = 100d0
 
   end subroutine pars_info
 

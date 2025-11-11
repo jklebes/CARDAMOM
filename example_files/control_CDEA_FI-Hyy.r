@@ -36,7 +36,7 @@ sshpass_key_server = "~/.ssh/id_rsa_eddie.pub" # location of passkey for remote 
 
 ## Model - which DALEC 
 # see "MODEL_DESCRIPTIONS.md" for available models
-model="DALEC.4."
+model="DALEC.35."
 pft_specific_parameters=FALSE # impacts crop model only
 
 ## MDF method
@@ -177,7 +177,7 @@ request_cost_function_scaling = 0 # 0 = Default, no normaliation of the likeliho
 # stage  3 : Copy back results and process vectors
 # stage  4 : Do some standard figure creation (and further processing for gridded analysis)
 # stage  5 : Generic dump of RESULTS_PROCESSED files to netcdf
-stage=4
+stage=3
 repair=1 # to force (=1) re-run processed results or driver files if they already exist
 grid_override=FALSE # force site specific files to be saved and figures to be generated when in "grid" operation
 
