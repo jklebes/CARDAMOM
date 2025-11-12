@@ -190,7 +190,7 @@ module MODEL_PARAMETERS
     PI%parmin(42) = 0.01d0
     PI%parmax(42) = 0.40d0
     ! Wood lignin fraction 
-    ! lignin fractions based on Cornwell et al (2009) GCB
+    ! lignin fractions based on Cornwell et al., (2009), Global Change Biology, 15: 2431-2449. https://doi.org/10.1111/j.1365-2486.2009.01916.x
     PI%parmin(43) = 0.15d0
     PI%parmax(43) = 0.40d0
 
@@ -199,7 +199,7 @@ module MODEL_PARAMETERS
     PI%parmin(44) = 0.62d0-(0.62d0*0.5d0)
     PI%parmax(44) = 0.62d0+(0.62d0*0.5d0)
 
-    ! Maximum microbial death rate 
+    ! Maximum microbial death rate  (fraction/day)
     ! original value from Xenakis & Williams (2014)
     PI%parmin(45) = 0.24d0-(0.24d0*0.d0)
     PI%parmax(45) = 0.24d0+(0.24d0*0.5d0)
@@ -208,7 +208,7 @@ module MODEL_PARAMETERS
     PI%parmin(46) = 0.213d0-(0.213d0*0.5d0)
     PI%parmax(46) = 0.213d0+(0.213d0*0.5d0)
 
-    ! Maintenance respiration coefficient 
+    ! Microbial maintenance respiration coefficient 
     PI%parmin(47) = 0.45d0
     PI%parmax(47) = 0.55d0
 

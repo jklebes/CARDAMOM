@@ -1217,6 +1217,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
            OTHERPRIORS[4] = 0.66               ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.035") {
+          PARPRIORS[1] = 0.5                               ; PARPRIORUNC[1]  = 0.1 #; PARPRIORWEIGHT[10] = 1 # Efficiency of Litter decomposition to soil (0-1)
           PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
@@ -1238,6 +1239,9 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
           #PARPRIORS[33] = 0.25                             ; PARPRIORUNC[33] = 0.25 # wood litter combustion completeness
+          PARPRIORS[41] = 0.13                             ; PARPRIORUNC[41] = 0.03 # Foliar lignin fraction (Mediavilla et al., (2008), Functional Ecology, 22: 787-793. https://doi.org/10.1111/j.1365-2435.2008.01453.x)
+          PARPRIORS[42] = 0.20                             ; PARPRIORUNC[42] = 0.08 # Fine root lignin fraction (Rough number from grasslands)
+          PARPRIORS[43] = 0.28                             ; PARPRIORUNC[43] = 0.15 # Wood lignin fraction (Cornwell et al., 2009, doi: https://doi.org/10.1111/j.1365-2486.2009.01916.x)
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034

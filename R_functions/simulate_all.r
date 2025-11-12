@@ -8056,17 +8056,23 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       MTT_foliage_years = MTT_years[,2],
                       MTT_roots_years = MTT_years[,3],
                       MTT_wood_years = MTT_years[,4],
-                      MTT_litter_years = MTT_years[,5],
-                      MTT_woodlitter_years = MTT_years[,6],
-                      MTT_som_years = MTT_years[,7],
+                      MTT_foliarlitter_years = MTT_years[,5],
+                      MTT_rootlitter_years = MTT_years[,6],
+                      MTT_woodlitter_years = MTT_years[,7],
+                      MTT_fastsom_years = MTT_years[,8],
+                      MTT_slowsom_years = MTT_years[,9],
+                      MTT_microbial_years = MTT_years[,10],
                       # Steady state estimates
                       SS_labile_gCm2 = SS_gCm2[,1],
                       SS_foliage_gCm2 = SS_gCm2[,2],
                       SS_roots_gCm2 = SS_gCm2[,3],
                       SS_wood_gCm2 = SS_gCm2[,4],
-                      SS_litter_gCm2 = SS_gCm2[,5],
-                      SS_woodlitter_gCm2 = SS_gCm2[,6],
-                      SS_som_gCm2 = SS_gCm2[,7])
+                      SS_foliarlitter_gCm2 = SS_gCm2[,5],
+                      SS_rootlitter_gCm2 = SS_gCm2[,6],
+                      SS_woodlitter_gCm2 = SS_gCm2[,7],
+                      SS_fastsom_gCm2 = SS_gCm2[,8],
+                      SS_slowsom_gCm2 = SS_gCm2[,9],
+                      SS_microbial_gCm2 = SS_gCm2[,10])
       # Determine the NPP fraction of expressed NPP
       # i.e. actual growth not GPP-Ra
       NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
@@ -8106,10 +8112,20 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       states_all$litter_gCm2 = states_all$foliarlitter_gCm2 + states_all$rootlitter_gCm2
       states_all$mean_litter_gCm2 = states_all$mean_foliarlitter_gCm2 + states_all$mean_rootlitter_gCm2
       states_all$mean_annual_litter_gCm2 = states_all$mean_annual_foliarlitter_gCm2 + states_all$mean_annual_rootlitter_gCm2
-      # Aggregate modle specific pools for fast, slow som and microbial into globally recognised value
+      # Aggregate model specific pools for fast, slow som and microbial into globally recognised value
       states_all$som_gCm2 = states_all$fastsom_gCm2 + states_all$slowsom_gCm2 + states_all$microbial_gCm2
       states_all$mean_som_gCm2 = states_all$mean_fastsom_gCm2 + states_all$mean_slowsom_gCm2 + states_all$mean_microbial_gCm2
       states_all$mean_annual_som_gCm2 = states_all$mean_annual_fastsom_gCm2 + states_all$mean_annual_slowsom_gCm2 + states_all$mean_annual_microbial_gCm2
+      # Aggregate specific MRTs into globally recognised
+      tmp1 = apply(states_all$foliarlitter_gCm2,1,mean) ; tmp2 = apply(states_all$rootlitter_gCm2,1,mean) ; tmp3 = apply(states_all$woodlitter_gCm2,1,mean)
+      states_all$MTT_litter_years = ( (states_all$MTT_foliarlitter_years * tmp1) + 
+                                      (states_all$MTT_rootlitter_years * tmp2) + 
+                                      (states_all$MTT_woodlitter_years * tmp3) ) / (tmp1 + tmp2 + tmp3)
+      tmp1 = apply(states_all$fastsom_gCm2,1,mean) ; tmp2 = apply(states_all$slowsom_gCm2,1,mean) ; tmp3 = apply(states_all$microbial_gCm2,1,mean)
+      states_all$MTT_som_years = ( (states_all$MTT_fastsom_years * tmp1) + 
+                                   (states_all$MTT_slowsom_years * tmp2) + 
+                                   (states_all$MTT_microbial_years * tmp3) ) / (tmp1 + tmp2 + tmp3)
+
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else {

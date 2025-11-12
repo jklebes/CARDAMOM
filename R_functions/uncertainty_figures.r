@@ -1472,7 +1472,17 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "rmain_from_labile_gCm2day", "foliar_growth_limitation", "ncce_grow_gCgC",
                       "ncce_loss_gCgC","foliage_feedback_turnover_limitation", 
                       "foliage_leafT_turnover_limitation", "foliage_wSWP_turnover_limitation",
-                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days")
+                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days",
+                      "rhet_foliarlitter_gCm2day","rhet_rootlitter_gCm2day","rhet_woodlitter_gCm2day",
+                      "rhet_fastsom_gCm2day","rhet_slowsom_gCm2day","rhet_microbial_gCm2day",
+                      "foliarlitter_to_som_gCm2day","woodlitter_to_som_gCm2day","rootlitter_to_som_gCm2day",
+                      "microbial_to_som_gCm2day","slow_to_fast_som_gCm2day","fast_som_to_microbial_gCm2day",
+                      "FIRElitter_foliarlitter_gCm2day","FIREemiss_rootlitter_gCm2day","FIRElitter_rootlitter_gCm2day",
+                      "FIREemiss_woodlitter_gCm2day","FIRElitter_woodlitter_gCm2day","FIREemiss_fastsom_gCm2day",
+                      "FIREemiss_slowsom_gCm2day","HARVESTextracted_woodlitter_gCm2day",
+                      "foliarlitter_gCm2","rootlitter_gCm2","woodlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
+                      "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction")
+
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists
