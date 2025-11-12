@@ -59,6 +59,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   # test for convergence and whether or not there is any single chain which can be removed in they do not converge
   notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars)) ; kept_chains = seq(1,dim(parameters)[3])
   while (dim(parameters)[3] > 2 & notconv) {
+  
      if (use_parallel == FALSE) {print("begin convergence checking")}
      converged = have_chains_converged(parameters)
      # If all chains are kept then we do not need to update kept_chains,
