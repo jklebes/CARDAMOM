@@ -3090,7 +3090,6 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       Etrans_2nd_root_layer_uptake_fraction = output[,,52],
                       mean_Etrans_2nd_root_layer_uptake_fraction = output_mean[,52],
                       mean_annual_Etrans_2nd_root_layer_uptake_fraction = output_annual[,,52],
-
                       wSWP_MPa = output[,,53],
                       mean_wSWP_MPa = output_mean[,53],
                       mean_annual_wSWP_MPa = output_annual[,,53],
@@ -3126,12 +3125,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_LWP_MPa = output_mean[,62],
                       mean_annual_LWP_MPa = output_annual[,,62], 
                       # Canopy aerodynamic diagnostics
-                      canopy_area_scaling_wind = output[,,63],
-                      mean_canopy_area_scaling_wind = output_mean[,63],
-                      mean_annual_canopy_area_scaling_wind = output_annual[,,63],
-                      canopy_area_scaling_light = output[,,64],
-                      mean_canopy_area_scaling_light = output_mean[,64],
-                      mean_annual_canopy_area_scaling_light = output_annual[,,64],    
+                      canopy_area_scaling_light = output[,,63],
+                      mean_canopy_area_scaling_light = output_mean[,63],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,63],    
+                      canopy_area_scaling_wind = output[,,64],
+                      mean_canopy_area_scaling_wind = output_mean[,64],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,64],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -3389,12 +3388,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_LWP_MPa = output_mean[,63],
                       mean_annual_LWP_MPa = output_annual[,,63], 
                       # Canopy aerodynamic diagnostics
-                      canopy_area_scaling_wind = output[,,64],
-                      mean_canopy_area_scaling_wind = output_mean[,64],
-                      mean_annual_canopy_area_scaling_wind = output_annual[,,64],
-                      canopy_area_scaling_light = output[,,65],
-                      mean_canopy_area_scaling_light = output_mean[,65],
-                      mean_annual_canopy_area_scaling_light = output_annual[,,65],    
+                      canopy_area_scaling_light = output[,,64],
+                      mean_canopy_area_scaling_light = output_mean[,64],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,64],                          
+                      canopy_area_scaling_wind = output[,,65],
+                      mean_canopy_area_scaling_wind = output_mean[,65],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,65],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -5743,12 +5742,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_LWP_MPa = output_mean[,63],
                       mean_annual_LWP_MPa = output_annual[,,63], 
                       # Canopy aerodynamic diagnostics
-                      canopy_area_scaling_wind = output[,,64],
-                      mean_canopy_area_scaling_wind = output_mean[,64],
-                      mean_annual_canopy_area_scaling_wind = output_annual[,,64],
-                      canopy_area_scaling_light = output[,,65],
-                      mean_canopy_area_scaling_light = output_mean[,65],
-                      mean_annual_canopy_area_scaling_light = output_annual[,,65],    
+                      canopy_area_scaling_light = output[,,64],
+                      mean_canopy_area_scaling_light = output_mean[,64],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,64],                          
+                      canopy_area_scaling_wind = output[,,65],
+                      mean_canopy_area_scaling_wind = output_mean[,65],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,65],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -6024,12 +6023,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_LWP_MPa = output_mean[,69],
                       mean_annual_LWP_MPa = output_annual[,,69], 
                       # Canopy aerodynamic diagnostics
-                      canopy_area_scaling_wind = output[,,70],
-                      mean_canopy_area_scaling_wind = output_mean[,70],
-                      mean_annual_canopy_area_scaling_wind = output_annual[,,70],
-                      canopy_area_scaling_light = output[,,71],
-                      mean_canopy_area_scaling_light = output_mean[,71],
-                      mean_annual_canopy_area_scaling_light = output_annual[,,71],                          
+                      canopy_area_scaling_light = output[,,70],
+                      mean_canopy_area_scaling_light = output_mean[,70],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,70],     
+                      canopy_area_scaling_wind = output[,,71],
+                      mean_canopy_area_scaling_wind = output_mean[,71],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,71],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],
@@ -8037,12 +8036,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_LWP_MPa = output_mean[,82],
                       mean_annual_LWP_MPa = output_annual[,,82], 
                       # Canopy aerodynamic diagnostics
-                      canopy_area_scaling_wind = output[,,83],
-                      mean_canopy_area_scaling_wind = output_mean[,83],
-                      mean_annual_canopy_area_scaling_wind = output_annual[,,83],
-                      canopy_area_scaling_light = output[,,84],
-                      mean_canopy_area_scaling_light = output_mean[,84],
-                      mean_annual_canopy_area_scaling_light = output_annual[,,84], 
+                      canopy_area_scaling_light = output[,,83],
+                      mean_canopy_area_scaling_light = output_mean[,83],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,83],                       
+                      canopy_area_scaling_wind = output[,,84],
+                      mean_canopy_area_scaling_wind = output_mean[,84],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,84],
                       # Microbial diagnostics
                       microbial_death_fraction = output[,,85],
                       mean_microbial_death_fraction = output_mean[,85],
