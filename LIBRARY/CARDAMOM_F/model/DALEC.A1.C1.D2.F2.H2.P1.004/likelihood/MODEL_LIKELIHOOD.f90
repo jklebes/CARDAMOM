@@ -644,6 +644,12 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 
+    ! The mean annual carbon stock change for soils is unlikely to be >250 gC/m2/yr
+    ! an informed guess.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/nos_years) > 250d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+    end if
+
     ! Equilibrium factor (in comparison with initial conditions)
 !    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
     ! Pool exponential decay tolerance
@@ -844,8 +850,7 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: averaging_period   !
-
-    double precision,dimension(averaging_period), intent (in) :: pools
+    double precision, dimension(averaging_period), intent (in) :: pools
 
     ! declare local variables
     integer :: c
@@ -870,16 +875,15 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year           & ! which year are we working on
                           ,averaging_period ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
-    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
+    endday   = floor(365.25d0*dble(year)  /(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
     cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
@@ -901,9 +905,8 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year            & ! which year are we working on
                           ,averaging_period  ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
@@ -1149,14 +1152,14 @@ module model_likelihood_module
     ! declare local variables
     integer :: n
     double precision, dimension(npars) :: local_likelihood
-!print*,"likelihood_p:"
+
     ! set initial value
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
-!print*,"likelihood_p: done"
+
     ! dont for get to return
     return
 

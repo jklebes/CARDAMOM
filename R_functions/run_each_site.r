@@ -69,6 +69,17 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
                                 drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                 PROJECT$exepath,soil_info)
+## EDC hack to reduce the possible range of soil C changes
+#filter = which(abs((states_all$som_gCm2[,dim(states_all$som_gCm2)[2]] - states_all$som_gCm2[,1]) / PROJECT$nos_years) < 250)
+#if (length(filter) > 0) {
+#parameters = array(parameters, dim=c((PROJECT$model$nopars[n]+1),prod(dim(parameters)[2:3])))[,filter]
+#parameters = array(parameters, dim=c(dim(parameters)[1],dim(parameters)[2],2))
+#states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
+#                          drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+#                          PROJECT$exepath,soil_info)
+#} else {
+#return(-9999)
+#}
       if (use_parallel == FALSE) {print("model ensemble ran, on to post-processing")}
 
       # Avoid running with ACM basically where not all fluxes exist

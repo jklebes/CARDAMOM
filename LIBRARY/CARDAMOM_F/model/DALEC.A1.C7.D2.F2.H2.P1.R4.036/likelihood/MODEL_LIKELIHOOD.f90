@@ -589,12 +589,23 @@ module model_likelihood_module
     !
 
     ! Turnover rate of foliage litter should be greater than slow som
-    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8) > Fout(5) ) then
+    ! NOTE: yes, I know this does not actually calculate the turnover fraction 
+    !       to the temporal mismatch in these variables, but they provide appropriate 
+    !       scaling for their relative comparison to be true.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8)/mean_pools(8) > Fout(5)/mean_pools(5) ) then
        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     endif    
     ! Turnover rate of fine root litter should be greater than slow som
-    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8) > Fout(7) ) then
+    ! NOTE: yes, I know this does not actually calculate the turnover fraction 
+    !       to the temporal mismatch in these variables, but they provide appropriate 
+    !       scaling for their relative comparison to be true.    
+    if ((EDC2 == 1 .or. DIAG == 1) .and. Fout(8)/mean_pools(8) > Fout(7)/mean_pools(7) ) then
        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
+    endif    
+    ! Turnover of foliar litter (pars(8)) should be faster than fine root litter (pars(9))
+    ! Guo et al., (2021). Global Ecology and Biogeography, 30, 2286–2296. https://doi.org/10.1111/geb.13384
+    if ((EDC2 == 1 .or. DIAG == 1) .and. pars(9) > pars(8)) then
+       EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif    
 
     ! Determine the mean and standard deviation of January LAIs 
@@ -615,7 +626,7 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(13) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
     end if
 
     ! Determine the mean and standard deviation of January wSWPs 
@@ -636,13 +647,13 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
     end if
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
     end if
 
     ! What are in effect the potential growth rates are modulated by the current 
@@ -654,25 +665,25 @@ module model_likelihood_module
     if ((EDC2 == 1 .or. DIAG == 1)) then
         ! Foliage
         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
         end if
         ! Fine roots
         if (maxval(M_FLUXES(:,6)) > 10d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
         end if
         ! Wood
         if (maxval(M_FLUXES(:,7)) > 10d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
         end if
     end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     if (EDC2 == 1 .or. DIAG == 1) then
@@ -681,55 +692,55 @@ module model_likelihood_module
 !        do n = 1, 3
 !           ! Restrict mean rates of increase
 !           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
 !           end if
 !           ! Restrict rates from deviating unrealistically from the mean
 !           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
 !                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
 !           end if
 !        end do
 !        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 2
 !        ! Restrict mean rates of increase
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
 !        end if
 !        ! Restrict exponential behaviour at initialisation         
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
 !        end if
         ! Fine root pool, note that in CDEA EDCs Fin has already been multiplied by time step
         n = 3
 !        ! Restrict mean rates of increase
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
 !        end if
         ! Restrict rates from deviating unrealistically from the mean
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
         end if
 !        ! Wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
 !        end if
 !        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
 !                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
 !        end if
 
         ! Dead pools - foliar litter, root litter, wood litter, fast som, slow som, microbial
         do n = 5, 10
            ! Restrict rates of increase
            if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
            end if
         end do
 
@@ -737,12 +748,12 @@ module model_likelihood_module
         n = 11  ! surface water pool
         ! Restrict rates of increase
         if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(25+n-1) = 0
         end if
         ! Restrict rates from deviating unrealistically from the mean
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
         end if
 
     end if ! EDC2 == 1 .or. DIAG == 1

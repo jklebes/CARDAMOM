@@ -202,9 +202,9 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       modelid = 33
   } else if (modelname == "") {
       modelid = 34
-  } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.035") {
-      modelid = 35
   } else if (modelname == "") {
+      modelid = 35
+  } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.036") {
       modelid = 36
   } else if (modelname == "") {
       modelid = 37
@@ -1216,7 +1216,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          OTHERPRIORS[2] =        ; OTHERPRIORUNC[2] =  # Initial soil water fraction 
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
            OTHERPRIORS[4] = 0.66               ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
-      } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.035") {
+      } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.036") {
           PARPRIORS[1] = 0.5                               ; PARPRIORUNC[1]  = 0.1 #; PARPRIORWEIGHT[10] = 1 # Efficiency of Litter decomposition to soil (0-1)
           PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 

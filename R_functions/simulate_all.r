@@ -7751,10 +7751,10 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
     states_all$NPP_roots_fraction = NPP_fraction[,2]
     # Tidy up variables
     rm(output,MTT_years,SS_gCm2)
-  } else if (model_name == "DALEC.A1.C7.D2.F2.H2.P1.R4.035") {
+  } else if (model_name == "DALEC.A1.C7.D2.F2.H2.P1.R4.036") {
       output_dim = 86 ; MTT_dim = 10 ; SS_dim = 10
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-      tmp=.Fortran( "rdalec35",output_dim=as.integer(output_dim)
+      tmp=.Fortran( "rdalec36",output_dim=as.integer(output_dim)
                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
                              ,met=as.double(t(met))
                              ,pars=as.double(pars_in)

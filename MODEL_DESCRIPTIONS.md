@@ -51,7 +51,8 @@ M = Managed Grassland / arable crops (Table 10)
 | 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 | 34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
-| 35 | DALEC.A1.C7.D2.F2.H2.P1.R4.035 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014     | Published   |
+| 35 |                                |                     |                                                     | D. T. Milodowski             | Published   |
+| 36 | DALEC.A1.C7.D2.F2.H2.P1.R4.035 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014      | Published   |
 
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
