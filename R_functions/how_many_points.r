@@ -398,7 +398,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         } # Aggrgeate to resolution
 
         # Set the threshold below which we assume that the pixel will be excluded
-        cover_threshold = 0.0004 # currently, equal to 1 ha, should this be more like 5 % (0.05, 125 ha)?
+        cover_threshold = 0.01 # currently, equal to 1 ha, assuming a 1 km grid
 
     } # default landsea mask
 

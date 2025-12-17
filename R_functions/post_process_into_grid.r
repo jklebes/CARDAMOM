@@ -368,6 +368,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_roots_to_litter_gCm2day
                grid_output$mean_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_roots_gCm2day
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = site_output$annual_max_roots_gCm2
+               grid_output$mean_combined_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_roots_gCm2day                              
                grid_output$mean_combined_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_roots_to_litter_gCm2day
                # Pixel specific time varying
                grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
@@ -375,6 +376,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$outflux_roots_gCm2day[n,,] = site_output$outflux_roots_gCm2day
                grid_output$roots_to_litter_gCm2day[n,,] = site_output$roots_to_litter_gCm2day
                grid_output$alloc_roots_gCm2day[n,,] = site_output$alloc_roots_gCm2day
+               grid_output$combined_alloc_roots_gCm2day[n,,] = site_output$combined_alloc_roots_gCm2day                              
                grid_output$combined_roots_to_litter_gCm2day[n,,] = site_output$combined_roots_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_roots_gCm2[n,,] = site_output$mean_annual_roots_gCm2
@@ -382,6 +384,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_annual_outflux_roots_gCm2day[n,,] = site_output$mean_annual_outflux_roots_gCm2day
                grid_output$mean_annual_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_roots_to_litter_gCm2day
                grid_output$mean_annual_alloc_roots_gCm2day[n,,] = site_output$mean_annual_alloc_roots_gCm2day
+               grid_output$mean_annual_combined_alloc_roots_gCm2day[n,,] = site_output$mean_annual_combined_alloc_roots_gCm2day               
                grid_output$mean_annual_combined_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_roots_to_litter_gCm2day
                grid_output$MTT_annual_roots_years[n,,] = site_output$MTT_annual_roots_years
                # Fractional partitioning of tunover to different drivers - should they exist
@@ -435,6 +438,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_wood_to_litter_gCm2day
                grid_output$mean_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_wood_gCm2day
                grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = site_output$annual_max_wood_gCm2
+               grid_output$mean_combined_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_wood_gCm2day
                grid_output$mean_combined_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_wood_to_litter_gCm2day
                # Pixel specific time varying
                grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
@@ -442,6 +446,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$outflux_wood_gCm2day[n,,] = site_output$outflux_wood_gCm2day
                grid_output$wood_to_litter_gCm2day[n,,] = site_output$wood_to_litter_gCm2day
                grid_output$alloc_wood_gCm2day[n,,] = site_output$alloc_wood_gCm2day
+               grid_output$combined_alloc_wood_gCm2day[n,,] = site_output$combined_alloc_wood_gCm2day               
                grid_output$combined_wood_to_litter_gCm2day[n,,] = site_output$combined_wood_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_wood_gCm2[n,,] = site_output$mean_annual_wood_gCm2
@@ -449,6 +454,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_annual_outflux_wood_gCm2day[n,,] = site_output$mean_annual_outflux_wood_gCm2day
                grid_output$mean_annual_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_wood_to_litter_gCm2day
                grid_output$mean_annual_alloc_wood_gCm2day[n,,] = site_output$mean_annual_alloc_wood_gCm2day
+               grid_output$mean_annual_combined_alloc_wood_gCm2day[n,,] = site_output$mean_annual_combined_alloc_wood_gCm2day               
                grid_output$mean_annual_combined_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_wood_to_litter_gCm2day
                grid_output$MTT_annual_wood_years[n,,] = site_output$MTT_annual_wood_years
                # Fractional partitioning of tunover to different drivers - should they exist

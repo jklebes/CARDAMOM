@@ -646,7 +646,7 @@ module model_likelihood_module
 
     ! The mean annual carbon stock change for soils is unlikely to be >250 gC/m2/yr
     ! an informed guess.
-    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/nos_years) > 250d0) then
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 250d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     end if
 

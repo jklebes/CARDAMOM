@@ -449,15 +449,15 @@ module model_likelihood_module
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(14) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(15) = 0
     endif
     ! Combustion completeness for foliar + fine root litter should be greater than foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(16) = 0
     endif
 
     ! could always add more / remove some
@@ -501,7 +501,8 @@ module model_likelihood_module
     ! declare local variables
     integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi, tmp, tmp1, tmp2 !, EQF, etol
+    double precision :: infi, tmp, tmp1, tmp2, & !, EQF, etol
+                        jan_sd_lai, jan_mean_lai, jan_first_lai
     double precision, dimension(nodays) :: lab_ratio, pool_hak, tmp_vec
     double precision, dimension(nopools) :: mean_pools, Fin, Fout, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
@@ -515,7 +516,7 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                  C_etol = 0.20d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.10d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
                                 H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
@@ -627,33 +628,81 @@ module model_likelihood_module
      if ((EDC2 == 1 .or. DIAG == 1)) then
          ! Foliage
          if (maxval(M_FLUXES(:,4)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
          end if
          ! Fine roots
          if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
          end if
          ! Wood
          if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
+             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
          end if
      end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. FT(4) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
     endif
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
     endif
 
     ! While it is possible for the CiCa, the ratio of internal to external leaf
     ! CO2 concentrations it should not on average be greater than 1
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_DIAGS(:,4))/dble(nodays) > 1d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
     endif
+
+    ! Determine the mean and standard deviation of January LAIs 
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    jan_first_lai = M_DIAGS(1,1) ! First January LAI
+    ! Initially sum each January from each year
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
+    end do
+    ! Calculate the mean
+    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+    ! Calculate the standard deviation now
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
+    end do
+    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+    end if
+
+    ! Determine the mean and standard deviation of January wSWPs 
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    jan_first_lai = M_DIAGS(1,10) ! First January wSWP
+    ! Initially sum each January from each year
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,10)
+    end do
+    ! Calculate the mean
+    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+    ! Calculate the standard deviation now
+    do y = 1, DATAin%nos_years
+       nn = 1 + (steps_per_year * (y - 1)) 
+       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,10))**2d0
+    end do
+    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+    end if
+
+    ! The mean annual carbon stock change for soils is unlikely to be >250 gC/m2/yr
+    ! an informed guess.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 250d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
+    end if
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
@@ -1448,7 +1497,8 @@ module model_likelihood_module
     ! local variable
     integer :: dummy_nodays = 1, dummy_noobs = 1
     integer, dimension(1) :: dummy_pts = 1, dummy_lag = 0
-    double precision, dimension(1) :: mod
+    double precision, dimension(1) :: mod, obs, unc
+    double precision, dimension(DATAin%nodays) :: tmp
     double precision :: dummy_scaling = 1d0
 
     ! Initial soil water condition
@@ -1487,10 +1537,21 @@ module model_likelihood_module
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
         mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
-            * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) / dble(DATAin%nodays))
+            * ((sum(DATAin%M_POOLS(1:DATAin%nodays,4)/(DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) &
+              / dble(DATAin%nodays))
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
+
+    ! Hardcoded prior assumption that when we are photosynthsising (i.e. gs_demand_supply_ratio > 0)
+    ! but not supply limited (i.e. gs_demand_supply_ratio < 1) we expect a mean CiCa of 0.7.
+    ! DIAGS(:,4) = CiCa ; DIAGS(:,7) = gs_demand_supply_ratio
+    obs = 0.7d0 ; unc = 0.1d0 ; tmp = 0d0 
+    ! Identify time steps which fit the criteria
+    where (DATAin%M_DIAGS(:,7) > 0d0 .and. DATAin%M_DIAGS(:,7) < 1d0) tmp = 1d0
+    mod = sum(DATAin%M_DIAGS(:,4) * tmp) / sum(tmp)
+    ML_obs_out = ML_obs_out + (DATAin%nos_years*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                                           obs,unc,dummy_lag,dummy_scaling,mod))
 
     return
 

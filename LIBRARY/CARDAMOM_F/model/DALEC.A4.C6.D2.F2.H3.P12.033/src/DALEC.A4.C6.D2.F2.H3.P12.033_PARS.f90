@@ -232,6 +232,11 @@ module MODEL_PARAMETERS
     PI%parmin(47) = 0.1d0
     PI%parmax(47) = 1d0
 
+    ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
+    ! A credible iWUE range spans atleast 0.00001 -> 0.01
+    PI%parmin(48) = 1d-6
+    PI%parmax(48) = 1d-1
+
     !
     ! INITIAL VALUES DECLARED HERE
     !

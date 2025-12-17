@@ -1481,7 +1481,8 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "FIREemiss_woodlitter_gCm2day","FIRElitter_woodlitter_gCm2day","FIREemiss_fastsom_gCm2day",
                       "FIREemiss_slowsom_gCm2day","HARVESTextracted_woodlitter_gCm2day",
                       "foliarlitter_gCm2","rootlitter_gCm2","woodlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
-                      "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction")
+                      "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
+                      "labile_to_wood_gCm2day")
 
 
    for (p in seq(1, length(list_variables))) {

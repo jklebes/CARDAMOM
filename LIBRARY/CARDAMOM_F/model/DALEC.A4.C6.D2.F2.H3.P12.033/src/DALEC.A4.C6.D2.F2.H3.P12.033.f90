@@ -164,7 +164,7 @@ module CARBON_MODEL_MOD
     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
    canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
-                         iWUE = 4.6875d-4,     & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+!                         iWUE = 4.6875d-4,     & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
                   Rg_fraction = 0.21875d0,     & ! fraction of C allocation towards each pool
                                                  ! lost as growth respiration
                                                  ! (i.e. 0.28 .eq. xNPP)
@@ -296,6 +296,7 @@ module CARBON_MODEL_MOD
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/day
                        Vcmax_ref, & ! Maximum rate of carboxylation (umolC/m2/s), Vcmax_ref = avN*NUE
 !                             avN, & ! average foliar N (gN/m2)
+                            iWUE, & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1) reference value
                        iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
 !                             NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
 !                                    ! ,unlimited by CO2, light and photoperiod (umolC/gN/m2leaf)
@@ -559,9 +560,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !call calculate_radiation_commons(lat,pars(39:44))
     call calculate_radiation_commons(lat)
 
-    ! Respiration parameters
+    ! Leaf maintence respiration constant
     Rm_leaf_const = pars(44)
     ! load ACM-GPP-ET parameters
+    iWUE = pars(48) ! load the inherent water use efficiency
     minlwp = pars(43) ! Minimum leaf water potential
     Vcmax_ref = pars(11) ! Canopy efficiency (umolC/m2/s)
                          ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
@@ -1096,7 +1098,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Mortality allocation is greater than growth desired
            FLUXES(n,4) = 0d0
        end if
-
        ! Store canopy growth and loss information for the next time step
        last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4) 
 

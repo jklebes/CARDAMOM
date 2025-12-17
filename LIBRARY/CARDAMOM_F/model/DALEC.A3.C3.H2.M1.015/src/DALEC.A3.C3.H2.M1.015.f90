@@ -1,4 +1,4 @@
-7!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -577,7 +577,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   ! some hardcoded crop parameters
   !
 
-  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0 & ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
+  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0,& ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
                                                lv_res = 0.1d0,      & ! residue fraction of leaves left post harvest
                                                st_res = 0.1d0,      & ! residue fraction of stem left post harvest 
                                                 LAICR = 4d0,        & ! LAI above which self shading turnover occurs

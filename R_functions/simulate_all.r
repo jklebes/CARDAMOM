@@ -4272,18 +4272,18 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       mean_harvest_gCm2day = output_mean[,6],
                       mean_annual_harvest_gCm2day = output_annual[,,6],
                       # Internal fluxes
-                      alloc_foliage_gCm2day = output[,,7],
-                      mean_alloc_foliage_gCm2day = output_mean[,7],
-                      mean_annual_alloc_foliage_gCm2day = output_annual[,,7],
+                      labile_to_foliage_gCm2day = output[,,7],
+                      mean_labile_to_foliage_gCm2day = output_mean[,7],
+                      mean_annual_labile_to_foliage_gCm2day = output_annual[,,7],
                       alloc_labile_gCm2day = output[,,8],
                       mean_alloc_labile_gCm2day = output_mean[,8],
                       mean_annual_alloc_labile_gCm2day = output_annual[,,8],
-                      alloc_roots_gCm2day = output[,,9],
-                      mean_alloc_roots_gCm2day = output_mean[,9],
-                      mean_annual_alloc_roots_gCm2day = output_annual[,,9],
-                      alloc_wood_gCm2day = output[,,10],
-                      mean_alloc_wood_gCm2day = output_mean[,10],
-                      mean_annual_alloc_wood_gCm2day = output_annual[,,10],
+                      labile_to_roots_gCm2day = output[,,9],
+                      mean_labile_to_roots_gCm2day = output_mean[,9],
+                      mean_annual_labile_to_roots_gCm2day = output_annual[,,9],
+                      labile_to_wood_gCm2day = output[,,10],
+                      mean_labile_to_wood_gCm2day = output_mean[,10],
+                      mean_annual_labile_to_wood_gCm2day = output_annual[,,10],
                       rgrow_gCm2day = output[,,11],
                       mean_rgrow_gCm2day = output_mean[,11],
                       mean_annual_rgrow_gCm2day = output_annual[,,11],
@@ -4528,12 +4528,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       SS_som_gCm2 = SS_gCm2[,6])
       # Determine the NPP fraction of expressed NPP
       # i.e. actual growth not GPP-Ra
-      NPP_fraction = apply(states_all$alloc_foliage_gCm2day +
-                           states_all$alloc_roots_gCm2day +
-                           states_all$alloc_wood_gCm2day,1,mean)
-      NPP_fraction = cbind(apply(states_all$alloc_foliage_gCm2day,1,mean),
-                           apply(states_all$alloc_roots_gCm2day,1,mean),
-                           apply(states_all$alloc_wood_gCm2day,1,mean)) / NPP_fraction
+      NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                           states_all$labile_to_roots_gCm2day +
+                           states_all$labile_to_wood_gCm2day,1,mean)
+      NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day,1,mean),
+                           apply(states_all$labile_to_roots_gCm2day,1,mean),
+                           apply(states_all$labile_to_wood_gCm2day,1,mean)) / NPP_fraction
       states_all$NPP_foliage_fraction = NPP_fraction[,1]
       states_all$NPP_roots_fraction = NPP_fraction[,2]
       states_all$NPP_wood_fraction = NPP_fraction[,3]

@@ -68,6 +68,48 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           stop("Error, CARDAMOM cannnot determine where C allocation foliage has come from")
       }
   }
+  # The total allocation of C to the fine root pool can, depending on model,
+  # be the combined total of direct allocation and that via a labile pool.
+  # For many comparison we will need their combined total.
+  if (any(check_list == "alloc_roots_gCm2day") &&
+      any(check_list == "labile_to_roots_gCm2day")) {
+      states_all$combined_alloc_roots_gCm2day = states_all$alloc_roots_gCm2day + states_all$labile_to_roots_gCm2day
+      states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_alloc_roots_gCm2day + states_all$mean_labile_to_roots_gCm2day
+      states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_alloc_roots_gCm2day + states_all$mean_annual_labile_to_roots_gCm2day
+  } else {
+      if (any(check_list == "labile_to_roots_gCm2day")) {
+          states_all$combined_alloc_roots_gCm2day = states_all$labile_to_roots_gCm2day
+          states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_labile_to_roots_gCm2day
+          states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_labile_to_roots_gCm2day
+      } else if (any(check_list == "alloc_roots_gCm2day")) {
+          states_all$combined_alloc_roots_gCm2day = states_all$alloc_roots_gCm2day
+          states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_alloc_roots_gCm2day
+          states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_alloc_roots_gCm2day
+      } else {
+          stop("Error, CARDAMOM cannnot determine where C allocation roots has come from")
+      }
+  }
+  # The total allocation of C to the wood pool can, depending on model,
+  # be the combined total of direct allocation and that via a labile pool.
+  # For many comparison we will need their combined total.
+  if (any(check_list == "alloc_wood_gCm2day") &&
+      any(check_list == "labile_to_wood_gCm2day")) {
+      states_all$combined_alloc_wood_gCm2day = states_all$alloc_wood_gCm2day + states_all$labile_to_wood_gCm2day
+      states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_alloc_wood_gCm2day + states_all$mean_labile_to_wood_gCm2day
+      states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_alloc_wood_gCm2day + states_all$mean_annual_labile_to_wood_gCm2day
+  } else {
+      if (any(check_list == "labile_to_wood_gCm2day")) {
+          states_all$combined_alloc_wood_gCm2day = states_all$labile_to_wood_gCm2day
+          states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_labile_to_wood_gCm2day
+          states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_labile_to_wood_gCm2day
+      } else if (any(check_list == "alloc_wood_gCm2day")) {
+          states_all$combined_alloc_wood_gCm2day = states_all$alloc_wood_gCm2day
+          states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_alloc_wood_gCm2day
+          states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_alloc_wood_gCm2day
+      } else {
+          stop("Error, CARDAMOM cannnot determine where C allocation wood has come from")
+      }
+  }        
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 
@@ -542,19 +584,36 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_alloc_labile_gCm2day = quantile(states_all$mean_alloc_labile_gCm2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_alloc_labile_gCm2day = apply(states_all$mean_annual_alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
+      site_output$outflux_labile_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
       site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
       site_output$FireFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
       site_output$HarvestFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
       site_output$GRAZINGFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
-      # Check for the possible loss pathways
+      # Check for the possible loss pathways from labile, assumes that foliage is the most likely pool to come from labile
       if (any(check_list == "labile_to_foliage_gCm2day")) {
           site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_labile_to_foliage_gCm2day = quantile(states_all$mean_labile_to_foliage_gCm2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_labile_to_foliage_gCm2day = apply(states_all$mean_annual_labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output for the outflux and later for natural turnover
           site_output$NaturalFractionOfTurnover_labile = states_all$labile_to_foliage_gCm2day
-          # Begin accumulating the total output
-          site_output$outflux_labile_gCm2day = states_all$labile_to_foliage_gCm2day
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_foliage_gCm2day 
       }
+      if (any(check_list == "labile_to_roots_gCm2day")) {
+          site_output$labile_to_roots_gCm2day = apply(states_all$labile_to_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_labile_to_roots_gCm2day = quantile(states_all$mean_labile_to_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_labile_to_roots_gCm2day = apply(states_all$mean_annual_labile_to_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output
+          site_output$NaturalFractionOfTurnover_labile = site_output$NaturalFractionOfTurnover_labile + states_all$labile_to_roots_gCm2day          
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_roots_gCm2day
+      }
+      if (any(check_list == "labile_to_wood_gCm2day")) {
+          site_output$labile_to_wood_gCm2day = apply(states_all$labile_to_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_labile_to_wood_gCm2day = quantile(states_all$mean_labile_to_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_labile_to_wood_gCm2day = apply(states_all$mean_annual_labile_to_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output
+          site_output$NaturalFractionOfTurnover_labile = site_output$NaturalFractionOfTurnover_labile + states_all$labile_to_wood_gCm2day          
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_wood_gCm2day
+      }      
       # Other natural flux pathways should really go here before disturbance related
       if (any(check_list == "FIREemiss_labile_gCm2day")) {
           site_output$FIREemiss_labile_gCm2day = apply(states_all$FIREemiss_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -733,6 +792,10 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
 
   # Fine roots related pool, change, input and output variables
   if (any(check_list == "roots_gCm2")) {
+      # A combined total of C to fine roots must always exist
+      site_output$combined_alloc_roots_gCm2day = apply(states_all$combined_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_combined_alloc_roots_gCm2day = quantile(states_all$mean_combined_alloc_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_annual_combined_alloc_roots_gCm2day = apply(states_all$mean_annual_combined_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Assign pool to site_output
       site_output$roots_gCm2 = apply(states_all$roots_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_roots_gCm2 = quantile(states_all$mean_roots_gCm2, prob=num_quantiles, na.rm = na_flag)
@@ -763,7 +826,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       if (any(check_list == "alloc_roots_gCm2day")) {
           site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_roots_gCm2day = quantile(states_all$mean_alloc_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
-          site_output$mean_annual_alloc_roots_gCm2day = apply(states_all$mean_annual_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_alloc_roots_gCm2day = apply(states_all$mean_annual_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)      
+      } else {
+          site_output$alloc_roots_gCm2day = array(0, dim = dim(site_output$roots_gCm2))
+          site_output$mean_alloc_roots_gCm2day = array(0, dim = length(site_output$mean_roots_gCm2))
+          site_output$mean_annual_alloc_roots_gCm2day = array(0, dim = dim(site_output$mean_annual_roots_gCm2))
       }
       if (any(check_list == "roots_to_litter_gCm2day")) {
           site_output$roots_to_litter_gCm2day = apply(states_all$roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -848,6 +915,10 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
 
   # Wood related pool, change, input and output variables
   if (any(check_list == "wood_gCm2")) {
+      # A combined total of C to foliage must always exist
+      site_output$combined_alloc_wood_gCm2day = apply(states_all$combined_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_combined_alloc_wood_gCm2day = quantile(states_all$mean_combined_alloc_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_annual_combined_alloc_wood_gCm2day = apply(states_all$mean_annual_combined_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Assign pool to site_output
       site_output$wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_wood_gCm2 = quantile(states_all$mean_wood_gCm2, prob=num_quantiles, na.rm = na_flag)
@@ -866,11 +937,15 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$FireFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
       site_output$HarvestFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
       site_output$GRAZINGFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
-      # Check for the possible pathways
+      # Check how we assign wood C
       if (any(check_list == "alloc_wood_gCm2day")) {
           site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_wood_gCm2day = quantile(states_all$mean_alloc_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_alloc_wood_gCm2day = apply(states_all$mean_annual_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      } else {
+          site_output$alloc_wood_gCm2day = array(0, dim = dim(site_output$wood_gCm2))
+          site_output$mean_alloc_wood_gCm2day = array(0, dim = length(site_output$mean_wood_gCm2))
+          site_output$mean_annual_alloc_wood_gCm2day = array(0, dim = dim(site_output$mean_annual_wood_gCm2))
       }
       if (any(check_list == "wood_to_litter_gCm2day")) {
           site_output$wood_to_litter_gCm2day = apply(states_all$wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)

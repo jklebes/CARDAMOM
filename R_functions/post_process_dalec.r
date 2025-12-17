@@ -197,9 +197,20 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   }
 
   # Determine whether have have both mean transit time and allocation to wood
-  if (any(check_list == "MTT_wood_years") && any(check_list == "alloc_wood_gCm2day")) {
-      # Multi-use variable
-      ensAwood = rowMeans(states_all$alloc_wood_gCm2day)
+  if (any(check_list == "MTT_wood_years") && (any(check_list == "alloc_wood_gCm2day") || any(check_list == "labile_to_wood_gCm2day"))) {
+      
+      # Determine where the carbon inputs are coming from
+      if (any(check_list == "alloc_wood_gCm2day") & any(check_list == "alloc_wolabile_to_wood_gCm2dayod_gCm2day")) {
+          # Multi-use variable
+          ensAwood = rowMeans(states_all$alloc_wood_gCm2day+states_all$labile_to_wood_gCm2day)
+      } else if (any(check_list == "alloc_wood_gCm2day")) {
+          # Multi-use variable
+          ensAwood = rowMeans(states_all$alloc_wood_gCm2day)
+      } else if (any(check_list == "labile_to_wood_gCm2day")){
+          # Multi-use variable
+          ensAwood = rowMeans(states_all$labile_to_wood_gCm2day)
+      }
+
       # As both exist determine their correlations with parameters...
       states_all$MTT_wood_years_parameter_correlation = cor(tmp,states_all$MTT_wood_years)
       states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,ensAwood)
@@ -266,6 +277,11 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       if (any(check_list == "alloc_wood_gCm2day")) {
           states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$alloc_wood_gCm2day))
       }
+      # If Mean mean allocation to wood is provided generate a correlation estimate
+      if (any(check_list == "labile_to_wood_gCm2day")) {
+          states_all$NPP_wood_gCm2day_parameter_correlation = cor(tmp,rowMeans(states_all$labile_to_wood_gCm2day))
+      }
+
   } # Both MTT wood and alloc_wood present?
 
   if (any(check_list == "MTT_som_years") == TRUE) {
