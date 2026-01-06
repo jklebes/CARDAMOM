@@ -199,7 +199,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of model parameters to be optimised
     nopools  = array(8,dim=c(length(ctessel_pft)))
     nopars   = array(36,dim=c(length(ctessel_pft)))
-    nofluxes = array(54,dim=c(length(ctessel_pft)))
+    nofluxes = array(55,dim=c(length(ctessel_pft)))
     nodiags  = array(20,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R1.007",shortname="DALEC.7.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.019" | modelname == "DALEC.19.") {
@@ -308,9 +308,9 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(8,dim=c(length(ctessel_pft)))
-    nopars=array(46,dim=c(length(ctessel_pft)))
-    nofluxes=array(34,dim=c(length(ctessel_pft)))
-    nodiags=array(20,dim=c(length(ctessel_pft)))
+    nopars=array(40,dim=c(length(ctessel_pft)))
+    nofluxes=array(55,dim=c(length(ctessel_pft)))
+    nodiags=array(21,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P3.R1.009",shortname = "DALEC9.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.008" | modelname == "DALEC.8.") {
     # information contains is
@@ -318,9 +318,9 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(43,dim=c(length(ctessel_pft)))
-    nofluxes=array(25,dim=c(length(ctessel_pft)))
-    nodiags=array(20,dim=c(length(ctessel_pft)))
+    nopars=array(39,dim=c(length(ctessel_pft)))
+    nofluxes=array(55,dim=c(length(ctessel_pft)))
+    nodiags=array(21,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P3.R1.008",shortname = "DALEC.8.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC_1005" | modelname == "DALEC.27.") {
     # information contains is

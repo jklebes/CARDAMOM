@@ -148,7 +148,6 @@ module MODEL_PARAMETERS
     ! of max depth
     PI%parmin(26) = 100d0
     PI%parmax(26) = 2500d0 !500d0
-
     ! BUCKET - maximum rooting depth
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0

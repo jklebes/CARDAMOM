@@ -24,7 +24,7 @@
 !
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A1.C1.D2.F2.H2.P1 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C1.D2.F2.H2.P1.R1 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -556,11 +556,11 @@ module model_likelihood_module
  !   Fin_yr2(4)  = FT_yr2(7)
  !   Fout_yr2(4) = FT_yr2(11)+FT_yr2(21)+FT_yr2(27)+FT_yr2(37)+FT_yr2(44)
     ! litter
-    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)
+    Fin(5)  = FT(10)+FT(12)+FT(24)+FT(25)+FT(26)+FT(41)+FT(42)+FT(43)
     Fout(5) = FT(13)+FT(15)+FT(22)+FT(28)+FT(38)
-    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)
+    Fin_yr1(5)  = FT_yr1(10)+FT_yr1(12)+FT_yr1(24)+FT_yr1(25)+FT_yr1(26)+FT_yr1(41)+FT_yr1(42)+FT_yr1(43)
     Fout_yr1(5) = FT_yr1(13)+FT_yr1(15)+FT_yr1(22)+FT_yr1(28)+FT_yr1(38)
-!    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)
+!    Fin_yr2(5)  = FT_yr2(10)+FT_yr2(12)+FT_yr2(24)+FT_yr2(25)+FT_yr2(26)+FT_yr2(41)+FT_yr2(42)+FT_yr2(43)
 !    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(38)
     ! som
     Fin(6)  = FT(15)+FT(27)+FT(28)+FT(31)+FT(33)
@@ -578,7 +578,7 @@ module model_likelihood_module
 !    Fin_yr2(7)  = FT_yr2(52)
 !    Fout_yr2(7) = FT_yr2(47)+FT_yr2(46)+FT_yr2(51)
     ! litwood
-    Fin(8)  = FT(11)
+    Fin(8)  = FT(11)+FT(44)
     Fout(8) = FT(30)+FT(31)+FT(32)+FT(33)+FT(39)
     Fin_yr1(8)  = FT_yr1(11)
     Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(32)+FT_yr1(33)+FT_yr1(39)

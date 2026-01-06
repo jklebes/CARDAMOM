@@ -317,7 +317,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.5) model.
+    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.6) model.
     ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
@@ -327,6 +327,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
+
+    ! Relevant references:
+    ! Bloom & Williams (2015), doi: 10.5194/bg-12-1299-2015
+    ! Smallman & Williams (2019), doi: 10.5194/gmd-12-2227-2019
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
 
     implicit none
 
@@ -358,6 +363,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
+    ! Modified later with the inclusion of CWD pool by TLS Aug 2020    
     double precision :: burnt_area
     double precision, dimension(7) :: cf,rfac
     ! local deforestation related variables
@@ -949,7 +955,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
        ! total leaf litter production
        FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
-       ! total wood production
+       ! total wood litter production
        FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
        ! total root litter production
        FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
@@ -966,7 +972,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
        ! turnover of wood litter (mineralisation + decompostion)
-       tmp = POOLS(n,8)*(1d0-(1d0-FLUXES(n,2)*pars(35))**deltat(n))*deltat_1(n)
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(35))**deltat(n))*deltat_1(n)
        ! Partition litter turnover between mineralisation and decomposition
        ! respiration heterotrophic litwood ; decomposition of litwood to som
        FLUXES(n,30) = tmp * (1d0-pars(1)) ; FLUXES(n,31) = tmp * pars(1)
@@ -1116,7 +1122,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                FLUXES(n,36) = (roots_loss-roots_residue) * deltat_1(n)
                FLUXES(n,37) = (wood_loss-wood_residue) * deltat_1(n)
                FLUXES(n,38) = 0d0 ! litter extraction by harvest
-               FLUXES(n,39) = 0d0 ! wood litter extraction by harvest
+               FLUXES(n,39) = 0d0 ! wood litter extraction by harvest 
                FLUXES(n,40) = soil_loss_with_roots * deltat_1(n)
                ! Convert harvest related residue generations to daily rate for output
                FLUXES(n,41) = labile_residue * deltat_1(n)

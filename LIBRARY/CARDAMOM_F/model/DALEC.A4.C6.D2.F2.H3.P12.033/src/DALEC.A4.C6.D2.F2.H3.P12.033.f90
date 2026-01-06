@@ -1082,22 +1082,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !       as these are fundementally continuous processes.
        !
 
-       ! Reduce each by the previous timesteps allocation / losses.
+       ! Reduce growth by the previous timesteps losses and vice versa.
        ! The objective is to avoid large losses directly after large inputs
        ! and large growths directly after large losses
        ! NOTE: this intentionally excluded losses driven by disturbance
-       FLUXES(n,4)  = max(0d0,FLUXES(n,4)  - last_leaf_loss)
-       FLUXES(n,10) = max(0d0,FLUXES(n,10) - last_leaf_grow)
+       FLUXES(n,4)  = max(0d0,FLUXES(n,4)  - last_leaf_loss) ! Growth
+       FLUXES(n,10) = max(0d0,FLUXES(n,10) - last_leaf_grow) ! Loss
 
        ! Assume that only the largest flux of 
        ! growth and mortality occurs
-       if (FLUXES(n,4) > FLUXES(n,10)) then
-           ! Growth allocation is greater than loss desired
-           FLUXES(n,10) = 0d0
-       else 
-           ! Mortality allocation is greater than growth desired
-           FLUXES(n,4) = 0d0
-       end if
+       !if (FLUXES(n,4) > FLUXES(n,10)) then
+       !    ! Growth allocation is greater than loss desired
+       !    FLUXES(n,10) = 0d0
+       !else 
+       !    ! Mortality allocation is greater than growth desired
+       !    FLUXES(n,4) = 0d0
+       !end if
        ! Store canopy growth and loss information for the next time step
        last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4) 
 
@@ -3740,7 +3740,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   leafW_min, & ! wSWP at which leaf growth fully suppressed (MPa)
                                   leafW_max, & ! wSWP at which leaf growth suppression begins (MPa)
                                 LabBio_coef, & ! labile:biomass at which 50 % suppression applied (0-1)
-                           ncce_crit_foliar, & ! NCCE return for growth to go aheat (gC/gC/m2/day)
+                           ncce_crit_foliar, & ! NCCE return for growth to go ahead (gC/gC/m2/day)
                            available_labile, & ! labile C available to spend this time step (gC/m2)
                                     biomass, & ! foliage, fine root and wood pool (gC/m2)
                                ncce_gCm2day    ! Net Canopy Carbon export (gC/m2/day)
@@ -4226,7 +4226,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Store the existing LAI and canopy_scaling
            lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
            ! Now make multiple proposals at different extraction levels
-           i = 0 ; tmp = 0d0 ; ncce_positive = .true.
+           i = 0 ; tmp = 0d0 ; proposed_fall = 0d0 ; ncce_positive = .true.
            do while (ncce_positive) 
               i = i + 1
               ! Calculate the new LAI proposal
@@ -4252,7 +4252,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
               if (tmp(i) <= 0d0 .or. i == 5) ncce_positive = .false.  
            end do
            ! Scale to per-gC
-           tmp = tmp / min(foliage,proposed_fall * time)
+           tmp = tmp / min(foliage,proposed_fall * time) ! 
            ! Find the proposal that gives the maximum return 
            delta_ncce_gCgC = maxval(tmp(1:i)) 
            ! Lose leaves if that will give a positive return, 
@@ -4278,8 +4278,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                !if (ncce_gCm2day < 0d0) foliage_litter = min(foliage,ncce_gCm2day * (-0.5d0))
            end if
            ! Convert to fractional loss and convert to gC/m2/day
-           foliage_litter = min(1d0,foliage_litter / foliage) &
-                          * foliage * (1d0-(1d0-foliage_litter)**time)/time
+           foliage_litter = min(1d0,foliage_litter / foliage) 
+           foliage_litter = foliage * (1d0-(1d0-foliage_litter)**time)/time
 
            ! Return initial values
            lai = lai_orig ; stomatal_conductance = gs_orig

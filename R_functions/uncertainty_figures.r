@@ -1482,7 +1482,8 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "FIREemiss_slowsom_gCm2day","HARVESTextracted_woodlitter_gCm2day",
                       "foliarlitter_gCm2","rootlitter_gCm2","woodlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
                       "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
-                      "labile_to_wood_gCm2day")
+                      "labile_to_wood_gCm2day","foliar_growth_limitation_gradient","foliage_leafP_limitation","foliage_leafV_limitation",
+                      "gpp_grow_gCgC")
 
 
    for (p in seq(1, length(list_variables))) {

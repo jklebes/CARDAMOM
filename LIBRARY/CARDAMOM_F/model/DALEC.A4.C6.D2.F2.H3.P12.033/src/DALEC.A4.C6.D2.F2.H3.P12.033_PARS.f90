@@ -123,11 +123,11 @@ module MODEL_PARAMETERS
     PI%parmax(14) = 10d0 
 
     ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
-    PI%parmin(15) =-0.1d0 ! allow losses if losses are small negative, accounts for lack of leaf aging model
-    PI%parmax(15) = 0.1d0
+    PI%parmin(15) =-0.2d0 ! allow losses if losses are small negative, accounts for lack of leaf aging model
+    PI%parmax(15) = 0.2d0
     ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
     PI%parmin(16) = 0d0
-    PI%parmax(16) = 0.1d0
+    PI%parmax(16) = 0.2d0
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
