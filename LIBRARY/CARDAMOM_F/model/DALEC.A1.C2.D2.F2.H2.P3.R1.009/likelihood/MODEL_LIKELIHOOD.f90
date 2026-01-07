@@ -586,21 +586,23 @@ module model_likelihood_module
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(39)
 !    Fin_yr2(6)  = FT_yr2(15)+FT_yr2(27)+FT_yr2(28)+FT_yr2(31)+FT_yr2(45)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(39)
+    ! litwood
+    Fin(7)  = FT(11)+FT(43)
+    Fout(7) = FT(30)+FT(31)+FT(38)+FT(44)+FT(45)
+    Fin_yr1(7)  = FT_yr1(11)+FT_yr1(43)
+    Fout_yr1(7) = FT_yr1(30)+FT_yr1(31)+FT_yr1(38)+FT_yr1(44)+FT_yr1(45)
+!    Fin_yr2(7)  = FT_yr2(11)+FT_yr2(43)
+!    Fout_yr2(7) = FT_yr2(30)+FT_yr2(31)+FT_yr2(38)+FT_yr2(44)+FT_yr2(45)
+
     ! Surface water pool (0-30cm)
     ! 52 = infiltrated, 47 = soil evaporation, 46 = transpiration from top soil, 51 = drainage from top soil
-    Fin(7)  = FT(52) 
-    Fout(7) = FT(47)+FT(46)+FT(51) 
-    Fin_yr1(7)  = FT_yr1(52) 
-    Fout_yr1(7) = FT_yr1(47)+FT_yr1(46)+FT_yr1(51) 
-!    Fin_yr2(7)  = FT_yr2(52)
-!    Fout_yr2(7) = FT_yr2(47)+FT_yr2(46)+FT_yr2(51)
-    ! litwood
-    Fin(8)  = FT(11)+FT(43)
-    Fout(8) = FT(30)+FT(31)+FT(38)+FT(44)+FT(45)
-    Fin_yr1(8)  = FT_yr1(11)+FT_yr1(43)
-    Fout_yr1(8) = FT_yr1(30)+FT_yr1(31)+FT_yr1(38)+FT_yr1(44)+FT_yr1(45)
-!    Fin_yr2(8)  = FT_yr2(11)+FT_yr2(43)
-!    Fout_yr2(8) = FT_yr2(30)+FT_yr2(31)+FT_yr2(38)+FT_yr2(44)+FT_yr2(45)
+    Fin(8)  = FT(52) 
+    Fout(8) = FT(47)+FT(46)+FT(51) 
+    Fin_yr1(8)  = FT_yr1(52) 
+    Fout_yr1(8) = FT_yr1(47)+FT_yr1(46)+FT_yr1(51) 
+!    Fin_yr2(8)  = FT_yr2(52)
+!    Fout_yr2(8) = FT_yr2(47)+FT_yr2(46)+FT_yr2(51)
+
 
     !
     ! Begin EDCs here
