@@ -969,7 +969,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! respiration heterotrophic som
        FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
        ! turnover of wood litter (mineralisation + decompostion)
-       tmp = POOLS(n,8)*(1d0-(1d0-FLUXES(n,2)*pars(16))**deltat(n))*deltat_1(n)
+       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(16))**deltat(n))*deltat_1(n)
        ! Partition litter turnover between mineralisation and decomposition
        ! respiration heterotrophic litwood ; decomposition of litwood to som
        FLUXES(n,30) = tmp * (1d0-pars(1)) ; FLUXES(n,31) = tmp * pars(1)
@@ -3453,6 +3453,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! If non-economical do not grow                               
                if (delta_gpp_gCgC < gpp_return_threshold) then
                    alloc_leaf_fraction = 0d0 ; alloc_leaf_gCm2day = 0d0
+               else
+                   ! Rescale to the per day flux to match the model timestep
+                   alloc_leaf_gCm2day = alloc_leaf_gCm2day / time
                end if
                ! Return initial values
                lai = lai_orig ; stomatal_conductance = gs_orig
@@ -3471,7 +3474,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Estimate the fractional loss rate of foliage to litter
            leaf_litter_fraction = potential_foliage_turnover*(1d0-gsi(step))
            ! Estimate the absolute flux value loss of foliage to litter
-           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)
+           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
        end if ! gsi_gradient > leaf_phenology_threshold .and. available_labile > 0
 

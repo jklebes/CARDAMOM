@@ -247,10 +247,10 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # The model name
     # Number of met parameters
     # Number of model parameters to be optimised
-    nopools=array(7,dim=c(length(ctessel_pft)))
-    nopars=array(48,dim=c(length(ctessel_pft)))
-    nofluxes=array(25,dim=c(length(ctessel_pft)))
-    nodiags=array(20,dim=c(length(ctessel_pft)))
+    nopools=array(8,dim=c(length(ctessel_pft)))
+    nopars=array(43,dim=c(length(ctessel_pft)))
+    nofluxes=array(55,dim=c(length(ctessel_pft)))
+    nodiags=array(21,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H1.P4.R2.010",shortname = "DALEC.10.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.011" | modelname == "DALEC.11.") {
     # information contains is
@@ -258,9 +258,9 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools=array(8,dim=c(length(ctessel_pft)))
-    nopars=array(49,dim=c(length(ctessel_pft)))
-    nofluxes=array(34,dim=c(length(ctessel_pft)))
-    nodiags=array(20,dim=c(length(ctessel_pft)))
+    nopars=array(44,dim=c(length(ctessel_pft)))
+    nofluxes=array(55,dim=c(length(ctessel_pft)))
+    nodiags=array(21,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P4.R2.011", shortname="DALEC.11.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.023" | modelname == "DALEC.23.") {
     # information contains is
@@ -311,7 +311,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(40,dim=c(length(ctessel_pft)))
     nofluxes=array(55,dim=c(length(ctessel_pft)))
     nodiags=array(21,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P3.R1.009",shortname = "DALEC9.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
+    cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P3.R1.009",shortname = "DALEC.9.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.008" | modelname == "DALEC.8.") {
     # information contains is
     # The model name

@@ -1491,16 +1491,12 @@ module model_likelihood_module
 
     ! Initial soil water condition
     if (DATAin%otherpriors(1) > -9998) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (DATAin%M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (DATAin%M_POOLS(1,8) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(2) > -9998) then
-        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
-        ! scaled by the total litter pool. This is based on the turnover being common.
         mod = sum(DATAin%M_FLUXES(1:DATAin%nodays,3)) / sum(DATAin%M_FLUXES(1:DATAin%nodays,1)) ! sum(Rauto) / sum(GPP)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(2)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(2),DATAin%otherpriorunc(2),dummy_lag,dummy_scaling,mod))

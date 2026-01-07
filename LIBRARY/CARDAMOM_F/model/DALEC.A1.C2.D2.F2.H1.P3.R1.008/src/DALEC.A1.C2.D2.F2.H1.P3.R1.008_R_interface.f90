@@ -315,7 +315,7 @@ subroutine rdalec8(output_dim,MTT_dim,SS_dim &
      ! Once the canopy has closes the inputs to the live biomass are stable
      ! and can thus be estimated from the simulated inputs
      out_var3(i,1) = sum(FLUXES(:,5)) ! Labile
-     out_var3(i,2) = sum(FLUXES(:,4)+FLUXES(:,8)) ! Foliage
+     out_var3(i,2) = sum(FLUXES(:,8)) ! Foliage
      out_var3(i,3) = sum(FLUXES(:,6)) ! Fine root
      out_var3(i,4) = sum(FLUXES(:,7)) ! Wood
      out_var3(i,5) = sum(FLUXES(:,10)+FLUXES(:,12)+ &
