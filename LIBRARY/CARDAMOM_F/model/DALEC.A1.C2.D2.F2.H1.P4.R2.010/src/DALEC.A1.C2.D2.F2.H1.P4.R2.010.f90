@@ -974,7 +974,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        available_labile = max(0d0, POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,4)) * deltat(n)))
        ! Do plant allocation
        call plant_canopy_phenology(nodays, gsi_lag_steps, n, deltat(n),                   & ! Timing
-                                   met(n,10), met(n,11), met(n,12),                       & ! GSI forcings
+                                   met(10,n), met(11,n), met(12,n),                     & ! GSI forcings
                                    pars(34), pars(35), pars(36), pars(37),                & ! GSI parameters 
                                    pars(38), pars(39), pars(14), pars(12), pars(5),       & ! 
                                    pars(17), pars(15), available_labile, POOLS(n,2),      & ! To calculate GPP return

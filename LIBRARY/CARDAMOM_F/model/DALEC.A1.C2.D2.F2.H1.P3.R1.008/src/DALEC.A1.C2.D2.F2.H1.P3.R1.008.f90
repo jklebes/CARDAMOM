@@ -903,7 +903,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
            FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
            ! Estimate the ratio of leaf internal to ambient CO2 concentrations
-           DIAGS(n,4) = ci / co2       
+           DIAGS(n,4) = ci / co2     
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
@@ -937,7 +937,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
        ! Do plant allocation
        call plant_canopy_phenology(nodays, gsi_lag_steps, n, deltat(n),                 & ! Timing
-                                   met(n,10), met(n,11), met(n,12),                     & ! GSI forcings
+                                   met(10,n), met(11,n), met(12,n),                     & ! GSI forcings
                                    pars(34), pars(35), pars(36), pars(37),              & ! GSI parameters 
                                    pars(38), pars(39), pars(14), pars(12), pars(5),     & ! 
                                    pars(17), pars(15), available_labile, POOLS(n,2),    & ! To calculate GPP return
@@ -3432,7 +3432,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! Store the existing LAI and canopy_scaling
                lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
                ! Calculate the total time step investment
-               alloc_leaf_gCm2day = available_labile * (1d0-(1d0-alloc_leaf_fraction)**time)
+               alloc_leaf_gCm2day = available_labile * ((1d0-(1d0-alloc_leaf_fraction)**time) / time)
                ! Calculate the new LAI based C investment, less allocation to growth respiration
                lai = lai + ((alloc_leaf_gCm2day * one_Rg_fraction) / lca)
                ! Update the shortwave radiation
