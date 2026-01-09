@@ -1142,7 +1142,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
           PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
           #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
-          PARPRIORS[42] = 11.197440                        ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+          PARPRIORS[40] = 11.197440                        ; PARPRIORUNC[40] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
           PARPRIORS[43] = 275.1452                         ; PARPRIORUNC[43] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
@@ -1176,7 +1176,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
           PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
           #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
-          PARPRIORS[43] = 11.197440                        ; PARPRIORUNC[43] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
+          PARPRIORS[41] = 11.197440                        ; PARPRIORUNC[41] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
           PARPRIORS[44] = 275.1452                         ; PARPRIORUNC[44] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)

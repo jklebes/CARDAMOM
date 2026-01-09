@@ -1304,7 +1304,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) then
+        acm_gpp_stage_2 = 0d0 ; ci = 0d0
+    end if
 
     ! don't forget to return
     return
@@ -1413,11 +1415,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 ! assume stomatal conductance is the minimum and move on.
                 stomatal_conductance = minimum_conductance                
             else
-
                 ! In all other cases iterate
                 stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
                                               find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
-
             end if
 
     else

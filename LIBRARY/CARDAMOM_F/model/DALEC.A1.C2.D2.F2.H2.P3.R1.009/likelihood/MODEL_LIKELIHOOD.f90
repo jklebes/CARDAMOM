@@ -316,7 +316,7 @@ module model_likelihood_module
         print*,local_fluxes(1,:)
         print*,"First time step for all fluxes in run 2"
         print*,DATAin%M_FLUXES(1,:)
-        stop
+        if (pool_error /= pool_error .or. flux_error /= flux_error) stop
     end if
 
 !    ! Commented out to limit error messages, but useful for diagnosis
@@ -602,7 +602,6 @@ module model_likelihood_module
     Fout_yr1(8) = FT_yr1(47)+FT_yr1(46)+FT_yr1(51) 
 !    Fin_yr2(8)  = FT_yr2(52)
 !    Fout_yr2(8) = FT_yr2(47)+FT_yr2(46)+FT_yr2(51)
-
 
     !
     ! Begin EDCs here
