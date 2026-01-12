@@ -157,10 +157,10 @@ module MODEL_PARAMETERS
     PI%parmin(13) = 0.05d0
     PI%parmax(13) = 0.5d0
 
-    ! Canopy GSI phenology threshold
-    PI%parmin(14) = -1d-3
-    PI%parmax(14) =  1d-3
-    ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
+    ! Canopy GSI phenology gradient threshold
+    PI%parmin(14) = -1d-2
+    PI%parmax(14) =  1d-2
+    ! NCCE return on new Cfol investment (gCperGPP per gCnewfol)
     PI%parmin(15) = 0.001d0
     PI%parmax(15) = 0.1d0
 
