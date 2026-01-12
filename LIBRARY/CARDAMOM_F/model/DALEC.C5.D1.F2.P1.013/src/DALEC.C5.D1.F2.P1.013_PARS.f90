@@ -59,8 +59,6 @@ module MODEL_PARAMETERS
 
     implicit none
 
-!    PI%npars=23;
-
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
     ! 22/11/2019 - try not to lose this information as it is needed for comparability
 

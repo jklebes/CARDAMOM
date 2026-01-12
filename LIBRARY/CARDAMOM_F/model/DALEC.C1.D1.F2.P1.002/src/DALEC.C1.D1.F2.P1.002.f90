@@ -482,7 +482,7 @@ public :: CARBON_MODEL     &
       !
 
       ! Labile release
-      FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+      FLUXES(n,8)  = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
       ! Leaf litter production
       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
       ! Wood litter production
@@ -610,24 +610,6 @@ public :: CARBON_MODEL     &
           end if ! C_total > 0d0
 
       endif ! end deforestation info
-
-! TLS: a modified version of the original model which has now been removed 31/03/2022
-!      The replacement provides different scenarios of what is being extracted (e.g. above vs below)
-!      and the re-allocation of C to be either extracted or litter / residues remaining in system
-!       ! Remove biomass if necessary
-!       if (met(8,n) > 0d0) then
-!           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
-!           if (allocated(extracted_C)) then
-!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
-!           endif
-!           POOLS(n+1,1) = tmp &
-!                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
-!!           POOLS(n+1,1) = max(pars(18),tmp &
-!!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
-!           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
-!           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
-!           ! NOTE: fine root is left in system this is an issue...
-!       end if
 
       !!!!!!!!!!
       ! Impose fire
@@ -812,7 +794,7 @@ public :: CARBON_MODEL     &
     return
 
   end function ospolynomial
-!
-!--------------------------------------------------------------------
-!
+  !
+  !--------------------------------------------------------------------
+  !
 end module CARBON_MODEL_MOD

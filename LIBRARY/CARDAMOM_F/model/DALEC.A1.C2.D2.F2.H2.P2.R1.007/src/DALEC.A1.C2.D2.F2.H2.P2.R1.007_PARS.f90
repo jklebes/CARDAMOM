@@ -220,7 +220,6 @@ module MODEL_PARAMETERS
     PI%parmax(34) = 10000d0
 
   end subroutine pars_info
-
   !
   !------------------------------------------------------------------
   !

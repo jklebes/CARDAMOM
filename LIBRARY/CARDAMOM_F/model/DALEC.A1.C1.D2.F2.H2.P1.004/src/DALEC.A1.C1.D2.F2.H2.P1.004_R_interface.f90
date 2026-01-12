@@ -191,7 +191,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,63) = DIAGS(1:nodays,9)           ! mean LWP (MPa)
      ! Canopy aerodynamic diagnostics
      out_var1(i,1:nodays,64) = DIAGS(1:nodays,14)          ! Canopy area scaling as a function of light
-     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaking as a function of wind
+     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaling as a function of wind
 
      !
      ! Calculate long-term mean of out_var1

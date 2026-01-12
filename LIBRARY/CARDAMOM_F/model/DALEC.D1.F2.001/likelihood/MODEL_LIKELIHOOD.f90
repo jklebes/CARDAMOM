@@ -1065,7 +1065,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              1d0,DATAin%M_FLUXES(1:DATAin%nodays,27))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
+    ! Calculate log-likelihood for net biome exchange 
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
             + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
@@ -1197,7 +1197,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,27))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
+    ! Calculate log-likelihood for net biome exchange 
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
             + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
