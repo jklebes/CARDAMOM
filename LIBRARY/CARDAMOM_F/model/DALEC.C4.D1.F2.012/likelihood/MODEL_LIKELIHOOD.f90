@@ -217,18 +217,20 @@ module model_likelihood_module
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
+!! DEBUG CODE    
 !    tot_exp = 0d0
 !    do n = 1, EDCD%nedc
-!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
-!       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
+!       tot_exp = tot_exp+(1d0-EDCD%PASSFAIL(n))
+!       !if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
+!       if (sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc)) < 2 .and. EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
 !    end do ! checking EDCs
-!    ! for testing purposes, stop the model when start achieved
+!   ! for testing purposes, stop the model when start achieved
 !    if (sum(EDCD%PASSFAIL) == 100) then
-!        print*,"Found it!" ; stop
+!        print*,"Found it" ; stop
 !    endif
+!! DEBUG CODE
 
     ! convert to a probability
-!    ML_obs_out = -0.5d0*(tot_exp*10d0)*DATAin%EDC
     ML_obs_out = -5d0*tot_exp*DATAin%EDC
 
   end subroutine edc_model_likelihood
@@ -358,12 +360,11 @@ module model_likelihood_module
     DIAG = EDCD%DIAG
 
     ! estimate GPP allocation fractions
-    fauto = pars(2)
-    ffol = (1d0-fauto)*pars(3)
-    froot = (1d0-fauto-ffol)*pars(4)
+    fauto = pars(1)
+    ffol = (1d0-fauto)*pars(2)
 
     ! convert leaf life span in year to fraction per day
-    torfol = 1d0/(pars(5)*365.25d0)
+    torfol = 1d0/(pars(3)*365.25d0)
 
     ! set all EDCs to 1 (pass)
     EDCD%nedc = 100
@@ -377,12 +378,6 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(4) > torfol) then
        EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     end if
-
-    ! root turnover greater than som turnover at mean temperature
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(4) < (pars(5)*exp(pars(6)*meantemp)))) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
-    endif
-
 
     ! could always add more / remove some
 
@@ -430,7 +425,7 @@ module model_likelihood_module
     !double precision, dimension(nodays) :: tmp1, tmp2
     double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
                                             mean_pools, Fin, Fout, Rm, Rs, &
-                                            Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
+                                            Fin_yr1, Fout_yr1
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
 
     ! Steady State Attractor:
@@ -441,11 +436,12 @@ module model_likelihood_module
                                    EQF10 = log(10d0),   &
                                    EQF15 = log(15d0),   &
                                    EQF20 = log(20d0),   &
-                                  C_etol = 0.10d0         ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.20d0         ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
 
     ! update initial values
     DIAG = EDCD%DIAG
     EDC2 = 1
+    infi = 0d0
 
     ! derive mean pools for first year
     do n = 1, nopools
@@ -459,11 +455,8 @@ module model_likelihood_module
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
-!       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
-       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
-                       *deltat((steps_per_year+1):(steps_per_year*2)))
     end do
 
     ! get total in and out for each pool
@@ -490,7 +483,7 @@ module model_likelihood_module
     ! iterate to check whether Fin/Fout is within EQF limits
     do n = 1, nopools
        ! Restrict rates of increase
-       if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+       if (abs(log(Fin(n)/Fout(n))) > EQF10) then
            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
        end if
        ! Restrict rates from deviating unrealistically from the mean
@@ -518,8 +511,8 @@ module model_likelihood_module
        end do
 
        do n = 1, nofluxes
-          if (maxval(abs(M_FLUXES(:,n))) == abs(log(infi)) .or. &
-              minval(M_FLUXES(:,n)) /= minval(M_FLUXES(:,n))) then
+          if (maxval(abs(M_FLUXES(1:nodays,n))) == abs(log(infi)) .or. &
+              minval(M_FLUXES(1:nodays,n)) /= minval(M_FLUXES(1:nodays,n))) then
               EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
           endif
        end do

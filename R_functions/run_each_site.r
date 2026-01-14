@@ -65,6 +65,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
 #drivers$met[,8] = 0
 # Irrigation of crops experiment, a minimum of at least 10 mm/day
 #drivers$met[,7] = pmax(drivers$met[,7],100/86400)
+#drivers$met[,7] = drivers$met[,7]*0.1
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
       if (use_parallel == FALSE) {print("running model ensemble")}

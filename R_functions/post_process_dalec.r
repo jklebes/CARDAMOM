@@ -135,8 +135,6 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   ensGPP = rowMeans(states_all$gpp_gCm2day)
   ensRauto = rowMeans(states_all$rauto_gCm2day)
   ensRhet = rowMeans(states_all$rhet_gCm2day)
-  ensWood = rowMeans(states_all$wood_gCm2)
-  ensSOM = rowMeans(states_all$som_gCm2)
 
   # Determine correlations between parameter values and various state variables
   states_all$lai_parameter_correlation = cor(tmp,ensLAI)
@@ -145,6 +143,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   states_all$gpp_parameter_correlation = cor(tmp,ensGPP)
   states_all$rauto_parameter_correlation = cor(tmp,ensRauto)
   states_all$rhet_parameter_correlation = cor(tmp,ensRhet)
+  states_all$CiCa_parameter_correlation = cor(tmp,rowMeans(states_all$CiCa))
   # Avoid error flag when no fire
   if (any(check_list == "fire_gCm2day")) {
       if (max(as.vector(states_all$fire_gCm2day)) > 0) {
@@ -153,27 +152,48 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
           states_all$fire_parameter_correlation = array(0, dim = c(PROJECT$model$nopars[n],1))
       }
   }
-  # Avoid error flag when no fire
-  if (any(check_list == "CiCa")) {
-      states_all$CiCa_parameter_correlation = cor(tmp,rowMeans(states_all$CiCa))
-  }
   # Avoid error flag when no LWP
   if (any(check_list == "LWP_MPa")) {
       states_all$LWP_parameter_correlation = cor(tmp,rowMeans(states_all$LWP_MPa))
   }
 
-  # Correlations between LAI and key gross and net fluxes
+  # Do wood related against common state / flux variables
+  if (any(check_list == "wood_gCm2")) {
+      # Determine time varying difference since t=1
+      dCwood = rowMeans(states_all$wood_gCm2 - states_all$wood_gCm2[,1]) # difference in wood from initial
+      # Determine the time varying difference
+      ensWood = rowMeans(states_all$wood_gCm2)
+      # Correlation between wood stock and parameters
+      states_all$wood_parameter_correlation = cor(tmp,ensWood)
+      # Correlations with LAI
+      states_all$lai_m2m2_to_wood_gCm2_correlation = cor(ensLAI,ensWood)      
+      states_all$lai_m2m2_to_dCwood_gCm2_correlation = cor(ensLAI,dCwood)      
+      # Correlations with NBP
+      states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(ensNBP,ensWood)
+      states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(ensNBP,dCwood)
+  }
+  if (any(check_list == "som_gCm2")) {
+      # Determine time varying difference since t=1
+      dCsom = rowMeans(states_all$som_gCm2 - states_all$som_gCm2[,1]) # difference in som from initial  
+      # Determine time varying difference
+      ensSOM = rowMeans(states_all$som_gCm2)
+      # Correlation between som stock and parameters
+      states_all$som_parameter_correlation = cor(tmp,ensSOM)
+      # Correlations with LAI
+      states_all$lai_m2m2_to_som_gCm2_correlation = cor(ensLAI,ensSOM)
+      states_all$lai_m2m2_to_dCsom_gCm2_correlation = cor(ensLAI,dCsom)      
+      # Correlation with NBP
+      states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(ensNBP,dCsom)      
+      states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(ensNBP,ensSOM)
+  }
+
+  # Correlations between LAI and common gross and net fluxes
   states_all$lai_m2m2_to_GPP_gCm2day_correlation = cor(ensLAI,ensGPP)
   states_all$lai_m2m2_to_NEE_gCm2day_correlation = cor(ensLAI,ensNEE)
   states_all$lai_m2m2_to_NBP_gCm2day_correlation = cor(ensLAI,ensNBP)
   states_all$lai_m2m2_to_Rauto_gCm2day_correlation = cor(ensLAI,ensRauto)
   states_all$lai_m2m2_to_Rhet_gCm2day_correlation = cor(ensLAI,ensRhet)
-  states_all$lai_m2m2_to_wood_gCm2_correlation = cor(ensLAI,ensWood)
-  states_all$lai_m2m2_to_som_gCm2_correlation = cor(ensLAI,ensSOM)
-  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-  states_all$lai_m2m2_to_dCwood_gCm2_correlation = cor(ensLAI,rowMeans(dCbio))
-  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-  states_all$lai_m2m2_to_dCsom_gCm2_correlation = cor(ensLAI,rowMeans(dCbio))
+
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
       states_all$lai_m2m2_to_harvest_gCm2day_correlation = cor(ensLAI,rowMeans(states_all$harvest_gCm2day))
@@ -185,12 +205,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   states_all$NBP_gCm2day_to_lai_m2m2_correlation = cor(ensNBP,ensLAI)
   states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation = cor(ensNBP,ensRauto)
   states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation = cor(ensNBP,ensRhet)
-  states_all$NBP_gCm2day_to_wood_gCm2_correlation = cor(ensNBP,ensWood)
-  states_all$NBP_gCm2day_to_som_gCm2_correlation = cor(ensNBP,ensSOM)
-  dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-  states_all$NBP_gCm2day_to_dCwood_gCm2_correlation = cor(ensNBP,rowMeans(dCbio))
-  dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-  states_all$NBP_gCm2day_to_dCsom_gCm2_correlation = cor(ensNBP,rowMeans(dCbio))
+
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
       states_all$NBP_gCm2day_to_harvest_gCm2day_correlation = cor(ensNBP,rowMeans(states_all$harvest_gCm2day))
@@ -224,10 +239,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$NPP_wood_gCm2day_to_wood_gCm2_correlation = cor(ensAwood,ensWood)   
       states_all$NPP_wood_gCm2day_to_som_gCm2_correlation = cor(ensAwood,ensSOM)   
       states_all$NPP_wood_gCm2day_to_lai_m2m2_correlation = cor(ensAwood,ensLAI)   
-      dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$NPP_wood_gCm2day_to_dCwood_gCm2_correlation = cor(ensAwood,rowMeans(dCbio))         
-      dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      states_all$NPP_wood_gCm2day_to_dCsom_gCm2_correlation = cor(ensAwood,rowMeans(dCbio))         
+      states_all$NPP_wood_gCm2day_to_dCwood_gCm2_correlation = cor(ensAwood,dCwood)         
+      states_all$NPP_wood_gCm2day_to_dCsom_gCm2_correlation = cor(ensAwood,dCsom)         
       # NPP wood - fraction
       states_all$NPP_wood_fraction_to_GPP_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensGPP)
       states_all$NPP_wood_fraction_to_NEE_gCm2day_correlation = cor(states_all$NPP_wood_fraction,ensNEE)
@@ -236,10 +249,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$NPP_wood_fraction_to_wood_gCm2_correlation = cor(states_all$NPP_wood_fraction,ensWood)   
       states_all$NPP_wood_fraction_to_som_gCm2_correlation = cor(states_all$NPP_wood_fraction,ensSOM)   
       states_all$NPP_wood_fraction_to_lai_m2m2_correlation = cor(states_all$NPP_wood_fraction,ensLAI)     
-      dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$NPP_wood_fraction_to_dCwood_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(dCbio))         
-      dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      states_all$NPP_wood_fraction_to_dCsom_gCm2_correlation = cor(states_all$NPP_wood_fraction,rowMeans(dCbio))                   
+      states_all$NPP_wood_fraction_to_dCwood_gCm2_correlation = cor(states_all$NPP_wood_fraction,dCwood)         
+      states_all$NPP_wood_fraction_to_dCsom_gCm2_correlation = cor(states_all$NPP_wood_fraction,dCsom)                   
       # MTT wood
       states_all$MTT_wood_years_to_GPP_gCm2day_correlation = cor(states_all$MTT_wood_years,ensGPP)
       states_all$MTT_wood_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_wood_years,ensNEE)
@@ -248,25 +259,23 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$MTT_wood_years_to_wood_gCm2_correlation = cor(states_all$MTT_wood_years,ensWood)   
       states_all$MTT_wood_years_to_som_gCm2_correlation = cor(states_all$MTT_wood_years,ensSOM)   
       states_all$MTT_wood_years_to_lai_m2m2_correlation = cor(states_all$MTT_wood_years,ensLAI)      
-      dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$MTT_wood_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(dCbio))         
-      dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      states_all$MTT_wood_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_wood_years,rowMeans(dCbio))                            
+      states_all$MTT_wood_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_wood_years,dCwood)         
+      states_all$MTT_wood_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_wood_years,dCsom)                            
       # ...and with each other
       states_all$MTT_wood_years_to_NPP_wood_gCm2day_correlation = cor(states_all$MTT_wood_years,ensAwood)
       states_all$MTT_wood_years_to_NPP_wood_fraction_correlation = cor(states_all$MTT_wood_years,states_all$NPP_wood_fraction)
       states_all$MTT_wood_years_to_MTT_som_years_correlation = cor(states_all$MTT_wood_years,states_all$MTT_som_years)      
       # As MTT wood exists we must also be able to work out the correlations for change in wood over time
-      dCbio = rowMeans(states_all$wood_gCm2 - states_all$wood_gCm2[,1]) # difference in som from initial
-      states_all$dCwood_gCm2_to_gpp_gCm2day_correlation = cor(dCbio,ensGPP) 
-      states_all$dCwood_gCm2_to_rauto_gCm2day_correlation = cor(dCbio,ensRauto) 
-      states_all$dCwood_gCm2_to_nee_gCm2day_correlation = cor(dCbio,ensNEE)    
-      states_all$dCwood_gCm2_to_rhet_gCm2day_correlation = cor(dCbio,ensRhet)    
-      states_all$dCwood_gCm2_to_wood_gCm2_correlation = cor(dCbio,ensWood)          
-      states_all$dCwood_gCm2_to_som_gCm2_correlation = cor(dCbio,ensSOM)      
+      states_all$dCwood_gCm2_to_gpp_gCm2day_correlation = cor(dCwood,ensGPP) 
+      states_all$dCwood_gCm2_to_rauto_gCm2day_correlation = cor(dCwood,ensRauto) 
+      states_all$dCwood_gCm2_to_nee_gCm2day_correlation = cor(dCwood,ensNEE)    
+      states_all$dCwood_gCm2_to_rhet_gCm2day_correlation = cor(dCwood,ensRhet)    
+      states_all$dCwood_gCm2_to_wood_gCm2_correlation = cor(dCwood,ensWood)          
+      states_all$dCwood_gCm2_to_som_gCm2_correlation = cor(dCwood,ensSOM)      
       # Remove multi-use variable
       rm(ensAwood)
   } else {
+
       # Both are not present, so we will determine whether we can generate one of the correlation estimates
 
       # If Mean transit time for wood is provided generate a correlation estimate
@@ -294,24 +303,22 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$MTT_som_years_to_wood_gCm2_correlation = cor(states_all$MTT_som_years,ensWood)   
       states_all$MTT_som_years_to_som_gCm2_correlation = cor(states_all$MTT_som_years,ensSOM)   
       states_all$MTT_som_years_to_lai_m2m2_correlation = cor(states_all$MTT_som_years,ensLAI)      
-      dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,rowMeans(dCbio)) 
-      dCbio = rowMeans(states_all$som_gCm2 - states_all$som_gCm2[,1]) # difference in som from initial
-      states_all$MTT_som_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_som_years,dCbio)
+      states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,dCwood) 
+      states_all$MTT_som_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_som_years,dCsom)
       # As MTT som exists we must also be able to work out the correlations for change in som over time
       # Note reuse of dCbio
-      states_all$dCsom_gCm2_to_gpp_gCm2day_correlation = cor(dCbio,ensGPP) 
-      states_all$dCsom_gCm2_to_rauto_gCm2day_correlation = cor(dCbio,ensRauto) 
-      states_all$dCsom_gCm2_to_nee_gCm2day_correlation = cor(dCbio,ensNEE)    
-      states_all$dCsom_gCm2_to_rhet_gCm2day_correlation = cor(dCbio,ensRhet)    
-      states_all$dCsom_gCm2_to_wood_gCm2_correlation = cor(dCbio,ensWood)          
-      states_all$dCsom_gCm2_to_som_gCm2_correlation = cor(dCbio,ensSOM)
+      states_all$dCsom_gCm2_to_gpp_gCm2day_correlation = cor(dCsom,ensGPP) 
+      states_all$dCsom_gCm2_to_rauto_gCm2day_correlation = cor(dCsom,ensRauto) 
+      states_all$dCsom_gCm2_to_nee_gCm2day_correlation = cor(dCsom,ensNEE)    
+      states_all$dCsom_gCm2_to_rhet_gCm2day_correlation = cor(dCsom,ensRhet)    
+      states_all$dCsom_gCm2_to_wood_gCm2_correlation = cor(dCsom,ensWood)          
+      states_all$dCsom_gCm2_to_som_gCm2_correlation = cor(dCsom,ensSOM)
       tmp = rowMeans(states_all$wood_to_litter_gCm2day + states_all$litter_to_som_gCm2day)
-      states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCbio,tmp)
+      states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCsom,tmp)
   }   
 
   # Tidy multi-use variables
-  rm(ensLAI,ensNBP,ensNEE,ensGPP,ensRauto,ensRhet,ensWood,ensSOM)
+  rm(ensLAI,ensNBP,ensNEE,ensGPP,ensRauto,ensRhet)
 
   # Return back to user
   return(states_all)
@@ -330,6 +337,10 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,
 
   ###
   ## Comparison with assimilated observation - to what extent does the ensemble overlap?
+
+  # Check the list variables in states_all which we will be searching
+  check_list = names(states_all)
+
 
   ## Parameter prior informatoin
   # Initise array
@@ -477,7 +488,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,
   obs_id = 19 ; unc_id = obs_id+1 ; lag_id = unc_id+1
   # If there is a prior assign it to the first timestep of the observation timeseries
   if (drivers$parpriors[21] > 0) { drivers$obs[1,obs_id] = drivers$parpriors[21] ; drivers$obs[1,unc_id] = drivers$parpriorunc[21] }
-  if (any(drivers$obs[,obs_id] != -9999)) {
+  if (any(drivers$obs[,obs_id] != -9999) && any(check_list == "wood_gCm2")) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$wood_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)
@@ -514,7 +525,7 @@ assess_ensemble_fit_to_calibration_data<-function(states_all,parameters,drivers,
       drivers$obs[1,unc_id] = drivers$parpriorunc[23] 
       drivers$obs[1,lag_id] = 0
   }
-  if (any(drivers$obs[,obs_id] != -9999)) {
+  if (any(drivers$obs[,obs_id] != -9999) && any(check_list == "som_gCm2")) {
       # Loop through time to assess model overlap with observations
       nobs = 0 ; states_all$soil_assim_data_overlap_fraction = 0
       to_do = which(drivers$obs[,obs_id] != -9999)

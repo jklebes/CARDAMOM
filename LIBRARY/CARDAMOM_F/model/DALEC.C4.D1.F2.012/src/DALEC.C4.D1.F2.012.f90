@@ -227,7 +227,7 @@ public :: CARBON_MODEL     &
     gpppars(10) = 1d0 ! totaly hydraulic resistance
 
     ! assign acm parameters (see Fox et al., 2009)
-    constants(1) = pars(11) ! canopy efficiency
+    constants(1) = pars(7) ! canopy efficiency
     constants(2) = 0.0156935d0
     constants(3) = 4.22273d0
     constants(4) = 208.868d0
@@ -445,7 +445,7 @@ public :: CARBON_MODEL     &
           ! between above ground stem(+branches) and below ground coarse root.
           Crootcr = POOLS(n+1,2)*Crootcr_part(harvest_management)
           Cstem   = POOLS(n+1,2)-Crootcr
-
+ 
           ! Calculate the total loss from biomass pools
           ! We assume that fractional clearing always equals the fraction
           ! of foliage and above ground (stem) wood removal. However, we assume
@@ -455,7 +455,7 @@ public :: CARBON_MODEL     &
           stem_loss   = (Cstem * met(8,n))
           rootcr_loss = (Crootcr * rootcr_frac_removal(harvest_management) * met(8,n))
           wood_loss   =  stem_loss + rootcr_loss
-
+ 
           ! Transfer fraction of harvest waste to litter, wood litter or som pools.
           ! This includes explicit calculation of the stem and coarse root residues due
           ! to their potentially different treatments under management scenarios
@@ -527,7 +527,7 @@ public :: CARBON_MODEL     &
               POOLS(n+1,3) = POOLS(n+1,3) + (FLUXES(n,21) + FLUXES(n,22) - FLUXES(n,20)) * deltat(n)
 
               ! calculate ecosystem fire emissions (gC/m2/day)
-              FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)
+              FLUXES(n,17) = sum(FLUXES(n,18:20))
 
           end if ! Burned_area > 0
 
@@ -549,7 +549,7 @@ public :: CARBON_MODEL     &
 
     ! declare input variables
     double precision, intent(in) :: drivers(10) & ! acm input requirements
-                         ,constants(10) ! ACM parameters
+                                 ,constants(10)   ! ACM parameters
 
     ! declare local variables
     double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &

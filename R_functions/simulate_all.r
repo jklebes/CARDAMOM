@@ -6727,132 +6727,128 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.C5.D1.F2.P1.013") {
-    output_dim = 23 ; MTT_dim = 4 ; SS_dim = 4
-    dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
-    tmp=.Fortran( "rdalec13",output_dim=as.integer(output_dim)
-                            ,MTT_dim=as.integer(MTT_dim)
-                            ,SS_dim = as.integer(SS_dim)
-                            ,met=as.double(t(met))
-                            ,pars=as.double(pars_in)
-                            ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                            ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                            ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                            ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
-                            ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                   
-                            ,lat=as.double(lat)
-                            ,nopars=as.integer(PROJECT$model$nopars[site])
-                            ,nomet=as.integer(dim(met)[2])
-                            ,nofluxes=as.integer(PROJECT$model$nofluxes[site])
-                            ,nopools=as.integer(PROJECT$model$nopools[site])
-                            ,nodays=as.integer(dim(met)[1])
-                            ,nos_years=as.integer(noyears)
-                            ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1]))))
-                            ,nos_iter=as.integer(nos_iter) )
-    output = tmp$out_var1    ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
-    output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
-    output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))          
-    MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
-    SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
-    # Unload the current dalec shared object
-    dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
-    rm(tmp) ; gc()
-    # create output object
-    states_all=list(# Ecosystem fluxes
-                    gpp_gCm2day = output[,,1],
-                    mean_gpp_gCm2day = output_mean[,1],
-                    mean_annual_gpp_gCm2day = output_annual[,,1],
-                    rauto_gCm2day = output[,,2],
-                    mean_rauto_gCm2day = output_mean[,2],
-                    mean_annual_rauto_gCm2day = output_annual[,,2],
-                    rhet_dom_gCm2day = output[,,3],
-                    mean_rhet_dom_gCm2day = output_mean[,3],
-                    mean_annual_rhet_dom_gCm2day = output_annual[,,3],
-                    fire_gCm2day = output[,,4],
-                    mean_fire_gCm2day = output_mean[,4],
-                    mean_annual_fire_gCm2day = output_annual[,,4],
-                    # Internal fluxes
-                    alloc_foliage_gCm2day = output[,,5],
-                    mean_alloc_foliage_gCm2day = output_mean[,5],
-                    mean_annual_alloc_foliage_gCm2day = output_annual[,,5],
-                    alloc_labile_gCm2day = output[,,6],
-                    mean_alloc_labile_gCm2day = output_mean[,6],
-                    mean_annual_alloc_labile_gCm2day = output_annual[,,6],
-                    alloc_roots_wood_gCm2day = output[,,7],
-                    mean_alloc_roots_wood_gCm2day = output_mean[,7],
-                    mean_annual_alloc_roots_wood_gCm2day = output_annual[,,7],
-                    labile_to_foliage_gCm2day = output[,,8],
-                    mean_labile_to_foliage_gCm2day = output_mean[,8],
-                    mean_annual_labile_to_foliage_gCm2day = output_annual[,,8],
-                    foliage_to_litter_gCm2day = output[,,9],
-                    mean_foliage_to_litter_gCm2day = output_mean[,9],
-                    mean_annual_foliage_to_litter_gCm2day = output_annual[,,9],
-                    roots_wood_to_litter_gCm2day = output[,,10],
-                    mean_roots_wood_to_litter_gCm2day = output_mean[,10],
-                    mean_annual_roots_wood_to_litter_gCm2day = output_annual[,,10],
-                    # Disturbance fluxes
-                    FIREemiss_labile_gCm2day = output[,,11],
-                    mean_FIREemiss_labile_gCm2day = output_mean[,11],
-                    mean_annual_FIREemiss_labile_gCm2day = output_annual[,,11],
-                    FIRElitter_labile_gCm2day = output[,,12],
-                    mean_FIRElitter_labile_gCm2day = output_mean[,12],
-                    mean_annual_FIRElitter_labile_gCm2day = output_annual[,,12],
-                    FIREemiss_foliage_gCm2day = output[,,13],
-                    mean_FIREemiss_foliage_gCm2day = output_mean[,13],
-                    mean_annual_FIREemiss_foliage_gCm2day = output_annual[,,13],
-                    FIRElitter_foliage_gCm2day = output[,,14],
-                    mean_FIRElitter_foliage_gCm2day = output_mean[,14],
-                    mean_annual_FIRElitter_foliage_gCm2day = output_annual[,,14],
-                    FIREemiss_roots_wood_gCm2day = output[,,15],
-                    mean_FIREemiss_roots_wood_gCm2day = output_mean[,15],
-                    mean_annual_FIREemiss_roots_wood_gCm2day = output_annual[,,15],
-                    FIRElitter_roots_wood_gCm2day = output[,,16],
-                    mean_FIRElitter_roots_wood_gCm2day = output_mean[,16],
-                    mean_annual_FIRElitter_roots_wood_gCm2day = output_annual[,,16],
-                    FIREemiss_dom_gCm2day = output[,,17],
-                    mean_FIREemiss_dom_gCm2day = output_mean[,17],
-                    mean_annual_FIREemiss_dom_gCm2day = output_annual[,,17],
-                    # C pools (gC/m2)
-                    labile_gCm2 = output[,,18],
-                    mean_labile_gCm2 = output_mean[,18],
-                    mean_annual_labile_gCm2 = output_annual[,,18],
-                    foliage_gCm2 = output[,,19],
-                    mean_foliage_gCm2 = output_mean[,19],
-                    mean_annual_foliage_gCm2 = output_annual[,,19],
-                    roots_wood_gCm2 = output[,,20],
-                    mean_roots_wood_gCm2 = output_mean[,20],
-                    mean_annual_roots_wood_gCm2 = output_annual[,,20],
-                    dom_gCm2 = output[,,21],
-                    mean_dom_gCm2 = output_mean[,21],
-                    mean_annual_dom_gCm2 = output_annual[,,21],
-                    # Canopy (phenology) properties
-                    lai_m2m2 = output[,,22],
-                    mean_lai_m2m2 = output_mean[,22],
-                    mean_annual_lai_m2m2 = output_annual[,,22],
-                    CiCa = output[,,23],
-                    mean_CiCa = output_mean[,23],
-                    mean_annual_CiCa = output_annual[,,23],
-                    ## Aggregated variables
-                    # Mean Transit times
-                    MTT_labile_years = MTT_years[,1],
-                    MTT_foliage_years = MTT_years[,2],
-                    MTT_roots_wood_years = MTT_years[,3],
-                    MTT_dom_years = MTT_years[,4],
-                    # Steady state estimates
-                    SS_labile_gCm2 = SS_gCm2[,1],
-                    SS_foliage_gCm2 = SS_gCm2[,2],
-                    SS_roots_wood_gCm2 = SS_gCm2[,3],
-                    SS_dom_gCm2 = SS_gCm2[,4])
-    # Determine the NPP fraction of expressed NPP
-    # i.e. actual growth not GPP-Ra
-    NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
-                         states_all$alloc_foliage_gCm2day +
-                         states_all$alloc_roots_wood_gCm2day,1,mean)
-    NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
-                         apply(states_all$alloc_roots_wood_gCm2day,1,mean)) / NPP_fraction
-    states_all$NPP_foliage_fraction = NPP_fraction[,1]
-    states_all$NPP_roots_wood_fraction = NPP_fraction[,2]
-    # Tidy up variables
-    rm(output,MTT_years,SS_gCm2)
+      output_dim = 23 ; MTT_dim = 4 ; SS_dim = 4
+      dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
+      tmp=.Fortran( "rdalec13",output_dim=as.integer(output_dim)
+                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                              ,met=as.double(t(met))
+                              ,pars=as.double(pars_in)
+                              ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                              ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                              ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                              ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
+                              ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                    
+                              ,lat=as.double(lat)
+                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                              ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
+                              ,nos_years=as.integer(noyears)
+                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter))
+      output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
+      output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
+      output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))
+      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+     # Unload the current dalec shared object
+     dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
+     rm(tmp) ; gc()
+     # create output object
+     states_all=list(# Ecosystem fluxes
+                     gpp_gCm2day = output[,,1],
+                     mean_gpp_gCm2day = output_mean[,1],
+                     mean_annual_gpp_gCm2day = output_annual[,,1],
+                     rauto_gCm2day = output[,,2],
+                     mean_rauto_gCm2day = output_mean[,2],
+                     mean_annual_rauto_gCm2day = output_annual[,,2],
+                     rhet_dom_gCm2day = output[,,3],
+                     mean_rhet_dom_gCm2day = output_mean[,3],
+                     mean_annual_rhet_dom_gCm2day = output_annual[,,3],
+                     fire_gCm2day = output[,,4],
+                     mean_fire_gCm2day = output_mean[,4],
+                     mean_annual_fire_gCm2day = output_annual[,,4],
+                     # Internal fluxes
+                     alloc_foliage_gCm2day = output[,,5],
+                     mean_alloc_foliage_gCm2day = output_mean[,5],
+                     mean_annual_alloc_foliage_gCm2day = output_annual[,,5],
+                     alloc_labile_gCm2day = output[,,6],
+                     mean_alloc_labile_gCm2day = output_mean[,6],
+                     mean_annual_alloc_labile_gCm2day = output_annual[,,6],
+                     alloc_roots_wood_gCm2day = output[,,7],
+                     mean_alloc_roots_wood_gCm2day = output_mean[,7],
+                     mean_annual_alloc_roots_wood_gCm2day = output_annual[,,7],
+                     labile_to_foliage_gCm2day = output[,,8],
+                     mean_labile_to_foliage_gCm2day = output_mean[,8],
+                     mean_annual_labile_to_foliage_gCm2day = output_annual[,,8],
+                     foliage_to_litter_gCm2day = output[,,9],
+                     mean_foliage_to_litter_gCm2day = output_mean[,9],
+                     mean_annual_foliage_to_litter_gCm2day = output_annual[,,9],
+                     roots_wood_to_litter_gCm2day = output[,,10],
+                     mean_roots_wood_to_litter_gCm2day = output_mean[,10],
+                     mean_annual_roots_wood_to_litter_gCm2day = output_annual[,,10],
+                     # Disturbance fluxes
+                     FIREemiss_labile_gCm2day = output[,,11],
+                     mean_FIREemiss_labile_gCm2day = output_mean[,11],
+                     mean_annual_FIREemiss_labile_gCm2day = output_annual[,,11],
+                     FIRElitter_labile_gCm2day = output[,,12],
+                     mean_FIRElitter_labile_gCm2day = output_mean[,12],
+                     mean_annual_FIRElitter_labile_gCm2day = output_annual[,,12],
+                     FIREemiss_foliage_gCm2day = output[,,13],
+                     mean_FIREemiss_foliage_gCm2day = output_mean[,13],
+                     mean_annual_FIREemiss_foliage_gCm2day = output_annual[,,13],
+                     FIRElitter_foliage_gCm2day = output[,,14],
+                     mean_FIRElitter_foliage_gCm2day = output_mean[,14],
+                     mean_annual_FIRElitter_foliage_gCm2day = output_annual[,,14],
+                     FIREemiss_roots_wood_gCm2day = output[,,15],
+                     mean_FIREemiss_roots_wood_gCm2day = output_mean[,15],
+                     mean_annual_FIREemiss_roots_wood_gCm2day = output_annual[,,15],
+                     FIRElitter_roots_wood_gCm2day = output[,,16],
+                     mean_FIRElitter_roots_wood_gCm2day = output_mean[,16],
+                     mean_annual_FIRElitter_roots_wood_gCm2day = output_annual[,,16],
+                     FIREemiss_dom_gCm2day = output[,,17],
+                     mean_FIREemiss_dom_gCm2day = output_mean[,17],
+                     mean_annual_FIREemiss_dom_gCm2day = output_annual[,,17],
+                     # C pools (gC/m2)
+                     labile_gCm2 = output[,,18],
+                     mean_labile_gCm2 = output_mean[,18],
+                     mean_annual_labile_gCm2 = output_annual[,,18],
+                     foliage_gCm2 = output[,,19],
+                     mean_foliage_gCm2 = output_mean[,19],
+                     mean_annual_foliage_gCm2 = output_annual[,,19],
+                     roots_wood_gCm2 = output[,,20],
+                     mean_roots_wood_gCm2 = output_mean[,20],
+                     mean_annual_roots_wood_gCm2 = output_annual[,,20],
+                     dom_gCm2 = output[,,21],
+                     mean_dom_gCm2 = output_mean[,21],
+                     mean_annual_dom_gCm2 = output_annual[,,21],
+                     # Canopy (phenology) properties
+                     lai_m2m2 = output[,,22],
+                     mean_lai_m2m2 = output_mean[,22],
+                     mean_annual_lai_m2m2 = output_annual[,,22],
+                     CiCa = output[,,23],
+                     mean_CiCa = output_mean[,23],
+                     mean_annual_CiCa = output_annual[,,23],
+                     ## Aggregated variables
+                     # Mean Transit times
+                     MTT_labile_years = MTT_years[,1],
+                     MTT_foliage_years = MTT_years[,2],
+                     MTT_roots_wood_years = MTT_years[,3],
+                     MTT_dom_years = MTT_years[,4],
+                     # Steady state estimates
+                     SS_labile_gCm2 = SS_gCm2[,1],
+                     SS_foliage_gCm2 = SS_gCm2[,2],
+                     SS_roots_wood_gCm2 = SS_gCm2[,3],
+                     SS_dom_gCm2 = SS_gCm2[,4])
+     # Determine the NPP fraction of expressed NPP
+     # i.e. actual growth not GPP-Ra
+     NPP_fraction = apply(states_all$labile_to_foliage_gCm2day +
+                          states_all$alloc_foliage_gCm2day +
+                          states_all$alloc_roots_wood_gCm2day,1,mean)
+     NPP_fraction = cbind(apply(states_all$labile_to_foliage_gCm2day+states_all$alloc_foliage_gCm2day,1,mean),
+                          apply(states_all$alloc_roots_wood_gCm2day,1,mean)) / NPP_fraction
+     states_all$NPP_foliage_fraction = NPP_fraction[,1]
+     states_all$NPP_roots_wood_fraction = NPP_fraction[,2]
+     # Tidy up variables
+     rm(output,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.D1.F2.001") {
       output_dim = 37 ; MTT_dim = 5 ; SS_dim = 5
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
@@ -7040,7 +7036,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                             ,nomet=as.integer(dim(met)[2])
                             ,nofluxes=as.integer(PROJECT$model$nofluxes[site])
                             ,nopools=as.integer(PROJECT$model$nopools[site])
-                            ,nodays=as.integer(dim(met)[1])
+                            ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
                             ,nos_years=as.integer(noyears)
                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1]))))
                             ,nos_iter=as.integer(nos_iter) )

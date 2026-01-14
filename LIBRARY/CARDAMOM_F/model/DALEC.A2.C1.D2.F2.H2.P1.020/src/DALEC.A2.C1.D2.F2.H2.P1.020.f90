@@ -2112,8 +2112,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
     ! Estimate the mean leaf temperature as a result of net radiation update.
     ! This can only be attempted if the canopy release fraction (an empirical fit) is greater than
-    ! zero. Otherwise the leafT defaults to infinity which is unrealistic.
-    if (canopy_release_fraction > 0d0) then
+    ! a minimum value. Otherwise the leafT defaults to infinity which is unrealistic.
+    if (canopy_release_fraction > 1d-4) then
         leafT = (((((canopy_loss + canopy_loss) - delta_iso) / (canopy_release_fraction * 2d0)) &
                  / emiss_boltz) ** (0.25d0)) - freeze 
     end if 

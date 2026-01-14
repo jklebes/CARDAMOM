@@ -70,7 +70,7 @@ module MODEL_PARAMETERS
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
-    ! Fraction of GPP respired as Rm(fol,root,wood)
+    ! Fraction of GPP respired as Rm(root,wood)
     PI%parmin(2) = 0.1d0
     PI%parmax(2) = 0.7d0
 
@@ -224,7 +224,7 @@ module MODEL_PARAMETERS
     PI%parmin(24) = 0.01d0
     PI%parmax(24) = 1.00d0
 
-    ! C CWD
+    ! C wood litter
     PI%parmin(34) = 1d0
     PI%parmax(34) = 10000d0
 

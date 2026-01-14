@@ -946,6 +946,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! There could / should be an assumption of leaf->canopy scaling, this should be a function of the leaf area and
        ! mean light vertical profile. Possible based on cosine solar zenith angle for the longest day?
        FLUXES(n,55) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)
+!    print*,n,seconds_per_day,umol_to_gC, lai, Rm_leaf_const, leafT, Rm_heskel_polynomial(Rm_leaf_const,leafT)
 
        ! Estimate the maintenance component of wood and roots for autotrophic respiration (gC.m-2.day-1)
        ! This is begining to accumulate autotrophic respiratory demands.
@@ -2122,8 +2123,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
     ! Estimate the mean leaf temperature as a result of net radiation update.
     ! This can only be attempted if the canopy release fraction (an empirical fit) is greater than
-    ! zero. Otherwise the leafT defaults to infinity which is unrealistic.
-    if (canopy_release_fraction > 0d0) then
+    ! a minimum value. Otherwise the leafT defaults to infinity which is unrealistic.
+    if (canopy_release_fraction > 1d-4) then
         leafT = (((((canopy_loss + canopy_loss) - delta_iso) / (canopy_release_fraction * 2d0)) &
                  / emiss_boltz) ** (0.25d0)) - freeze 
     end if 
