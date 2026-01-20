@@ -1456,12 +1456,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
     ! Estimate ci as a function of the final combined GPP estimate
-    !pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
-    !! calculate internal CO2 concentration (ppm or umol/mol)
-    !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+    pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
+    ! calculate internal CO2 concentration (ppm or umol/mol)
+    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) then
+        acm_gpp_stage_2 = 0d0 ; ci = 0d0
+    end if
 
     ! don't forget to return
     return
@@ -3875,13 +3877,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                + HARVESTextracted_dead_foliage &
                + HARVESTextracted_labile
 
-        ! what's left (will fall to the ground)..
-        stock_litter  = stock_litter               &
-                      + HARVESTlitter_foliage      &
-                      + HARVESTlitter_stem         &
-                      + HARVESTlitter_dead_foliage &
-                      + HARVESTlitter_resp_auto    & 
-                      + HARVESTlitter_labile
+        ! what's left (will fall to the ground as litter)..
+        stock_litter  = stock_litter +               &
+                       (HARVESTlitter_foliage +      &
+                        HARVESTlitter_stem +         &
+                        HARVESTlitter_dead_foliage + &
+                        HARVESTlitter_resp_auto +    & 
+                        HARVESTlitter_labile) * days_per_step
 
     end if ! Ctotal > 0
 

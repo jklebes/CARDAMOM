@@ -591,9 +591,15 @@ module model_likelihood_module
     !  EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     !endif
 
+    ! The mean annual carbon stock change for soils is unlikely to be >200 gC/m2/yr
+    ! an informed guess.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 200d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+    end if
+
     ! We should assume all crops get somewhere close to maturity (2.0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,13)) < 1.9) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
     endif
 
     !

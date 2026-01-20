@@ -1385,13 +1385,13 @@ module CARBON_MODEL_MOD
                + HARVESTextracted_dead_foliage &
                + HARVESTextracted_labile
 
-        ! what's left (will fall to the ground)..
-        stock_litter  = stock_litter               &
-                      + HARVESTlitter_foliage      &
-                      + HARVESTlitter_stem         &
-                      + HARVESTlitter_dead_foliage &
-                      + HARVESTlitter_resp_auto    & 
-                      + HARVESTlitter_labile
+        ! what's left (will fall to the ground as litter)..
+        stock_litter  = stock_litter +               &
+                       (HARVESTlitter_foliage +      &
+                        HARVESTlitter_stem +         &
+                        HARVESTlitter_dead_foliage + &
+                        HARVESTlitter_resp_auto +    & 
+                        HARVESTlitter_labile) * days_per_step
 
     end if ! Ctotal > 0
 

@@ -209,7 +209,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     # Number of model parameters to be optimised
     nopools  = array(8,dim=c(length(ctessel_pft)))
     nopars   = array(38,dim=c(length(ctessel_pft)))
-    nofluxes = array(54,dim=c(length(ctessel_pft)))
+    nofluxes = array(55,dim=c(length(ctessel_pft)))
     nodiags  = array(20,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A1.C2.D2.F2.H2.P2.R3.019", shortname="DALEC.19.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.C5.D1.F2.P1.013" | modelname == "DALEC.13.") {

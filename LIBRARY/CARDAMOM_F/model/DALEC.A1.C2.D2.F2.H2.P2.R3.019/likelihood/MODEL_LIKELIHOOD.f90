@@ -316,23 +316,16 @@ module model_likelihood_module
         print*,local_fluxes(1,:)
         print*,"First time step for all fluxes in run 2"
         print*,DATAin%M_FLUXES(1,:)
+        print*,"First time step for all pools in run 1"
+        print*,local_pools(1,:)
+        print*,"First time step for all pools in run 2"
+        print*,DATAin%M_POOLS(1,:)
+        print*,"First time step for all diags in run 1"
+        print*,local_diags(1,:)
+        print*,"First time step for all diags in run 2"
+        print*,DATAin%M_DIAGS(1,:)
         stop
     end if
-
-!    ! Commented out to limit error messages, but useful for diagnosis
-!    do t = 1, DATAin%nodays
-!       if (sum(abs(DATAin%M_FLUXES(t,:) - local_fluxes(t,:))) > (tiny(0d0)*(DATAin%nofluxes))) then
-!           print*,"Time step of mismatch = ",i
-!           do i = 1, DATAin%nofluxes
-!               print*,"Flux counter = ",i
-!               print*,"Original run"
-!               print*,local_fluxes(t,i)
-!               print*,"Second run"
-!               print*,DATAin%M_FLUXES(t,i)
-!           end do
-!       end if
-!       stop
-!    end do
 
     ! Update the user
     print*,"Sanity check completed"

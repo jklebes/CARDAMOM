@@ -848,15 +848,16 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # derived from the ATEC experiment field, Sus et al., (2010), or updated based on daily CARDAMOM-DALEC.15 analysis
           if (max(OBS$LAI) > 0) {
               # Linear fit between allocation to Ra and LAI
-              # R2 = 0.66      Estimate Std. Error t value Pr(>|t|)    
-              #(Intercept)    0.453162   0.007847  57.747 8.98e-12 ***
-              #max_lai_yield -0.009620   0.002199  -4.375  0.00236 ** 
+              # R2 = 0.94      Estimate Std. Error t value Pr(>|t|)    
+              #(Intercept)     0.50433    0.01257   40.13 1.55e-09 ***
+              #max_lai_yield  -0.03998    0.00364  -10.98 1.15e-05 ***
               # Fraction of GPP allocated to autotrophic pool
-              PARPRIORS[2] = max(OBS$LAI) * -0.009620 + 0.453162
-              PARPRIORUNC[2] = 0.044 # mean confidence interval of linear regression for LAI ranges 1-8
+              PARPRIORS[2] = max(OBS$LAI) * -0.03998 + 0.50433
+              PARPRIORUNC[2] = 0.044 # mean confidence interval of linear regression for LAI ranges 1-8              
           } else {
               PARPRIORS[2] = 0.44           ; PARPRIORUNC[2]  = 0.08         # Fraction of GPP allocated to autotrophic pool
           }
+
           PARPRIORS[3] = 0.04           ; PARPRIORUNC[3]  = 0.02         # Development rate coefficient DS 0-1
           PARPRIORS[4] = 0.023          ; PARPRIORUNC[4]  = 0.02         # Development rate coefficient DS 1-2
           PARPRIORS[5] = 0.008          ; PARPRIORUNC[5]  = 0.03         # turnover rate foliage (frac/day)
@@ -865,10 +866,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[8] = 22.5           ; PARPRIORUNC[8]  = 5.0          # No. of vernalisation days for plants to be 50 % vernalised
           if (max(OBS$LAI) > 0) {
               # Linear fit between NUE ~ max LAI
-              # R2 = 0.55      Estimate Std. Error t value Pr(>|t|)    
-              #(Intercept)    10.8266     2.0332   5.325 0.000707 ***
-              #max_lai_yield   1.9833     0.5697   3.481 0.008302 ** 
-              PARPRIORS[11] = max(OBS$LAI) * 1.9833 + 10.8266
+              # R2 = 0.8689   Estimate Std. Error t value Pr(>|t|)    
+              #(Intercept)    9.5774     2.2492   4.258 0.003755 ** 
+              #max_lai_yield  4.7810     0.6514   7.340 0.000157 ***
+              PARPRIORS[11] = max(OBS$LAI) * 4.7810 + 9.5774
               PARPRIORUNC[11] = 11.6 # mean confidence interval of linear regression for LAI ranges 1-8
           } else {
               PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
@@ -877,11 +878,12 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[12]=OBS$planting_doy       ; PARPRIORUNC[12]=OBS$planting_doy_unc # Sow day of year, applied as p12%%365.25
           #PARPRIORS[14]=OBS$growing_season_doy ; PARPRIORUNC[14]=OBS$growing_season_doy_unc  # Growing season length sowing->harvest days
           if (max(OBS$LAI) > 0) {
-              # R = 0.93        Estimate Std. Error t value Pr(>|t|)    
-              #(Intercept)    1.40364    0.26393   5.318 0.000713 ***
-              #max_lai_yield  0.82440    0.07395  11.148 3.75e-06 ***
+              # Linear fit between initial fol N ~ max LAI
+              #R = 0.88       Estimate Std. Error t value Pr(>|t|)    
+              #(Intercept)    1.9607     0.4154   4.720  0.002157 ***
+              #max_lai_yield  0.9473     0.1203   7.875  0.000101 ***              
               # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
-              PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.82440 + 1.40364)
+              PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.9473 + 1.9607)
               PARPRIORUNC[15] = 1.5  # mean confidence interval of linear regression for LAI ranges 1-8
               #PARPRIORWEIGHT[15] = noyears
           } else {

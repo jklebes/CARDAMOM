@@ -89,7 +89,7 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # Match resolutions
              if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
                  # Resample to correct grid
-                 var1 = resample(var1, cardamom_ext, method="average") ; gc() 
+                 var1 = resample(var1, cardamom_ext, method="average") ; gc() # "average"
              } # Aggrgeate to resolution
 
              # determine new (s)tart and (e)nd points for the output array

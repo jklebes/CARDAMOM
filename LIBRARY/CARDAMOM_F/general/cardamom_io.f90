@@ -208,7 +208,7 @@ module cardamom_io
         ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.019
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 54
+        DATAin%nofluxes = 55
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.020

@@ -179,7 +179,7 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         # Match resolutions
         if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) {
             # Resample to correct grid
-            tmp1 = resample(tmp1, cardamom_ext, method="average") ; gc() 
+            tmp1 = resample(tmp1, cardamom_ext, method="average") ; gc() # TLS "average"
         } # Aggrgeate to resolution
 
         # Filter through the reduced dataset for the specific locations

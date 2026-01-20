@@ -651,7 +651,6 @@ module model_likelihood_module
 
     ! While it is possible for the CiCa, the ratio of internal to external leaf
     ! CO2 concentrations it should not on average be greater than 1
-    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_DIAGS(:,4))/dble(nodays) > 1d0) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
     endif

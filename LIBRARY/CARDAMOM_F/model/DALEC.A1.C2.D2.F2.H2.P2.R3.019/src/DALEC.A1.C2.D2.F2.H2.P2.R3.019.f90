@@ -940,13 +940,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! calculate maintenance respiration demands and mass balance
        !
 
-
        ! Estimate leaf maintenance respiration (umolC/m2leaf/s) following Heskel et al., (2016), then
        ! scale to leaf area, and to gC/m2/day.
        ! There could / should be an assumption of leaf->canopy scaling, this should be a function of the leaf area and
        ! mean light vertical profile. Possible based on cosine solar zenith angle for the longest day?
        FLUXES(n,55) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)
-!    print*,n,seconds_per_day,umol_to_gC, lai, Rm_leaf_const, leafT, Rm_heskel_polynomial(Rm_leaf_const,leafT)
 
        ! Estimate the maintenance component of wood and roots for autotrophic respiration (gC.m-2.day-1)
        ! This is begining to accumulate autotrophic respiratory demands.
@@ -965,7 +963,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5))*pars(4)
        ! wood production
        FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
-
        ! Leaffall and labile release factors (fraction / day)
        FLUXES(n,9)  = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
        FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
@@ -1392,7 +1389,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) then
+        acm_gpp_stage_2 = 0d0 ; ci = 0d0
+    end if
 
     ! don't forget to return
     return
@@ -1478,11 +1477,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
         call acm_gpp_stage_1
-
-        ! In all other cases iterate
-        !potential_stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-        !                                        find_gs_iWUE,minimum_conductance,max_gs*leaf_canopy_light_scaling, & 
-        !                                        tol_gs*lai,iWUE_step*0.10d0)
 
 !        if (do_iWUE) then
             ! Intrinsic WUE optimisation
