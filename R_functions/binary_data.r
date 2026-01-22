@@ -126,6 +126,19 @@ obs_array_names <<- c("GPP (gC/m2/day)",
                       "Surface soil moisture variance (m3/m3)",
                       "Lag period over which to average (steps)")
 
+# Logistic model
+logistic_model<-function(conc, gradient, mid_point, ref_val) {
+
+  # Gradient = maximum gradient at midpoint
+  # ref_val = reference value, 
+
+  # Increasing logistic function
+  logistic_model = 1 - (1+exp(gradient*(conc-mid_point)))**(-1)
+  logistic_model = ref_val * logistic_model
+  return(logistic_model)
+  
+}           
+
 binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,parameter_type,nopars,noyears) {
 
   # Inform the user
@@ -870,7 +883,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
               #(Intercept)    9.5774     2.2492   4.258 0.003755 ** 
               #max_lai_yield  4.7810     0.6514   7.340 0.000157 ***
               PARPRIORS[11] = max(OBS$LAI) * 4.7810 + 9.5774
-              PARPRIORUNC[11] = 11.6 # mean confidence interval of linear regression for LAI ranges 1-8
+              PARPRIORUNC[11] = 4.0 # mean confidence interval of linear regression for LAI ranges 1-8
           } else {
               PARPRIORS[11] = 21.1491       ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = noyears # NUE: derived from multiple trait values from Kattge et al., (2011)
           }
@@ -882,11 +895,18 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
               #R = 0.88       Estimate Std. Error t value Pr(>|t|)    
               #(Intercept)    1.9607     0.4154   4.720  0.002157 ***
               #max_lai_yield  0.9473     0.1203   7.875  0.000101 ***              
-              # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N
-              PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.9473 + 1.9607)
-              PARPRIORUNC[15] = 1.5  # mean confidence interval of linear regression for LAI ranges 1-8
+              #PARPRIORS[15] = min(8.0,max(OBS$LAI) * 0.9473 + 1.9607)
+              #PARPRIORUNC[15] = 1.5  # mean confidence interval of linear regression for LAI ranges 1-8
+              # Logistic fit between initial fol N ~ max LAI
+              # R2  = 0.94  
+              # gradient mid_point   ref_val 
+              #   0.7865    1.9120    7.0713 
+              # residual sum-of-squares: 0.5801
+              PARPRIORS[15] = logistic_model(max(OBS$LAI), gradient = 0.7865, mid_point = 1.912, ref_val = 7.0713)
+              PARPRIORUNC[15] = 0.58  # mean confidence interval of linear regression for LAI ranges 1-8
               #PARPRIORWEIGHT[15] = noyears
           } else {
+              # Prior on canopy N derived from ATEC experiment assuming max LAI is related to canopy N          
               PARPRIORS[15] = 4.088        ; PARPRIORUNC[15] = 0.6052851    # Constant for canopy N dilution model (gN/m2leaf)
           }
           PARPRIORS[16] = -0.0252      ; PARPRIORUNC[16] = 0.00092      # Coefficient relating foliar C to N dilution
