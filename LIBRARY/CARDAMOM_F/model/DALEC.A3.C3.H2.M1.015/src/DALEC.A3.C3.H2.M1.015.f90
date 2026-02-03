@@ -2790,7 +2790,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
+
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
@@ -2944,16 +2944,33 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! arguments
-    double precision, intent(in) :: rainfall_in ! rainfall (kg.m-2.day-1)
+    double precision, intent(in) :: rainfall_in ! rainfall (kgH2O.m-2.day-1)
 
     ! local argumemts
     integer :: i
-    double precision :: add, & ! surface water available for infiltration (m)
-                      wdiff    ! available space in a given soil layer for water to fill (m)
-
+    double precision :: &
+            pot_runoff, & ! Potential rate of runoff (MgH2O/m2/day)
+                   add, & ! surface water available for infiltration (m)
+                 wdiff    ! available space in a given soil layer for water to fill (m)
+    
+    ! Parameters
+    double precision, parameter :: beta_s = 0.5d0 ! Infiltration enhancement factor (See Best et al., 2011, Table 6)
+                                                  ! i.e. if this was == 1 then there would be more infiltration
     ! convert rainfall water from mm -> m (or kgH2O.m-2.day-1 -> MgH2O.m-2.day-1)
-    add = rainfall_in * 1d-3
+    add = rainfall_in * 1d-3 
 
+    ! Estimate the potential infiltration rate, assumed as half the conductivity rate at porosity.
+    ! This is consistent with JULES, ORCHIDEE, CLM models as examples.
+    ! The *0.5 is the Beta_s factor taken from JULES, but other values are used in the other models.
+    call calculate_soil_conductivity(1,porosity(1),pot_runoff) 
+    ! Scaled to 2.5 hours, on the mean number of hours over which rainfall typically occurs. 
+    ! This is based on reported precipitation time series from global fluxnet2025 database.
+    pot_runoff = pot_runoff * seconds_per_day * (2.5d0/24d0) * beta_s 
+    pot_runoff = add * exp(-(pot_runoff / add)) ! potential runoff
+    ! Update cumulative runoff and substract from the rainfall addition
+    runoff = runoff + (pot_runoff*1d3) ; add = add - pot_runoff ; pot_runoff = 0d0
+
+    ! Loop through soil layers to drain
     do i = 1 , nos_soil_layers
 
        ! is the input of water greater than available space
@@ -2976,7 +2993,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
-    infiltrated = infiltrated + (waterchange(1) * 1e3)
+    infiltrated = infiltrated + (sum(waterchange) * 1d3)
 
   end subroutine infiltrate
   !
@@ -2988,7 +3005,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Due to the longer time steps undertake by ACM / DALEC and the fact that
     ! drainage is a concurrent processes we assume that drainage occurs at
     ! the bottom of the column first creating space into which water can drain
-    ! from the top down. Therefore we draing from the bottom first and then the top.
+    ! from the top down. Therefore we drain from the bottom first and then the top.
     ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
     !       has already been updated in soil mass balance
 
@@ -3028,14 +3045,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
     ! estimate how much liquid is available to flow
     avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
+
     ! trapezium rule scaler and the half-way point between current and field capacity
     dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
     do t = 1, nos_soil_layers
        if (avail_to_flow(t) > 0d0) then
            ! Trapezium rule for approximating integral of drainage rate
-           call calculate_soil_conductivity(t,liquid(t),tmp1)
-           call calculate_soil_conductivity(t,field_capacity(t),tmp2)
-           call calculate_soil_conductivity(t,halfway(t),tmp3)
+           call calculate_soil_conductivity(t,liquid(t),tmp1)         ! This is the maximum rate
+           call calculate_soil_conductivity(t,field_capacity(t),tmp2) ! This is the final rate
+           call calculate_soil_conductivity(t,halfway(t),tmp3)        ! This is half way between
            pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
        else
            ! We are at field capacity currently even after rainfall has been infiltrated.

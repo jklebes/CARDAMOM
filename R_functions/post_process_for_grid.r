@@ -343,6 +343,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   states_all$mean_Ctotal_gCm2 = states_all$mean_biomass_gCm2 + states_all$mean_dom_gCm2
   states_all$mean_annual_Ctotal_gCm2 = states_all$mean_annual_biomass_gCm2 + states_all$mean_annual_dom_gCm2
 
+#  # Calculate the annual delta in biomass, dom and total C
+#  states_all$annual_change_Ctotal_gCm2 = array(NA, dim=dim(states_all$mean_Ctotal_gCm2))
+#  states_all$annual_change_Cbiomass_gCm2 = array(NA, dim=dim(states_all$biomass_gCm2))
+#  states_all$annual_change_Cdom_gCm2 = array(NA, dim=dim(states_all$dom_gCm2))
+  # Now loop through each year to calculate the delta's
+  for (y in seq())
+
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 

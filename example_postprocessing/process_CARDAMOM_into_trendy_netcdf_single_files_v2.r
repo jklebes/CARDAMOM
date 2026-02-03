@@ -998,6 +998,27 @@ if (exists(x = "mean_annual_nbp_gCm2day", where = grid_output)) {
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_nbp_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
     write_to_nc_analysis_annual(est, var_name = "nbp", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Net Biome Productivity (-NEE - Fire - fLuc)")
 }    
+## Annual C allocation to fine roots gC/m2/day -> kgC/m2/s
+if (exists(x = "mean_annual_alloc_roots_gCm2day", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_alloc_roots_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
+    write_to_nc_analysis_annual(est, var_name = "fAllocRoot", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Net Primary Productivity to fine root")
+}
+## Annual C allocation to wood gC/m2/day -> kgC/m2/s
+if (exists(x = "mean_annual_alloc_wood_gCm2day", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_alloc_wood_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
+    write_to_nc_analysis_annual(est, var_name = "fAllocWood", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Net Primary Productivity to wood")
+}
+## Annual C allocation to foliage gC/m2/day -> kgC/m2/s
+if (exists(x = "mean_annual_combined_alloc_foliage_gCm2day", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_combined_alloc_foliage_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
+    write_to_nc_analysis_annual(est, var_name = "fAllocLeaf", var_unit = "kg.m-2.s-1", var_long = "Mean Annual of Both direct and via labile Net Primary Productivity to foliage")
+}
 ## Annual evapotranspiration kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_ET_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
