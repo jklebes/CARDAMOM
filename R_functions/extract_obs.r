@@ -35,7 +35,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                      ,lca_all,gpp_all,Cwood_inc_all,Cwood_growth_all,Cwood_mortality_all
-                     ,fire_all,fapar_all,et_all
+                     ,fire_all,fapar_all,et_all,RhetQ10_all,MTTsom_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -1082,6 +1082,62 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
+    ## Get some information on the temperature sensitivity of heterotrophic respiration.
+    ## The contents of the file has the same name, but may be expressed as a Q10 or 
+    ## exp(c*T) depending on the DALEC model version. Please be very careful that these match
+
+    if (RhetQ10_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        RhetQ10 = read_site_specific_obs("RhetQ10",infile)
+        RhetQ10_unc = read_site_specific_obs("RhetQ10_unc",infile)
+    } else if (RhetQ10_source == "Gridded_nc" | RhetQ10_source == "Gridded_tif") {
+        # get Rhet temperature sensitivity information
+        output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,RhetQ10_all,
+                                                              na_flag = -9999,
+                                                              est_var_name_in="RhetQ10",
+                                                              unc_var_name_in="RhetQ10_uncertainty",
+                                                              est_var_name_out="RhetQ10",
+                                                              unc_var_name_out="RhetQ10_unc") 
+        # Load into local variables
+        RhetQ10 = output$RhetQ10
+        RhetQ10_unc = output$RhetQ10_unc
+    } else {
+        # assume no data available
+        RhetQ10 = -9999 ; RhetQ10_unc = -9999
+    }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    if (RhetQ10 > -9999) { RhetQ10_unc = max(0.005,sqrt(RhetQ10_unc**2 + (0.1*RhetQ10)**2)) }
+
+    ###
+    ## Mean transit time (MTT, years) for the soil organic matter (aka soil, som).
+    ## This will be applied as an other prior, not directly on the turnover parameter
+    ## as these are not equivalent
+
+    if (MTTsom_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        MTTsom = read_site_specific_obs("MTTsom",infile)
+        MTTsom_unc = read_site_specific_obs("MTTsom_unc",infile)
+    } else if (MTTsom_source == "Gridded_nc" | MTTsom_source == "Gridded_tif") {
+        # get mean transis time of soil information
+        output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,MTTsom_all,
+                                                              na_flag = -9999,
+                                                              est_var_name_in="MTTsom",
+                                                              unc_var_name_in="MTTsom_uncertainty",
+                                                              est_var_name_out="MTTsom",
+                                                              unc_var_name_out="MTTsom_unc") 
+        # Load into local variables
+        MTTsom = output$MTTsom
+        MTTsom_unc = output$MTTsom_unc
+    } else {
+        # assume no data available
+        MTTsom = -9999 ; MTTsom_unc = -9999
+    }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    if (MTTsom > -9999) { MTTsom_unc = max(10,sqrt(MTTsom_unc**2 + (0.1*MTTsom)**2)) }
+
+    ###
     ## Extract the local information for timeseries information without observations,
     ## i.e. those values which are forcings
     ###
@@ -1252,7 +1308,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 lca = lca, lca_unc = lca_unc,
                 foliage_to_litter = foliage_to_litter, foliage_to_litter_unc = foliage_to_litter_unc, foliage_to_litter_lag = foliage_to_litter_lag,
                 frac_Cwood_coarse_root_prior = frac_Cwood_coarse_root_prior, frac_Cwood_coarse_root_prior_unc = frac_Cwood_coarse_root_prior_unc,
-                minLWP = minLWP, minLWP_unc = minLWP_unc))
+                minLWP = minLWP, minLWP_unc = minLWP_unc, RhetQ10 = RhetQ10, RhetQ10_unc = RhetQ10_unc, MTTsom = MTTsom, MTTsom_unc = MTTsom_unc))
 
 } # end function extract_obs
 

@@ -35,7 +35,7 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                          ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                          ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                          ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
-                         ,fapar_all, et_all) {
+                         ,fapar_all, et_all, RhetQ10_all, MTTsom_all) {
 
    # create the file name for the met/obs binary
    filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
@@ -95,7 +95,7 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                              ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                              ,nbe_all,lca_all,gpp_all,Cwood_inc_all,Cwood_growth_all,Cwood_mortality_all
-                             ,fire_all,fapar_all, et_all
+                             ,fire_all,fapar_all, et_all, RhetQ10_all, MTTsom_all
                              ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                              ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
             # update ctessel pft in the project and potentially the model information
@@ -379,6 +379,21 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_in = "leaf_carbon_area_SD",
                                                              est_var_name_out = "lca_gCm2",
                                                              unc_var_name_out = "lca_uncertainty_gCm2")               
+           # Temperature sensitivity of heterotrophic respiration expresses as a Q10 or exp(c*T).
+           # The version needed depends on the specific DALEC model selected. Please be very careful that these match
+           RhetQ10_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+                                                             RhetQ10_source,path_to_RhetQ10,prefix = "RhetQ10",
+                                                             est_var_name_in = "RhetQ10",
+                                                             unc_var_name_in = "RhetQ10_SD",
+                                                             est_var_name_out = "RhetQ10",
+                                                             unc_var_name_out = "RhetQ10_uncertainty")                                                             
+           # Mean transit time (MTT) of soil organic matter (years)
+           MTTsom_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+                                                             MTTsom_source,path_to_MTTsom,prefix = "MTT_som_years",
+                                                             est_var_name_in = "MTTsom",
+                                                             unc_var_name_in = "MTTsom_SD",
+                                                             est_var_name_out = "MTTsom",
+                                                             unc_var_name_out = "MTTsom_uncertainty")    
 
        } # if (PROJECT$model$name != "ACM")
 
@@ -400,7 +415,8 @@ cardamom_stage_1<-function(PROJECT) {
                            burnt_all = burnt_all, soilwater_all = soilwater_all, nbe_all = nbe_all, 
                            lca_all = lca_all, gpp_all = gpp_all, Cwood_inc_all = Cwood_inc_all,
                            Cwood_mortality_all = Cwood_mortality_all, fire_all = fire_all, 
-                           fapar_all = fapar_all, et_all = et_all)
+                           fapar_all = fapar_all, et_all = et_all, RhetQ10_all = RhetQ10_all,
+                           MTTsom_all = MTTsom_all)
 
       } else { # use parallel
 
@@ -415,7 +431,7 @@ cardamom_stage_1<-function(PROJECT) {
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                               ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
-                              ,fapar_all, et_all)    
+                              ,fapar_all, et_all, RhetQ10_all, MTTsom_all)    
 
           } # site loop
 

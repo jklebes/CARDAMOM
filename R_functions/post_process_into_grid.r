@@ -178,6 +178,11 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$mean_annual_dnbe_gCm2day[n,,]     = site_output$mean_annual_dnbe_gCm2day
            grid_output$mean_annual_dnbp_gCm2day[n,,]     = site_output$mean_annual_dnbp_gCm2day
 
+           # Extract quantiles
+           #grid_output$annual_change_Ctotal_gCm2[n,,] = site_output$annual_change_Ctotal_gCm2
+           #grid_output$annual_change_biomass_gCm2[n,,] = site_output$annual_change_biomass_gCm2
+           #grid_output$annual_change_dom_gCm2[n,,] = site_output$annual_change_dom_gCm2
+
            # Based on the presence of each pool define the grids for the mean and final values.
            # Also, create the time varying but quantile based values and time
 

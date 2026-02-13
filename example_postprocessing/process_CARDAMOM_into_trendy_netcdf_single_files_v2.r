@@ -649,7 +649,7 @@ if (exists(x = "dom_gCm2", where = grid_output)) {
     # (Re-)create the object to be updated
     est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "dom_gCm2", bias_adj = 0, scale_adj = 1e-3) 
-    write_to_nc_analysis_timestep(est, var_name = "cDOM", var_unit = "kg.m-2", var_long = "Carbon in leaf, fine root, wood litter, and soil organic matter")  
+    write_to_nc_analysis_timestep(est, var_name = "cDOM", var_unit = "kg.m-2", var_long = "Carbon in leaf, fine root and wood litter, and soil organic matter")  
 }
 ## Biomass
 if (exists(x = "biomass_gCm2", where = grid_output)) {
@@ -1001,21 +1001,21 @@ if (exists(x = "mean_annual_nbp_gCm2day", where = grid_output)) {
 ## Annual C allocation to fine roots gC/m2/day -> kgC/m2/s
 if (exists(x = "mean_annual_alloc_roots_gCm2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_alloc_roots_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
     write_to_nc_analysis_annual(est, var_name = "fAllocRoot", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Net Primary Productivity to fine root")
 }
 ## Annual C allocation to wood gC/m2/day -> kgC/m2/s
 if (exists(x = "mean_annual_alloc_wood_gCm2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_alloc_wood_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
     write_to_nc_analysis_annual(est, var_name = "fAllocWood", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Net Primary Productivity to wood")
 }
 ## Annual C allocation to foliage gC/m2/day -> kgC/m2/s
 if (exists(x = "mean_annual_combined_alloc_foliage_gCm2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_combined_alloc_foliage_gCm2day", bias_adj = 0, scale_adj = 1e-3 * (1/86400)) 
     write_to_nc_analysis_annual(est, var_name = "fAllocLeaf", var_unit = "kg.m-2.s-1", var_long = "Mean Annual of Both direct and via labile Net Primary Productivity to foliage")
 }
@@ -1029,51 +1029,51 @@ if (exists(x = "mean_annual_ET_kgH2Om2day", where = grid_output)) {
 ## Transpiration kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_Etrans_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_Etrans_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "tran", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Transpiration")
+    write_to_nc_analysis_annual(est, var_name = "tran", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Transpiration")
 }
 ## Soil evaporation kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_Esoil_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_Esoil_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "evspsblsoi", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Soil evaporation")
+    write_to_nc_analysis_annual(est, var_name = "evspsblsoi", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Soil evaporation")
 }
 ## Wet canopy evaporation kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_Ewetcanopy_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_Ewetcanopy_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "evspsblveg", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Canopy intercepted rainfall evaporation")
+    write_to_nc_analysis_annual(est, var_name = "evspsblveg", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Canopy intercepted rainfall evaporation")
 }
 ## Total drainage (surface runoff + underflow) kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_total_drainage_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_total_drainage_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "mrro", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Total drainage from soil surface and bottom of soil column")
+    write_to_nc_analysis_annual(est, var_name = "mrro", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Total drainage from soil surface and bottom of soil column")
 }
 ## Surface runoff kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_runoff_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_runoff_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "runoff", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Soil surface water runoff")
+    write_to_nc_analysis_annual(est, var_name = "runoff", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Soil surface water runoff")
 }
 ## Underflow kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_underflow_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_underflow_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "underflow", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Water drainage from the bottom of the soil column")
+    write_to_nc_analysis_annual(est, var_name = "underflow", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Water drainage from the bottom of the soil column")
 }
 ## Soil water potential weighted by plant water utilisation (MPa)
 if (exists(x = "mean_annual_wSWP_MPa", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_wSWP_MPa", bias_adj = 0, scale_adj = 1) 
-    write_to_nc_analysis_timestep(est, var_name = "wSWP", var_unit = "MPa", var_long = "Mean annual Soil water potential weighted by plant water utilisation")
+    write_to_nc_analysis_annual(est, var_name = "wSWP", var_unit = "MPa", var_long = "Mean annual Soil water potential weighted by plant water utilisation")
 }
 ## Annual carbon use efficiency (gC/gC)
 if (exists(x = "mean_annual_cue", where = grid_output)) {
@@ -1154,7 +1154,7 @@ if (exists(x = "MTT_annual_dom_years", where = grid_output)) {
 }    
 
 ###
-## Analysis output anomaly at annual timestep - i.e. t1-n - t=1
+## Analysis output anomaly at annual timestep - i.e. t1->n - t=1
 
 ## Annual anomaly leaf area index m2/m-2 
 if (exists(x = "mean_annual_dlai_m2m2", where = grid_output)) {
@@ -1257,52 +1257,71 @@ if (exists(x = "mean_annual_dET_kgH2Om2day", where = grid_output)) {
 ## Transpiration kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_dEtrans_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dEtrans_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "tran_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Transpiration")
+    write_to_nc_analysis_annual(est, var_name = "tran_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Transpiration")
 }
 ## Soil evaporation kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_dEsoil_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dEsoil_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "evspsblsoi_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Soil evaporation")
+    write_to_nc_analysis_annual(est, var_name = "evspsblsoi_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Soil evaporation")
 }
 ## Wet canopy evaporation kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_dEwetcanopy_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dEwetcanopy_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "evspsblveg_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Canopy intercepted rainfall evaporation")
+    write_to_nc_analysis_annual(est, var_name = "evspsblveg_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Canopy intercepted rainfall evaporation")
 }
 ## Total drainage (surface runoff + underflow) kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_dtotal_drainage_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dtotal_drainage_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "mrro_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Total drainage from soil surface and bottom of soil column")
+    write_to_nc_analysis_annual(est, var_name = "mrro_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Total drainage from soil surface and bottom of soil column")
 }
 ## Surface runoff kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_drunoff_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_drunoff_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "runoff_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Soil surface water runoff")
+    write_to_nc_analysis_annual(est, var_name = "runoff_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Soil surface water runoff")
 }
 ## Underflow kgH2O/m2/day -> kgH2O/m2/s
 if (exists(x = "mean_annual_dunderflow_kgH2Om2day", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dunderflow_kgH2Om2day", bias_adj = 0, scale_adj = (1/86400)) 
-    write_to_nc_analysis_timestep(est, var_name = "underflow_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Water drainage from the bottom of the soil column")
+    write_to_nc_analysis_annual(est, var_name = "underflow_anomaly", var_unit = "kg.m-2.s-1", var_long = "Mean Annual Anomaly (i.e. t-t1) Water drainage from the bottom of the soil column")
 }
 ## Soil water potential weighted by plant water utilisation (MPa)
 if (exists(x = "mean_annual_dwSWP_MPa", where = grid_output)) {
     # (Re-)create the object to be updated
-    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
     tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "mean_annual_dwSWP_MPa", bias_adj = 0, scale_adj = 1) 
-    write_to_nc_analysis_timestep(est, var_name = "wSWP_anomaly", var_unit = "MPa", var_long = "Mean annual anomaly of soil water potential weighted by plant water utilisation")
+    write_to_nc_analysis_annual(est, var_name = "wSWP_anomaly", var_unit = "MPa", var_long = "Mean annual anomaly of soil water potential weighted by plant water utilisation")
 }
+
+###
+## Analysis output annual anomaly - i.e. t+1 - t
+
+## Biomass change each year
+if (exists(x = "annual_change_biomass_gCm2", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "annual_change_biomass_gCm2", bias_adj = 0, scale_adj = 1e-3) 
+    write_to_nc_analysis_annual(est, var_name = "dcVeg_annual", var_unit = "kg.m-2", var_long = "Change in Carbon in live biomass since each year")  
+}
+## DOM change each year
+if (exists(x = "annual_change_dom_gCm2", where = grid_output)) {
+    # (Re-)create the object to be updated
+    est = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))
+    tmp = sapply(c(1:PROJECT$nosites), FUN = extract_from_grid_output, var_name = "annual_change_dom_gCm2", bias_adj = 0, scale_adj = 1e-3) 
+    write_to_nc_analysis_annual(est, var_name = "dcDOM_annual", var_unit = "kg.m-2", var_long = "Change in Carbon in leaf, fine root and wood litter, and soil organic matter each year")  
+}
+
 # Tidy away the main objects to save memory
 rm(est,tmp,grid_output) ; gc()
 

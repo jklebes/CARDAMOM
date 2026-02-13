@@ -408,6 +408,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       # Assign model specific parameter priors
      if (modelname == "DALEC.D1.F2.001") {
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10          ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)          
           PARPRIORS[11] = 16.9                 ; PARPRIORUNC[11] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           PARPRIORS[12] = OBS$lca              ; PARPRIORUNC[12] = OBS$lca_unc #; PARPRIORWEIGHT[12] = noyears
           PARPRIORS[13] = OBS$Cfol_initial     ; PARPRIORUNC[13] = OBS$Cfol_initial_unc # Cfoliar prior
@@ -428,8 +429,9 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       } else if (modelname == "DALEC.C1.D1.F2.P1.002") {
 
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10          ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 16.9                 ; PARPRIORUNC[11] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-          PARPRIORS[17] = OBS$lca              ; PARPRIORUNC[17] = OBS$lca_un
+          PARPRIORS[17] = OBS$lca              ; PARPRIORUNC[17] = OBS$lca_unc
           PARPRIORS[19] = OBS$Cfol_initial     ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[20] = OBS$Croots_initial   ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
@@ -451,7 +453,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }               
       } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1.003") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
                                                                                # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                                # These observational constraints are not the same and would lead to
@@ -490,7 +492,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.004") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+#          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
                                                                                # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                                # These observational constraints are not the same and would lead to
@@ -519,6 +522,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+          OTHERPRIORS[6] = OBS$MTTsom          ; OTHERPRIORUNC[6] = OBS$MTTsom_unc # Prior on the MTT of soil
           # Hack to remove LAI observations out of growing season for high LCA areas
           if (PARPRIORS[17] > 100) {
 #              if (lat_degrees > 50) {
@@ -528,7 +532,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.005") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -562,7 +566,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.006") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -597,7 +601,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.007") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -632,7 +636,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.008") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -667,7 +671,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.009") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -702,7 +706,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.010") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 0.2764618                        ; PARPRIORUNC[11] = 0.2014871 # log10 avg foliar N (gN.m-2)
           PARPRIORS[17] = OBS$lca                          ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
           PARPRIORS[19] = OBS$Cfol_initial                 ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
@@ -736,7 +740,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.011") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 0.2764618                        ; PARPRIORUNC[11] = 0.2014871 # log10 avg foliar N (gN.m-2)
           PARPRIORS[17] = OBS$lca                          ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
           PARPRIORS[19] = OBS$Cfol_initial                 ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
@@ -771,7 +775,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }                    
       } else if (modelname == "DALEC.C4.D1.F2.012") {
           PARPRIORS[1]  = 0.54                 ; PARPRIORUNC[1]  = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[6]  = 0.0334798            ; PARPRIORUNC[6]  = 0.015 #; PARPRIORWEIGHT[6] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)          
+          PARPRIORS[6]  = OBS$RhetQ10          ; PARPRIORUNC[6]  = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[7]  = 16.9                 ; PARPRIORUNC[7]  = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           PARPRIORS[8]  = OBS$lca              ; PARPRIORUNC[8]  = OBS$lca_unc #; PARPRIORWEIGHT[8] = noyears
           PARPRIORS[9]  = OBS$Cfol_initial     ; PARPRIORUNC[9]  = OBS$Cfol_initial_unc # Cfoliar prior
@@ -779,7 +783,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[11] = OBS$Csom_initial     ; PARPRIORUNC[11] = OBS$Csom_initial_unc # Csom + Clitter prior
       } else if (modelname == "DALEC.C5.D1.F2.P1.013") {
           PARPRIORS[1]  = 0.54                 ; PARPRIORUNC[1]  = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[6]  = 0.0334798            ; PARPRIORUNC[6]  = 0.015 #; PARPRIORWEIGHT[6] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)          
+          PARPRIORS[6]  = OBS$RhetQ10          ; PARPRIORUNC[6]  = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[7]  = 16.9                 ; PARPRIORUNC[7]  = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           PARPRIORS[15] = OBS$Cfol_initial     ; PARPRIORUNC[15] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[16] = OBS$Cwood_initial    ; PARPRIORUNC[16] = OBS$Cwood_initial_unc # Croot + Cwood prior
@@ -914,7 +918,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
                                                                         # Prior values from Penning de Vries (1982), Simulation of Ecophysiological Processes of Growth in Several Annual Crops
                                                                         # Barley = 15.60, Maize = 21.60, Potato = 14.40, Rice = 21.12, Sorghum = 19.20, Soybean = 19.20, SugarBeet = 24.00, 
                                                                        # Sugarcane = 33.60, Sunflower = 25.92, WinterWheat = 20.40 , SprintWheat = 24.00
-          #PARPRIORS[17]=OBS$lca                ; PARPRIORUNC[17]=OBS$lca_unc
+          #PARPRIORS[17] = OBS$lca                ; PARPRIORUNC[17] = OBS$lca_unc
           #PARPRIORS[19] = OBS$Cfol_initial       ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
           #PARPRIORS[20] = OBS$Croots_initial     ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
           #PARPRIORS[21] = OBS$Cwood_initial      ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
@@ -938,11 +942,11 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
           OTHERPRIORS[8] = 0.38        ; OTHERPRIORUNC[8] = 0.087*0.5 #; OTHERPRIORWEIGHT[8] = noyears
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2.018") {
-          PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2]=0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = 0.0334798            ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
-          PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11]=8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-                                                                          #       Note that this prior is difference from DALEC.C1.D1.F2.P1.
-                                                                          # due to the different temperature response functions used in ACM2 vs ACM 1
+          PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10          ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+                                                                            #       Note that this prior is difference from DALEC.C1.D1.F2.P1.
+                                                                            # due to the different temperature response functions used in ACM2 vs ACM 1
           PARPRIORS[17] = OBS$lca              ; PARPRIORUNC[17] = OBS$lca_unc
           PARPRIORS[19] = OBS$Cfol_initial     ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[20] = OBS$Croots_initial   ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
@@ -967,7 +971,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }         
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.019") {
           PARPRIORS[1]  = 0.5                  ; PARPRIORUNC[1] = 0.125 # fraction of litter decomposition to Csom
-          PARPRIORS[10] = 0.0334798            ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10          ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                           # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                           # due to the different temperature response functions used in ACM2 vs ACM 1
@@ -997,7 +1001,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }         
   } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1.020") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 65.0                             ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
           PARPRIORS[11] = 24.43                            ; PARPRIORUNC[11]= 10.4 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Median of CARDAMOM analysis assimilating 4 GPP products
           PARPRIORS[17] = OBS$lca                          ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
@@ -1029,6 +1033,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }                    
       } else if (modelname == "DALEC_1005") {
           PARPRIORS[2]  = 0.54                   ; PARPRIORUNC[2]  = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10            ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 16.9                   ; PARPRIORUNC[11] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           PARPRIORS[17] = OBS$lca                ; PARPRIORUNC[17] = OBS$lca_unc
           PARPRIORS[19] = OBS$Cfol_initial       ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
@@ -1040,6 +1045,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[5] = OBS$Cwood_potential   ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
       } else if (modelname == "DALEC_1005a") {
           PARPRIORS[2]  = 0.54                   ; PARPRIORUNC[2]  = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10            ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 16.9                   ; PARPRIORUNC[11] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           PARPRIORS[17] = OBS$lca                ; PARPRIORUNC[17] = OBS$lca_unc
           PARPRIORS[19] = OBS$Cfol_initial       ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
@@ -1078,7 +1084,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
       } else if (modelname == "DALEC.A4.C6.D2.F2.H2.P11.031") {
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)      
+          PARPRIORS[10] = OBS$RhetQ10         ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
 #          PARPRIORS[11] = 60.0               ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
                                                                           # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -1108,15 +1114,6 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 #; OTHERPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
-          #if (PARPRIORS[17] != -9999) { 
-          #    # LL (months) ~ LMA (gm2) R2 = 0.42 from 
-          #    # Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
-          #    # Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496
-          #    OTHERPRIORS[6]   = (0.0031*(PARPRIORS[17]/0.48)**c(1.71))/12  #  Mean estimate
-          #    tmp1 = (0.0031*(PARPRIORS[17]-PARPRIORUNC[17]/0.48)**c(1.62))/12 # Lower 95 % CI estimate
-          #    tmp2 = (0.0031*(PARPRIORS[17]+PARPRIORUNC[17]/0.48)**c(1.82))/12 # Upper 95 % CI estimate
-          #    OTHERPRIORUNC[6] = (tmp2-tmp1) * 0.5
-          #}
           # Hack to remove LAI observations out of growing season for high LCA areas
           if (PARPRIORS[17] > 100) {
 #              if (lat_degrees > 50) {
@@ -1126,7 +1123,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              }
           }                    
       } else if (modelname == "DALEC.A4.C6.D2.F2.H3.P12.033") {
-          PARPRIORS[10] = 0.0334798              ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)      
+          PARPRIORS[10] = OBS$RhetQ10            ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 65.0               ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
 #          PARPRIORS[11] = 60.0               ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: derived from multiple trait values from Kattge et al., (2011)
                                                                           # Note that this prior is difference from DALEC.C1.D1.F2.P1.
@@ -1171,6 +1168,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
                                                                                # These observational constraints are not the same and would lead to
                                                                                # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
 #          PARPRIORS[11] = 65.0                 ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
+          PARPRIORS[10] = OBS$RhetQ10            ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                           # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                           # due to the different temperature response functions used in ACM2 vs ACM 1
@@ -1347,7 +1345,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
            OTHERPRIORS[4] = 0.66               ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.036") {
           PARPRIORS[1] = 0.5                               ; PARPRIORUNC[1]  = 0.1 #; PARPRIORWEIGHT[10] = 1 # Efficiency of Litter decomposition to soil (0-1)
-          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
           PARPRIORS[11] = 21.1491                          ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
                                                                                         # from Kattge et al., (2011)
                                                                                         # Note that this prior is difference from DALEC.C1.D1.F2.P1.

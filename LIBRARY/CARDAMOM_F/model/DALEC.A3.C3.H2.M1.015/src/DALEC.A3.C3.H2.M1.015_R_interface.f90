@@ -229,7 +229,9 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,46) = FLUXES(1:nodays,41)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,47) = FLUXES(1:nodays,42)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,43)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,49) = FLUXES(1:nodays,44)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,49) = FLUXES(1:nodays,44) &       ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,47) &       ! 
+                             + FLUXES(1:nodays,48)         !               
      out_var1(i,1:nodays,50) = FLUXES(1:nodays,45)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,46)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,52) = POOLS(1:nodays,8)           ! surface water (kgH2O.m-2.30cmdepth)

@@ -203,6 +203,11 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
           grid_output$mean_annual_dnbe_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
           grid_output$mean_annual_dnbp_gCm2day = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
 
+          # Annual changes
+          #grid_output$annual_change_Ctotal_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          #grid_output$annual_change_biomass_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+          #grid_output$annual_change_dom_gCm2 = array(NA, dim=c(PROJECT$nosites,dim(site_output$labile_gCm2)[1],nos_years))
+
           # Periodically request garbage collection to maintain memory management - to avoid R's attempts to claim more memory than exists
           gc() ; gc()
 

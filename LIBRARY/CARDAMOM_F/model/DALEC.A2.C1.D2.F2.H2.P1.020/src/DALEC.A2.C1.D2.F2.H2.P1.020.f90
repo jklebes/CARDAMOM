@@ -185,7 +185,9 @@ module CARBON_MODEL_MOD
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
-  double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
+  double precision, dimension(nos_soil_layers) :: &
+                   soil_frac_clay,soil_frac_sand, & ! clay and soil fractions of soil
+                                     infiltrated    ! surface water infiltrated (kgH2O.m-2.d-1)                                            
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
                                             water_flux_mmolH2Om2s, & ! potential transpiration flux (mmolH2O.m-2.s-1)
@@ -212,7 +214,6 @@ module CARBON_MODEL_MOD
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
                                         runoff, & ! runoff (kgH2O.m-2.day-1)
-                                   infiltrated, & ! surface water infiltrated (kgH2O.m-2.d-1)                                           
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
                                 previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
@@ -1015,7 +1016,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,44) = runoff          ! soil surface runoff
        FLUXES(n,45) = underflow       ! drainage from bottom of soil column
        FLUXES(n,46) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
-       FLUXES(n,47) = infiltrated     ! soil surface infiltration by rain 
+       FLUXES(n,47) = infiltrated(1)  ! top soil surface infiltration by rain (kgH2O/m2/day)
+       FLUXES(n,50) = infiltrated(2)  ! middle soil surface infiltration by rain (kgH2O/m2/day)
+       FLUXES(n,51) = infiltrated(3)  ! bottom soil surface infiltration by rain (kgH2O/m2/day)       
        FLUXES(n,48) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
        FLUXES(n,49) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)
 
@@ -2969,7 +2972,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
-    infiltrated = infiltrated + (sum(waterchange) * 1d3)
+    infiltrated = infiltrated + (waterchange(1:nos_soil_layers) * 1d3)
 
   end subroutine infiltrate
   !

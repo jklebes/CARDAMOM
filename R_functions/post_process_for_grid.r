@@ -344,11 +344,17 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   states_all$mean_annual_Ctotal_gCm2 = states_all$mean_annual_biomass_gCm2 + states_all$mean_annual_dom_gCm2
 
 #  # Calculate the annual delta in biomass, dom and total C
-#  states_all$annual_change_Ctotal_gCm2 = array(NA, dim=dim(states_all$mean_Ctotal_gCm2))
-#  states_all$annual_change_Cbiomass_gCm2 = array(NA, dim=dim(states_all$biomass_gCm2))
-#  states_all$annual_change_Cdom_gCm2 = array(NA, dim=dim(states_all$dom_gCm2))
-  # Now loop through each year to calculate the delta's
-  for (y in seq())
+#  states_all$annual_change_Ctotal_gCm2 = array(NA, dim=dim(states_all$mean_annual_Ctotal_gCm2))
+#  states_all$annual_change_biomass_gCm2 = array(NA, dim=dim(states_all$mean_annual_biomass_gCm2))
+#  states_all$annual_change_dom_gCm2 = array(NA, dim=dim(states_all$mean_annual_dom_gCm2))
+#  # Now loop through each year to calculate the delta's
+#  a = 1 ; b = steps_per_year
+#  for (y in seq(1, dim(states_all$mean_annual_Ctotal_gCm2)[2])) {
+#       states_all$annual_change_Ctotal_gCm2[,y] = states_all$Ctotal_gCm2[,b] - states_all$Ctotal_gCm2[,a]
+#       states_all$annual_change_biomass_gCm2[,y] = states_all$biomass_gCm2[,b] - states_all$biomass_gCm2[,a]
+#       states_all$annual_change_dom_gCm2[,y] = states_all$dom_gCm2[,b] - states_all$dom_gCm2[,a]
+#       a = b + 1 ; b = b + steps_per_year
+#  }
 
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
@@ -569,6 +575,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$dCtotal_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
   dvar = states_all$lai_m2m2 - states_all$lai_m2m2[,1] #  difference in lai from initial
   site_output$dlai_m2m2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+
+#  # Extract quantiles
+#  site_output$annual_change_Ctotal_gCm2 = apply(states_all$annual_change_Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+#  site_output$annual_change_biomass_gCm2 = apply(states_all$annual_change_biomass_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+#  site_output$annual_change_dom_gCm2 = apply(states_all$annual_change_dom_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
 
   # Then do model specific pool combinations
   # Include the pool, its net change, the allocation of C from GPP / NPP direct
