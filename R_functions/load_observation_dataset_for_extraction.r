@@ -241,12 +241,18 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                       if (lag_present) { var3 = extend(var3,cardamom_ext) ; var3 = crop(var3,cardamom_ext) }
 
                       # Adjust spatial resolution of the datasets, this occurs in all cases
-                      if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                           # Resample to correct grid.
                           # Probably should be done via aggregate function to allow for correct error propogation
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
                           if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
+                      } else {
+                          # If the resolution of the dataset is coarser than the CARDAMOM grid, we should use
+                          # nearest neighbour.
+                          var1 = resample(var1, cardamom_ext, method="near") ; gc() 
+                          if (std_present) { var2 = resample(var2, cardamom_ext, method="near") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="near") ; gc() }
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster
@@ -529,6 +535,12 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
                           if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
+                      } else {
+                          # If the resolution of the dataset is coarser than the CARDAMOM grid, we should use
+                          # nearest neighbour.
+                          var1 = resample(var1, cardamom_ext, method="near") ; gc() 
+                          if (std_present) { var2 = resample(var2, cardamom_ext, method="near") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="near") ; gc() }                          
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster
