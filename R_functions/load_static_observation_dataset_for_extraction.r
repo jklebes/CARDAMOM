@@ -106,7 +106,7 @@ load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,
             } 
 
             # Extract the epsg from the file
-            epsg = crs(var1, describe = TRUE)$code
+            epsg = crs(est_out_tif, describe = TRUE)$code
             if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
             # If we have an epsg then we want to know if it differs from the one desired by the analysis
             if (epsg != gsub("epsg:","",grid_type)) {
