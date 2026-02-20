@@ -100,7 +100,7 @@ load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,
             rm(est_in)
             # Check that we have a uncertainty estimate
             if (std_present) {
-                std_out_tif = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(std_in[,,t]))
+                std_out_tif = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(std_in))
                 std_out_tif = rast(std_out_tif, crs = paste("epsg:",epsg,sep=""), type="xyz")
                 rm(std_in)
             } 
