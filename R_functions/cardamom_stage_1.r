@@ -34,8 +34,8 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                          ,lai_all,Csom_all,forest_all
                          ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                          ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                         ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
-                         ,fapar_all, et_all, RhetQ10_all, MTTsom_all) {
+                         ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_mortality_all,fire_all
+                         ,fapar_all, et_all, RhetQ10_all, MTTsom_all,MaxRootDepth_all) {
 
    # create the file name for the met/obs binary
    filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
@@ -94,8 +94,8 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
             obs = extract_obs(grid_long_loc,grid_lat_loc,latlon[n,],lai_all,Csom_all,forest_all
                              ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                             ,nbe_all,lca_all,gpp_all,Cwood_inc_all,Cwood_growth_all,Cwood_mortality_all
-                             ,fire_all,fapar_all, et_all, RhetQ10_all, MTTsom_all
+                             ,nbe_all,lca_all,gpp_all,Cwood_change_all,Cwood_growth_all,Cwood_mortality_all
+                             ,fire_all,fapar_all, et_all, RhetQ10_all, MTTsom_all, MaxRootDepth_all
                              ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                              ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
             # update ctessel pft in the project and potentially the model information
@@ -276,38 +276,39 @@ cardamom_stage_1<-function(PROJECT) {
                                                              default_lag = 1)                                                                         
            # Wood stock production, i.e. gross growth (gC/m2/day)
            Cwood_growth_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                             Cwood_growth_source,path_to_Cwood_growth,prefix = "wood_stock_production_gCm2day_",
+                                                             Cwood_growth_source,path_to_Cwood_growth,prefix = "nppCwood_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "wood_production",
-                                                             unc_var_name_in = "wood_production_SD",
-                                                             lag_var_name_in = "wood_production_lag",
+                                                             est_var_name_in = "wood_growth",
+                                                             unc_var_name_in = "wood_growth_SD",
+                                                             lag_var_name_in = "wood_growth_lag",
                                                              est_var_name_out = "Cwood_growth_gCm2day",
                                                              unc_var_name_out = "Cwood_growth_uncertainty_gCm2day",
                                                              lag_var_name_out = "Cwood_growth_lag",
                                                              default_lag = 0)                      
 
            # Wood stock net increment (gC/m2/day)
-           Cwood_inc_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                             Cwood_inc_source,path_to_Cwood_inc,prefix = "wood_stock_increment_gCm2day_",
+           Cwood_change_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+                                                             Cwood_change_source,path_to_Cwood_change,prefix = "deltaCwood_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "wood_increment",
-                                                             unc_var_name_in = "wood_increment_SD",
-                                                             lag_var_name_in = "wood_increment_lag",
-                                                             est_var_name_out = "Cwood_increment_gCm2day",
-                                                             unc_var_name_out = "Cwood_increment_uncertainty_gCm2day",
-                                                             lag_var_name_out = "Cwood_increment_lag",
+                                                             est_var_name_in = "wood_change",
+                                                             unc_var_name_in = "wood_change_SD",
+                                                             lag_var_name_in = "wood_change_lag",
+                                                             est_var_name_out = "Cwood_change_gCm2day",
+                                                             unc_var_name_out = "Cwood_change_uncertainty_gCm2day",
+                                                             lag_var_name_out = "Cwood_change_lag",
                                                              default_lag = 0)                      
            # Wood stock mortality (gC/m2/day)
            Cwood_mortality_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                             Cwood_mortality_source,path_to_Cwood_mortality,prefix = "wood_stock_mortality_gCm2day_",
+                                                             Cwood_mortality_source,path_to_Cwood_mortality,prefix = "lossCwood_gCm2day_",
                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "wood_mortality",
-                                                             unc_var_name_in = "wood_mortality_SD",
-                                                             lag_var_name_in = "wood_mortality_lag",
-                                                             est_var_name_out = "Cwood_mortality_gCm2day",
-                                                             unc_var_name_out = "Cwood_mortality_uncertainty_gCm2day",
-                                                             lag_var_name_out = "Cwood_mortality_lag",
+                                                             est_var_name_in = "wood_loss",
+                                                             unc_var_name_in = "wood_loss_SD",
+                                                             lag_var_name_in = "wood_loss_lag",
+                                                             est_var_name_out = "Cwood_loss_gCm2day",
+                                                             unc_var_name_out = "Cwood_loss_uncertainty_gCm2day",
+                                                             lag_var_name_out = "Cwood_loss_lag",
                                                              default_lag = 0)                      
+     # Write uncertainty to file
            # Surface soil water content (m3/m3)
 #           soilwater_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
 #                                                             soilwater_source,path_to_soil_water,prefix = "soil_water_m3m3_",
@@ -394,6 +395,13 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_in = "MTTsom_SD",
                                                              est_var_name_out = "MTTsom",
                                                              unc_var_name_out = "MTTsom_uncertainty")    
+           # Maxmimum rooting depth (m)
+           MaxRootDepth_all = load_static_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+                                                             MaxRootDepth_source,path_to_MaxRootDepth,prefix = "MaxRootDepth_m",
+                                                             est_var_name_in = "MaxRootDepth",
+                                                             unc_var_name_in = "MaxRootDepth_SD",
+                                                             est_var_name_out = "MaxRootDepth_m",
+                                                             unc_var_name_out = "MaxRootDepth_uncertainty_m")    
 
        } # if (PROJECT$model$name != "ACM")
 
@@ -413,10 +421,10 @@ cardamom_stage_1<-function(PROJECT) {
                            Cwood_stock_all = Cwood_stock_all, Cwood_potential_all = Cwood_potential_all,
                            sand_clay_all = sand_clay_all, crop_man_all = crop_man_all,
                            burnt_all = burnt_all, soilwater_all = soilwater_all, nbe_all = nbe_all, 
-                           lca_all = lca_all, gpp_all = gpp_all, Cwood_inc_all = Cwood_inc_all,
+                           lca_all = lca_all, gpp_all = gpp_all, Cwood_change_all = Cwood_change_all,
                            Cwood_mortality_all = Cwood_mortality_all, fire_all = fire_all, 
                            fapar_all = fapar_all, et_all = et_all, RhetQ10_all = RhetQ10_all,
-                           MTTsom_all = MTTsom_all)
+                           MTTsom_all = MTTsom_all, MaxRootDepth_all = MaxRootDepth_all)
 
       } else { # use parallel
 
@@ -430,8 +438,8 @@ cardamom_stage_1<-function(PROJECT) {
                               ,lai_all,Csom_all,forest_all
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                              ,nbe_all, lca_all,gpp_all,Cwood_inc_all,Cwood_mortality_all,fire_all
-                              ,fapar_all, et_all, RhetQ10_all, MTTsom_all)    
+                              ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_mortality_all,fire_all
+                              ,fapar_all, et_all, RhetQ10_all, MTTsom_all, MaxRootDepth_all)    
 
           } # site loop
 

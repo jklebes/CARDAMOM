@@ -56,9 +56,9 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_RhetQ10") == FALSE)               {path_to_RhetQ10 <<- " "}  
   if (exists("path_to_MTTsom") == FALSE)                {path_to_MTTsom <<- " "}  
   if (exists("path_to_Csom") == FALSE)                  {path_to_Csom <<- " "}
-  if (exists("path_to_Cwood_inc") == FALSE)             {path_to_Cwood_inc <<- " "}
+  if (exists("path_to_Cwood_change") == FALSE)          {path_to_Cwood_change <<- " "}
   if (exists("path_to_Cwood_growth") == FALSE)          {path_to_Cwood_growth <<- " "}
-  if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- "v"}
+  if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- " "}
   if (exists("path_to_Cwood") == FALSE)                 {path_to_Cwood <<- " "}
   if (exists("path_to_Cwood_initial") == FALSE)         {path_to_Cwood_initial <<- " "}
   if (exists("path_to_Cwood_potential") == FALSE)       {path_to_Cwood_potential <<- " "}
@@ -68,6 +68,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_et") == FALSE)                    {path_to_et <<- " "}
   if (exists("path_to_fire") == FALSE)                  {path_to_fire <<- " "}
   if (exists("path_to_lca") == FALSE)                   {path_to_lca <<- " "}
+  if (exists("path_to_MaxRootDepth") == FALSE)          {path_to_MaxRootDepth <<- " "}  
   # Forcings data options
   if (exists("met_source") == FALSE)                    {met_source <<- " "}
   if (exists("burnt_area_source") == FALSE)             {burnt_area_source <<- " "}
@@ -107,6 +108,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("lca_source") == FALSE)                    {lca_source <<- " "}
   if (exists("frac_Cwood_coarse_root_source") == FALSE) {frac_Cwood_coarse_root_source <<- " "}
   if (exists("minLWP_source") == FALSE)                 {minLWP_source <<- " "}
+  if (exists("MaxRootDepth_source") == FALSE)           {MaxRootDepth_source <<- " "}
   if (exists("Cwood_potential_source") == FALSE)        {Cwood_potential_source <<- " "}
   if (exists("crop_management_source") == FALSE)        {crop_management_source <<- " "}
   if (exists("snow_source") == FALSE)                   {snow_source <<- " "}
@@ -158,7 +160,7 @@ check_control_file_defaults<-function(paths) {
   if (Csom_source != "site_specific" & Csom_source != " " & path_to_Csom == " ")                                 {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
   if (MTTsom_source != "site_specific" & MTTsom_source != " " & path_to_MTTsom == " ")                           {stop(paste("specified 'MTTsom_source' and 'path_to_MTTsom' incompatible"))}  
   if (RhetQ10_source != "site_specific" & RhetQ10_source != " " & path_to_RhetQ10 == " ")                        {stop(paste("specified 'RhetQ10_source' and 'path_to_RhetQ10' incompatible"))}  
-  if (Cwood_inc_source != "site_specific" & Cwood_inc_source != " " & path_to_Cwood_inc == " ")                  {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
+  if (Cwood_change_source != "site_specific" & Cwood_change_source != " " & path_to_Cwood_change == " ")         {stop(paste("specified 'Cwood_change_source' and 'path_to_Cwood_change' incompatible"))}
   if (Cwood_growth_source != "site_specific" & Cwood_growth_source != " " & path_to_Cwood_growth == " ")         {stop(paste("specified 'Cwood_growth_source' and 'path_to_Cwood_growth' incompatible"))}
   if (Cwood_mortality_source != "site_specific" & Cwood_mortality_source != " " & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
   if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
@@ -168,7 +170,8 @@ check_control_file_defaults<-function(paths) {
   if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
   if (gpp_source != "site_specific" & gpp_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'gpp_source' and 'path_to_gpp' incompatible"))}
   if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
-  if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'fire_source' and 'path_to_lca' incompatible"))}
+  if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'lca_source' and 'path_to_lca' incompatible"))}
+  if (MaxRootDepth_source != "site_specific" & MaxRootDepth_source != " " & path_to_MaxRootDepth == " ")         {stop(paste("specified 'MaxRootDepth_source' and 'path_to_MaxRootDepth' incompatible"))}  
 
   # NOTE: current assimilated variables which have currently only been done on site scale, without gridded datasets
 #  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}

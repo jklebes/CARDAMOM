@@ -53,7 +53,7 @@ M = Managed Grassland / arable crops (Table 10)
 | !34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
 | !35 |                                |                     |                                                     | D. T. Milodowski             | Published   |
 | 36 | DALEC.A1.C7.D2.F2.H2.P1.R4.035 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014      | Published   |
-
+| 37 | DALEC.A1.C1.D2.F2.H5.P1.037    | NA                  | As DALEC.4. with paramterisable minLWP and iWUE     | T. L. Smallman                | Unpublished   |
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
 | Model Name | Short Description                                                          | Details                   |
@@ -103,6 +103,7 @@ M = Managed Grassland / arable crops (Table 10)
 | H2         | 3-pool water cycle, 30cm top layer, variable rooting depth layer and remainder of soil. Soil coupled to C-cycle via fine root biomass and supply ~ demand model of stomatal conductance (A2,3,4) | Published (Smallman & Williams, 2019)  |
 | H3         | As H2 but min LWP parameterisable                                     | Unpublished (D. T. Milodowski) |
 | H4         | As H2 but Saxton pedotransfer functions replaced with van Genuchten   | Unpublished (L. Orci-Fernandez)|
+| H5         | As H3 but with iWUE parameterisable                                   | Unpublished (T. L. Smallman)   | 
 
 #### TABLE 7. Nitrogen pools represented and connected structure sub-models
 

@@ -110,14 +110,14 @@ obs_array_names <<- c("GPP (gC/m2/day)",
                       "Mean woody gross productivity (gC/m2/day)",
                       "Mean woody gross productivity variance (gC/m2/day)",
                       "Lag period over which to average (steps)",
-                      "Mean woody natural mortality (gC/m2/day)",
-                      "Mean woody natural mortality variance (gC/m2/day)",
+                      "Mean woody loss (gC/m2/day)",
+                      "Mean woody loss variance (gC/m2/day)",
                       "Lag period over which to average (steps)",
                       "Mean leaf litter flux (gC/m2/day)",
                       "Mean leaf litter flux variance (gC/m2/day)",
                       "Lag period over which to average (steps)",
-                      "Mean woody net increment (gC/m2/day)",
-                      "Mean woody net increment variance (gC/m2/day)",
+                      "Mean woody net change (gC/m2/day)",
+                      "Mean woody net change variance (gC/m2/day)",
                       "Lag period over which to average (steps)",
                       "Extracted C due to harvest (gC/m2/day)",
                       "Extracted C due to harvest variance (gC/m2/day)",
@@ -219,7 +219,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       modelid = 35
   } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.036") {
       modelid = 36
-  } else if (modelname == "") {
+  } else if (modelname == "DALEC.A1.C1.D2.F2.H5.P1.037"){
       modelid = 37
   } else if (modelname == "") {
       modelid = 38
@@ -338,15 +338,15 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       OBSMAT[,49] = OBS$Cwood_growth          # Mean woody productivity over lag period (gC/m2/day)
       OBSMAT[,50] = OBS$Cwood_growth_unc      # Mean woody productivity varince
       OBSMAT[,51] = OBS$Cwood_growth_lag      # Lag period over which to average  (steps)
-      OBSMAT[,52] = OBS$Cwood_mortality       # Mean woody natural mortality over lag period (gC/m2/day)
-      OBSMAT[,53] = OBS$Cwood_mortality_unc   # Mean woody natural mortality varince
-      OBSMAT[,54] = OBS$Cwood_mortality_lag   # Lag period over which to average  (steps)
+      OBSMAT[,52] = OBS$Cwood_loss            # Mean woody loss over lag period (gC/m2/day)
+      OBSMAT[,53] = OBS$Cwood_loss_unc        # Mean woody loss varince
+      OBSMAT[,54] = OBS$Cwood_loss_lag        # Lag period over which to average  (steps)
       OBSMAT[,55] = OBS$foliage_to_litter     # Mean litter flux over lag period (gC/m2/day)
       OBSMAT[,56] = OBS$foliage_to_litter_unc # Mean litter flux varince
       OBSMAT[,57] = OBS$foliage_to_litter_lag # Lag period over which to average (steps)
-      OBSMAT[,58] = OBS$Cwood_inc         # Mean woody net increment over lag period (gC/m2/day)
-      OBSMAT[,59] = OBS$Cwood_inc_unc     # Mean woody net increment varince
-      OBSMAT[,60] = OBS$Cwood_inc_lag     # Lag period over which to average  (steps)
+      OBSMAT[,58] = OBS$Cwood_change          # Mean woody net change over lag period (gC/m2/day)
+      OBSMAT[,59] = OBS$Cwood_change_unc      # Mean woody net change varince
+      OBSMAT[,60] = OBS$Cwood_change_lag      # Lag period over which to average  (steps)
       OBSMAT[,61] = OBS$harvest               # Extracted C due to harvest over lag period (gC/m2/day)
       OBSMAT[,62] = OBS$harvest_unc           # Extracted C due to harvest varince
       OBSMAT[,63] = OBS$harvest_lag           # Lag period over which to average (steps)
@@ -470,9 +470,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[24] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[24] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[26] = 1.0                              ; PARPRIORUNC[26] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[26] = OBS$MaxRootDepth                 ; PARPRIORUNC[26] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[26] = 1.0                              ; PARPRIORUNC[26] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[27] = 0.87                             ; PARPRIORUNC[27] = 0.41 # Resilience factor
           #PARPRIORS[28] = 0.5                              ; PARPRIORUNC[28] = 0.25 # Foliar combustion completeness
           #PARPRIORS[29] = 0.1                              ; PARPRIORUNC[29] = 0.25 # Root / wood combustion completeness
@@ -492,7 +493,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.004") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Global Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
 #          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
                                                                                # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
@@ -510,9 +511,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -544,9 +546,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -578,9 +581,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -613,9 +617,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -648,9 +653,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -683,9 +689,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -715,9 +722,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -749,9 +757,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
           #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
           #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
@@ -939,7 +948,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # Other priors
           OTHERPRIORS[1] = 0.54        ; OTHERPRIORUNC[1] = 0.12 #; OTHERPRIORWEIGHT[1] = noyears  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           # Yield:GPP Winter Wheat ATEC experiment plus He et al., (2018), doi: 10.3390/rs10030372
-          # Values from He et al., Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
+          # Values from He et al., Winter Wheat 0.38, Spring Wheat 0.24, Barley 0.42, Duram Wheat 0.22, Alfalfa 0.55, Pea 0.28, Maize 0.44
           OTHERPRIORS[8] = 0.38        ; OTHERPRIORUNC[8] = 0.087*0.5 #; OTHERPRIORWEIGHT[8] = noyears
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P2.018") {
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12  # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -953,6 +962,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[27] = OBS$MaxRootDepth     ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
           #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -981,6 +991,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[27] = OBS$MaxRootDepth     ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
           #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1011,9 +1022,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1072,6 +1084,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[33] = OBS$minLWP                       ; PARPRIORUNC[33] = OBS$minLWP_unc # minLWP prior
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
@@ -1099,7 +1112,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial      ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial       ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial       ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
-          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth       ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
 #          PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
 #          PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
 #          PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1138,7 +1152,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial      ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial       ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial       ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
-          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth       ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
 #          PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
 #          PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
 #          PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1178,6 +1193,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[27] = OBS$MaxRootDepth     ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           #PARPRIORS[28] = 0.87                 ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1208,6 +1224,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
           #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1228,6 +1245,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
           #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1248,6 +1266,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[32] = -1.8                 ; PARPRIORUNC[32] = 1 # minLWP (MPa)
+          PARPRIORS[40] = OBS$MaxRootDepth     ; PARPRIORUNC[40] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[42] = 11.197440            ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #          PARPRIORS[43] = 275.1452             ; PARPRIORUNC[43] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # other priors
@@ -1269,6 +1288,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[32] = -1.8                 ; PARPRIORUNC[32] = 1 # minLWP (MPa)
+          PARPRIORS[40] = OBS$MaxRootDepth     ; PARPRIORUNC[40] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[42] = 11.197440            ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #          PARPRIORS[43] = 275.1452             ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # other priors
@@ -1290,6 +1310,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[32] = -1.8                 ; PARPRIORUNC[32] = 1 # minLWP (MPa)
+          PARPRIORS[40] = OBS$MaxRootDepth     ; PARPRIORUNC[40] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[42] = 11.197440            ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #          PARPRIORS[43] = 275.1452             ; PARPRIORUNC[43]=296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # other priors
@@ -1308,6 +1329,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[40] = OBS$MaxRootDepth     ; PARPRIORUNC[40] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[42] = 11.197440            ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #          PARPRIORS[43] = 275.1452             ; PARPRIORUNC[43] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # other priors
@@ -1339,6 +1361,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[18] = OBS$Croots_initial   ; PARPRIORUNC[18] = OBS$Croots_initial_unc # Croots prior
           PARPRIORS[19] = OBS$Clit_initial     ; PARPRIORUNC[19] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[37] = OBS$MaxRootDepth     ; PARPRIORUNC[37] = OBS$MaxRootDepth_unc # Maximum rooting depth prior,           
           # other priors
 #          OTHERPRIORS[2] =        ; OTHERPRIORUNC[2] =  # Initial soil water fraction 
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
@@ -1357,9 +1380,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
-          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
-                                                                                   # based on median from Fan et al., (2017) 
-                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
@@ -1382,7 +1406,51 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
                   OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
-          }                    
+          }           
+      } else if (modelname == "DALEC.A1.C1.D2.F2.H5.P1.037") {
+          PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+#          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+#          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
+                                                                               # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
+                                                                               # These observational constraints are not the same and would lead to
+                                                                               # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
+#          PARPRIORS[11] = 65.0                             ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
+          PARPRIORS[11] = 21.1491                            ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
+                                                                                        # from Kattge et al., (2011)
+                                                                                        # Note that this prior is difference from DALEC.C1.D1.F2.P1.
+                                                                                        # due to the different temperature response functions used in ACM2 vs ACM 1
+          PARPRIORS[17] = OBS$lca                          ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
+          PARPRIORS[19] = OBS$Cfol_initial                 ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
+          PARPRIORS[20] = OBS$Croots_initial               ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
+          PARPRIORS[21] = OBS$Cwood_initial                ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
+          PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
+          PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
+          #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
+          #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
+          #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[33] = -2.0                             ; PARPRIORUNC[33] = 0.5 # minimum leaf water potential (MPa)          
+          # Other priors
+          #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
+          OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
+          OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+          OTHERPRIORS[6] = OBS$MTTsom          ; OTHERPRIORUNC[6] = OBS$MTTsom_unc # Prior on the MTT of soil
+          OTHERPRIORS[7] = 0.7                 ; OTHERPRIORUNC[7] = 0.1 ; OTHERPRIORWEIGHT[7] = noyears # Prior on the unstressed CiCa ratio
+          # Hack to remove LAI observations out of growing season for high LCA areas
+          if (PARPRIORS[17] > 100) {
+#              if (lat_degrees > 50) {
+                  filter = which(MET[,6] < 175 | MET[,6] > 250)
+                  OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+#              }
+          }                                       
       } else if (modelname == "ACM") {
 
           # For ACM_GPP_ET

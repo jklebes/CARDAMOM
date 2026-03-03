@@ -34,8 +34,8 @@
 extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,forest_all
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
-                     ,lca_all,gpp_all,Cwood_inc_all,Cwood_growth_all,Cwood_mortality_all
-                     ,fire_all,fapar_all,et_all,RhetQ10_all,MTTsom_all
+                     ,lca_all,gpp_all,Cwood_change_all,Cwood_growth_all,Cwood_loss_all
+                     ,fire_all,fapar_all,et_all,RhetQ10_all,MTTsom_all,MaxRootDepth_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -268,53 +268,53 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
-    ## Get some Wood net increment information (gC/m2/day; time series)
+    ## Get some Wood net change information (gC/m2/day; time series)
 
-    if (Cwood_inc_source == "site_specific") {
+    if (Cwood_change_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        Cwood_inc = read_site_specific_obs("Cwood_increment_gCm2day",infile)
-        Cwood_inc_unc = read_site_specific_obs("Cwood_increment_uncertainty_gCm2day",infile)
-        Cwood_inc_lag = read_site_specific_obs("Cwood_increment_lag_step",infile) # in model time steps
+        Cwood_change = read_site_specific_obs("Cwood_change_gCm2day",infile)
+        Cwood_change_unc = read_site_specific_obs("Cwood_change_uncertainty_gCm2day",infile)
+        Cwood_change_lag = read_site_specific_obs("Cwood_change_lag_step",infile) # in model time steps
         # Has uncertainty information been provided?
-        if (length(Cwood_inc_unc) == 1) {
+        if (length(Cwood_change_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cwood_inc_unc = rep(-9999,times = length(Cwood_inc))
-            Cwood_inc_unc[which(Cwood_inc > 0)] = 0.25 * Cwood_inc[which(Cwood_inc > 0)]
+            Cwood_change_unc = rep(-9999,times = length(Cwood_change))
+            Cwood_change_unc[which(Cwood_change > 0)] = 0.25 * Cwood_change[which(Cwood_change > 0)]
         }
         # Has lag information been provided
-        if (length(Cwood_inc_lag) == 1) {
+        if (length(Cwood_change_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cwood_inc_lag = rep(-9999,times = length(Cwood_inc))
-            Cwood_inc_lag[which(Cwood_inc > 0)] = 0 # assume applies to current time step only
+            Cwood_change_lag = rep(-9999,times = length(Cwood_change))
+            Cwood_change_lag[which(Cwood_change > 0)] = 0 # assume applies to current time step only
         }
-    } else if (Cwood_inc_source == "Gridded_nc" | Cwood_inc_source == "Gridded_tif") {
+    } else if (Cwood_change_source == "Gridded_nc" | Cwood_change_source == "Gridded_tif") {
         # If there are any values in the analysis window
-        if (max(Cwood_inc_all$place_obs_in_step) > 0) {
+        if (Cwood_change_all$data_available) {        
             # Extract gross wood production / growth and uncertainty information
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_inc_all,agg_func = "mean", na_flag = -9999,
-                                                                      est_var_name_in = "Cwood_increment_gCm2day",
-                                                                      unc_var_name_in = "Cwood_increment_uncertainty_gCm2day",
-                                                                      lag_var_name_in = "Cwood_increment_lag",
-                                                                      est_var_name_out = "Cwood_inc",
-                                                                      unc_var_name_out = "Cwood_inc_unc",
-                                                                      lag_var_name_out = "Cwood_inc_lag")                                                  
-            Cwood_inc = output$Cwood_inc ; Cwood_inc_unc = output$Cwood_inc_unc ; Cwood_inc_lag = output$Cwood_inc_lag
+                                                                      Cwood_change_all,agg_func = "mean", na_flag = -9999,
+                                                                      est_var_name_in = "Cwood_change_gCm2day",
+                                                                      unc_var_name_in = "Cwood_change_uncertainty_gCm2day",
+                                                                      lag_var_name_in = "Cwood_change_lag",
+                                                                      est_var_name_out = "Cwood_change",
+                                                                      unc_var_name_out = "Cwood_change_unc",
+                                                                      lag_var_name_out = "Cwood_change_lag")                                                  
+            Cwood_change = output$Cwood_change ; Cwood_change_unc = output$Cwood_change_unc ; Cwood_change_lag = output$Cwood_change_lag
             # Tidy up
             rm(output)
         } else {
             # assume no data available
-            Cwood_inc = -9999 ; Cwood_inc_unc = -9999 ; Cwood_inc_lag = -9999
+            Cwood_change = -9999 ; Cwood_change_unc = -9999 ; Cwood_change_lag = -9999
         }
     } else {
         # assume no data available
-        Cwood_inc = -9999 ; Cwood_inc_unc = -9999 ; Cwood_inc_lag = -9999
+        Cwood_change = -9999 ; Cwood_change_unc = -9999 ; Cwood_change_lag = -9999
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_inc_unc[Cwood_inc_unc >= 0] = pmax(0.1,sqrt(Cwood_inc_unc[Cwood_inc_unc >= 0]**2 + (0.1*mean(Cwood_inc[Cwood_inc_unc >= 0]))**2))
+    Cwood_change_unc[Cwood_change_unc >= 0] = pmax(0.1,sqrt(Cwood_change_unc[Cwood_change_unc >= 0]**2 + (0.1*mean(Cwood_change[Cwood_change_unc >= 0]))**2))
 
     ###
     ## Get some gross woody production information (gC/m2/day; time series)
@@ -338,7 +338,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         }
     } else if (Cwood_growth_source == "Gridded_nc" | Cwood_growth_source == "Gridded_tif") {
         # If there are any values in the analysis window
-        if (max(Cwood_growth_all$place_obs_in_step) > 0) {
+        if (Cwood_growth_all$data_available) {      
             # Extract gross wood production / growth and uncertainty information
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
@@ -367,56 +367,56 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     Cwood_growth_unc[Cwood_growth_unc >= 0] = pmax(0.1,sqrt(Cwood_growth_unc[Cwood_growth_unc >= 0]**2 + (0.1*mean(Cwood_growth[Cwood_growth_unc >= 0]))**2))
 
     ###
-    ## Get some Wood natural mortality information (gC/m2/day; time series)
+    ## Get some Wood loss information (gC/m2/day; time series)
 
     if (Cwood_mortality_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_obs.csv",sep="")
-        Cwood_mortality = read_site_specific_obs("Cwood_mortality_gCm2day",infile)
-        Cwood_mortality_unc = read_site_specific_obs("Cwood_mortality_uncertainty_gCm2day",infile)
-        Cwood_mortality_lag = read_site_specific_obs("Cwood_mortality_lag_step",infile) # in model time steps
+        Cwood_loss = read_site_specific_obs("Cwood_loss_gCm2day",infile)
+        Cwood_loss_unc = read_site_specific_obs("Cwood_loss_uncertainty_gCm2day",infile)
+        Cwood_loss_lag = read_site_specific_obs("Cwood_loss_lag_step",infile) # in model time steps
         # Has uncertainty information been provided?
-        if (length(Cwood_mortality_unc) == 1) {
+        if (length(Cwood_loss_unc) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cwood_mortality_unc = rep(-9999,times = length(Cwood_mortality))
-            Cwood_mortality_unc[which(Cwood_mortality > 0)] = 0.25 * Cwood_mortality[which(Cwood_mortality > 0)]
+            Cwood_loss_unc = rep(-9999,times = length(Cwood_loss))
+            Cwood_loss_unc[which(Cwood_loss > 0)] = 0.25 * Cwood_loss[which(Cwood_loss > 0)]
         }
         # Has lag information been provided
-        if (length(Cwood_mortality_lag) == 1) {
+        if (length(Cwood_loss_lag) == 1) {
             # on the other hand if not then we have no uncertainty info, so use default
-            Cwood_mortality_lag = rep(-9999,times = length(Cwood_mortality))
-            Cwood_mortality_lag[which(Cwood_mortality > 0)] = 0 # assume applies to current time step only
+            Cwood_loss_lag = rep(-9999,times = length(Cwood_loss))
+            Cwood_loss_lag[which(Cwood_loss > 0)] = 0 # assume applies to current time step only
         }
     } else if (Cwood_mortality_source == "Gridded_nc" | Cwood_mortality_source == "Gridded_tif") {
         # If there are any values in the analysis window
-        if (max(Cwood_mortality_all$place_obs_in_step) > 0) {
+        if (Cwood_loss_all$data_available) {      
             # Extract wood mortality and uncertainty information
             # NOTE: assume default uncertainty (+/- scale)
             # Extract the current location from the gridded dataset
             output = extract_timeseries_observations_with_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                      Cwood_mortality_all,agg_func = "mean", na_flag = -9999,
-                                                                      est_var_name_in = "Cwood_mortality_gCm2day",
-                                                                      unc_var_name_in = "Cwood_mortality_uncertainty_gCm2day",
-                                                                      lag_var_name_in = "Cwood_mortality_lag",
-                                                                      est_var_name_out = "Cwood_mortality",
-                                                                      unc_var_name_out = "Cwood_mortality_unc",
-                                                                      lag_var_name_out = "Cwood_mortality_lag")   
+                                                                      Cwood_loss_all,agg_func = "mean", na_flag = -9999,
+                                                                      est_var_name_in = "Cwood_loss_gCm2day",
+                                                                      unc_var_name_in = "Cwood_loss_uncertainty_gCm2day",
+                                                                      lag_var_name_in = "Cwood_loss_lag",
+                                                                      est_var_name_out = "Cwood_loss",
+                                                                      unc_var_name_out = "Cwood_loss_unc",
+                                                                      lag_var_name_out = "Cwood_loss_lag")   
             # Assign to local variables                           
-            Cwood_mortality = output$Cwood_mortality ; Cwood_mortality_unc = output$Cwood_mortality_unc ; Cwood_mortality_lag = output$Cwood_mortality_lag
+            Cwood_loss = output$Cwood_loss ; Cwood_loss_unc = output$Cwood_loss_unc ; Cwood_loss_lag = output$Cwood_loss_lag
 
             # Tidy up
             rm(output)
         } else {
             # assume no data available
-            Cwood_mortality = -9999 ; Cwood_mortality_unc = -9999 ; Cwood_mortality_lag = -9999
+            Cwood_loss = -9999 ; Cwood_loss_unc = -9999 ; Cwood_loss_lag = -9999
         }
     } else {
         # assume no data available
-        Cwood_mortality = -9999 ; Cwood_mortality_unc = -9999 ; Cwood_mortality_lag = -9999
+        Cwood_loss = -9999 ; Cwood_loss_unc = -9999 ; Cwood_loss_lag = -9999
     }
     # Assumed uncertainty structure as agreed with Anthony Bloom
     # NOTE minimum uncertainty bound irrespective of the dataset estimates
-    Cwood_mortality_unc[Cwood_mortality_unc >= 0] = pmax(0.1,sqrt(Cwood_mortality_unc[Cwood_mortality_unc >= 0]**2 + 
-                                                                  (0.1*mean(Cwood_mortality[Cwood_mortality_unc >= 0]))**2))
+    Cwood_loss_unc[Cwood_loss_unc >= 0] = pmax(0.1,sqrt(Cwood_loss_unc[Cwood_loss_unc >= 0]**2 + 
+                                                                  (0.1*mean(Cwood_loss[Cwood_loss_unc >= 0]))**2))
 
     ###
     ## Get some foliage to litter flux information (gC/m2/day; time series)
@@ -1002,6 +1002,32 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (lca > -9999) { lca_unc = max(10,sqrt(lca_unc**2 + (0.1*lca)**2)) }
 
     ###
+    ## Get some maximum rooting depth information (m)
+
+    if (MaxRootDepth_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_initial_obs.csv",sep="")
+        MaxRootDepth = read_site_specific_obs("MaxRootDepth_m",infile)
+        MaxRootDepth_unc = read_site_specific_obs("MaxRootDepth_unc_m",infile)
+    } else if (MaxRootDepth_source == "Gridded_nc" | MaxRootDepth_source == "Gridded_tif") {
+        # get leaf carbon per unit leaf area from gridded dataset  
+        output = extract_static_observations_with_uncertainty(grid_long_loc,grid_lat_loc,MaxRootDepth_all,
+                                                              na_flag = -9999,
+                                                              est_var_name_in="MaxRootDepth_m",
+                                                              unc_var_name_in="MaxRootDepth_uncertainty_m",
+                                                              est_var_name_out="MaxRootDepth_m",
+                                                              unc_var_name_out="MaxRootDepth_unc_m") 
+        # Load into local variables
+        MaxRootDepth = output$MaxRootDepth_m
+        MaxRootDepth_unc = output$MaxRootDepth_unc_m
+    } else {
+        # assume no data available
+        MaxRootDepth = -9999 ; MaxRootDepth_unc = -9999
+    }
+    # Assumed uncertainty structure as agreed with Anthony Bloom
+    # NOTE minimum uncertainty bound irrespective of the dataset estimates
+    if (MaxRootDepth > -9999) { MaxRootDepth_unc = max(0.3,sqrt(MaxRootDepth_unc**2 + (0.1*MaxRootDepth)**2)) }
+
+    ###
     ## Get some prior info on fraction of Cwood belowground as course roots (fraction) 
 
     if (frac_Cwood_coarse_root_source == "site_specific") {
@@ -1290,9 +1316,9 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 nbe = nbe, nbe_unc = nbe_unc, nbe_lag = nbe_lag,
                 SWE = SWE, SWE_unc = SWE_unc, SWE_lag = SWE_lag,
                 soilwater = soilwater, soilwater_unc = soilwater_unc, soilwater_lag = soilwater_lag,
-                Cwood_inc = Cwood_inc, Cwood_inc_unc = Cwood_inc_unc, Cwood_inc_lag = Cwood_inc_lag,
+                Cwood_change = Cwood_change, Cwood_change_unc = Cwood_change_unc, Cwood_change_lag = Cwood_change_lag,
                 Cwood_growth = Cwood_growth, Cwood_growth_unc = Cwood_growth_unc, Cwood_growth_lag = Cwood_growth_lag,
-                Cwood_mortality = Cwood_mortality, Cwood_mortality_unc = Cwood_mortality_unc, Cwood_mortality_lag = Cwood_mortality_lag,
+                Cwood_loss = Cwood_loss, Cwood_loss_unc = Cwood_loss_unc, Cwood_loss_lag = Cwood_loss_lag,
                 harvest = harvest, harvest_unc = harvest_unc, harvest_lag = harvest_lag,
                 Csom_initial = Csom_initial, Csom_initial_unc = Csom_initial_unc, 
                 Cfol_initial = Cfol_initial, Cfol_initial_unc = Cfol_initial_unc,
@@ -1308,7 +1334,8 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 lca = lca, lca_unc = lca_unc,
                 foliage_to_litter = foliage_to_litter, foliage_to_litter_unc = foliage_to_litter_unc, foliage_to_litter_lag = foliage_to_litter_lag,
                 frac_Cwood_coarse_root_prior = frac_Cwood_coarse_root_prior, frac_Cwood_coarse_root_prior_unc = frac_Cwood_coarse_root_prior_unc,
-                minLWP = minLWP, minLWP_unc = minLWP_unc, RhetQ10 = RhetQ10, RhetQ10_unc = RhetQ10_unc, MTTsom = MTTsom, MTTsom_unc = MTTsom_unc))
+                minLWP = minLWP, minLWP_unc = minLWP_unc, RhetQ10 = RhetQ10, RhetQ10_unc = RhetQ10_unc, MTTsom = MTTsom, MTTsom_unc = MTTsom_unc,
+                MaxRootDepth = MaxRootDepth, MaxRootDepth_unc = MaxRootDepth_unc))
 
 } # end function extract_obs
 
