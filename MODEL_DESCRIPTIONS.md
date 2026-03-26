@@ -37,9 +37,9 @@ M = Managed Grassland / arable crops (Table 10)
 | 18 | DALEC.A1.C1.D2.F2.H2.P2.018    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
 | 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.019 | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
 | 20 | DALEC.A2.C1.D2.F2.H2.P1.020    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
-| !21 | DALEC.A1.C1.D2.F2.H2.P5.021    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
-| !22 | DALEC.A1.C1.D2.F2.H2.P6.022    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
-| !23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
+| 21 | DALEC.A1.C1.D2.F2.H2.P5.021    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
+| 22 | DALEC.A1.C1.D2.F2.H2.P6.022    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
+| 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
 | !24 | DALEC.A1.C2.D2.F2.H2.P8.R2.024 | G6                  |                                                     | T. L. Smallman               | Unpublished |
 | !25 | DALEC.A1.C2.D2.F2.H2.P9.R2.025 | G7                  |                                                     | T. L. Smallman               | Unpublished |
 | !26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |

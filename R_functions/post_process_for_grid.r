@@ -1787,6 +1787,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$dCwood_gCm2_to_rhet_gCm2day_correlation = states_all$dCwood_gCm2_to_rhet_gCm2day_correlation
       site_output$dCwood_gCm2_to_wood_gCm2_correlation  = states_all$dCwood_gCm2_to_wood_gCm2_correlation 
       site_output$dCwood_gCm2_to_som_gCm2_correlation = states_all$dCwood_gCm2_to_som_gCm2_correlation
+      site_output$dCwood_gCm2_to_dCsom_gCm2_correlation = states_all$dCwood_gCm2_to_dCsom_gCm2_correlation      
   }
   if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation")) {
       site_output$MTT_som_years_parameter_correlation = states_all$MTT_som_years_parameter_correlation

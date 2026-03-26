@@ -210,10 +210,6 @@ module MODEL_PARAMETERS
     PI%parmin(43) = 0.10d0 !0.645
     PI%parmax(43) = 1.10d0 !0.911
 
-    ! Initial leaf lifespan (days)
-    PI%parmin(44) =  60.d0
-    PI%parmax(44) = 365.25d0 * 4d0
-
     !
     ! INITIAL VALUES DECLARED HERE
     !

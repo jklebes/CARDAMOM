@@ -951,6 +951,7 @@ define_grid_output<-function(PROJECT,repair,outfile_grid,site_output){
               grid_output$dCwood_gCm2_to_rhet_gCm2day_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
               grid_output$dCwood_gCm2_to_wood_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
               grid_output$dCwood_gCm2_to_som_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))    
+              grid_output$dCwood_gCm2_to_dCsom_gCm2_correlation = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))                  
           }
           # If Mean mean allocation to wood correlation exists, ensure we store it for the gridded run too
           if (any(check_list == "MTT_som_years_parameter_correlation") == TRUE) {

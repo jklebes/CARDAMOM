@@ -11,10 +11,6 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 source("./R_functions/load_all_cardamom_functions.r")
 
 # Load the info file for the project you will be calling from
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_EDC_TendyMet_longterm/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_fapar_EDC_TendyMet_longterm/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C1.D2.F2.H2.P1.#_MHMCMC/CZO_lai_fapar_EDC_TendyMet_longterm/infofile.RData")
 load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A3.C3.H2.M1.#_MHMCMC/ATEC/infofile.RData")
 # If the project has more than one site within set "n" to the correct value, otherwise leave as 1
 n = 1

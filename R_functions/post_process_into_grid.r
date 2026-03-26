@@ -940,6 +940,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$dCwood_gCm2_to_rhet_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_rhet_gCm2day_correlation
                grid_output$dCwood_gCm2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_wood_gCm2_correlation 
                grid_output$dCwood_gCm2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_som_gCm2_correlation
+               grid_output$dCwood_gCm2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_dCsom_gCm2_correlation
            }
            if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation") == TRUE) {
                grid_output$MTT_som_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_som_years_parameter_correlation

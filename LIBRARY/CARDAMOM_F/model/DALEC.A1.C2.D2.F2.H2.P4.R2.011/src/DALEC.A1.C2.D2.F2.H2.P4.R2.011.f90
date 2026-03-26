@@ -354,7 +354,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision ::  tmp,infi &
                 ,Rm_leaf_baseline &
                   ,Rm_leaf_per_gC &
-                       ,leaf_life &        
                 ,available_labile & ! available labile for allocation (gC/m2)
                    ,transpiration & ! kgH2O/m2/day
                  ,soilevaporation & ! kgH2O/m2/day
@@ -497,8 +496,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note that the mean temperature Q10 will be estimates in loop below where
     ! meant_time calculated
     Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(42),pars(43)) * umol_to_gC * seconds_per_day * 2d-3
-    ! set initial leaf lifespan
-    leaf_life = pars(44)
 
     ! Rooting parameters
     root_k = pars(26) ; max_depth = pars(27)
@@ -601,7 +598,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
@@ -979,29 +976,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    pars(34), pars(35), pars(36), pars(37),                & ! GSI parameters 
                                    pars(38), pars(39), pars(14), pars(12), pars(5),       & ! 
                                    pars(17), pars(15), available_labile, POOLS(n,2),      & ! To calculate GPP return
-                                   FLUXES(n,1), DIAGS(n,21), FLUXES(n,4), Rm_leaf_per_gC, & ! 
+                                   FLUXES(n,1), DIAGS(n,21), Rm_leaf_per_gC,              & ! 
                                    FLUXES(n,16), FLUXES(n,8), FLUXES(n,9), FLUXES(n,10),  & ! Output variables
                                    DIAGS(n,18), DIAGS(n,19), DIAGS(n,20), DIAGS(n,17),    &
                                    DIAGS(:,16)) 
-
-       ! Update the leaf lifespan if another year has passed.
-       if (n > steps_per_year) then
-           if(met(6,n) < met(6,n-1)) then
-              ! determine the mean life span (days)
-              tmp = sum(POOLS((n-steps_per_year):(n-1),2)) &
-                  / sum(FLUXES((n-steps_per_year):(n-1),10) + &
-                        FLUXES((n-steps_per_year):(n-1),19) + &
-                        FLUXES((n-steps_per_year):(n-1),25))
-              ! i.e. we cannot / should not update the leaf lifespan if there has
-              ! been no turnover and / or there is no foliar pool.
-              ! 2933 = 365.25 * 8 years
-              if (tmp > 0d0 .and. tmp < 2933d0) then
-                  ! We assume that leaf life span is weighted 50:50 between the
-                  ! previous year and its history
-                  leaf_life = (tmp + leaf_life) * 0.5d0
-              end if
-           end if ! new calendar year
-       endif ! not in first year
 
        !
        ! those with time dependancies
@@ -3387,7 +3365,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     leafV_min, leafV_max, leaf_phenology_threshold,        & !
                                     potential_labile_turnover, potential_foliage_turnover, & ! 
                                     lca, ncce_return_threshold, available_labile, foliage, & ! To calculate GPP return
-                                    current_gpp, delta_ncce_gCgC, Rm_leaf, Rm_leaf_per_gC, & !                           & ! 
+                                    current_gpp, delta_ncce_gCgC, Rm_leaf_per_gC,          & !                           & ! 
                                     alloc_leaf_fraction, alloc_leaf_gCm2day,               & ! Output variables
                                     leaf_litter_fraction, leaf_litter_gCm2day,             &
                                     leafT_limit, leafP_limit, leafV_limit, gsi_gradient, gsi) 
@@ -3447,7 +3425,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                 leafV_limit, & ! vapour pressure deficit limitation on foliage (0-1)
                                gsi_gradient    ! GSI gradient over the lag period (-1->1 / day)
        double precision, dimension(nodays), intent(inout) ::    &
-                                    Rm_leaf, & ! Current time step maintenance demand for leaves (gC/m2/d)
                                         gsi    ! canopy Growing Season Index (gsi, 0-1)   
 
        ! Local variables

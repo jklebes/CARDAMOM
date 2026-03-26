@@ -207,19 +207,11 @@ module MODEL_PARAMETERS
     PI%parmin(44) = -4.4d0
     PI%parmax(44) = -0.6d0
 
-!    ! Potential loss rate for foliage to litter (gC/m2/day)
-!    PI%parmin(45) = 0.01d0
-!    PI%parmax(45) = 20d0
     ! Potential loss rate for foliage to litter (fraction/day)
     ! for environmental factors
     PI%parmin(45) = 0.0003424658 ! 8 years
     PI%parmax(45) = 0.0333333333 ! 30 days
 
-    !! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
-    !! This is a hack to account for the model representing whole ecosystem,
-    !! within which competing leaf stratagies will be at play.
-    !PI%parmin(46) = 0.1d0
-    !PI%parmax(46) = 1d0 
     ! Gradient for logistic function controlling limiting / suppression of 
     ! leaf area index (m2/m2) turnover.
     ! This is a hack to account for the model representing whole ecosystem,

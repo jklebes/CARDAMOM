@@ -1483,8 +1483,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "foliarlitter_gCm2","rootlitter_gCm2","woodlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
                       "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
                       "labile_to_wood_gCm2day","foliar_growth_limitation_gradient","foliage_leafP_limitation","foliage_leafV_limitation",
-                      "gpp_grow_gCgC","runoff_kgH2Om2day","underflow_kgH2Om2day")
-
+                      "gpp_grow_gCgC","runoff_kgH2Om2day","underflow_kgH2Om2day","ncce_gCgC_gradient","foliar_loss_limitation")
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

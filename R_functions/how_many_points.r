@@ -157,7 +157,7 @@ corine2006_to_ctessel<- function(input_pft) {
 corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
 
 #lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
-how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitename) {
+how_many_points<- function(path_to_landsea,lat,long,resolution,grid_type,sitename) {
 
     # Spatial grid
     output = generate_grid(cardamom_grid_type,lat,long,resolution)

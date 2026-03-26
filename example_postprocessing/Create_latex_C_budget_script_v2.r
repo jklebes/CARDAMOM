@@ -38,9 +38,9 @@ site_nos = 1
 
 # The caption must be written in correct latex syntax
 # NOTE: if the latex language requires use of "\" ensure it is a "\\".
-figure_caption = "CARDAMOM analysis of the global terrestrial ecosystem C-budget (2003-2024). Numbers show median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are MgC ha$^{-1}$ for stocks and MgC ha$^{-1}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown in a fractional form with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production (NPP), mortality (Mort), autotrophic respiration (R$_a$) and heterotrophic respiration (R$_h$). NEE = R$_a$ + R$_h$ - GPP. NBP = -NEE - E$_{total}$ - Forest$_{loss}$ (not shown). Red fluxes are fire-driven emissions ($E$)."
+figure_caption = "CARDAMOM analysis of the global terrestrial ecosystem C-budget (2003-2024). Numbers shown are the median estimate of fluxes (alongside arrows) and of stocks (in boxes). Units are MgC ha$^{-1}$ for stocks and MgC ha$^{-1}$ y$^{-1}$ for fluxes. 95\\% confidence intervals are shown as fractions with 2.5 and 97.5 percentiles as numerator and denominator. Black fluxes are biogenic, including net primary production (NPP), mortality (Mort), autotrophic respiration (R$_a$) and heterotrophic respiration (R$_h$). NEE = R$_a$ + R$_h$ - GPP. NBP = -NEE - E$_{total}$ - Forest$_{loss}$ (not shown). Red fluxes are fire-driven emissions ($E$)."
 # The label will be used for referencing the figure in the latex document
-figure_label = "SIFig:global_budget"
+figure_label = "fig:global_budget"
 # Desired precision, i.e. decimal places
 dp = 2
 

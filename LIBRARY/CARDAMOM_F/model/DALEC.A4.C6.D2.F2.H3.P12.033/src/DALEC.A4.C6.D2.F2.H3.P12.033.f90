@@ -436,8 +436,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots         &
-                       ,avg_scaling                  &
-                       ,avg_plant_balance_gCm2day    &
                        ,avg_foliage_turnover  
     integer, dimension(nodays) :: pool_hak
     integer :: n, harvest_management    
@@ -573,12 +571,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     root_k = pars(26) ; max_depth = pars(27)
     ! Initialise leaf growth / mortality history
     last_leaf_loss = 0d0 ; last_leaf_grow = 0d0 
-    ! Load initial rolling average whole plant C balance (gC/m2/day)
-    avg_plant_balance_gCm2day = 0
-    ! Estimate the weighting factor for averaging MTT,
-    ! i.e. mean number of days divided by days in averaging period
-    ! NOTE: ecological memory may be longer than 1 year...
-    avg_scaling = (sum(deltat) / nodays) / (365.25d0 * 2d0)
 
     ! assigning initial conditions
     POOLS(1,1) = pars(18) ! labile
@@ -1115,21 +1107,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction ! Wood
        FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction ! Fine root
 
-!       ! Determine the current time steps whole C expendature
-!       ! alloc_fol + alloc_wood + alloc_root + Rg(fol,wood,root) + Rm(wood,root)
-!       tmp = FLUXES(n,4) + FLUXES(n,6) + FLUXES(n,7) + FLUXES(n,8) + FLUXES(n,16)
-!       ! Determine the difference between NCCE and total spend,
-!       ! where a positive value means we are accumulating more C than is being spent.
-!       tmp = DIAGS(n,22) - tmp
-!       ! Estimate the rolling average whole plant C spend (gC/m2/day).
-!       ! Weighted by the current MTTleaf. This variable is used to help determine 
-!       ! whether the current canopy has paid back its investment without
-!       ! explicitly tracking each canopy componet over time
-!       tmp1 = min(1d0,deltat(n) / MTTfoliage_days)
-!       avg_plant_balance_gCm2day = (avg_plant_balance_gCm2day * (1d0 - tmp1)) + (tmp * tmp1)
-!       ! Update to diagnostic variable
-!       DIAGS(n,27) = avg_plant_balance_gCm2day
-
        !
        ! Dead organic matter decomposition and mineralisation (gC/m2/day)
        !
@@ -1336,24 +1313,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! set fluxes to zero
            FLUXES(n,17:28) = 0d0
        end if
-
-!       ! Update foliage MTT variable as a function of all variables
-!       tmp = (FLUXES(n,10) + FLUXES(n,19) + FLUXES(n,25) + FLUXES(n,32) + FLUXES(n,38))
-!       if (POOLS(n,2) <= 0d0) then
-!           ! Expended the current foliar pool, so reduce the MTT by zero value
-!           MTTfoliage_days = (MTTfoliage_days * (1d0-avg_scaling)) + (0d0 * avg_scaling)    
-!!       else if (tmp == 0d0) then
-!!           ! i.e. no turnover so we extend MTT by the number of days in the current step
-!!           MTTfoliage_days = (MTTfoliage_days * (1d0-avg_scaling)) + ((MTTfoliage_days + deltat(n)) * avg_scaling)    
-!       else
-!           ! Estimate as a turnover
-!           tmp = tmp / POOLS(n,2)
-!           ! Update rolling average
-!           avg_foliage_turnover = (avg_foliage_turnover * (1d0-avg_scaling)) &
-!                                + (tmp * avg_scaling)
-!       end if
-!       ! Update the diagnostic variable for 1-year rolling average MTT of foliage (days)
-!       MTTfoliage_days = avg_foliage_turnover ** (-1d0) ; DIAGS(n,26) = MTTfoliage_days
 
     end do ! nodays loop
 
@@ -1607,6 +1566,61 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function find_gs_iWUE
+  !
+  !----------------------------------------------------------------------
+  !
+!  double precision function find_gs_WUE(gs_in)
+!
+!    ! Calculate CO2 limited photosynthesis as a function of metabolic limited
+!    ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
+!    ! conductance (gs_in). Photosynthesis is calculated twice to allow for
+!    ! testing of senstivity to WUE.
+!
+!    ! NOTE: this must be modified if wanted to be used
+!
+!    ! arguments
+!    double precision, intent(in) :: gs_in
+!
+!    ! local variables
+!    double precision :: gs_high, gs_store, &
+!                        gpp_high, gpp_low, &
+!                        evap_high, evap_low
+!
+!    !!!!!!!!!!
+!    ! Optimise water use efficiency
+!    !!!!!!!!!!
+!
+!    ! Globally stored upper stomatal conductance estimate in memory
+!    gs_store = stomatal_conductance
+!
+!    ! now assign the current estimate
+!    stomatal_conductance = gs_in
+!    ! estimate photosynthesis with current estimate of gs
+!    gpp_low = acm_gpp_stage_2(gs_in)
+!    call calculate_transpiration(evap_low)
+!
+!    ! Increment gs
+!    gs_high = gs_in + delta_gs
+!    ! now assign the incremented estimate
+!    stomatal_conductance = gs_high
+!    ! estimate photosynthesis with incremented gs
+!    gpp_high = acm_gpp_stage_2(gs_high)
+!    call calculate_transpiration(evap_high)
+!
+!    ! Convert transpiration into per m2, per second
+!    evap_high = (evap_high * dayl_seconds_1) / leaf_canopy_light_scaling
+!    evap_low = (evap_low * dayl_seconds_1) / leaf_canopy_light_scaling
+!
+!    ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
+!    find_gs_WUE = (((gpp_high - gpp_low)/(evap_high - evap_low))) - iWUE
+!
+!    ! return original stomatal value back into memory
+!    stomatal_conductance = gs_store
+!
+!    ! remember to return back to the user
+!    return
+!
+!  end function find_gs_WUE
   !
   !------------------------------------------------------------------
   !
@@ -3900,40 +3914,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            alloc_root = available_labile * (1d0-(1d0-alloc_root)**time)/time
            alloc_wood = available_labile * (1d0-(1d0-alloc_wood)**time)/time
 
-!           ! 
-!           ! Apply optimality theory for the proposed allocation
-!           !
-!
-!           ! Finally quantify the impact of increasing LAI on GPP, less Rd(24)
-!           if (alloc_leaf > 0d0) then
-!               ! Store the existing LAI and canopy_scaling
-!               lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
-!               ! Calculate the total time step invesment
-!               leaf_investment = alloc_leaf * time
-!               ! Calculate the new LAI based C investment, less allocation to growth respiration
-!               lai = lai + ((leaf_investment * one_Rg_fraction) / lca)
-!               ! Update the shortwave radiation
-!               call calculate_shortwave_balance
-!               ! Update acm_gpp_stage_1
-!               call acm_gpp_stage_1      
-!               ! Update stomatal conductance 
-!               stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
-!               ! Estimate the change in net canopy carbon export
-!               delta_ncce_gCgC = (((acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
-!                               * umol_to_gC * dayl_seconds) - (dark_respiration * umol_to_gC * seconds_per_day)) &
-!                               - ncce_gCm2day
-!               ! rescale NCCE to per gC investment but including the C gone to growth respiration
-!               delta_ncce_gCgC = delta_ncce_gCgC / leaf_investment
-!               ! If non-economical do not grow                               
-!               if (delta_ncce_gCgC < ncce_crit_foliar) alloc_leaf = 0d0
-!               ! Return initial values
-!               lai = lai_orig ; stomatal_conductance = gs_orig
-!               ! Update the shortwave radiation
-!               call calculate_shortwave_balance
-!               ! Update acm_gpp_stage_1
-!               call acm_gpp_stage_1      
-!           end if ! alloc_leaf > 0
-
        end if ! available_labile > 0
 
        ! Return subroutine
@@ -3988,172 +3968,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end subroutine plant_soil_flow
-  !
-  !------------------------------------------------------------------
-  !
-!  subroutine plant_natural_turnover(time,                                  & ! time related
-!                                    available_labile, biomass,             & ! C pools
-!                                    foliage, wood, root,                   & 
-!                                    lca, ncce_gCm2day,                     & ! LCA / foliar net carbon export
-!                                    leafT_low, leafT_high, leafT_coef,     & ! foliar temperature parameters
-!                                    leafW_low, leafW_high,                 & ! foliar water parameters
-!                                    fol_coef,                              & ! foliage pool 50 % coef
-!                                    foliar_fall_rate,                      & ! reference foliar fall rate
-!                                    wood_turn, root_turn,                  & ! wood and fine root turnovers
-!                                    fol_limit, leafT_limit, leafW_limit,   & ! leaf limiter components for output
-!                                    foliage_litter,root_litter,wood_litter,& ! Natural litter fluxes (fol, root, wood)
-!                                    delta_ncce_gCgC)
-!
-!       ! Subroutine deals with the determining litter generates from foliage, fine roots and wood.
-!       ! Specifically litter due to non-disturbance related forcings, i.e. age or climate
-!
-!       implicit none
-!
-!       ! Arguments
-!       double precision, intent(in) :: time, & ! number of days in current time step
-!                           available_labile, & ! available labile in the current time step (gC/m2)
-!                                    biomass, & ! total live biomass in current time step (gC/m2)
-!                                    foliage, & ! foliage pool (gC/m2)
-!                                       wood, & ! wood pool (gC/m2)
-!                                       root, & ! fine root pool (gC/m2)    
-!                                        lca, & ! leaf carbon per unit leaf area (gC/m2)
-!                               ncce_gCm2day, & ! current leaf net canopy carbon export (gC/m2/day)
-!                                  leafT_low, & ! leaf temperature (oC) below which cold stress induced loss 
-!                                 leafT_high, & ! leaf temperature (oC) above which heat stress induced loss 
-!                                 leafT_coef, & ! degrees over which heat or cold stress reaches 50 %
-!                                  leafW_low, & ! wSWP at which turnover fully engaged
-!                                 leafW_high, & ! wSWP at which turnover just beginning
-!                                   fol_coef, & ! Foliage pool at which loss is 50 % of potential
-!                           foliar_fall_rate, & ! potential rate of leaf fall
-!                                  wood_turn, & ! wood turnover rate (fraction / day)
-!                                  root_turn    ! fine root turnover rate (fraction / day)
-!
-!       double precision, intent(out) :: &
-!                                  fol_limit, & ! low foliar limitation on fall (0-1)
- !                               leafT_limit, & ! temperature limitation on foliage (0-1)
- !                               leafW_limit, & ! water limitation on foliage (0-1)       
- !                            foliage_litter, & ! foliage litter (gC/m2/day)
- !                               root_litter, & ! fine root litter (gC/m2/day)
- !                               wood_litter, & ! wood litter (gC/m2/day)
- !                           delta_ncce_gCgC    ! Change in net canopy C export for leaf loss
-
-!       ! Local variables
-!       double precision :: foliage_turn, & ! fractional foliage turnover per day
-!                              high, low, & !  
-!        lai_orig, gs_orig, scaling_orig    ! Original values for lai, stomatal conductance and leaf->canopy scaling based on light                           
-
-!       !
-!       ! Foliage
-!       !
-
-!       ! Default assumption of no turnover
-!       foliage_turn = 0d0
-!
-!       if (foliage > 0d0) then 
-!
-!           ! Foliage turnover is assumed to be composed of three components.
-!           ! First, the maximum of environmental drivers determining the scalar on a potential scenescence rate.
-!           ! Second, an economic component based on the net canopy carbon export (NCCE, gC/m2/day).
-!           ! Third, a background turnover rate.      
-!           ! Final component is needed to determine when the turnover rate should be slowed to 
-!           ! allow for having shed all leaves desired in a given year. This component is currently undertermined,
-!           ! possible a function of some rolling average loss rate. But this should not play a final roll in 
-!           ! determining whether losses are occuring or not.
-!
-!           ! Set default assumption of no canopy loss
-!           leafT_limit = 0d0 ; leafW_limit = 0d0 ; fol_limit = 0d0
-!
-!           ! Calculate high temperature limitation
-!           high = 1d0 - (1d0+exp(leafT_coef*(leafT-leafT_high)))**(-1d0)
-!           ! Calculate low temperature limitation
-!           low =  (1d0+exp(leafT_coef*(leafT-leafT_low)))**(-1d0)
-!           ! Assign which ever is greater
-!           if (high > low) then
-!               leafT_limit = high
-!           else 
-!               leafT_limit = low
-!           end if
-!           ! Determine whether we have water stress
-!           if (wSWP > leafW_low) then
-!               ! Specific limitation of hydraulic limitation on leaf growth,
-!               ! wSWP as proxy.
-!               leafW_limit = 1d0 - min(1d0,max(0d0,(wSWP - leafW_low) / (leafW_high-leafW_low)))
-!           else
-!               ! We are be fully water limited 
-!               leafW_limit = 1d0
-!           end if
-!
-!           ! The economic limitations are imposed in two components. 
-!           ! For component one of the economic limitation we will add an additional 
-!           ! foliar loss linked to an unprofitable canopy, i.e. costing more C than is makes.
-!           ! This is applied directly to the foliage turnover variable.
-!           if (ncce_gCm2day < 0d0) foliage_turn = (ncce_gCm2day * (-0.5d0))           
-!           ! We resist further canopy fall as the canopy approaches some minimum threshold.
-!           fol_limit = foliage / (foliage + fol_coef)
-!
-!           ! Determine limiting factor is larger, note contrast with co-limitation assumption in growth.
-!           if (leafW_limit > leafT_limit) then
-!               ! Hydraulic limitation is greater
-!               foliage_turn = foliage_turn + (foliar_fall_rate * leafW_limit * fol_limit)
-!           else 
-!               ! Temperature limit is greater or they are the same, 
-!               ! so makes no difference which is used for the calculation
-!               foliage_turn = foliage_turn + (foliar_fall_rate * leafT_limit * fol_limit)
-!           end if
-!
-!           ! Convert into a daily fractional loss, 
-!           ! assuming that the loss rate per day must be no larger than the overall canopy.
-!           ! Here is also where we impose the background foliar loss fraction per day.
-!           foliage_turn = min(1d0,(foliage_turn / foliage))
-!           ! Calculate the total canopy loss term. 
-!           foliage_litter = foliage * (1d0-(1d0-foliage_turn)**time)/time
-!
-!           ! Finally quantify the impact of increasing LAI on GPP, less Rd(24)
-!           if (foliage_litter > 0d0) then
-!               ! Store the existing LAI and canopy_scaling
-!               lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
-!               ! Calculate the new LAI
-!               lai = lai - ((foliage_litter * time) / lca)
-!               ! Update the shortwave radiation
-!               call calculate_shortwave_balance
-!               ! Update acm_gpp_stage_1
-!               call acm_gpp_stage_1      
-!               ! Update stomatal conductance
-!               stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
-!               delta_ncce_gCgC = (((acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
-!                               * umol_to_gC * dayl_seconds) - (dark_respiration * umol_to_gC * seconds_per_day)) &
-!                               - ncce_gCm2day
-!               delta_ncce_gCgC = delta_ncce_gCgC / (foliage_litter * time)
-!               ! If non-economical do not grow
-!               if (delta_ncce_gCgC < 0d0) foliage_litter = 0d0
-!               ! Return initial values
-!               lai = lai_orig ; stomatal_conductance = gs_orig
-!               ! Update the shortwave radiation
-!               call calculate_shortwave_balance
-!               ! Update acm_gpp_stage_1
-!               call acm_gpp_stage_1      
-!           end if ! alloc_leaf > 0
-!
-!       end if ! foliage > 0
-!
-!       !
-!       ! Wood / structural 
-!       !
-!
-!       ! total wood litter production
-!       wood_litter = wood*(1d0-(1d0-wood_turn)**time)/time
-!
-!       !
-!       ! Fine roots
-!       !
-!
-!       ! total root litter production
-!       root_litter = root*(1d0-(1d0-root_turn)**time)/time
-!
-!       ! Return subroutine
-!       return
-!
-!  end subroutine plant_natural_turnover
   !
   !------------------------------------------------------------------
   !
@@ -4287,16 +4101,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! Assume we lose carbon to gain the benefit.
                ! (which is already assigned above)
                foliage_litter = proposed_fall(maxloc(tmp(1:i), dim=1))           
-               ! Logistic function 0->1 on the balance of supply and consumption
-               ! i.e. average NCCE - averge whole plant C spend
-!               foliage_litter = foliage_litter & 
-!                              * (1d0-(1d0+exp(whole_C_coef*avg_plant_balance_gCm2day))**(-1d0))
            else 
                ! Set as zero - unless also absolute NCCE loss
                foliage_litter = 0d0
-               ! Add an additional foliar loss linked to an unprofitable canopy, i.e. costing more C than is makes.
-               ! This is applied directly to the foliage turnover variable.
-               !if (ncce_gCm2day < 0d0) foliage_litter = min(foliage,ncce_gCm2day * (-0.5d0))
            end if
            ! Convert to fractional loss and convert to gC/m2/day
            foliage_litter = min(1d0,foliage_litter / foliage) 
@@ -4309,11 +4116,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Update acm_gpp_stage_1
            call acm_gpp_stage_1      
 
-           !! Assume largest potential loss rate
-           ! Take maximum loss rate of environment or NCCE
-           ! and then apply the Michaelis-Menten LAI limiter
-           !foliage_litter = max(foliage_litter,env_foliage_litter) &
-           !               * (lai / (lai_MM_limiter + lai))   
            !! Assume largest potential loss rate
            ! Take maximum loss rate of environment or NCCE
            ! and then apply logistic function LAI limiter.
@@ -4446,6 +4248,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     if (opt_max_scaling /= opt_max_scaling) opt_max_scaling = 0d0
 
   end function opt_max_scaling
+  !
+  !----------------------------------------------------------------------
+  !  
+  double precision function logistic_func(invar,max_growth,max_growth_point,min_asym,asym_offset)
+
+    ! Logistic regression output bounded between 0 and 1.
+    ! NOTE: upper bound determined by exponent value currently == 1
+    ! For further information search Generalised logistic function (Richard's Curve)
+
+    ! Arguments
+    double precision, intent(in) :: invar, & ! input variable
+                               max_growth, & ! growth rate / gradient
+                         max_growth_point, & ! if curve_offset == asym_offset
+                                             ! then this is value of invar at which maximum growth occurs
+                                 min_asym, & ! minimum asymptote value of the function
+                              asym_offset    ! must be > 0, larger value shifts the max gradient position towards max_asym
+
+    ! local parameters
+    double precision, parameter :: & !min_asym = 0d0, & ! minimum asymptote value of the function
+                                   max_asym = 1d0, & ! maximum asymptote value of the function
+                               curve_offset = 1d0    ! must be > 0, larger value shifts curve towards max_asym
+
+    ! calculate value of the logistic function
+!    logistic_func = (1d0+exp(max_growth*(max_growth_point-invar)))**(-1d0)
+    logistic_func = min_asym + &
+                   ( (max_asym-min_asym) / &
+                     (1d0+curve_offset * exp(max_growth*(max_growth_point-invar))**(1d0/asym_offset)) )
+
+    return
+
+  end function logistic_func  
   !
   !----------------------------------------------------------------------
   !

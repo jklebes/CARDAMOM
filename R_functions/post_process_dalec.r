@@ -272,6 +272,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$dCwood_gCm2_to_rhet_gCm2day_correlation = cor(dCwood,ensRhet)    
       states_all$dCwood_gCm2_to_wood_gCm2_correlation = cor(dCwood,ensWood)          
       states_all$dCwood_gCm2_to_som_gCm2_correlation = cor(dCwood,ensSOM)      
+      states_all$dCwood_gCm2_to_dCsom_gCm2_correlation = cor(dCwood,dCsom)          
       # Remove multi-use variable
       rm(ensAwood)
   } else {
