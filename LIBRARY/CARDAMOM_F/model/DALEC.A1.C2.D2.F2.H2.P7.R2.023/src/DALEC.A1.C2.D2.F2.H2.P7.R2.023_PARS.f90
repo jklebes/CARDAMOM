@@ -122,11 +122,11 @@ module MODEL_PARAMETERS
     PI%parmax(13) = 0.5d0
 
     ! Canopy CGI phenology gradient threshold
-    PI%parmin(14) = -1d-2
-    PI%parmax(14) =  1d-2
+    PI%parmin(14) = -0.001d0
+    PI%parmax(14) =  0.01d0
     ! NCCE return on new Cfol investment (gCperGPP per gCnewfol)
     PI%parmin(15) = 0.001d0
-    PI%parmax(15) = 0.1d0
+    PI%parmax(15) = 0.05d0
 
     ! Turnover rate for CWD
     PI%parmin(16) = 1.368925d-05 ! 200.00 years at 0oC
@@ -212,11 +212,11 @@ module MODEL_PARAMETERS
 
     ! NCCE per gCleaf at which
     ! CMI is suppressed by 0.5
-    PI%parmin(44) = 0.01d0 
-    PI%parmax(44) = 0.3d0
+    PI%parmin(44) = 0.0001d0 
+    PI%parmax(44) = 0.1d0
     ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(45) = -0.30d0
-    PI%parmax(45) =  0.30d0
+    PI%parmin(45) = -0.10d0
+    PI%parmax(45) =  0.10d0
 
     ! Absolute minimum temperature at which no leaf growth occurs (oC)
     PI%parmin(46) = -5d0
@@ -224,6 +224,11 @@ module MODEL_PARAMETERS
     ! Degree C above p46 at which this limitation is at 50%
     PI%parmin(47) = 0.1d0
     PI%parmax(47) = 10d0
+
+    ! Canopy NCCE (gC/gC) phenology gradient threshold, 
+    ! controlling foliar loss
+    PI%parmin(48) = -0.001d0
+    PI%parmax(48) =  0.001d0
 
     !
     ! INITIAL VALUES DECLARED HERE
