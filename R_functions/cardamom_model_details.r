@@ -362,7 +362,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nofluxes=array(51,dim=c(length(ctessel_pft)))
     nodiags=array(20,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A3.C1.D2.F2.H2.P1.030",shortname="DALEC.30.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
-  } else if (modelname == "DALEC.A1.C7.D2.F2.H2.P1.R4.036" | modelname == "DALEC.36.") {
+  } else if (modelname == "DALEC.A1.C8.D2.F2.H2.P1.R4.036" | modelname == "DALEC.36.") {
     # information contains is
     # The model name
     # Number of met parameters
@@ -371,7 +371,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopars=array(50,dim=c(length(ctessel_pft)))
     nofluxes=array(67,dim=c(length(ctessel_pft)))
     nodiags=array(20,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.A1.C7.D2.F2.H2.P1.R4.036",shortname="DALEC.36.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
+    cardamom_model_details=list(name="DALEC.A1.C8.D2.F2.H2.P1.R4.036",shortname="DALEC.36.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C1.D2.F2.H5.P1.037" | modelname == "DALEC.37.") {
     # information contains is
     # The model name
