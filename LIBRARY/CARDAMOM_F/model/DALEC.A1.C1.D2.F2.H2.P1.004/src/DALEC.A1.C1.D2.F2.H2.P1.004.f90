@@ -118,7 +118,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,              & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,            & ! minimum wind speed at canopy top
-                          min_layer = 0.03d0,           & ! minimum thickness of the third rooting layer (m)
+                          min_layer = 0.03d0,           & ! minimum thickness of the second rooting layer (m)
                         soil_roughl = 0.00085d0,        & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
                        min_drythick = soil_roughl*10d0, & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
                      top_soil_depth = 0.30d0,           & ! thickness of the top soil layer (m)
@@ -2733,12 +2733,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Update soil layer thickness
     !!!!!!!!!!
 
-    depth_change = (top_soil_depth+min_layer) ; water_change = 0
+    ! Determine the root depth below which we will consider layer thickness changes,
+    ! and reset the water_change variable, used for maintaining mass balance.
+    depth_change = top_soil_depth+min_layer ; water_change = 0
     ! if roots extent down into the bucket
-    if (root_reach > depth_change .and. previous_depth <= depth_change) then
+    if (root_reach > depth_change) then
 
         !!!!!!!!!!
         ! Soil profile is within the bucket layer (layer 3)
+        ! therefore we must expand the soil layer (layer 2).
         !!!!!!!!!!
 
         if (previous_depth > depth_change) then

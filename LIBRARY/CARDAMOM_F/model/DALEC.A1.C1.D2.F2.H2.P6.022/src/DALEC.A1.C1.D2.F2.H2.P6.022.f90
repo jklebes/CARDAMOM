@@ -2736,7 +2736,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     depth_change = (top_soil_depth+min_layer) ; water_change = 0
     ! if roots extent down into the bucket
-    if (root_reach > depth_change .and. previous_depth <= depth_change) then
+    if (root_reach > depth_change) then
 
         !!!!!!!!!!
         ! Soil profile is within the bucket layer (layer 3)
