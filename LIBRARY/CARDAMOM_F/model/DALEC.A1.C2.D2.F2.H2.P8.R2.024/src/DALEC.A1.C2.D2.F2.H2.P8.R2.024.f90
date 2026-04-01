@@ -46,158 +46,27 @@ module CARBON_MODEL_MOD
   private
 
   ! explicit publics
-  public :: CARBON_MODEL                  &
-           ,vsmall                        &
-           ,arrhenious                    &
-           ,acm_gpp_stage_1               &
-           ,acm_gpp_stage_2               &
-           ,calculate_transpiration       &
-           ,calculate_wetcanopy_evaporation &
-           ,calculate_soil_evaporation    &
-           ,calculate_radiation_balance   &
-           ,calculate_stomatal_conductance&
-           ,meteorological_constants      &
-           ,update_soil_initial_conditions&
-           ,calculate_daylength           &
-           ,opt_max_scaling               &
-           ,logistic_func                 &
-           ,freeze                        &
-           ,minlwp_default                &
-           ,co2comp_sat_25C            &
-           ,co2comp_gradient         &
-           ,kc_half_sat_25C                 &
-           ,kc_half_sat_gradient              &
-           ,calculate_update_soil_water   &
-           ,calculate_Rtot                &
-           ,calculate_aerodynamic_conductance &
-           ,saxton_parameters             &
-           ,initialise_soils              &
-!           ,linear_model_gradient         &
-           ,seconds_per_day               &
-           ,seconds_per_step              &
-           ,fine_root_biomass             &
-           ,root_biomass                  &
-           ,root_reach                    &
-           ,min_root                      &
-           ,max_depth                     &
-           ,root_k                        &
-           ,top_soil_depth                &
-           ,previous_depth                &
-           ,nos_root_layers               &
-           ,wSWP                          &
-           ,rSWP                          &
-           ,cica_time                     &
-           ,root_depth_time               &
-           ,snow_storage_time             &
-           ,SWP                           &
-           ,deltat_1                      &
-           ,total_water_flux              &
-           ,water_flux_mmolH2Om2s         &
-           ,layer_thickness               &
-           ,waterchange                   &
-           ,potA,potB                     &
-           ,cond1,cond2,cond3             &
-           ,soil_conductivity             &
-           ,soil_waterfrac                &
-           ,porosity                      &
-           ,porosity_initial              &
-           ,field_capacity                &
-           ,field_capacity_initial        &
-           ,drythick                      &
-           ,min_drythick                  &
-           ,min_layer                     &
-           ,wSWP_time                     &
-           ,rSWP_time                     &
-           ,total_water_flux_time         &
-           ,gs_demand_supply_ratio        &
-           ,gs_total_canopy               &
-           ,gb_total_canopy               &
-           ,canopy_par_MJday_time         &
-           ,canopy_par_MJday              &
-           ,soil_frac_clay                &
-           ,soil_frac_sand                &
-           ,nos_soil_layers               &
-           ,meant                         &
-           ,convert_ms1_mol_1             &
-           ,aerodynamic_conductance       &
-           ,stomatal_conductance          &
-           ,potential_conductance         &
-           ,iWUE                          &
-           ,avN                           &
-           ,NUE                           &
-           ,ceff                          &
-           ,pn_max_temp                   &
-           ,pn_opt_temp                   &
-           ,pn_kurtosis                   &
-           ,e0                            &
-           ,co2_half_sat                  &
-           ,co2_comp_point                &
-           ,minlwp                        &
-           ,mint                          &
-           ,maxt                          &
-           ,leafT                         &
-           ,soilT                         &
-           ,swrad                         &
-           ,co2                           &
-           ,doy                           &
-           ,rainfall                      &
-           ,airt_zero_fraction            &
-           ,snowfall                      &
-           ,snow_melt                     &
-           ,wind_spd                      &
-           ,vpd_kPa                       &
-           ,lai                           &
-           ,days_per_step                 &
-           ,days_per_step_1               &
-           ,dayl_seconds                  &
-           ,dayl_seconds_1                &
-           ,dayl_hours                    &
-           ,dayl_hours_fraction           &
-           ,snow_storage                  &
-           ,canopy_storage                &
-           ,intercepted_rainfall          &
-           ,rainfall_time                 &
-           ,Rg_from_labile                &
-           ,Rm_from_labile                &
-           ,Resp_leaf, Resp_wood_root     &
-           ,Rm_leaf, Rm_wood_root         &
-           ,Rg_leaf, Rg_wood_root         &
-           ,NCCE                          &
-           ,CMI                           &
-           ,dim_1,dim_2                   &
-           ,nos_trees                     &
-           ,nos_inputs                    &
-           ,leftDaughter                  &
-           ,rightDaughter                 &
-           ,nodestatus                    &
-           ,xbestsplit                    &
-           ,nodepred                      &
+  public :: CARBON_MODEL     &
+           ,top_soil_depth   &
+           ,sw_par_fraction  &
+           ,soil_frac_clay   &
+           ,soil_frac_sand   &
+           ,nos_soil_layers  &
+           ,dim_1,dim_2      &
+           ,nos_trees        &
+           ,nos_inputs       &
+           ,leftDaughter     &
+           ,rightDaughter    &
+           ,nodestatus       &
+           ,xbestsplit       &
+           ,nodepred         &
            ,bestvar
-
-  !!!!!!!!!!
-  ! Random Forest GPP emulator
-  !!!!!!!!!!
-
-  ! arrays for the emulator, just so we load them once and that is it cos they be
-  ! massive
-  integer ::    dim_1, & ! dimension 1 of response surface
-                dim_2, & ! dimension 2 of response surface
-            nos_trees, & ! number of trees in randomForest
-           nos_inputs    ! number of driver inputs
-
-  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                      rightDaughter, & ! right daughter for forets
-                                                         nodestatus, & ! nodestatus for forests
-                                                         xbestsplit, & ! for forest
-                                                           nodepred, & ! prediction value for each tree
-                                                            bestvar    ! for randomForests
 
   !!!!!!!!!
   ! Parameters
   !!!!!!!!!
 
   ! useful technical parameters
-  logical :: do_iWUE = .true. ! Use iWUE or WUE for stomatal optimisation
   double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
                                 ,vlarge = huge(0d0)
 
@@ -210,8 +79,9 @@ module CARBON_MODEL_MOD
                               boltz = 5.670400d-8,  & ! Boltzmann constant (W.m-2.K-4)
                          emissivity = 0.96d0,       &
                         emiss_boltz = 5.443584d-08, & ! emissivity * boltz
+                        ppfd_to_par = 4.6d0,        & ! Conversion of umolPAR -> J
                     sw_par_fraction = 0.5d0,        & ! fraction of short-wave radiation which is PAR
-                             freeze = 273.15d0,     &
+                             freeze = 273.15d0,     & !
                   gs_H2Ommol_CO2mol = 0.001646259d0,& ! The ratio of H20:CO2 diffusion for gs (Jones appendix 2)
               gs_H2Ommol_CO2mol_day = 142.2368d0,   & ! The ratio of H20:CO2 diffusion for gs, including seconds per day correction
                          gb_H2O_CO2 = 1.37d0,       & ! The ratio of H20:CO2 diffusion for gb (Jones appendix 2)
@@ -265,73 +135,66 @@ module CARBON_MODEL_MOD
 
   ! timing parameters
   double precision, parameter :: &
-                   seconds_per_hour = 3600d0,         & ! Number of seconds per hour
-                    seconds_per_day = 86400d0,        & ! Number of seconds per day
-                  seconds_per_day_1 = 1.157407d-05      ! Inverse of seconds per day
+                   seconds_per_hour = 3600d0,       & ! Number of seconds per hour
+                    seconds_per_day = 86400d0,      & ! Number of seconds per day
+                  seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
   ! ACM-GPP-ET parameters
   double precision, parameter :: &
                        Vc_minT = -6.991d0,     & ! Temperature at which all photosynthetic activity is shutdown
                        Vc_coef = 0.1408d0,     & ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs  
-                   ! Assumption that photosythesis will be limited by Jmax temperature response
-                   pn_max_temp = 57.05d0,       & ! Maximum daily max temperature for photosynthesis (oC)
-                   pn_min_temp = -1d6,          & ! Minimum daily max temperature for photosynthesis (oC)
-                   pn_opt_temp = 30d0,          & ! Optimum daily max temperature for photosynthesis (oC)
-                   pn_kurtosis = 0.172d0,       & ! Kurtosis of Jmax temperature response
-                ko_half_sat_25C = 157.46892d0,  & ! photorespiration O2 half sat(mmolO2/mol), achieved at 25oC
-           ko_half_sat_gradient = 14.93643d0,   & ! photorespiration O2 half sat gradient
-                kc_half_sat_25C = 319.58548d0,  & ! carboxylation CO2 half sat (umolCO2/mol), achieved at 25oC
-           kc_half_sat_gradient = 24.72297d0,   & ! carboxylation CO2 half sat gradient
-                co2comp_sat_25C = 36.839214d0,  & ! carboxylation CO2 compensation point(umolCO2/mol), saturation
-               co2comp_gradient = 9.734371d0,   & ! carboxylation CO2 comp point, achieved at oC
-                                                  ! Each of these are temperature sensitivty
-                            e0 = 3.2d+00,       & ! Quantum yield (gC/MJ/m2/day PAR), SPA apparent yield
-                minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
-      soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
-!             orig             iWUE = 1.8d-7,        & ! Intrinsic water use efficiency (gC/mmolH2O-1/m2leaf/s-1)
-                          iWUE = 4.6875d-04,    & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
-         soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
-         max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
-        lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
-       soil_iso_to_net_coef_SW =-3.500964d-02,  & ! Coefficient relating soil isothermal net radiation to net.
-         soil_iso_to_net_const = 3.455772d+00,  & ! Constant relating soil isothermal net radiation to net
-           max_par_transmitted = 1.628077d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
-           max_nir_transmitted = 2.793660d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
-             max_par_reflected = 1.629133d-01,  & ! Max fraction of canopy incident PAR reflected to sky
-             max_nir_reflected = 4.284365d-01,  & ! Max fraction of canopy incident NIR reflected to sky
-     canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
-       canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
-    canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
+                   pn_max_temp = 57.05d0,      & ! Maximum daily max temperature for photosynthesis (oC)
+                   pn_min_temp = -1d6,         & ! Minimum daily max temperature for photosynthesis (oC)
+                   pn_opt_temp = 30d0,         & ! Optimum daily max temperature for photosynthesis (oC)
+                   pn_kurtosis = 0.172d0,      & ! Kurtosis of Jmax temperature response
+               ko_half_sat_25C = 157.46892d0,  & ! photorespiration O2 half sat(mmolO2/mol), achieved at 25oC
+          ko_half_sat_gradient = 14.93643d0,   & ! photorespiration O2 half sat gradient
+               kc_half_sat_25C = 319.58548d0,  & ! carboxylation CO2 half sat (umolCO2/mol), achieved at 25oC
+          kc_half_sat_gradient = 24.72297d0,   & ! carboxylation CO2 half sat gradient
+               co2comp_sat_25C = 36.839214d0,  & ! carboxylation CO2 compensation point(umolCO2/mol), saturation
+              co2comp_gradient = 9.734371d0,   & ! carboxylation CO2 comp point, achieved at oC
+                                                 ! Each of these are temperature sensitivty
+                           e0 = 3.2d+00,       & ! Quantum yield (gC/MJ/m2/day PAR), SPA apparent yield
+               minlwp_default =-1.808224d+00,  & ! minimum leaf water potential (MPa). NOTE: actual SPA = -2 MPa
+     soil_iso_to_net_coef_LAI =-2.717467d+00,  & ! Coefficient relating soil isothermal net radiation to net.
+                         iWUE = 4.6875d-04,    & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+        soil_swrad_absorption = 9.989852d-01,  & ! Fraction of SW rad absorbed by soil
+        max_lai_lwrad_release = 9.516639d-01,  & ! 1-Max fraction of LW emitted from canopy to be released
+       lai_half_lwrad_release = 4.693329d+00,  & ! LAI at which LW emitted from canopy to be released at 50 %
+      soil_iso_to_net_coef_SW =-3.500964d-02,  & ! Coefficient relating soil isothermal net radiation to net.
+        soil_iso_to_net_const = 3.455772d+00,  & ! Constant relating soil isothermal net radiation to net
+          max_par_transmitted = 1.628077d-01,  & ! Max fraction of canopy incident PAR transmitted to soil
+          max_nir_transmitted = 2.793660d-01,  & ! Max fraction of canopy incident NIR transmitted to soil
+            max_par_reflected = 1.629133d-01,  & ! Max fraction of canopy incident PAR reflected to sky
+            max_nir_reflected = 4.284365d-01,  & ! Max fraction of canopy incident NIR reflected to sky
+    canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
+      canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
+   canopy_iso_to_net_coef_LAI = 2.455582d+00     ! Coefficient relating LAI to the adjustment between isothermal and net LW
+
+  !!!!!!!!!
+  ! Module variables
+  !!!!!!!!!
 
   double precision :: minlwp = minlwp_default
 
-  !!!!!!!!!
-  ! Module level variables
-  !!!!!!!!!
+  ! arrays for the emulator, just so we load them once and that is it cos they be
+  ! massive
+  integer ::    dim_1, & ! dimension 1 of response surface
+                dim_2, & ! dimension 2 of response surface
+            nos_trees, & ! number of trees in randomForest
+           nos_inputs    ! number of driver inputs
 
-  ! management and phenology related values
-  integer :: ncce_lag_remembered, cmi_lag_remembered
-  ! local variables for phenology model
-  double precision :: Rm_leaf_per_gC, Rm_leaf_baseline     &
-                     ,mean_Q10_adjustment,labile_target  &
-                     ,leaf_life, SLA,avail_labile    &
-                     ,Cwood_labile_release_gradient  &
-                     ,Cwood_labile_half_saturation   &
-                     ,Croot_labile_release_gradient  &
-                     ,Croot_labile_half_saturation   &
-                     ,Cwood_hydraulic_gradient       &
-                     ,Cwood_hydraulic_half_saturation&
-                     ,Cwood_hydraulic_limit          &
-                     ,tmp
-
-  double precision, allocatable, dimension(:) :: &
-                                                 Q10_adjustment, &
-                                                 Rg_from_labile, &
-                                                 Rm_from_labile, &
-                                      Resp_leaf, Resp_wood_root, & ! Total respiration (gC/m2/day)
-                                          Rm_leaf, Rm_wood_root, & ! Maintenance respiration (gC/m2/day)
-                                          Rg_leaf, Rg_wood_root, &
-                                            tmp_x, ncce_history, cmi_history
+  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                      rightDaughter, & ! right daughter for forets
+                                                         nodestatus, & ! nodestatus for forests
+                                                         xbestsplit, & ! for forest
+                                                           nodepred, & ! prediction value for each tree
+                                                            bestvar    ! for randomForests
+  ! Canopy phenology model
+  integer :: cgi_ncce_lag_step ! Number of model time steps over which CGI / NCCE  is lagged for gradient calculation
+  double precision, allocatable, dimension(:) :: cgi_ncce_lag_days, & ! Number of days equivelent over which CGI / NCCE is lagged
+                                                   cgi_lag_history, & ! Local storage of the CGI values to be worked on.
+                                                  ncce_lag_history    ! Local storage of the NCCE values to be worked on.
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
@@ -340,11 +203,12 @@ module CARBON_MODEL_MOD
                                      infiltrated    ! surface water infiltrated (kgH2O.m-2.d-1)                                            
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                            water_flux_mmolH2Om2s, & ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                        conductance_mmolH2OMPam2s    ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)                                            
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
-                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)                                            
+                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
@@ -356,15 +220,15 @@ module CARBON_MODEL_MOD
   double precision :: root_reach, root_biomass, &
                              fine_root_biomass, & ! root depth, coarse+fine, and fine root biomass
                               total_water_flux, & ! potential transpiration flux (kgH2O.m-2.day-1)
-                           act_pot_trans_ratio, & ! ratio of actual to potential tranpiration
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
+                                          Reff, & ! Effective total hydraulic resistance (MPa.m2.s.mmolH2O-1)                                          
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
-                                        runoff, & ! runoff (kgH2O.m-2.day-1)
+                                        runoff, & ! surface water runoff (kgH2O.m-2.day-1)
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
-                      new_depth,previous_depth, & ! depth of bottom of soil profile
+                                previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
                                          ustar, & ! friction velocity (m.s-1)
                                       ustar_Uh, &
@@ -373,20 +237,19 @@ module CARBON_MODEL_MOD
                                         roughl, & ! roughness length (m)
                                   displacement, & ! zero plane displacement (m)
                                          meant, & ! mean air temperature (oC)
-                                         leafT, & ! canopy temperature (oC)
-                                         soilT, & ! soil temperature (oC)
-                               est_canopy_fall, & ! Estimate run day of peak leaf fall
-                              mean_annual_temp, & ! Mean annual air temperature (C)
+                                         soilT, & ! soil day time temperature
+                                         leafT, & ! canopy day time temperature temperature (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
+                                soil_par_MJday, & ! soil absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
-                          stomatal_conductance, & ! stomatal conductance (mmolH2O.m-2ground.s-1)
+                          stomatal_conductance, & ! canopy scale stomatal conductance (mmolH2O.m-2.d-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
-                           minimum_conductance, & ! minimum stomatal conductance (mmolH2O.m-2ground.s-1)
-                       aerodynamic_conductance, & ! bulk surface layer conductance (m.s-1)
+                           minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
+                       aerodynamic_conductance, & ! aerodynamic conductance at canopy top (m.s-1)
                               soil_conductance, & ! soil surface conductance (m.s-1)
                              convert_ms1_mol_1, & ! Conversion ratio for m.s-1 -> mol.m-2.s-1
                             convert_ms1_mmol_1, & ! Conversion ratio for m/s -> mmol/m2/s
@@ -396,29 +259,27 @@ module CARBON_MODEL_MOD
                                          slope, & ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
                         water_vapour_diffusion, & ! Water vapour diffusion coefficient in (m2/s)
                            kinematic_viscosity, & ! kinematic viscosity (m2.s-1)
-                                  snow_storage, & ! snow storage (kgH2O/m2)
+                                  snow_storage, & ! snow storage on soil surface (kgH2O/m2)
                                 canopy_storage, & ! water storage on canopy (kgH2O.m-2)
                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
-  ! Module level variables for ACM_GPP_ET parameters
-  double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/dayl
-                            ceff, & ! canopy efficency, ceff = avN*NUE
-                             avN, & ! average foliar N (gN/m2)
-                       iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
+  ! Module level variables for ACM_GPP_ET variables
+  double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/day
+                             avN, & ! Average canopy foliar N (gN/m2leaf)
                              NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-                                    ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
+                                    ! ,unlimited by CO2, light and photoperiod (umolC/gN/m2leaf)                            
+                       iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                               ci, & ! Internal CO2 concentration (ppm)
-                          gb_mol, & ! Canopy boundary layer conductance (molCO2/m2/day)
                         rb_mol_1, & ! Canopy boundary layer resistance (day/m2/molCO2)
+                     o2_half_sat, & ! O2 at which photorespiration is 50 % of maximum
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
   ! Module level variables for step specific met drivers
   double precision :: mint, & ! minimum temperature (oC)
                       maxt, & ! maximum temperature (oC)
-                   run_day, & ! day of the run
         airt_zero_fraction, & ! fraction of air temperature above freezing
                      swrad, & ! incoming short wave radiation (MJ/m2/day)
                        co2, & ! CO2 (ppm)
@@ -430,13 +291,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                    vpd_kPa, & ! Vapour pressure deficit (kPa)
  leaf_canopy_light_scaling, & ! approximate scaling factor from leaf to canopy for gpp and gs
   leaf_canopy_wind_scaling, & ! approximate scaling factor from leaf to canopy for gb
-                     lai_1, & ! inverse of LAI
                        lai    ! leaf area index (m2/m2)
 
-  ! Module level varoables for step specific timing information
+  ! Module level variables for step specific timing information
   integer :: steps_per_year
-  double precision :: cos_solar_zenith_angle, &
-                            seconds_per_step, & !
+  double precision ::       seconds_per_step, & !
                                days_per_step, & !
                              days_per_step_1, & !
                           mean_days_per_step, &
@@ -446,54 +305,30 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   dayl_hours    ! day length in hours
 
   double precision, dimension(:), allocatable :: deltat_1, & ! inverse of decimal days
-                                               meant_time, &
                                   airt_zero_fraction_time, &
                                           daylength_hours, &
                                         daylength_seconds, &
                                       daylength_seconds_1, &
-                                            rainfall_time, &
-                                Cwood_labile_release_coef, & ! time series of labile release to wood
-                                Croot_labile_release_coef, & ! time series of labile release to root
-                                   gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                          gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
-                                          gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
-                                    canopy_par_MJday_time, & ! Absorbed PAR by canopy (MJ/m2ground/day)
-                                                cica_time, & ! Internal vs ambient CO2 concentrations
-                                          root_depth_time, & ! Rooting depth (m)
-                                        snow_storage_time, & ! Snow storage (m)
-                                                     NCCE, & ! Net canopy carbon export (gC/m2/day)
-                                                      CMI, & ! Canopy Mortality index (0-1)
-                                    total_water_flux_time, & !
-                                                rSWP_time, & ! Soil water potential weighted by root access
-                                                wSWP_time    ! Soil water potential weighted by water supply
-
-  save
+                                            rainfall_time
 
   contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai_out,NEE_out,FLUXES,POOLS &
-                         ,nopars,nomet,nopools,nofluxes,GPP_out)
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
+                         ,nopars,nomet,nopools,nofluxes,nodiags)
 
-    !
-    ! The Data Assimilation Linked Ecosystem Carbon - BUCKET (DALEC_BUCKET) model.
-    !
-    ! The Aggregated Canopy Model for Gross Primary Productivity and
-    ! Evapotranspiration (ACM-GPP-ET) simulates coupled
-    ! photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (3 layers).
-    !
-    ! Carbon allocation based on fixed fraction and turnover follows first order
-    ! kinetics with the following exceptions.
-    ! 1) Foliar allocation is based on marginal return calculation estimating
-    ! the net canopy export of carbon
-    ! 2) Foliar turnover is based on the Growing Season Index framework.
-    ! 3) Turnover of litter and soil includes an exponential temperature
-    ! dependency.
-    !
-    ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! Version 1: 02/03/2021
+    ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
+    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.23) model.
+    ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
+    ! between various ecosystem carbon pools. These pools are subject
+    ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
+    ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
+    ! evaporation and soil water balance (4 layers).
+
+    ! This version includes the option to simulate fire combustion based
+    ! on burned fraction and fixed combusion rates. It also includes the
+    ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
 
@@ -504,35 +339,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
-                          ,nodays     ! number of days in simulation
+                          ,nodays   & ! number of days in simulation
+                          ,nodiags    ! number of model diagnositic variables
 
     double precision, intent(in) :: met(nomet,nodays) & ! met drivers
                                    ,deltat(nodays)    & ! time step in decimal days
                                    ,pars(nopars)      & ! number of parameters
                                    ,lat                 ! site latitude (degrees)
 
-    double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
-                                                         ,GPP_out & ! Gross primary productivity
-                                                         ,NEE_out   ! net ecosystem exchange of CO2
-
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
-    ! declare general local variables
-    double precision ::  infi &
-                ,new_lab_step &
-                         ,fSm &
-               ,transpiration &
-             ,soilevaporation &
-              ,wetcanopy_evap &
-             ,snowsublimation
-
-    integer :: f,nxp,n,test,m
+    ! declare local variables
+    double precision ::  tmp,infi &
+                ,Rm_leaf_baseline &
+                  ,Rm_leaf_per_gC &
+                ,available_labile & ! available labile for allocation (gC/m2)
+                   ,transpiration & ! kgH2O/m2/day
+                 ,soilevaporation & ! kgH2O/m2/day
+                  ,wetcanopy_evap & ! kgH2O/m2/day
+                 ,snowsublimation   ! kgH2O/m2/day
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
-    ! Modified later with the inclusion of CWD pool by TLS Aug 2020
-    double precision :: cf(7),rfac(7),burnt_area
+    double precision :: burnt_area
+    double precision, dimension(7) :: cf,rfac
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
                                      ,foliage_frac_res       &
@@ -554,7 +385,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
-    integer :: harvest_management
+    integer :: harvest_management,n
 
     ! met drivers are:
     ! 1st run day
@@ -581,19 +412,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 4 = wood   (p21)
     ! 5 = litter (p22)
     ! 6 = som    (p23)
-    ! 7 = litwood (p37)
-    ! 8 = soil water content (currently assumed to field capacity)
-
-    ! p(30) = labile replanting
-    ! p(31) = foliar replanting
-    ! p(32) = fine root replanting
-    ! p(33) = wood replanting
+    ! 7 = 0-10 cm soil water content (mm) (p24)
 
     ! FLUXES are:
     ! 1 = GPP
     ! 2 = temprate
     ! 3 = respiration_auto
-    ! 4 = respiration het litwood
+    ! 4 = leaf production
     ! 5 = labile production
     ! 6 = root production
     ! 7 = wood production
@@ -606,85 +431,52 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 14 = respiration het som
     ! 15 = litter2som
     ! 16 = labrelease factor
-    ! 17 = carbon flux due to fire
-    ! 18 = growing season index
-    ! 19 = Evapotranspiration (kgH2O.m-2.day-1)
-    ! 20 = litwood turnover to litter
-    ! 21 = C extracted as harvest
-    ! 22 = NOT IN USE
-    ! 23 = NOT IN USE
-    ! 24 = NOT IN USE
-    ! 25 = NOT IN USE
-    ! 26 = NOT IN USE
-    ! 27 = NOT IN USE
-    ! 28 = NOT IN USE
+
+    ! emissions of carbon into the atmosphere due to combustion
+    ! 17 = ecosystem fire emission  (sum of fluxes 18 to 23)
+    ! 18 = fire emission from labile
+    ! 19 = fire emission from foliar
+    ! 20 = fire emission from roots
+    ! 21 = fire emission from wood
+    ! 22 = fire emission from litter
+    ! 23 = fire emission from soil
+
+    ! mortality due to fire
+    ! 24 = transfer from labile into litter
+    ! 25 = transfer from foliar into litter
+    ! 26 = transfer from roots into litter
+    ! 27 = transfer from wood into som
+    ! 28 = transfer from litter into som
+
+    ! Water fluxes
+    ! 29 = Evapotranspiration (kgH2O.m-2.day-1)
 
     ! PARAMETERS
-    ! 35 process parameters; 7 C pool initial conditions; 1 soil water initial condition
+    ! 17 values
 
-    ! p(1) Decomposition efficiency (fraction to som)
-    ! p(2) Fraction of GPP respired as maintenance for wood and root
-    ! p(3) -----NOT IN USE-----
-    ! p(4) Fraction of NPP allocated to roots
-    ! p(5) max leaf turnover
-    ! p(6) Turnover rate of wood
-    ! p(7) Turnover rate of roots
-    ! p(8) Litter turnover rate
-    ! p(9) SOM mineralisation rate
-    ! p(10) Parameter in exponential term of temperature
-    ! p(11) Mean foliar nitrogen content (gN/m2)
-    ! p(12) = Max labile turnover
-    ! p(13) = Fraction allocated to Clab
-    ! p(14) = Min temperature for canopy growth
-    ! p(15) = Optimal temperature for canopy growth
-    ! p(16) =
+    ! p(1) Litter to SOM conversion rate  - m_r
+    ! p(2) Fraction of GPP respired - f_a
+    ! p(3) Fraction of NPP allocated to foliage - f_f
+    ! p(4) Fraction of NPP allocated to roots - f_r
+    ! p(5) Leaf lifespan - L_f
+    ! p(6) Turnover rate of wood - t_w
+    ! p(7) Turnover rate of roots - t_r
+    ! p(8) Litter turnover rate - t_l
+    ! p(9) SOM turnover rate  - t_S
+    ! p(10) Parameter in exponential term of temperature - \theta
+    ! p(11) Canopy efficiency parameter - C_eff (part of ACM)
+    ! p(12) = date of Clab release - B_day
+    ! p(13) = Fraction allocated to Clab - f_l
+    ! p(14) = lab release duration period - R_l
+    ! p(15) = date of leaf fall - F_day
+    ! p(16) = leaf fall duration period - R_f
     ! p(17) = LMA
-    ! p(24) =
-    ! p(25) = wSWP at which canopy growth potential = 0.5
-    ! p(26) = wSWP gradient for canopy growth potential
-    ! p(27) = Net Canopy Export return on new Cfol investment (gCperNCCE per gCnewfol)
-    ! p(28) = Initial CMI
-    ! p(29) = Fraction of Cwood which is Ccoarseroot
-    ! p(34) = CMI sensitivity for leaf scenescence
-    ! p(35) = Reich Maintenance respiration N leaf exponent
-    ! p(36) = Reich Maintenance respiration N leaf baseline
-    ! p(37) = Initial litwood pool
-    ! p(38) = litwood turnover fraction
-    ! p(39) = Fine root (gbiomass.m-2) needed to reach 50% of max depth
-    ! p(40) = Maximum rooting depth (m)
-    ! p(41) = Fraction of field capacity to set soils at
-    ! p(42) = Nitrogen use efficiency (gC/gN/day)
-    ! p(43) = Initial leaf lifespan (days)
+    ! p(25) = fraction of Cwood that is assumed coarse root
+    ! p(26) = fine + coarse root biomass (g/m2) needed to reach 50% of max root depth
+    ! p(27) = maximum rooting depth (m)
 
-    ! variables related to deforestation
-    ! labile_loss = total loss from labile pool from deforestation
-    ! foliar_loss = total loss form foliar pool from deforestation
-    ! roots_loss = total loss from root pool from deforestation
-    ! wood_loss = total loss from wood pool from deforestation
-    ! labile_residue = harvested labile remaining in system as residue
-    ! foliar_residue = harested foliar remaining in system as residue
-    ! roots_residue = harvested roots remaining in system as residue
-    ! wood_residue = harvested wood remaining in system as residue
-    ! coarse_root_residue = expected coarse woody root left in system as residue
-
-    ! parameters related to deforestation
-    ! labile_frac_res = fraction of labile harvest left as residue
-    ! foliage_frac_res = fraction of foliage harvest left as residue
-    ! roots_frac_res = fraction of roots harvest left as residue
-    ! wood_frac_res = fraction of wood harvest left as residue
-    ! Crootcr_part = fraction of wood pool expected to be coarse root
-    ! Crootcr_frac_res = fraction of coarse root left as residue
-    ! soil_loss_frac = fraction determining Csom expected to be physically
-    ! removed along with coarse roots
-
-    ! profiling example
-    !real :: begin, done,f1=0,f2=0,f3=0,f4=0,f5=0
-    !real :: Rtot_times=0, aero_time=0 , soilwater_time=0 , acm_et_time = 0
-    !call cpu_time(start)
-    !call cpu_time(finish)
-
-    ! Set some initial states for the io variables
-    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
+    ! Set some initial states
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
     ! Reset hydrology variables
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0 ; snowsublimation = 0d0
@@ -695,197 +487,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soil_conductance = 0d0
 
     ! load ACM-GPP-ET parameters
-    minlwp = pars(32)    ! Load minimum leaf water potential (MPa)
-    NUE = pars(42)       ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
+    avN = 10d0**pars(11) ! foliar N gN/m2
+    NUE = pars(41)       ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                          ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
                          ! Other initial values for ACM_GPP_ET
-    avN = 10d0**pars(11) ! foliar N gN/m2
-!    ceff = avN*NUE       ! canopy efficiency, used to avoid what in most cases is a reductance multiplication
-!                         ! NOTE: must be updated any time NUE or avN changes
 
     ! Estimate time invarient N response for maintenance respiration
-    ! Include scalings from nmolC/g/s -> gC/gCleaf/day
+    ! Include scalings from nmolC/g/s -> gC/m2/day
     ! Note that the mean temperature Q10 will be estimates in loop below where
     ! meant_time calculated
-    Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(35),pars(36)) * umol_to_gC * seconds_per_day * 2d-3
-    ! set initial leaf lifespan
-    leaf_life = pars(43)
-    est_canopy_fall = mod(pars(26),365.25d0)
+    Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(42),pars(43)) * umol_to_gC * seconds_per_day * 2d-3
 
-    ! plus ones being calibrated
-    root_k = pars(39) ; max_depth = pars(40)
+    ! Rooting parameters
+    root_k = pars(26) ; max_depth = pars(27)
 
-    ! if either of our disturbance drivers indicate disturbance will occur then
-    ! set up these components
-    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+    ! assigning initial conditions
+    POOLS(1,1) = pars(18) ! labile
+    POOLS(1,2) = pars(19) ! foliar
+    POOLS(1,3) = pars(20) ! roots
+    POOLS(1,4) = pars(21) ! wood
+    POOLS(1,5) = pars(22) ! litter
+    POOLS(1,6) = pars(23) ! som
+    POOLS(1,7) = pars(24) ! wood litter
 
-        ! initial values for deforestation variables
-        labile_loss = 0d0    ; foliar_loss = 0d0
-        roots_loss = 0d0     ; wood_loss = 0d0
-        labile_residue = 0d0 ; foliar_residue = 0d0
-        roots_residue = 0d0  ; wood_residue = 0d0
-        stem_residue = 0d0
-        soil_loss_with_roots = 0d0
-        coarse_root_residue = 0d0
-        post_harvest_burn = 0d0
-
-        ! now load the hardcoded forest management parameters into their scenario locations
-
-        ! Deforestation process functions in a sequential way.
-        ! Thus, the pool_loss is first determined as a function of met(n,8) and
-        ! for fine and coarse roots whether this felling is associated with a mechanical
-        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
-        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
-        ! but allows for management activities such as grazing, mowing and coppice.
-        ! The pool_loss is then partitioned between the material which is left within the system
-        ! as a residue and thus direcly placed within one of the dead organic matter pools.
-
-        !! Parameter values for deforestation variables
-        !! Scenario 1
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(1) = 1d0
-        roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1)  = 1d0
-        stem_frac_res(1)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(1) = 1d0
-
-        !! Scenario 2
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(2)  = 0d0
-        rootcr_frac_removal(2) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(2) = 1d0
-        roots_frac_res(2)   = 1d0
-        rootcr_frac_res(2) = 1d0
-        stem_frac_res(2)   = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(2) = 0d0
-
-        !! Scenario 3
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(3)  = 0d0
-        rootcr_frac_removal(3) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(3) = 0.5d0
-        roots_frac_res(3)   = 1d0
-        rootcr_frac_res(3) = 1d0
-        stem_frac_res(3)   = 0d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(3) = 0d0
-
-        !! Scenario 4
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(4)  = 1d0
-        rootcr_frac_removal(4) = 1d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(4) = 0.5d0
-        roots_frac_res(4)   = 1d0
-        rootcr_frac_res(4) = 0d0
-        stem_frac_res(4)   = 0d0
-        ! wood partitioning (fraction)
-        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(4) = 0d0
-
-        !## Scenario 5 (grassland grazing / cutting)
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(5)  = 0d0
-        rootcr_frac_removal(5) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(5) = 0.1d0
-        roots_frac_res(5)   = 0d0
-        rootcr_frac_res(5)  = 0d0
-        stem_frac_res(5)    = 0.12d0
-        ! wood partitioning (fraction)
-        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(5) = 0d0
-
-        ! for the moment override all paritioning parameters with those coming from
-        ! CARDAMOM
-        Crootcr_part = pars(29)
-
-        ! Assign proposed resilience factor for biomass
-        rfac(1:4) = pars(46)
-        ! Resilience factor for non-combusted tissue (lit, som, wood litter)
-        rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
-        ! Assign combustion completeness to foliage
-        cf(2) = pars(47) ! foliage
-        ! Assign combustion completeness to non-photosynthetic
-        cf(1) = pars(48) ; cf(3) = pars(48) ; cf(4) = pars(48)
-        cf(6) = pars(49) ! soil
-        ! values for litter and wood litter
-        cf(5) = pars(50) ; cf(7) = pars(51)
-
-    end if ! disturbance ?
-
-    ! assigning initial conditions for the current iteration
-    POOLS(1,1) = pars(18) ; labile_target = pars(18)
-    POOLS(1,2) = pars(19)
-    POOLS(1,3) = pars(20)
-    POOLS(1,4) = pars(21)
-    POOLS(1,5) = pars(22)
-    POOLS(1,6) = pars(23)
-    POOLS(1,7) = pars(37)
-    ! POOL(1,8) assigned later
-
+    ! Some time consuming variables we only want to set once
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(Cwood_labile_release_coef(nodays),Croot_labile_release_coef(nodays), &
-                 deltat_1(nodays),wSWP_time(nodays),gs_demand_supply_ratio(nodays), &
-                 gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 meant_time(nodays),rainfall_time(nodays),cica_time(nodays), &
-                 Rg_from_labile(nodays),Rm_from_labile(nodays),Resp_leaf(nodays), &
-                 Resp_wood_root(nodays),Rm_leaf(nodays),Rm_wood_root(nodays),Q10_adjustment(nodays), &
-                 Rg_leaf(nodays),Rg_wood_root(nodays),total_water_flux_time(nodays), &
-                 NCCE(nodays),CMI(nodays),rSWP_time(nodays),root_depth_time(nodays), &
-                 snow_storage_time(nodays))
+        allocate(deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
+                 daylength_seconds_1(nodays),rainfall_time(nodays),airt_zero_fraction_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -908,45 +537,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! calculate inverse for each time step in seconds
         daylength_seconds_1 = daylength_seconds ** (-1d0)
-        ! meant time step temperature
-        meant_time = (met(2,:)+met(3,:)) * 0.5d0
         ! fraction of temperture period above freezing
-        airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+        airt_zero_fraction_time = 0d0
+        where (met(2,:) > 0d0) airt_zero_fraction_time = 1d0 
+        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
         ! mean days per step
         mean_days_per_step = sum(deltat) / dble(nodays)
-
-        !
-        ! Determine those related to phenology
-        !
-
-        ! Hydraulic limitation parameters for tissue cell expansion, i.e. growth
-        ! NOTE: that these parameters are applied to deltaWP (i.e. minLWP-wSWP)
-!        Cwood_hydraulic_gradient = 5d0 ; Cwood_hydraulic_half_saturation = -1.5d0
-
-        ! Temperature limitiation parameters on wood and fine root growth.
-        ! Parmeters generated on the assumption of 5 % / 95 % activation at key
-        ! temperature values. Roots 1oC/30oC, wood 5oC/30oC.
-        ! NOTE: Foliage and root potential turnovers use the same temperature curve
-!        Croot_labile_release_gradient = 0.1962d0 ; Croot_labile_half_saturation = 15.0d0
-!        Cwood_labile_release_gradient = 0.2355d0 ; Cwood_labile_half_saturation = 17.5d0
-        ! calculate temperature limitation on potential wood/root growth
-!        Cwood_labile_release_coef = (1d0+exp(-Cwood_labile_release_gradient* &
-!                                    (meant_time-Cwood_labile_half_saturation)))**(-1d0)
-!        Croot_labile_release_coef = (1d0+exp(-Croot_labile_release_gradient* &
-!                                    (meant_time-Croot_labile_half_saturation)))**(-1d0)
-
-        ! Calculate timing components needed for phenology models
-        ncce_lag_remembered = max(2,nint(21d0/mean_days_per_step))
-        cmi_lag_remembered = max(2,nint(21d0/mean_days_per_step))
-        allocate(tmp_x(ncce_lag_remembered) &
-                ,ncce_history(ncce_lag_remembered) &
-                ,cmi_history(cmi_lag_remembered))
-        do f = 1, ncce_lag_remembered
-           tmp_x(f) = dble(f) * mean_days_per_step
-        end do
 
         !
         ! Initialise the water model
@@ -957,10 +556,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! initialise some time invarient parameters
         call saxton_parameters(soil_frac_clay,soil_frac_sand)
         call initialise_soils(soil_frac_clay,soil_frac_sand)
-        call update_soil_initial_conditions(pars(41))
+        call update_soil_initial_conditions(pars(40))
         ! save the initial conditions for later
         field_capacity_initial = field_capacity
         porosity_initial = porosity
+
+        ! Initialise the canopy growth index and ncce gradiant calculation
+        ! for canopy phenology model
+
+        ! Determine the number of model time steps over which CGI / NCCE will be lagged
+        ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
+        cgi_ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
+        allocate(cgi_ncce_lag_days(cgi_ncce_lag_step),cgi_lag_history(cgi_ncce_lag_step),ncce_lag_history(cgi_ncce_lag_step))
+        call initialise_cgi(mean_days_per_step,cgi_ncce_lag_step,cgi_ncce_lag_days)
 
     else ! deltat_1 allocated?
 
@@ -974,19 +582,174 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! input initial soil water fraction then
         ! update SWP and soil conductivity accordingly
-        call update_soil_initial_conditions(pars(41))
+        call update_soil_initial_conditions(pars(40))
+
+        ! Initialise the Growing Season Index (GSI)
+        ! canopy phenology model
+
+        ! Determine the number of model time steps over which GSI will be lagged
+        ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
+        cgi_ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
+        ! We assume the other initialised variables are stored in memory.
 
     endif ! deltat_1 allocated
 
-    ! Assign initial values for net canopy carbon export per gC leaf
-    !ncce_history = pars(28)
-    cmi_history = pars(28)
-    ! specific leaf area (m2/gC)
-    SLA = pars(17)**(-1d0)
+    ! Assign initial canopy CGI / NCCE values
+    cgi_lag_history = pars(3)
+    ncce_lag_history = pars(49)
+
+    ! now load the hardcoded forest management parameters into their scenario locations
+
+    ! Deforestation process functions in a sequential way.
+    ! Thus, the pool_loss is first determined as a function of met(8,n) and
+    ! for fine and coarse roots whether this felling is associated with a mechanical
+    ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+    ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+    ! but allows for management activities such as grazing, mowing and coppice.
+    ! The pool_loss is then partitioned between the material which is left within the system
+    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+
+    !! Parameter values for deforestation variables
+    !! Scenario 1
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(1)  = 0d0
+    rootcr_frac_removal(1) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(1) = 1d0
+    roots_frac_res(1)   = 1d0
+    rootcr_frac_res(1)  = 1d0
+    stem_frac_res(1)    = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(1) = 1d0
+
+    !! Scenario 2
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(2)  = 0d0
+    rootcr_frac_removal(2) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(2) = 1d0
+    roots_frac_res(2)   = 1d0
+    rootcr_frac_res(2) = 1d0
+    stem_frac_res(2)   = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(2) = 0d0
+
+    !! Scenario 3
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(3)  = 0d0
+    rootcr_frac_removal(3) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(3) = 0.5d0
+    roots_frac_res(3)   = 1d0
+    rootcr_frac_res(3) = 1d0
+    stem_frac_res(3)   = 0d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(3) = 0d0
+
+    !! Scenario 4
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(4)  = 1d0
+    rootcr_frac_removal(4) = 1d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(4) = 0.5d0
+    roots_frac_res(4)   = 1d0
+    rootcr_frac_res(4) = 0d0
+    stem_frac_res(4)   = 0d0
+    ! wood partitioning (fraction)
+    Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(4) = 0d0
+
+    !## Scenario 5 (grassland grazing / cutting)
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(5)  = 0d0
+    rootcr_frac_removal(5) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(5) = 0.1d0
+    roots_frac_res(5)   = 0d0
+    rootcr_frac_res(5)  = 0d0
+    stem_frac_res(5)    = 0.12d0
+    ! wood partitioning (fraction)
+    Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(5) = 0d0
+
+    ! Override all paritioning parameters with those coming from
+    ! CARDAMOM
+    Crootcr_part = pars(25)
+
+!    ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
+!    cf(1) = 0.1d0 ; cf(2) = 0.9d0
+!    cf(3) = 0.1d0 ; cf(4) = 0.1d0
+!    cf(5) = 0.7d0 ; cf(6) = 0.01d0
+!    ! Resilience factor for non-combusted tissue
+!    rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
+
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
+
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(28)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0 ; rfac(7) = 0.1d0
+    ! Assign combustion completeness to foliage
+    cf(2) = pars(29) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    cf(1) = pars(30) ; cf(3) = pars(30) ; cf(4) = pars(30)
+    cf(6) = pars(31) ! soil
+    ! derived values for litter
+    cf(5) = pars(32) ; cf(7) = pars(33)
+
+    !
+    ! Begin looping through each time step
+    !
 
     ! load some needed module level values
-    lai = POOLS(1,2)*SLA
-    run_day = met(1,1) ! day of analysis
+    lai = POOLS(1,2)/pars(17)
     mint = met(2,1)  ! minimum temperature (oC)
     maxt = met(3,1)  ! maximum temperature (oC)
     swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
@@ -995,19 +758,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
     wind_spd = met(15,1) ! wind speed (m/s)
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
-    meant = meant_time(1)
+    meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
     leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
-    soilT = maxt     ! initial soil temperature (oC)
+    soilT = meant
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
-    
+
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(leafT,leafT+freeze,vpd_kPa)
 
     ! Initialise root reach based on initial coarse root biomass
     fine_root_biomass = max(min_root,POOLS(1,3)*2d0)
-    root_biomass = fine_root_biomass + max(min_root,POOLS(1,4)*pars(29)*2d0)
+    root_biomass = fine_root_biomass + max(min_root,POOLS(1,4)*pars(25)*2d0)
     ! calculate soil depth to which roots reach - needed here to set up
     ! layer_thickness correctly!
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
@@ -1019,22 +782,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Needed to initialise soils
     call calculate_Rtot
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
-                                     0d0,FLUXES(1,19)) ! assume no evap or rainfall
-    ! Reset variable used to track ratio of water supply used to meet demand
-    gs_demand_supply_ratio = 0d0
-
+                                     0d0,FLUXES(1,29)) ! assume no evap or rainfall
     ! Store soil water content of the surface zone (mm)
     POOLS(1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
-
-    !!!!!!!!!!!!
-    ! assign climate sensitivities
-    !!!!!!!!!!!!
-
-!    FLUXES(:,2) = exp(pars(10)*meant_time)
-
-    !
-    ! Begin looping through each time step
-    !
 
     do n = start, finish
 
@@ -1043,35 +793,32 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
 
        ! Incoming drivers
-       run_day = met(1,n) ! day of analysis
        mint = met(2,n)  ! minimum temperature (oC)
        maxt = met(3,n)  ! maximum temperature (oC)
-       leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
-       soilT = maxt     ! initial soil temperature (oC)
        swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
        co2 = met(5,n)   ! CO2 (ppm)
        doy = met(6,n)   ! Day of year
-       rainfall = rainfall_time(n) ! rainfall (kgH2O/m2/s)
-       meant = meant_time(n) ! mean air temperature (oC)
-       airt_zero_fraction = maxt / (maxt-mint) ! fraction of temperture period above freezing
+       rainfall = rainfall_time(n)
+       meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
+       leafT = (meant + maxt) * 0.5d0 ! estimate mean daytime air temperature (oC)
+       soilT = meant ! Estimate mean day time soil temperature (oC)
        wind_spd = met(15,n) ! wind speed (m/s)
-       vpd_kPa = met(16,n)*1d-3 ! vapour pressure deficit (Pa->kPa)
+       vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
+       airt_zero_fraction = airt_zero_fraction_time(n) ! fraction of above / below freezing temperature
 
-       ! states needed for module variables
-       lai_out(n) = POOLS(n,2)*SLA
-       lai = lai_out(n) ! leaf area index (m2/m2)
+       ! calculate LAI value
+       lai = POOLS(n,2)/pars(17)
+       DIAGS(n,1) = lai
 
        ! extract timing related values
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
-       !iWUE_step = pars(27) * dayl_hours_fraction
-       iWUE_step = iWUE * dayl_hours_fraction
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
 
        !!!!!!!!!!
-       ! Adjust snow balance balance based on temperture
+       ! Adjust snow balance balance based on temperature
        !!!!!!!!!!
 
        ! snowing or not...?
@@ -1079,7 +826,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! on average above freezing so no snow
            snowfall = 0d0
        else
-           ! on average below freezing, so some snow based on proportion of temperture
+           ! on average below freezing, so some snow based on proportion of temperature
            ! below freezing
            snowfall = rainfall * (1d0 - airt_zero_fraction) ; rainfall = rainfall - snowfall
            ! Add rainfall to the snowpack and clear rainfall variable
@@ -1105,14 +852,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        else
            snow_melt = 0d0
        end if
-       snow_storage_time(n) = snow_storage
-
-       !!!!!!!!!!
-       ! Determine net shortwave and isothermal longwave energy balance
-       !!!!!!!!!!
-
-       call calculate_radiation_balance
-       canopy_par_MJday_time(n) = canopy_par_MJday
+       DIAGS(n,2) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -1124,9 +864,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
-       ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
-       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1 * &
-                            leaf_canopy_wind_scaling
+       ! Units converted from canopy top m/s to canopy scale (mmolH2O/m2ground/s)
+       DIAGS(n,6) = aerodynamic_conductance * convert_ms1_mmol_1 * &
+                    leaf_canopy_wind_scaling
+       DIAGS(n,15) = leaf_canopy_wind_scaling ! canopy area scaling as a function of wind profiles
+
+       !!!!!!!!!!
+       ! Determine net shortwave and isothermal longwave energy balance
+       !!!!!!!!!!
+
+       call calculate_radiation_balance
+       DIAGS(n,3) = canopy_par_MJday ! Absorbed PAR by canopy (MJ/m2ground/day)
+       DIAGS(n,14) = leaf_canopy_light_scaling ! canopy area scaling as a function of light profiles
+       DIAGS(n,13) = soil_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -1144,21 +894,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! calculate the minimum soil & root hydraulic resistance based on total
        ! fine root mass ! *2*2 => *RS*C->Bio
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
-       root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(29)*2d0)
+       root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot
-       ! Pass wSWP to output variable
-       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; total_water_flux_time(n) = total_water_flux
-       root_depth_time(n) = root_reach
+       ! Pass root~water~soil variables to output variable
+       DIAGS(n,8) = root_reach ! Rooting depth (m)
+       DIAGS(n,10) = wSWP      ! Soil water potential weighted by supply of water
+       DIAGS(n,11) = rSWP      ! Soil water potential weighted by access water
+       DIAGS(n,12) = Reff      ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
-       ! close are we to maxing out supply (note 0.01 taken from min_gs)
-       gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
-                                 / (potential_conductance - minimum_conductance)
+       ! close are we to maxing out supply
+       DIAGS(n,7) = (stomatal_conductance  - minimum_conductance) &
+                  / (potential_conductance - minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
-       !gs_total_canopy(n) = stomatal_conductance * dayl_seconds_1
-       gs_total_canopy(n) = stomatal_conductance
+       DIAGS(n,5) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
        ! adjustments
@@ -1168,181 +919,123 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Gross primary productivity (gC/m2/day)
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
            FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
-           cica_time(n) = ci / co2
+           ! Estimate the ratio of leaf internal to ambient CO2 concentrations
+           DIAGS(n,4) = ci / co2       
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0
        endif
 
-       !!!!!!!!!!
-       ! GPP allocation
-       !!!!!!!!!!
+       ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
+       ! Positive LWPs can be estimated given very small gs and cold temperatures.
+       ! Debugging print statements
+       !print*,"Estimate LWP"
+       !LWP = SWP(1:nos_root_layers) - head*canopy_height &
+       !     - transpiration*uptake_fraction(1:nos_root_layers) &
+       !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
+       DIAGS(n,9) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
 
-       ! Estimate temperature sensitivity for decomposition
-       FLUXES(n,2) = exp(pars(10)*soilT)
-       ! Wood and fine root maintenance respiration (gC.m-2.day-1)
-       Rm_wood_root(n) = pars(2)*FLUXES(n,1)
+       ! temprate (i.e. temperature modified rate of metabolic activity))
+       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
+
+       !
+       ! calculate maintenance respiration demands and mass balance
+       !
+
+       ! Scale baseline Rm (gC/gCleaf/day at 20oC) for leaf with current temperature Q10 response
+       ! giving maintenance respiration at maximum of current or mean annual temperature per gC leaf
+       ! (gC/gCleaf/day).
+       Rm_leaf_per_gC = Rm_leaf_baseline * Rm_reich_Q10(meant)
+       ! Estimate demand on labile pool to support canopy maintenance
+       ! NOTE: current Rm costs must be related to current temperature
+       FLUXES(n,4) = Rm_leaf_per_gC * POOLS(n,2)
+
+       ! Estimate the maintenance component of wood and roots for autotrophic respiration (gC.m-2.day-1)
+       ! This is begining to accumulate autotrophic respiratory demands.
+       ! NOTE we do not accumulate leaf maintenance here, this is done below with FLUX 55
+       FLUXES(n,3) = pars(2)*FLUXES(n,1)
+
+       ! Estimate the net canopy carbon export per gram of leaf per day
+       if (POOLS(n,2) > 0d0) DIAGS(n,22) = (FLUXES(n,1) / POOLS(n,2)) - Rm_leaf_per_gC
+
+       !
+       ! Allocate remaining carbon to tissues
+       !
+
        ! labile production (gC.m-2.day-1)
-       FLUXES(n,5) = (FLUXES(n,1)-Rm_wood_root(n))*pars(13)
+       FLUXES(n,5) = (FLUXES(n,1)-FLUXES(n,3))*pars(13)
        ! root production (gC.m-2.day-1)
-       FLUXES(n,6) = (FLUXES(n,1)-Rm_wood_root(n)-FLUXES(n,5))*pars(4)
+       FLUXES(n,6) = (FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5))*pars(4)
        ! wood production
-       FLUXES(n,7) = FLUXES(n,1)-Rm_wood_root(n)-FLUXES(n,5)-FLUXES(n,6)
+       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6)
+
+       ! Accumulate this time steps labile C (gC.m-2.day-1), less demand we are already committed to
+       available_labile = max(0d0, POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,4)) * deltat(n)))
+       ! Do plant allocation
+       call plant_canopy_phenology(nodays, cgi_ncce_lag_step, n, deltat(n),               & ! Timing
+                                   pars(36), pars(34), pars(35), pars(37),                & ! CGI parameters
+                                   pars(46), pars(47),                                    & !
+                                   pars(38), pars(39),                                    & ! 
+                                   pars(50), pars(51), pars(52), pars(53),                & ! CMI parameters
+                                   pars(54), pars(44), pars(45),                          & ! 
+                                   pars(14), pars(48), pars(12), pars(5),                 & ! 
+                                   pars(17), pars(15), available_labile, POOLS(n,2),      & ! To calculate GPP return
+                                   POOLS(n,1), FLUXES(n,1), DIAGS(n,21), DIAGS(:,22),     & !
+                                   Rm_leaf_per_gC,                                        & !                           
+                                   FLUXES(n,16), FLUXES(n,8), FLUXES(n,9), FLUXES(n,10),  & ! Output variables
+                                   DIAGS(n,18), DIAGS(n,19), DIAGS(n,20), DIAGS(n,17),    & !
+                                   DIAGS(:,16), DIAGS(:,23)) 
+
+       !
+       ! those with time dependancies
+       !
+
+       ! total wood litter production
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+       ! total root litter production
+       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+
+       !
+       ! those with temperature AND time dependancies
+       !
+
+       ! turnover of litter (mineralisation + decomposition)
+       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       ! Partition litter turnover between mineralisation and decomposition
+       ! respiration heterotrophic litter ; decomposition of litter to som
+       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
+       ! respiration heterotrophic som
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+       ! turnover of wood litter (mineralisation + decompostion)
+       tmp = POOLS(n,8)*(1d0-(1d0-FLUXES(n,2)*pars(16))**deltat(n))*deltat_1(n)
+       ! Partition litter turnover between mineralisation and decomposition
+       ! respiration heterotrophic litwood ; decomposition of litwood to som
+       FLUXES(n,30) = tmp * (1d0-pars(1)) ; FLUXES(n,31) = tmp * pars(1)
 
        !!!!!!!!!!
        ! calculate growth respiration and adjust allocation to pools assuming
        ! 0.21875 of total C allocation towards each pool (i.e. 0.28 .eq. xNPP)
        !!!!!!!!!!
 
-       ! Determine growth respiration...
-       Rg_wood_root(n) = (FLUXES(n,7)*Rg_fraction) + (FLUXES(n,6)*Rg_fraction)
-       ! ...and remove from the bulk flux to tissue
-       FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction ! Wood
-       FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction ! Fine root
-
-       !!!!!!!!!!
-       ! calculate maintenance respiration demands and mass balance
-       !!!!!!!!!!
-
-       ! Scale baseline Rm (gC/gCleaf/day at 20oC) for leaf with current temperature Q10 response
-       ! giving maintenance respiration at maximum of current or mean annual temperature per gC leaf
-       ! (gC/gCleaf/day).
-       !Q10_adjustment(n) = Rm_reich_Q10(meant)
-       Q10_adjustment(n) = Rm_reich_Q10(leafT)
-       Rm_leaf_per_gC = Rm_leaf_baseline * Q10_adjustment(n)
-       ! Heskel approach
-       !Rm_leaf_per_gC = Rm_heskel_polynomial(Rm_0C,leafT) * SLA
-       ! Estimate new C added to labile pool
-       new_lab_step = FLUXES(n,5) * deltat(n)
-       ! Estimate time step demand on labile pool to support canopy maintenance
-       ! NOTE: current Rm costs must be related to current temperature
-       Rm_leaf(n) = min(POOLS(n,1)+new_lab_step,Rm_leaf_per_gC * POOLS(n,2) * deltat(n)) * deltat_1(n)
-
-       !!!!!!!!!!
-       ! Calculate canopy phenology
-       !!!!!!!!!!
-
-       ! Assume that available labile is composed on existing labile stores, less that needed for
-       ! maintenance respiration but including new allocation to the labile pool from current GPP
-       avail_labile = (POOLS(n,1)+new_lab_step) - (Rm_leaf(n)*deltat(n))
-
-       ! Update the time step in which the majority of foliage is lost.
-       ! NOTE: if successful in monthly time step this will need modifying to ensure that it can be applied at sub-monthly timestep models
-       if (est_canopy_fall > run_day) then
-           ! Do nothing
-       else
-           ! We have passed the current estimate, time to update
-           ! Initially we will do this assuming 12 months ahead from the current but we will refine further later on the turn of the year
-           est_canopy_fall = est_canopy_fall + 365.25d0
-       end if
-
-       ! Determine leaf growth and turnover based on CGI and NCCE
-       ! NOTE: that turnovers will be bypassed in favour of mortality turnover
-!       ! should available labile be exhausted
-!       call calculate_leaf_dynamics(n,deltat,nodays,met(10,n),met(11,n)  &
-!                                   ,pars(16),pars(14),pars(15),pars(24) &
-!                                   ,pars(30),pars(31) &
-!                                   ,pars(33),pars(34) &
-!                                   ,pars(5),pars(12)  &
-!                                   ,pars(3),pars(25) &
-!                                   ,FLUXES(n,1),POOLS(n,2) &
-!                                   ,pars(27),FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
-       call calculate_leaf_dynamics(n,deltat,nodays,met(10,n),met(11,n)  &
-                                   ,pars(16),pars(14),pars(15),pars(24) &
-                                   ,pars(30),pars(31) &
-                                   ,pars(33),pars(25),pars(27),pars(34) &
-                                   ,pars(5),pars(12)  &
-                                   ,pars(3),pars(44),pars(45) &
-                                   ,FLUXES(n,1),POOLS(n,2),POOLS(n,1) &
-                                   ,FLUXES(:,18),FLUXES(n,9),FLUXES(n,16))
-
-       ! Total labile release to foliage
-       FLUXES(n,8) = avail_labile*(1d0-(1d0-FLUXES(n,16))**deltat(n))*deltat_1(n)
-       ! Determine growth respiration...
-       Rg_leaf(n) = FLUXES(n,8)*Rg_fraction
-       ! ...and remove from the bulk flux to tissue
-       FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction ! Leaf
-
-       ! if 12 months has gone by, update the leaf lifespan variable
-       if (n > steps_per_year) then
-           if (met(6,n) < met(6,n-1)) then
-              ! Determine the new labile storage target
-              labile_target = (labile_target + maxval(POOLS((n-steps_per_year):(n-1),1))) * 0.5d0
-              ! Estimate the new expected time step of peak leaf fall
-              f = (n-steps_per_year-1)+maxloc(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23), dim=1)
-              if (est_canopy_fall > run_day) then
-                  est_canopy_fall = ((met(1,f) + 365.25d0) + est_canopy_fall) * 0.5d0
-              else
-                  est_canopy_fall = ((met(1,f) + 365.25d0) + (est_canopy_fall+365.25d0)) * 0.5d0
-              end if
-              ! update the mean_Q10_adjustment for the previous year
-!              tmp = sum(Q10_adjustment((n-steps_per_year):(n-1))) / dble(steps_per_year)
-!              mean_Q10_adjustment = (tmp + mean_Q10_adjustment) * 0.5d0
-              ! determine the mean life span (days)
-              tmp = sum(POOLS((n-steps_per_year):(n-1),2)) &
-                  / sum(FLUXES((n-steps_per_year):(n-1),10) + FLUXES((n-steps_per_year):(n-1),23))
-              ! i.e. we cannot / should not update the leaf lifespan if there has
-              ! been no turnover and / or there is no foliar pool.
-              ! 2933 = 365.25 * 8 years
-              if (tmp > 0d0 .and. tmp < 2933d0) then
-                  ! We assume that leaf life span is weighted 50:50 between the
-                  ! previous year and its history
-                  leaf_life = (tmp + leaf_life) * 0.5d0
-              end if
-           end if ! new calendar year
-       endif ! n /= 1
-
-       !
-       ! litter creation with time dependancies
-       !
-
-       ! total leaf litter production
-       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))*deltat_1(n)
-       ! total wood litter production
-       ! NOTE: we assume that the coarse root fraction (pars(29)) is passed to the soil directly
-       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))*deltat_1(n)
-       ! total root litter production
-       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))*deltat_1(n)
-
-       !
-       ! those with temperature AND time dependancies
-       !
-
-       ! turnover of litter
-       fSm = 0.25d0 + 0.75d0 * soil_waterfrac(1)
-       tmp = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*fSm)**deltat(n))*deltat_1(n)
-       ! respiration heterotrophic litter ; decomposition of litter to som
-       FLUXES(n,13) = tmp * (1d0-pars(1)) ; FLUXES(n,15) = tmp * pars(1)
-       ! respiration heterotrophic som
-       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*fSm)**deltat(n))*deltat_1(n)
-
-       ! respiration heterotrophic litwood ; decomposition of litwood to som
-       tmp = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(38)*fSm)**deltat(n))*deltat_1(n)
-       FLUXES(n,4) = tmp * (1d0-pars(1)) ; FLUXES(n,20) = tmp * pars(1)
-
-       !
-       ! Combine growth and maintenance respiration flux
-       ! and determine allocation from labile
-       !
-
-       ! Combine to give total tissue respiration fluxes
-       Resp_leaf(n) = Rg_leaf(n) + Rm_leaf(n)
-       Resp_wood_root(n) = Rg_wood_root(n) + Rm_wood_root(n)
-       ! Total Autotrophic respiration
-       FLUXES(n,3) = Resp_leaf(n) + Resp_wood_root(n)
-       ! Total fluxes from labile pool
-       Rg_from_labile(n) = Rg_leaf(n) ; Rm_from_labile(n) = Rm_leaf(n)
+       ! Determine growth respiration from labile to foliage (FLUX 55).
+       ! Update Ra flux (FLUX 3) and then correct the flux making it to the foliage pool (* one_Rg_fraction bit)
+       FLUXES(n,55) = (FLUXES(n,8)*Rg_fraction) + FLUXES(n,4) ; FLUXES(n,3)  = FLUXES(n,3) + FLUXES(n,55)
+       FLUXES(n,8) = FLUXES(n,8) * one_Rg_fraction
+       ! Direct GPP allocation to fine roots
+       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,6)*Rg_fraction) ; FLUXES(n,6) = FLUXES(n,6) * one_Rg_fraction
+       ! Direct GPP allocation to wood 
+       FLUXES(n,3) = FLUXES(n,3) + (FLUXES(n,7)*Rg_fraction) ; FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction
 
        !
        ! update pools for next timestep
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,8)-Rg_from_labile(n)-Rm_from_labile(n))*deltat(n))
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8)-FLUXES(n,55))*deltat(n)
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,8)-FLUXES(n,10))*deltat(n)
        ! root pool
@@ -1352,9 +1045,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! litter pool
        POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,20)-FLUXES(n,14))*deltat(n)
-       ! litter wood pool
-       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,20)-FLUXES(n,4))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)+FLUXES(n,31)-FLUXES(n,14))*deltat(n)
+       ! litwood
+       POOLS(n+1,7) = POOLS(n,7) + (FLUXES(n,11)-FLUXES(n,30)-FLUXES(n,31))*deltat(n)
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1365,12 +1058,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! do mass balance (i.e. is there enough water to support ET)
        call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation, &
                                         ((rainfall-intercepted_rainfall)*seconds_per_day) &
-                                       ,FLUXES(n,19))
+                                       ,FLUXES(n,29))
        ! now that soil mass balance has been updated we can add the wet canopy
        ! evaporation (kgH2O.m-2.day-1)
-       FLUXES(n,19) = FLUXES(n,19) + wetcanopy_evap
+       FLUXES(n,29) = FLUXES(n,29) + wetcanopy_evap
        ! store soil water content of the surface zone (mm)
-       POOLS(n+1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
+       POOLS(n+1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)       
        ! Assign all water variables to output variables (kgH2O/m2/day)
        FLUXES(n,46) = transpiration   ! transpiration (kgH2O/m2/day)
        FLUXES(n,47) = soilevaporation ! soil evaporation (kgH2O/m2/day)
@@ -1379,10 +1072,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,50) = underflow       ! drainage from bottom of soil column (kgH2O/m2/day)
        FLUXES(n,51) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd (kgH2O/m2/day)
        FLUXES(n,52) = infiltrated(1)  ! top soil surface infiltration by rain (kgH2O/m2/day)
-       FLUXES(n,55) = infiltrated(2)  ! middle soil surface infiltration by rain (kgH2O/m2/day)
-       FLUXES(n,56) = infiltrated(3)  ! bottom soil surface infiltration by rain (kgH2O/m2/day)       
+       FLUXES(n,56) = infiltrated(2)  ! middle soil surface infiltration by rain (kgH2O/m2/day)
+       FLUXES(n,57) = infiltrated(3)  ! bottom soil surface infiltration by rain (kgH2O/m2/day)       
        FLUXES(n,53) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
-       FLUXES(n,54) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)
+       FLUXES(n,54) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)       
+
 
        !!!!!!!!!!
        ! Extract biomass - e.g. deforestation / degradation
@@ -1453,29 +1147,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                POOLS(n+1,6) = POOLS(n+1,6) - soil_loss_with_roots
                POOLS(n+1,7) = POOLS(n+1,7) + wood_residue
                ! mass balance check
-               ! NOTE: that we only apply this to the C pools (1:7) even though water
-               ! (pool 8) is a positive definite value too
                where (POOLS(n+1,1:7) < 0d0) POOLS(n+1,1:7) = 0d0
 
                ! Convert harvest related extractions to daily rate for output
                ! For dead organic matter pools, in most cases these will be zeros.
                ! But these variables allow for subseqent management where surface litter
                ! pools are removed or mechanical extraction from soil occurs.
-               FLUXES(n,34) = (labile_loss-labile_residue) * deltat_1(n)
-               FLUXES(n,35) = (foliar_loss-foliar_residue) * deltat_1(n)
-               FLUXES(n,36) = (roots_loss-roots_residue) * deltat_1(n)
-               FLUXES(n,37) = (wood_loss-wood_residue) * deltat_1(n)
-               FLUXES(n,38) = 0d0 ! litter
-               FLUXES(n,39) = 0d0 ! wood litter
-               FLUXES(n,40) = soil_loss_with_roots * deltat_1(n)
+               FLUXES(n,33) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
+               FLUXES(n,34) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
+               FLUXES(n,35) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
+               FLUXES(n,36) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
+               FLUXES(n,37) = 0d0 ! litter extraction
+               FLUXES(n,38) = 0d0 ! wood litter extraction by harvest               
+               FLUXES(n,39) = soil_loss_with_roots / deltat(n)          ! som extraction
                ! Convert harvest related residue generations to daily rate for output
-               FLUXES(n,41) = labile_residue * deltat_1(n)
-               FLUXES(n,42) = foliar_residue * deltat_1(n)
-               FLUXES(n,43) = roots_residue * deltat_1(n)
-               FLUXES(n,44) = wood_residue * deltat_1(n)
+               FLUXES(n,40) = labile_residue / deltat(n) ! labile residues
+               FLUXES(n,41) = foliar_residue / deltat(n) ! foliage residues
+               FLUXES(n,42) = roots_residue / deltat(n)  ! fine roots residues
+               FLUXES(n,43) = wood_residue / deltat(n)   ! wood residues
 
-               ! Total C extraction, this includes any som or litter clearing
-               FLUXES(n,45) = sum(FLUXES(n,34:40))
+               ! Total C extraction, including any potential litter and som.
+               FLUXES(n,32) = sum(FLUXES(n,33:39))
 
            end if ! C_total > 0d0
 
@@ -1501,79 +1193,42 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            if (burnt_area > 0d0) then
 
                ! first calculate combustion / emissions fluxes in g C m-2 d-1
-               FLUXES(n,21) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
-               FLUXES(n,22) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
-               FLUXES(n,23) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
-               FLUXES(n,24) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
-               FLUXES(n,25) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
-               FLUXES(n,26) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
-               FLUXES(n,27) = POOLS(n+1,7)*burnt_area*cf(7)/deltat(n) ! litterwood
+               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
+               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
+               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
+               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
+               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
+               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
+               FLUXES(n,44) = POOLS(n+1,7)*burnt_area*cf(7)/deltat(n) ! litterwood
 
                ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-               FLUXES(n,28) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
-               FLUXES(n,29) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
-               FLUXES(n,30) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
-               FLUXES(n,31) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
-               FLUXES(n,32) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
-               FLUXES(n,33) = POOLS(n+1,7)*burnt_area*(1d0-cf(7))*(1d0-rfac(7))/deltat(n) ! wood litter into som
+               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
+               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
+               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
+               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
+               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
+               FLUXES(n,45) = POOLS(n+1,7)*burnt_area*(1d0-cf(7))*(1d0-rfac(7))/deltat(n) ! wood litter into som
 
                ! update pools - first remove burned vegetation
-               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,21) + FLUXES(n,28)) * deltat(n) ! labile
-               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,22) + FLUXES(n,29)) * deltat(n) ! foliar
-               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,23) + FLUXES(n,30)) * deltat(n) ! roots
-               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,24) + FLUXES(n,31)) * deltat(n) ! wood
+               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
+               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
+               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
+               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
                ! update pools - add litter transfer
-               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,28) + FLUXES(n,29) + FLUXES(n,30) - FLUXES(n,25) - FLUXES(n,32)) * deltat(n) ! litter
-               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,31) + FLUXES(n,32) + FLUXES(n,33) - FLUXES(n,26)) * deltat(n) ! som
-               POOLS(n+1,7) = POOLS(n+1,7) - (FLUXES(n,27) + FLUXES(n,33)) * deltat(n) ! wood litter
+               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
+               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) + FLUXES(n,45) - FLUXES(n,23)) * deltat(n)
+               POOLS(n+1,7) = POOLS(n+1,7) - (FLUXES(n,44) + FLUXES(n,45)) * deltat(n)
 
-               ! calculate ecosystem emissions
-               FLUXES(n,17) = sum(FLUXES(n,21:27))
-           end if ! burnt_area > 0
-       end if ! any fire?
+               ! calculate ecosystem emissions (gC/m2/day)
+               FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)+FLUXES(n,44)
 
-!       do nxp = 1, nopools
-!          if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
-!              print*,"step",n, nxp
-!              print*,"met",met(:,n)
-!              print*,"POOLS",POOLS(n,:)
-!              print*,"FLUXES",FLUXES(n,:)
-!              print*,"POOLS+1",POOLS(n+1,:)
-!              print*,"wSWP",wSWP
-!              print*,"waterfrac",soil_waterfrac
-!              print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
-!              print*,"field_capacity",field_capacity
-!              print*,"porosity",porosity
-!              stop
-!          endif
-!       enddo
-!
-!       if (FLUXES(n,1) < 0d0 .or. FLUXES(n,1) /= FLUXES(n,1) .or. &
-!           FLUXES(n,19) /= FLUXES(n,19)) then
-!           print*,"step",n, nxp
-!           print*,"met",met(:,n)
-!           print*,"POOLS",POOLS(n,:)
-!           print*,"FLUXES",FLUXES(n,:)
-!           print*,"POOLS+1",POOLS(n+1,:)
-!           print*,"wSWP",wSWP
-!           print*,"waterfrac",soil_waterfrac
-!           print*,"Etrans",transpiration,"Esoil",soilevaporation,"Ewet",wetcanopy_evap
-!           print*,"field_capacity",field_capacity
-!           print*,"porosity",porosity
-!           stop
-!       endif
+           end if ! Burned_area > 0
+       else
+           ! set fluxes to zero
+           FLUXES(n,17:28) = 0d0 ; FLUXES(n,44:45) = 0d0
+       end if
 
     end do ! nodays loop
-
-    !!!!!!!!!!
-    ! Calculate Ecosystem diagnostics
-    !!!!!!!!!!
-
-    ! calculate NEE
-    NEE_out = -FLUXES(:,1) & ! GPP
-            + FLUXES(:,3)+FLUXES(:,13)+FLUXES(:,14)+FLUXES(:,4) ! Respiration
-    ! load GPP
-    GPP_out = FLUXES(:,1)
 
   end subroutine CARBON_MODEL
   !
@@ -1588,13 +1243,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Declare local variables
-    double precision :: a, b, c, Pl_max, PAR_m2, airt_adj
+    double precision :: a, b, c, Pl_max, PAR_m2, airt_ad, ceff
 
     !
     ! Metabolic limited photosynthesis
     !
 
-    ! Determine the appropriate canopy top
+    ! Determine the appropriate canopy top canopy efficiency value.
     ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
     ceff = (((avN * lai) / leaf_canopy_light_scaling) * NUE)
 
@@ -1609,7 +1264,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Light limited photosynthesis
     !
 
-    ! Calculate light limted rate of photosynthesis (gC.m-2.day-1) as a function
+    ! Calculate light limted rate of photosynthesis (umolC.m-2.s-1, daylight) as a function
     ! light capture and leaf to canopy scaling on quantum yield (e0).
     light_limited_photosynthesis = e0 * canopy_par_MJday * dayl_seconds_1 * gC_to_umol
 
@@ -1619,7 +1274,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
 
     ! Canopy level boundary layer conductance unit change
-    ! (m.s-1 -> mol.m-2.d-1) assuming sea surface pressure only.
+    ! (m.s-1 -> mol.m-2.s-1) assuming sea surface pressure only.
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
@@ -1679,6 +1334,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! calculate CO2 limited rate of photosynthesis (umolC.m-2.s-1)
+    ! Then scale to day light period as this is then consistent with the light
+    ! capture period (1/24 = 0.04166667)
     pd = ((co2-ci)/rc)
 
     !
@@ -1726,61 +1383,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function find_gs_iWUE
-  !
-  !----------------------------------------------------------------------
-  !
-  double precision function find_gs_WUE(gs_in)
-
-    ! Calculate CO2 limited photosynthesis as a function of metabolic limited
-    ! photosynthesis (pn), atmospheric CO2 concentration and stomatal
-    ! conductance (gs_in). Photosynthesis is calculated twice to allow for
-    ! testing of senstivity to WUE.
-
-    ! NOTE: this must be modified if wanted to be used
-
-    ! arguments
-    double precision, intent(in) :: gs_in
-
-    ! local variables
-    double precision :: gs_high, gs_store, &
-                        gpp_high, gpp_low, &
-                        evap_high, evap_low
-
-    !!!!!!!!!!
-    ! Optimise water use efficiency
-    !!!!!!!!!!
-
-    ! Globally stored upper stomatal conductance estimate in memory
-    gs_store = stomatal_conductance
-
-    ! now assign the current estimate
-    stomatal_conductance = gs_in
-    ! estimate photosynthesis with current estimate of gs
-    gpp_low = acm_gpp_stage_2(gs_in)
-    call calculate_transpiration(evap_low)
-
-    ! Increment gs
-    gs_high = gs_in + delta_gs
-    ! now assign the incremented estimate
-    stomatal_conductance = gs_high
-    ! estimate photosynthesis with incremented gs
-    gpp_high = acm_gpp_stage_2(gs_high)
-    call calculate_transpiration(evap_high)
-
-    ! Convert transpiration into per m2, per second
-    evap_high = (evap_high * dayl_seconds_1) / leaf_canopy_light_scaling
-    evap_low = (evap_low * dayl_seconds_1) / leaf_canopy_light_scaling
-
-    ! estimate marginal return on GPP for water loss, less water use efficiency criterion (gC.kgH2O-1.m-2.s-1)
-    find_gs_WUE = (((gpp_high - gpp_low)/(evap_high - evap_low))) - iWUE
-
-    ! return original stomatal value back into memory
-    stomatal_conductance = gs_store
-
-    ! remember to return back to the user
-    return
-
-  end function find_gs_WUE
   !
   !------------------------------------------------------------------
   !
@@ -1838,26 +1440,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! are independent of stomatal conductance effects
         call acm_gpp_stage_1
 
-        ! Intrinsic WUE optimisation
-        ! Check that the water restricted water range brackets the root solution for the bisection
-        iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
-        if ( iWUE_upper * find_gs_iWUE(min_gs) > 0d0 ) then
-             ! Then both proposals indicate that photosynthesis
-             ! would be increased by greater opening of the stomata
-             ! and is therefore water is limiting!
-             stomatal_conductance = potential_conductance
-             ! Exception being if both are positive - therefore assume
-             ! lowest
-             if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
-        else if (potential_conductance < minimum_conductance) then
-            ! If the potential conductance is less than the hardcoded minimum 
-            ! assume stomatal conductance is the minimum and move on.
-            stomatal_conductance = minimum_conductance             
-        else
-             ! In all other cases iterate
-             stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                           find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
-        end if
+        ! In all other cases iterate
+        !potential_stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+        !                                        find_gs_iWUE,minimum_conductance,max_gs*leaf_canopy_light_scaling, & 
+        !                                        tol_gs*lai,iWUE_step*0.10d0)
+
+!        if (do_iWUE) then
+            ! Intrinsic WUE optimisation
+            ! Check that the water restricted water range brackets the root solution for the bisection
+            iWUE_upper = find_gs_iWUE(potential_conductance) !; iWUE_lower = find_gs_iWUE(min_gs)
+            if ( iWUE_upper * find_gs_iWUE(min_gs) > 0d0 ) then
+                ! Then both proposals indicate that photosynthesis
+                ! would be increased by greater opening of the stomata
+                ! and is therefore water is limiting!
+                stomatal_conductance = potential_conductance
+                ! Exception being if both are positive - therefore assume
+                ! lowest
+                if (iWUE_upper > 0d0) stomatal_conductance = minimum_conductance
+            else if (potential_conductance < minimum_conductance) then
+                ! If the potential conductance is less than the hardcoded minimum 
+                ! assume stomatal conductance is the minimum and move on.
+                stomatal_conductance = minimum_conductance                
+            else
+
+                ! In all other cases iterate
+                stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+                                              find_gs_iWUE,minimum_conductance,potential_conductance,tol_gs*lai,iWUE_step*0.10d0)
+
+            end if
 
     else
 
@@ -2035,6 +1645,44 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
+  subroutine calculate_potential_evaporation(potential_evap)
+
+    ! Estimates potential surface evapotransporation based on the Penman-Monteith model
+    ! (kgH20.m-2.day-1). FAO Chapter 3 Determination of ETo, see chapter 2 for derivation.
+
+    implicit none
+
+    ! arguments
+    double precision, intent(out) :: potential_evap ! kgH2O.m-2.day-1
+
+    ! local variables
+    double precision :: canopy_radiation  ! isothermal net radiation (W/m2)
+
+    !!!!!!!!!!
+    ! Estimate energy radiation balance (W.m-2)
+    !!!!!!!!!!
+
+    ! Absorbed shortwave radiation MJ.m-2.day-1
+    canopy_radiation = canopy_swrad_MJday + soil_swrad_MJday & 
+                     + (canopy_lwrad_Wm2 * 1d-6 * seconds_per_day) &
+                     + (soil_lwrad_Wm2 * 1d-6 * seconds_per_day)
+
+    !!!!!!!!!!
+    ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
+    !!!!!!!!!!
+
+    ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
+    ! NOTE: Rn - G, neglected as G (ground heat) near zero on daily scales
+    ! 0.34 estimates the ratio of canopy and stomatal conductance
+    ! 0.408 is the inverse of lambda as described in this code.
+    potential_evap = ((0.408d0*slope*canopy_radiation) + &
+                      (psych*(900d0 / (meant + 273d0)) * wind_spd * vpd_kPa)) &
+                   / (slope + psych * (1d0+0.34d0*wind_spd))
+
+  end subroutine calculate_potential_evaporation
+  !
+  !------------------------------------------------------------------
+  !
   subroutine calculate_soil_evaporation(soilevap)
 
     ! Estimate soil surface evaporation based on the Penman-Monteith model of
@@ -2054,7 +1702,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                               ,gws   ! water vapour conductance through soil air space (m.s-1)
 
     ! oC -> K for local temperature value
-    !local_temp = maxt + freeze
     local_temp = soilT + freeze
 
     !!!!!!!!!!
@@ -2207,9 +1854,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 1/vonkarman * 0.31 = 0.7710906
     canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
-    ! set minimum value for wind speed at canopy top (m.s-1)
-!    canopy_wind = max(min_wind,canopy_wind)
-
   end subroutine log_law_decay
   !
   !-----------------------------------------------------------------
@@ -2217,7 +1861,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine calculate_field_capacity
 
     use brent_zero, only: zbrent
-
+    
     ! field capacity calculations for saxton eqns !
 
     implicit none
@@ -2249,7 +1893,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: doy, lat
 
     ! local variables
-    double precision :: dec, mult, aob!, !sinld, cosld
+    double precision :: dec, mult, sinld, cosld, aob
 
     !
     ! Estimate solar geometry variables needed
@@ -2264,9 +1908,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! latitude in radians
     mult = lat * deg_to_rad
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
-    !sinld = sin( mult ) * sin( dec )
-    !cosld = cos( mult ) * cos( dec )
-    aob = max(-1d0,min(1d0,(sin( mult ) * sin( dec )) / (cos( mult ) * cos( dec ))))
+    sinld = sin( mult ) * sin( dec )
+    cosld = cos( mult ) * cos( dec )
+    aob = max(-1d0,min(1d0,sinld / cosld))
 
     ! estimate day length in hours and seconds and upload to module variables
     dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
@@ -2297,6 +1941,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: lwrad, & ! downward long wave radiation from sky (W.m-2)
          transmitted_fraction, & ! fraction of LW which is not incident on the canopy
   canopy_transmitted_fraction, & !
+                    delta_iso, &
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
       longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
             trans_lw_fraction, &
@@ -2417,6 +2062,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! determine isothermal net soil
     soil_lwrad_Wm2 = (soil_absorption_from_sky + soil_absorption_from_canopy) - longwave_release_soil
 
+    !!!!!!!!!!
+    ! Convert isothermal to net radiation
+    !!!!!!!!!!
+
+    ! Apply linear correction to soil surface isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
+                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                 soil_iso_to_net_const
+    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
+    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+    ! Estimate the mean soil surface temperature as a result of net radiation update
+    soilT = (((longwave_release_soil - delta_iso) / emiss_boltz) ** (0.25d0)) - freeze
+
+    ! Apply linear correction to canopy isothermal->net longwave radiation
+    ! balance based on absorbed shortwave radiation
+    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
+                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+                canopy_iso_to_net_const
+    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
+    ! Estimate the mean leaf temperature as a result of net radiation update.
+    ! This can only be attempted if the canopy release fraction (an empirical fit) is greater than
+    ! a minimum value. Otherwise the leafT defaults to infinity which is unrealistic.
+    if (canopy_release_fraction > 1d-4) then
+        leafT = (((((canopy_loss + canopy_loss) - delta_iso) / (canopy_release_fraction * 2d0)) &
+                 / emiss_boltz) ** (0.25d0)) - freeze 
+    end if 
+
   end subroutine calculate_longwave_isothermal
   !
   !------------------------------------------------------------------
@@ -2433,28 +2106,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! isothermal longwave balance to net based on soil surface incident shortwave
     ! radiation
 
-    ! declare local variables
-    double precision :: delta_iso
-
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
+    !call calculate_longwave_isothermal(meant,meant)
     call calculate_longwave_isothermal(leafT,soilT)
-!    call calculate_longwave_isothermal(meant,meant)
-    ! Apply linear correction to soil surface isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
-                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                soil_iso_to_net_const
-    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
-    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
-    ! Apply linear correction to canopy isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
-                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                canopy_iso_to_net_const
-    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -2480,11 +2136,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,canopy_transmitted_fraction &
                        ,absorbed_nir_fraction_soil  &
                        ,absorbed_par_fraction_soil  &
-                       ,snow_adjusted_nir_reflected &
-                       ,snow_adjusted_par_reflected &
-                       ,leaf_fsnow,soil_fsnow       &
-                       ,par,nir                     &
-                       ,soil_par_MJday              &
+                       ,fsnow,par,nir               &
                        ,soil_nir_MJday              &
                        ,trans_nir_MJday             &
                        ,trans_par_MJday             &
@@ -2515,43 +2167,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! canopy?
     transmitted_fraction = exp(decay * lai * clump)
     ! Estimate the integral of light interception for use as a leaf to canopy
-    ! scaler for photoynthesis, transpiration, and gs
+    ! scaler for photosynthesis, transpiration, and gs
     ! Based on the canopy scaling of photosynthetic capacity due to light from 
     ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
     leaf_canopy_light_scaling = (1d0-transmitted_fraction) / (-decay*clump)
 
     ! Second, of the radiation which is incident on the canopy what fractions
     ! are transmitted through, reflected from or absorbed by the canopy
-    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
 
-    ! Update soil reflectance based on snow cover
-    if (snow_storage > 0d0) then
-        ! Estimate fraction of ground covered by snow
-        soil_fsnow = 1d0 - exp( - snow_storage * transmitted_fraction * 1d-1 )
-        leaf_fsnow = 1d0 - exp( - snow_storage * (1d0 - transmitted_fraction) * 1d-1 )
-        ! Estimate the weighted composition of par and nir reflectance of soil
-        absorbed_par_fraction_soil = ((1d0 - soil_fsnow) * soil_swrad_absorption) + (soil_fsnow * newsnow_par_abs)
-        absorbed_nir_fraction_soil = ((1d0 - soil_fsnow) * soil_swrad_absorption) + (soil_fsnow * newsnow_nir_abs)
-        ! Estimate weighted composition of par and nir reflectance of the canopy
-        snow_adjusted_par_reflected = ((1d0 - leaf_fsnow) * max_par_reflected) + (leaf_fsnow * (1d0-newsnow_par_abs))
-        snow_adjusted_nir_reflected = ((1d0 - leaf_fsnow) * max_nir_reflected) + (leaf_fsnow * (1d0-newsnow_nir_abs))
-        ! Update estimate of soil and canopy temperature.
-        ! Assume tha areas under snow are at 0oC or 273.15 K
-        soilT = (soilT * (1d0 - soil_fsnow)) !+ (0d0 * fsnow)
-        leafT = (leafT * (1d0 - leaf_fsnow)) !+ (0d0 * fsnow)
-    else
-        absorbed_par_fraction_soil = soil_swrad_absorption
-        absorbed_nir_fraction_soil = soil_swrad_absorption
-        snow_adjusted_par_reflected = max_par_reflected
-        snow_adjusted_nir_reflected = max_nir_reflected
-    endif
+    canopy_transmitted_fraction = exp(decay * lai * 0.5d0 * clump)
 
     ! Canopy transmitted of PAR & NIR radiation towards the soil
     trans_par_fraction = canopy_transmitted_fraction * max_par_transmitted
     trans_nir_fraction = canopy_transmitted_fraction * max_nir_transmitted
     ! Canopy reflected of near infrared and photosynthetically active radiation
-    reflected_nir_fraction = canopy_transmitted_fraction * snow_adjusted_nir_reflected
-    reflected_par_fraction = canopy_transmitted_fraction * snow_adjusted_par_reflected
+    reflected_nir_fraction = canopy_transmitted_fraction * max_nir_reflected
+    reflected_par_fraction = canopy_transmitted_fraction * max_par_reflected
     ! Canopy absorption of near infrared and photosynthetically active radiation
     absorbed_nir_fraction = 1d0 - reflected_nir_fraction - trans_nir_fraction
     absorbed_par_fraction = 1d0 - reflected_par_fraction - trans_par_fraction
@@ -2571,6 +2202,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     par = par - trans_par_MJday
     nir = nir - trans_nir_MJday
 
+! NOTE: Can something about snow reflectance be added here to reduce radiation available for subsequent absorption / reflectance, and just reflect back to sky?
+
     ! Estimate incoming shortwave radiation absorbed, transmitted and reflected
     ! by the canopy (MJ.m-2.day-1)
     canopy_par_MJday = par * absorbed_par_fraction
@@ -2579,6 +2212,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     trans_nir_MJday = trans_nir_MJday + (nir * trans_nir_fraction)
     refl_par_MJday = par * reflected_par_fraction
     refl_nir_MJday = nir * reflected_nir_fraction
+
+    !!!!!!!!!
+    ! Estimate soil absorption of shortwave passing through the canopy
+    !!!!!!!!!
+
+    ! Update soil reflectance based on snow cover
+    if (snow_storage > 0d0) then
+        fsnow = 1d0 - exp( - snow_storage * 0.1d0 )  ! fraction of snow cover on the ground
+        absorbed_par_fraction_soil = ((1d0 - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_par_abs)
+        absorbed_nir_fraction_soil = ((1d0 - fsnow) * soil_swrad_absorption) + (fsnow * newsnow_nir_abs)
+    else
+        absorbed_par_fraction_soil = soil_swrad_absorption
+        absorbed_nir_fraction_soil = soil_swrad_absorption
+    endif
 
     ! Then the radiation incident and ultimately absorbed by the soil surface
     ! itself (MJ.m-2.day-1)
@@ -2615,12 +2262,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Combine to estimate total shortwave canopy absorbed radiation
     canopy_swrad_MJday = canopy_par_MJday + canopy_nir_MJday
 
-    ! check energy balance
-!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday -
-!    refl_nir_MJday - soil_swrad_MJday
-!    if ((balance - swrad) / swrad > 0.01) then
-!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual =
-!        ",balance,"SW in = ",swrad
+!    ! check energy balance
+!    balance = swrad - canopy_par_MJday - canopy_nir_MJday - refl_par_MJday - refl_nir_MJday - soil_swrad_MJday
+!    if (((balance - swrad) / swrad) > 0.01) then
+!        print*,"SW residual frac = ",(balance - swrad) / swrad,"SW residual = ",balance,"SW in = ",swrad
 !    endif
 
   end subroutine calculate_shortwave_balance
@@ -2635,9 +2280,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! local variables
     integer :: i, rooted_layer
-    double precision :: bonus, &
-                        transpiration_resistance,root_reach_local, &
-                        root_depth_50, slpa, mult, prev, exp_func
+    double precision :: transpiration_resistance,root_reach_local, &
+                        slpa, mult, prev, exp_func!, root_depth_50, bonus
     double precision, dimension(nos_root_layers) :: Rcond_layer, &
                                                     root_mass,  &
                                                     root_length
@@ -2647,14 +2291,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0
-    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0 ; Reff = 0d0 
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0 ; conductance_mmolH2OMPam2s = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear
     ! whether this actually varies with height or whether tall trees have a
     ! xylem architecture which keeps the whole plant conductance (gplant) 1-10 (ish).
     !    transpiration_resistance = (gplant * lai)**(-1d0)
+    ! Following Weiburg function, the potential conductance is reduced under increasing
+    ! potential differences between the canopy and soil
+ !SOME THOUGHT NEEDED HERE ON HOW TO QUANTIFY THIS IMPACT ON GPLANT, AS STRESS VARIES DEPENDING ON THE ROOT ZONE LAYERS...
+    !transpiration_resistance = gplant * exp(-(abs(SWP(1:nos_root_layers) - minlwp) / s1)**(s2))
+    !transpiration_resistance = canopy_height / (transpiration_resistance * max(min_lai,lai))
     transpiration_resistance = canopy_height / (gplant * max(min_lai,lai))
 
     !!!!!!!!!!!
@@ -2776,7 +2425,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Turn the output resistance into conductance
     Rcond_layer = Rcond_layer**(-1d0)
 
-    ! if freezing then assume soil surface is frozen, therefore no water flux
+    ! If freezing then assume soil surface is frozen, therefore no water flux
     if (soilT < 1d0) then
         water_flux_mmolH2Om2s(1) = 0d0
         Rcond_layer(1) = 0d0
@@ -2978,7 +2627,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     !! Assume leaf transpiration is drawn from the soil based on the
     !! update_fraction estimated in calculate_Rtot
-    pot_evap_losses = Eleaf * uptake_fraction
+     pot_evap_losses = Eleaf * uptake_fraction
     !! Assume all soil evaporation comes from the soil surface only
     !pot_evap_losses(1) = pot_evap_losses(1) + Esoil
 
@@ -3134,7 +2783,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! now assign that new volume of water to the deep rooting layer
             soil_waterfrac(nos_root_layers) = ((soil_waterfrac(nos_root_layers)*layer_thickness(nos_root_layers))+water_change) &
                                             / (layer_thickness(nos_root_layers)+depth_change)
-
             ! explicitly update the soil profile if there has been rooting depth
             ! changes
             layer_thickness(1) = top_soil_depth
@@ -3154,7 +2802,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! now assign that new volume of water to the deep rooting layer
             soil_waterfrac(nos_soil_layers) = ((soil_waterfrac(nos_soil_layers)*layer_thickness(nos_soil_layers))+water_change) &
                                             / (layer_thickness(nos_soil_layers)+depth_change)
-
             ! explicitly update the soil profile if there has been rooting depth
             ! changes
             layer_thickness(1) = top_soil_depth
@@ -3328,12 +2975,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     iceprop = 0d0
 
     ! except the surface layer in the mean daily temperature is < 0oC
-    if (soilT < 1d0) iceprop(1) = 1d0
+    if (meant < 1d0) iceprop(1) = 1d0
 
     ! zero water fluxes
     waterchange = 0d0
 
-    ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+    ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
     water_grav_flow = water_grav_flow * 1d-3
@@ -3614,6 +3261,32 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
+  subroutine initialise_cgi(mean_days_per_step,cgi_ncce_lag_step,cgi_ncce_lag_days)
+
+    ! Subroutine tidys away the calculation of the 
+    ! number of days for the canopy growth index lag period
+
+    implicit none
+
+    ! Arguments
+    integer, intent(in) :: cgi_ncce_lag_step
+    double precision, intent(in) :: mean_days_per_step
+    double precision, dimension(cgi_ncce_lag_step), intent(out) :: cgi_ncce_lag_days
+    ! Local variables
+    integer :: f          
+
+    ! Determine the number of days equivalent for the lag period
+    do f = 1, cgi_ncce_lag_step
+       cgi_ncce_lag_days(f) = dble(f) * mean_days_per_step
+    end do
+
+    ! Return
+    return
+
+  end subroutine initialise_cgi
+  !
+  !----------------------------------------------------------------------
+  !
   subroutine soil_water_potential
 
     ! Find SWP without updating waterfrac yet (we do that in !
@@ -3651,8 +3324,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, parameter :: cd1 = 7.5d0,   & ! Canopy drag parameter; fitted to data
                                     Cs = 0.003d0, & ! Substrate drag coefficient
                                     Cr = 0.3d0,   & ! Roughness element drag coefficient
-                          ustar_Uh_max = 0.3d0,   & ! Maximum observed ratio of
-                                                    ! (friction velocity / canopy top wind speed) (m.s-1)
+                          ustar_Uh_max = 0.35d0,  &
                           ustar_Uh_min = 0.05d0,  &
                                     Cw = 2d0,     &  ! Characterises roughness sublayer depth (m)
                                  phi_h = 0.19314718056d0 ! Roughness sublayer influence function;
@@ -3661,7 +3333,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! roughness from the intertial sublayer log law
 
 
-    ! Estimate canopy drag factor
+    ! Estimate canopy drag coefficient
     sqrt_cd1_lai = sqrt(cd1 * local_lai)
 
     ! calculate estimate of ratio of friction velocity / canopy wind speed.
@@ -3695,442 +3367,270 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-!  subroutine calculate_leaf_dynamics(current_step,deltat,nodays,mean_max_airt, mean_dayl  &
-!                                    ,cgi_temperature_coef_1 &
-!                                    ,cgi_temperature_coef_2 &
-!                                    ,cgi_temperature_coef_3 &
-!                                    ,cgi_temperature_coef_4 &
-!                                    ,cgi_water_coef_1,cgi_water_coef_2 &
-!                                    ,cgi_dayl_coef_1,cgi_dayl_coef_2 &
-!                                    ,pot_leaf_fall,pot_leaf_growth    &
-!                                    ,base_leaf_fall,cmi_ncce_k50 &
-!                                    ,GPP_current,foliage &
-!                                    ,dNCCE_crit_frac,CGI,leaf_fall,leaf_growth)
-  subroutine calculate_leaf_dynamics(current_step,deltat,nodays,mean_max_airt, mean_dayl  &
-                                    ,cgi_temperature_coef_1 &
-                                    ,cgi_temperature_coef_2 &
-                                    ,cgi_temperature_coef_3 &
-                                    ,cgi_temperature_coef_4 &
-                                    ,cgi_water_coef_1,cgi_water_coef_2 &
-                                    ,cmi_temperature_coef_1 &
-                                    ,cmi_temperature_coef_2 &
-                                    ,cmi_temperature_coef_3 &
-                                    ,cmi_temperature_coef_4 &
-                                    ,pot_leaf_fall,pot_leaf_growth    &
-                                    ,base_leaf_fall, cmi_sensitivity &
-                                    ,labile_deficit_k50 &
-                                    ,GPP_current,foliage,labile &
-                                    ,CGI,leaf_fall,leaf_growth)
+  subroutine plant_canopy_phenology(nodays, cgi_ncce_lag_step, step, time,                 & ! Timing
+                                    cgi_temperature_coef_1, cgi_temperature_coef_2,        & ! CGI parameters
+                                    cgi_temperature_coef_3, cgi_temperature_coef_4,        & !
+                                    cgi_temperature_coef_5, cgi_temperature_coef_6,        & !
+                                    cgi_water_coef_1, cgi_water_coef_2,                    & ! 
+                                    cmi_temperature_coef_1, cmi_temperature_coef_2,        & ! CMI parameters
+                                    cmi_temperature_coef_3, cmi_temperature_coef_4,        & !
+                                    cmi_labile_k50, cmi_ncce_k50, cmi_ncce_coef,           & !
+                                    cgi_phenology_threshold, ncce_phenology_threshold,     & !
+                                    potential_labile_turnover, potential_foliage_turnover, & ! 
+                                    lca, ncce_return_threshold, available_labile, foliage, & ! To calculate GPP return
+                                    labile, current_gpp, delta_ncce_gCgC, ncce_gCgC,       & !
+                                    Rm_leaf_per_gC,                                        & !                           
+                                    alloc_leaf_fraction, alloc_leaf_gCm2day,               & ! Output variables
+                                    leaf_litter_fraction, leaf_litter_gCm2day,             & !
+                                    leafT_limit, leafW_limit, ncce_gradient, cgi_gradient, & !
+                                    cgi, cmi) 
 
-    ! Subroutine determines whether leaves are growing or dying.
-    ! 1) Calculate the Canopy Growth and Mortality Indices
-    ! 2) Determines whether conditions are improving or deteriorating
-    ! 3) Estimates the Marginal return on Net Canopy Carbon Export (NCCE)
-    ! 4) Based on CGI and NCCE growth and mortality are determined.
+       ! Subroutine deals with the determining of allocated carbon to foliage from 
+       ! the labile / non-structural carbohydrates pool and senescence of foliage 
+       ! to fine litter. Growth are determined by a canopy growth index (CGI),
+       ! which is the product of 2-limiting terms represented by temperature, 
+       ! water stress. The functions are scaled 0-1 ensuring the product is also 
+       ! 0-1 and applied to a potential growth and loss parameters.
+       ! Canopy losses are deterined by the canopy mortality index, which is a Michaelis-Menten 
+       ! function of the net canopy carbon export (NCCE) per gC of foliage.     
+       ! Growth is subject to an economic test of whether the NCCE is above a threshold value.
 
-    ! Growing Season Index (GSI) concept added by JFE and TLS.
-    ! Refs Jolly et al., 2005, doi: 10.1111/j.1365-2486.2005.00930.x)
-    !      Stoeckli et al., 2010, doi:10.1029/2010JG001545.
-    ! GSI renames into a Canopy Growth Index (CGI).
-    ! CGI directly drivers growth but mortality is modified by CGI and NCCE.
-    ! Added 21/01/2021 TLS
+       ! Here we calculate the Growing Season Index based on
+       ! Jolly et al. A generalized, bioclimatic index to predict foliar
+       ! phenology in response to climate Global Change Biology, Volume 11, page 619-632,
+       ! 2005 (doi: 10.1111/j.1365-2486.2005.00930.x)
+       ! Stoeckli, R., T. Rutishauser, I. Baker, M. A. Liniger, and A. S.
+       ! Denning (2011), A global reanalysis of vegetation phenology, J. Geophys. Res.,
+       ! 116, G03020, doi:10.1029/2010JG001545.
 
-    implicit none
+       implicit none
 
-    ! declare arguments
-    integer, intent(in) :: nodays, current_step
-    double precision, intent(in) :: deltat(nodays) & !
-                                    ,mean_max_airt & !
-                                        ,mean_dayl & !
-                                          ,foliage & !
-                                           ,labile &
-                                      ,GPP_current & !
-!                                  ,dNCCE_crit_frac & !
-                           ,cgi_temperature_coef_1 & !
-                           ,cgi_temperature_coef_2 & !
-                           ,cgi_temperature_coef_3 & !
-                           ,cgi_temperature_coef_4 & !
-                                 ,cgi_water_coef_1 & !
-                                 ,cgi_water_coef_2 & !
-                           ,cmi_temperature_coef_1 & !
-                           ,cmi_temperature_coef_2 & !
-                           ,cmi_temperature_coef_3 & !
-                           ,cmi_temperature_coef_4 & !
-!                                  ,cgi_dayl_coef_1 & !
-!                                  ,cgi_dayl_coef_2 & !
-                                   ,base_leaf_fall &
-                                    ,pot_leaf_fall & !
-                                  ,pot_leaf_growth & !
-                                  ,cmi_sensitivity &
-                               ,labile_deficit_k50
-!                                     ,cmi_ncce_k50   !
+       ! Arguments
+       integer, intent(in) :: step, & ! current model time step
+                            nodays, & ! Number of time steps in the analysis
+                 cgi_ncce_lag_step    ! Number of model time steps over which ncce / cgi gradient calculations will be made.
+       double precision, intent(in) :: time, & ! number of days in current time step
+                     cgi_temperature_coef_1, & ! max temperature for skewed Gaussian growth curve (oC)
+                     cgi_temperature_coef_2, & ! min temperature for skewed Gaussian growth curve (oC)
+                     cgi_temperature_coef_3, & ! optimum temperature for growth (oC)
+                     cgi_temperature_coef_4, & ! kurtosis of skewed Gaussian function
+                     cgi_temperature_coef_5, & ! Hard minimum temperature for leaf growth
+                     cgi_temperature_coef_6, & ! Temperature above cgi...5 that MM model is at 50 %                                      
+                           cgi_water_coef_1, & ! SWP at which growth fully limited (MPa)
+                           cgi_water_coef_2, & ! SWP at which growth non-limited (MPa)                    
+                     cmi_temperature_coef_1, & ! max temperature for skewed Gaussian loss curve (oC)
+                     cmi_temperature_coef_2, & ! min temperature for skewed Gaussian loss curve (oC)
+                     cmi_temperature_coef_3, & ! optimum temperature for loss (oC)
+                     cmi_temperature_coef_4, & ! kurtosis of skewed Gaussian function
+                             cmi_labile_k50, & ! labile at which cmi is at half saturation
+                               cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
+                              cmi_ncce_coef, & ! ncce_gCgC gradient for logistic function
+                    cgi_phenology_threshold, & ! CGI gradient threshold above which leaf growth is possible 
+                   ncce_phenology_threshold, & ! NCCE gradient threshold below (negative) which leaf fall is possible
+                  potential_labile_turnover, & ! Potential fractional rate of labile turnover to foliage (0-1)
+                 potential_foliage_turnover, & ! Potential fractional rate of foliage turnover to fine litter (0-1)                    
+                                        lca, & ! leaf carbon per leaf area (gC/m2)
+                      ncce_return_threshold, & ! NCCE return for growth to go ahead (gC/gC/m2/day)
+                           available_labile, & ! labile C available to spend this time step (gC/m2)
+                                    foliage, & ! foliage C in this time step (gC/m2) 
+                                     labile, & ! labile C in this time step (gC/m2)
+                                current_gpp, & ! current time step GPP estimate (gC/m2/day)
+                             Rm_leaf_per_gC    ! Maintenance demand for leaves per gC/d                                
+       double precision, intent(out) :: &
+                            delta_ncce_gCgC, & ! change in net canopy carbon export from investment (gC/gCinvested/day)
+                        alloc_leaf_fraction, & ! allocation to lablile to leaf (0-1)
+                         alloc_leaf_gCm2day, & ! allocation to labile to leaf (gC/m2/day)
+                       leaf_litter_fraction, & ! leaf litter fall fraction (0-1)
+                        leaf_litter_gCm2day, & ! leaf litter fall (gC/m2/day)
+                              ncce_gradient, & ! NCCE gradient over the lag period (gC/gCleaf/day / day)                                
+                               cgi_gradient, & ! CGI gradient over the lag period (-1->1 / day)                                                              
+                                leafT_limit, & ! temperature limitation on foliage (0-1)
+                                leafW_limit    ! water limitation on foliage (0-1)
+       double precision, dimension(nodays), intent(inout) ::    &
+                                  ncce_gCgC, & ! current net canopy carbon export (gC/gCleaf/day)     
+                                        cgi, & ! canopy growing index (cgi, 0-1)   
+                                        cmi    ! canopy mortality index (cmi, 0-1)                                           
 
-    double precision, intent(inout) :: CGI(nodays) &
-                                      ,leaf_fall,leaf_growth
+       ! Local variables
+       integer :: interval
+       double precision :: tmp, rescale, lai_orig, gs_orig, scaling_orig, leaf_investment
 
-    ! declare local variables
-    integer :: m, interval, ncce_lag, cmi_lag
-    double precision :: infi     &
-                       ,tmp      &
-                       ,gradient &
-                  ,return_period &
-                    ,pot_foliage &
-                      ,deltaNCCE &
-                       ,deltaGPP &
-                        ,deltaRm &
-                       ,C_invest &
-                ,cgi_temperature &
-                      ,cgi_water &
-                       ,cgi_dayl &
-                       ,cmi_ncce &
-             ,labile_suppression &
-                       ,lai_save &
-                 ,canopy_lw_save &
-                 ,canopy_sw_save &
-                ,canopy_par_save &
-                   ,soil_lw_save &
-          ,soil_sw_save, gs_save
+       ! Set intial value of all output variables
+       alloc_leaf_fraction = 0d0 ; alloc_leaf_gCm2day = 0d0
+       leaf_litter_fraction = 0d0 ; leaf_litter_gCm2day = 0d0
+       leafT_limit = 0d0 ; leafW_limit = 0d0 
 
-    ! save original values for re-allocation later
-    canopy_lw_save = canopy_lwrad_Wm2 ; soil_lw_save = soil_lwrad_Wm2
-    canopy_sw_save = canopy_swrad_MJday ; canopy_par_save  = canopy_par_MJday
-    soil_sw_save = soil_swrad_MJday ; gs_save = stomatal_conductance
-    lai_save = lai
+       !
+       ! Calculate the current time steps canopy growing index
+       !
 
-    ! for infinity checks
-    infi = 0d0
+       ! Estimate the temperature limitation on foliage
+       if (leafT > cgi_temperature_coef_5) then  
+           leafT_limit = opt_max_scaling(cgi_temperature_coef_1,cgi_temperature_coef_2 &
+                                        ,cgi_temperature_coef_3,cgi_temperature_coef_4,leafT)
+           ! Now calculate the minimum temperature threshold via Michaelis-Menten
+           ! combine with the skewed Gaussian. This provides a shutdown point.
+           leafT_limit = ((leafT-cgi_temperature_coef_5) / ((leafT-cgi_temperature_coef_5) + cgi_temperature_coef_6)) * leafT_limit                                        
+       end if
+       ! Specific limitation of hydraulic limitation on leaf growth, wSWP as proxy.
+       if (wSWP > cgi_water_coef_1) then  
+           leafW_limit = min(1d0,max(0d0,(wSWP - cgi_water_coef_1) / (cgi_water_coef_2-cgi_water_coef_1)))
+       end if      
+       ! Calculate current time steps canopy growing index
+       cgi(step) = leafT_limit * leafW_limit 
 
-    ! Reset turnover parameters
-    leaf_fall = 0d0   ! leaf turnover
-    leaf_growth = 0d0 ! leaf growth
-    ! Reset marginal return variables
-    deltaGPP = 0d0 ; deltaRm = 0d0 ; deltaNCCE = 0d0
+       !
+       ! Calculate the current time steps canopy mortality index
+       !
 
-    ! Estimate current NCCE (gC/gCleaf/day)
-    if (foliage < 1e-6) then
-        NCCE(current_step) = 0d0
-    else
-        NCCE(current_step) = (GPP_current / foliage) - Rm_leaf_per_gC
-    endif
-    ! Estimate current NCCE (gC/m2/day)
-!    NCCE(current_step) = GPP_current - (Rm_leaf_per_gC * foliage)
-    ! Determine the degree of suppression being applied to the potential turnover
-!    cmi_ncce = 1d0 - max(0d0,NCCE(current_step) / (NCCE(current_step) + cmi_ncce_k50))
+       ! Update the CGI and NCCE gradient over the averaging period (21-days or 1 month)
+       if (step < cgi_ncce_lag_step) then
+           if (step == 1) then
+               cgi_lag_history(2)  = cgi(step)
+               ncce_lag_history(2) = ncce_gCgC(step)
+               interval = 2
+           else
+               cgi_lag_history(1:step)  = cgi(1:step)
+               ncce_lag_history(1:step) = ncce_gCgC(1:step)
+              
+               interval = step
+           endif
+       else
+           cgi_lag_history(1:cgi_ncce_lag_step)  = cgi((step-cgi_ncce_lag_step+1):step)
+           ncce_lag_history(1:cgi_ncce_lag_step) = ncce_gCgC((step-cgi_ncce_lag_step+1):step)
+           interval = cgi_ncce_lag_step
+       end if
+       ! Now calculate the linear gradients
+       cgi_gradient  = linear_model_gradient(cgi_ncce_lag_days(1:interval),cgi_lag_history(1:interval),interval)
+       ncce_gradient = linear_model_gradient(cgi_ncce_lag_days(1:interval),ncce_lag_history(1:interval),interval)
 
-!    !!!
-!    ! Estimate of change (i.e. gradient) in the NCCE
-!
-!    ! load lag for linear regression
-!    ncce_lag = ncce_lag_remembered
-!
-!    ! Determine NCCE section to have linear regression applied to and
-!    ! determine the number of values, i.e. the interval
-!    if (current_step < ncce_lag) then
-!        if (current_step == 1) then
-!            ncce_history(1:2) = NCCE(current_step)
-!            interval = 2
-!        else
-!            ncce_history(1:current_step) = NCCE(1:current_step)
-!            interval = current_step
-!        endif
-!    else
-!        ncce_history(1:ncce_lag) = NCCE((current_step-ncce_lag+1):current_step)
-!        interval = ncce_lag
-!    end if
-!    ! Now calculate the linear gradient
-!    gradient = linear_model_gradient(tmp_x(1:interval),ncce_history(1:interval),interval)
+       ! Estimate the canopy mortality index following a logistic function of NCCE, temperature and labile storage
+       cmi(step) = (1d0+exp(cmi_ncce_coef*(ncce_gCgC(step)-cmi_ncce_k50)))**(-1d0)
 
-!    ! store lag to keep fresh in memory - yes this is a hack to get around a
-!    ! memory problem
-!    ncce_lag_remembered = ncce_lag
+       ! Estimate the canopy mortality index - a function of temperature, labile pool size and NCCE
+       ! First of all, if we are outside of the temperature range, then we have a CMI == 1
+       if (leafT > cmi_temperature_coef_1 .and. leafT < cmi_temperature_coef_3) then  
+           ! 1 minus a skewed Gaussian curve increase CMI away from an optimum environment
+           cmi(step) = 1d0 - opt_max_scaling(cgi_temperature_coef_1,cgi_temperature_coef_2 &
+                                            ,cgi_temperature_coef_3,cgi_temperature_coef_4,leafT)
+           ! Update based on a logistic function of NCCE
+           cmi(step) = cmi(step) * ((1d0+exp(cmi_ncce_coef*(ncce_gCgC(step)-cmi_ncce_k50)))**(-1d0))
+           ! Update based on labile pool size
+           cmi(step) = cmi(step) * (labile / (labile + cmi_labile_k50))
+       else 
+           cmi(step) = 1d0
+       end if
 
-    ! CGI is the product of 2 limiting factors for temperature and
-    ! water availability that scale between 0 to 1
-    ! A larger CGI indicates a greater likelihood of canopy growth
+       ! We can only allocate if we have labile to spend and a CGI gradient above the leaf phenology threshold.
+       if (cgi_gradient > cgi_phenology_threshold .and. cgi(step) > vsmall .and. available_labile > 0d0) then
 
-    ! Temperature limitation
-    !                 = opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
-    cgi_temperature = opt_max_scaling(cgi_temperature_coef_1,cgi_temperature_coef_2 &
-                                     ,cgi_temperature_coef_3,cgi_temperature_coef_4,leafT)
-    ! Water availability limitation
-!    cgi_water = logistic_func(rSWP,cgi_water_coef_1,cgi_water_coef_2,0d0,1d0)
-!    cgi_water = max(0d0,min(1d0,(rSWP - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
-    cgi_water = max(0d0,min(1d0,((total_water_flux/lai) - cgi_water_coef_1) / (cgi_water_coef_2 - cgi_water_coef_1)))
-    ! Day length limitation
-    !cgi_dayl = max(0d0,min(1d0,(mean_dayl - cgi_dayl_coef_1) / (cgi_dayl_coef_2 - cgi_dayl_coef_1)))
+           !
+           ! Labile allocation to plant tissues (gC/m2/day)
+           !
 
-    ! Calculate and store the CGI
-    CGI(current_step) = cgi_temperature * cgi_water! * cgi_dayl
+           ! Labile to foliage rate (gC.m-2.day-1)
+           alloc_leaf_fraction = potential_labile_turnover*cgi(step)
 
-    ! Calculate and store the CMI value
-    !                 = opt_max_scaling( max_val, min_val , optimum , kurtosis , current )
-    CMI(current_step) = 1d0 - opt_max_scaling(cmi_temperature_coef_1,cmi_temperature_coef_2 &
-                                             ,cmi_temperature_coef_3,cmi_temperature_coef_4,leafT)
-    !!!
-    ! Estimate of change (i.e. gradient) in the CMI
+           ! 
+           ! Apply (loose-)optimality theory for the proposed allocation
+           !
 
-    ! load lag for linear regression
-    cmi_lag = cmi_lag_remembered
+           ! Finally quantify the impact of increasing LAI on GPP, less Rd(24)
+           if (alloc_leaf_fraction > 0d0) then
+               ! Store the existing LAI and canopy_scaling
+               lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
+               ! Calculate the total time step investment
+               alloc_leaf_gCm2day = available_labile * (1d0-(1d0-alloc_leaf_fraction)**time)
+               ! Calculate the new LAI based C investment, less allocation to growth respiration
+               lai = lai + ((alloc_leaf_gCm2day * one_Rg_fraction) / lca)
+               ! Update the shortwave radiation
+               call calculate_shortwave_balance
+               ! Update acm_gpp_stage_1
+               call acm_gpp_stage_1      
+               ! Update stomatal conductance 
+               stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
+               ! Estimate the change in gross primary production, NCCE calculated later.
+               delta_ncce_gCgC = (acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds) &
+                               - current_gpp
+               ! Rescale GPP to per gC investment but including the C gone to growth respiration.
+               ! Followed by conversion to the net canopy carbon export by subtracting leaf maintenance costs
+               delta_ncce_gCgC = (delta_ncce_gCgC / alloc_leaf_gCm2day) - Rm_leaf_per_gC
+               ! If non-economical do not grow                               
+               if (delta_ncce_gCgC < ncce_return_threshold) then
+                   alloc_leaf_fraction = 0d0 ; alloc_leaf_gCm2day = 0d0
+               else
+                   ! Rescale to the per day flux to match the model timestep
+                   alloc_leaf_gCm2day = alloc_leaf_gCm2day / time                   
+               end if
+               ! Return initial values
+               lai = lai_orig ; stomatal_conductance = gs_orig
+               ! Update the shortwave radiation
+               call calculate_shortwave_balance
+               ! Update acm_gpp_stage_1
+               call acm_gpp_stage_1      
+           end if ! alloc_leaf_fraction > 0
 
-    ! Determine CMI section to have linear regression applied to and
-    ! determine the number of values, i.e. the interval
-    if (current_step < cmi_lag) then
-        if (current_step == 1) then
-            !cmi_history(1:2) = CMI(current_step)
-            cmi_history(1:2) = NCCE(current_step)
-            interval = 2
-        else
-            !cmi_history(1:current_step) = CMI(1:current_step)
-            cmi_history(1:current_step) = NCCE(1:current_step)
-            interval = current_step
-        endif
-    else
-        !cmi_history(1:cmi_lag) = CMI((current_step-cmi_lag+1):current_step)
-        cmi_history(1:cmi_lag) = NCCE((current_step-cmi_lag+1):current_step)
-        interval = cmi_lag
-    end if
-    ! Now calculate the linear gradient
-    gradient = linear_model_gradient(tmp_x(1:interval),cmi_history(1:interval),interval)
+       end if ! maybe growing
 
-    ! store lag to keep fresh in memory - yes this is a hack to get around a
-    ! memory problem
-    cmi_lag_remembered = cmi_lag
+       ! Determine whether the NCCE is currently declining and that the CMI is above zero, but we still have C available for allocation.
+       ! Alternatively if the conditions are good but we have no available labile, we can assume that we will undergo some mortality of 
+       ! the leaves to balance the books.
+       if (available_labile <= 0d0 .and. foliage > 0d0) then ! This line is also not compled / tested
 
-    !!!!!!!!
-    ! Assess canopy growth
-    !!!!!!!!
+           !
+           ! Leaf fall to litter (gC/m2/day)
+           ! Due to leaves not paying their way
+           !
 
-    ! We only want to growth when the canopy is not otherwise losing C.
-    ! Therefore, while the potential allocation of new C is determined by the CGI,
-    ! whether we consider growing is dependent on the CMI
-    if (CGI(current_step) > 1d-6 .and. avail_labile > vsmall) then
+           ! Estimate the fractional loss rate of foliage to litter
+           leaf_litter_fraction = potential_foliage_turnover*cmi(step)
+           ! Estimate the absolute flux value loss of foliage to litter
+           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
-        ! Estimate approximate the potential leaf area increment
-        leaf_growth = pot_leaf_growth*CGI(current_step)
-        ! calculate potential C allocation to leaves
-        tmp = avail_labile * &
-             (1d0-(1d0-leaf_growth)**deltat(current_step))
+           !
+           ! Leaf fall to litter (gC/m2/day)
+           ! Due to more demand for maintenance respiration than is available
+           ! or an unproductive canopy
+           !
+! TLS: this section of code may be inappropriate, leading to more accelerated losses than are areasonable for a single time steps assumed losses...
 
-        ! Store total investment, then adjust for loss to maintenance Rg
-        C_invest = tmp ; tmp = tmp * one_Rg_fraction
-        ! Determine the daily increment in maintenance respiration
-        deltaRm = Rm_leaf_per_gC * tmp
+       !else if (ncce_gradient <= ncce_phenology_threshold .and. cmi(step) > vsmall .and. available_labile > 0d0) then
+       else if (ncce_gradient <= ncce_phenology_threshold .and. available_labile > 0d0) then       
 
-        ! Determine potential size of foliage pool
-        pot_foliage = foliage+tmp
-        ! calculate new leaf area, GPP return
-        lai = pot_foliage * SLA
-        if (lai_save < vsmall) then
-            call calculate_aerodynamic_conductance
-        else
-            aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
-        endif ! lai_save < vsmall
-        call calculate_stomatal_conductance
-        ! calculate stomatal conductance of water
-        if (stomatal_conductance > vsmall) then
-            call calculate_shortwave_balance
-             call acm_gpp_stage_1
-            tmp = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
-        else
-            tmp = 0d0
-        endif
-        ! Estimate total daily GPP return from new leaf
-        deltaGPP = (tmp - GPP_current)
+           !
+           ! Leaf fall to litter (gC/m2/day)
+           ! Due to environment declining
+           !
 
-        ! Estimate the change in net carbon export by the canopy per day,
-        ! then scale the initial investment costs by leaf lifespan (days) and substract the initial investment cost
-        ! i.e. gC/m2/day/(gCinvest/LL)
-        if (leaf_life < 365.25d0) then
-            return_period = min(leaf_life,est_canopy_fall - run_day)
-        else
-            return_period = leaf_life
-        endif
-        deltaNCCE = ((deltaGPP - deltaRm) - (C_invest/return_period)) / C_invest
-        !deltaNCCE = ((deltaGPP - deltaRm) - (C_invest/leaf_life)) / C_invest
+           ! Estimate the fractional loss rate of foliage to litter
+           leaf_litter_fraction = potential_foliage_turnover*cmi(step)
+           ! Estimate the absolute flux value loss of foliage to litter
+           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
-        ! Is the marginal return for GPP (over the mean life of leaves)
-        ! less than increase in maintenance respiration and C required
-        ! to growth?
-        if (deltaNCCE < 0d0) leaf_growth = 0d0
-        !if (deltaNCCE < dNCCE_crit_frac) leaf_growth = 0d0
-        !if (deltaNCCE < (C_invest/leaf_life)) leaf_growth = 0d0
+!       else if (available_labile <= 0d0 .and. foliage > 0d0) then
 
-    endif ! grow or lose leaf area
+!           !
+!           ! Leaf fall to litter (gC/m2/day)
+!           ! Due to more demand for maintenance respiration than is available
+!           ! or an unproductive canopy
+!           !
 
-    !!!!!!!!
-    ! Assess canopy scenescence
-    !!!!!!!!
+!           ! Estimate that amount of leaf C needed to be lost to remove the excess demand on labile pool
+!           leaf_litter_gCm2day = abs(available_labile/time) / Rm_leaf_per_gC
+!           leaf_litter_fraction = 1d0-(1d0-time*(leaf_litter_gCm2day/foliage))**(1d0/time)
 
-    ! Do we have leaves to lose?
-    if (foliage > 1e-6) then
+       end if ! ncce_gradient > ncce_phenology_threshold .and. available_labile > 0
 
-        ! If no labile assume canopy is turning over
-        if (avail_labile == 0d0 .or. NCCE(current_step) < 0d0) then
+       ! Return subroutine
+       return
 
-            ! We want to lose a chunk of leaf quickly!
-            leaf_fall = pot_leaf_fall
-
-        ! If CGI is less than 1
-!        else if (gradient <= 0d0 .and. NCCE(current_step) < dNCCE_crit_frac) then
-!CMI        else if (gradient >= cmi_sensitivity .or. CMI(current_step) == 1d0) then
-        else if (gradient < cmi_sensitivity) then ! gradient not NCCE per gCLeaf
-
-            ! Estimate the deficit between max labile of last 12 months and current
-            labile_suppression = max(0d0, labile_target - labile)
-            ! Then estimate the degree of suppression on turnover
-            labile_suppression = 1d0 - (labile_suppression / (labile_suppression + labile_deficit_k50))
-
-            ! Estimate leaf turnover rate given current NCCE
-!            leaf_fall = pot_leaf_fall * cmi_ncce
-            leaf_fall = pot_leaf_fall * CMI(current_step) * labile_suppression
-
-            !
-            ! Determine whether the proposed change will lead to an increase in NCCE (gC/m2/day)
-            !
-
-!            ! Estimate approximate the potential leaf area increment
-!            leaf_fall = pot_leaf_fall * (1d0-CGI(current_step)) !* cmi_ncce
-!            ! calculate potential C allocation to leaves
-!            tmp = foliage * &
-!                 (1d0-(1d0-leaf_fall)**deltat(current_step))!*deltat_1(current_step)
-!            ! Determine potential size of foliage pool
-!            pot_foliage = foliage-tmp
-!            ! Determine the daily increment in maintenance respiration
-!            deltaRm = (Rm_leaf_per_gC * pot_foliage) - (Rm_leaf_per_gC * foliage)
-!            ! calculate new leaf area, GPP return
-!            lai = pot_foliage * SLA
-!            if (lai > vsmall) then
-!                aerodynamic_conductance = aerodynamic_conductance * (lai / lai_save)
-!                call calculate_stomatal_conductance
-!                ! calculate stomatal conductance of water
-!                if (stomatal_conductance > vsmall) then
-!                    call calculate_shortwave_balance
-!                    call acm_gpp_stage_1
-!                   tmp = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
-!                else
-!                    tmp = 0d0
-!                endif
-!            else
-!                tmp = 0d0
-!            endif
-!            if ((tmp - GPP_current) - deltaRm < 0d0) leaf_fall = 0d0
-
-        end if ! enhanced loss or not?
-
-        ! Combine baseline and NCCE based turnovers
-!        leaf_fall = leaf_fall + (base_leaf_fall * cmi_ncce)
-!        leaf_fall = leaf_fall + base_leaf_fall
-        !if (CMI(current_step) > 1e-6) leaf_fall = leaf_fall + base_leaf_fall!(base_leaf_fall * CMI(current_step))
-        !if (leaf_growth == 0d0) leaf_fall = leaf_fall + base_leaf_fall!(base_leaf_fall * CMI(current_step))
-
-    end if ! are there leaves to lose?
-
-    ! Restore original value back from memory
-    lai = lai_save
-    canopy_lwrad_Wm2 = canopy_lw_save ; soil_lwrad_Wm2 = soil_lw_save
-    canopy_swrad_MJday = canopy_sw_save ; canopy_par_MJday = canopy_par_save
-    soil_swrad_MJday = soil_sw_save ; stomatal_conductance = gs_save
-
-  end subroutine calculate_leaf_dynamics
+  end subroutine plant_canopy_phenology
   !
   !------------------------------------------------------------------
-  !
-!  subroutine calculate_wood_root_growth(n,lab_to_roots,lab_to_wood &
-!                                       ,deltaWP,Rtot,current_gpp,Croot,Cwood  &
-!                                       ,root_growth,wood_growth)
-!    implicit none
-!
-!    ! Premise of wood and root phenological controls
-!
-!    ! Assumption 1:
-!    ! Based on plant physiology all cell expansion can only occur if there is
-!    ! sufficient water pressure available to drive the desired expansion.
-!    ! Moreover, as there is substantial evidence that shows wood and root growth
-!    ! do not follow the same phenology as leaves or GPP availability.
-!    ! Therefore, their phenological constrols should be separate from both that of
-!    ! the GSI model driving canopy phenology or GPP. Wood growth is limited by a
-!    ! logisitic temperature response assuming <5 % growth potential at 5oC and
-!    ! >95 % growth potential at 30 oC. Wood growth is also limited by a
-!    ! logistic response to water availability. When deltaWP (i.e. minleaf-wSWP)
-!    ! is less than -1 MPa wood growth is restricted to <5 % of potential.
-!    !  See review Fatichi et al (2013). Moving beyond phtosynthesis from carbon
-!    ! source to sink driven vegetation modelling. New Phytologist,
-!    ! https://doi.org/10.1111/nph.12614 for further details.
-!
-!    ! As with wood, root phenology biologically speaking is independent of
-!    ! observed foliar phenological dynamics and GPP availabilty and thus has
-!    ! a separate phenology model. Similar to wood, a logistic temperature
-!    ! response is applied such that root growth is <5 % of potential at 0oC and
-!    ! >95 % of potential at 30oC. The different temperature minimua between
-!    ! wood and root growth is due to observed root growth when ever the soil
-!    ! is not frozen. We also assume that root growth is less sensitive to
-!    ! available hydraulic pressure, see assumption 3.
-!
-!    ! Assumption 2:
-!    ! Actual biological theory suggests that roots support demands for resources
-!    ! made by the rest of the plant in this current model this is water only.
-!    ! Therefore there is an implicit assumption that roots should grow so long as
-!    ! growth is environmentally possible as growth leads to an improvement in
-!    ! C balance over their life time greater than their construction cost.
-!
-!    ! Assumption 3:
-!    ! Determining when root growth should stop is poorly constrained.
-!    ! Similar to wood growth, here we assume root expansion is also dependent on water availability,
-!    ! but is less sensitive than wood. Root growth is assumed to stop when deltaWP approaches 0,
-!    ! determined by marginal return on root growth and temperature limits.
-!
-!    ! arguments
-!    integer, intent(in) :: n
-!    double precision, intent(in) :: lab_to_roots,lab_to_wood &
-!                                   ,deltaWP,Rtot,current_gpp,Croot,Cwood
-!    double precision, intent(out) :: root_growth,wood_growth
-!
-!    ! reset allocation to roots and wood
-!    root_growth = 0d0 ; wood_growth = 0d0
-!
-!    ! Is it currently hydraulically possible for cell expansion (i.e. is soil
-!    ! water potential more negative than min leaf water potential).
-!    if ( avail_labile > 0d0 .and. deltaWP < 0d0 ) then
-!
-!      ! Assume potential root growth is dependent on hydraulic and temperature conditions.
-!      ! Actual allocation is only allowed if the marginal return on GPP,
-!      ! averaged across the life span of the root is greater than the rNPP and Rg_root.
-!
-!      ! Temperature limited turnover rate of labile -> roots
-!      root_growth = lab_to_roots*Croot_labile_release_coef(n)
-!
-!      ! calculate hydraulic limits on wood growth.
-!      ! NOTE: PARAMETERS NEED TO BE CALIBRATRED
-!      Cwood_hydraulic_limit = (1d0+exp(Cwood_hydraulic_gradient*(deltaWP-Cwood_hydraulic_half_saturation)))**(-1d0)
-!      ! determine wood growth based on temperature and hydraulic limits
-!      wood_growth = lab_to_wood*Cwood_labile_release_coef(n)*Cwood_hydraulic_limit
-!
-!      ! cost of wood construction and maintenance not accounted for here due
-!      ! to no benefit being determined
-!
-!      ! track labile reserves to ensure that fractional losses are applied
-!      ! sequencially in assumed order of importance (leaf->root->wood)
-!
-!      ! root production (gC.m-2.day-1)
-!      root_growth = avail_labile*(1d0-(1d0-root_growth)**days_per_step)*days_per_step_1
-!      root_growth = min(avail_labile*days_per_step_1,root_growth)
-!      avail_labile = avail_labile - (root_growth*days_per_step)
-!      ! wood production (gC.m-2.day-1)
-!!      wood_growth = min(current_gpp,avail_labile*(1d0-(1d0-wood_growth)**days_per_step)*days_per_step_1)
-!      wood_growth = min(avail_labile*days_per_step_1,wood_growth)
-!      avail_labile = avail_labile - (wood_growth*days_per_step)
-!
-!    endif ! grow root and wood?
-!
-!    return
-!
-!  end subroutine calculate_wood_root_growth
-  !
-  !------------------------------------------------------------------
-  !
+  !    
   subroutine plant_soil_flow(root_layer,root_length,root_mass &
                             ,demand,root_reach_in,transpiration_resistance &
-                            ,Rroot_layer)
+                            ,Rtot_layer)
 
     !
     ! Calculate soil layer specific water flow form the soil to canopy (mmolH2O.m-2.s-1)
@@ -4149,7 +3649,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                          demand, &
                                   root_reach_in, &
                        transpiration_resistance
-    double precision, intent(out) :: Rroot_layer
+    double precision, intent(out) :: Rtot_layer
 
     ! local arguments
     double precision :: soilR1, soilR2
@@ -4163,22 +3663,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculates root hydraulic resistance (MPa m2 s mmol-1) in a soil-root zone
     soilR2 = root_resist / (root_mass*root_reach_in)
     ! Estimate the total hydraulic resistance for the layer
-    Rroot_layer = soilR2
-
+    Rtot_layer = transpiration_resistance + soilR1 + soilR2
+    ! Track for later diagnosis of the effective canopy leaf water potential
+    if (demand > 0d0) conductance_mmolH2OMPam2s(root_layer) = 1d0/Rtot_layer
     ! Estimate the soil to plant flow of water mmolH2O/m2/s
-    water_flux_mmolH2Om2s(root_layer) = demand/(transpiration_resistance + soilR1 + soilR2)
+    water_flux_mmolH2Om2s(root_layer) = demand/Rtot_layer
 
     ! return
     return
 
   end subroutine plant_soil_flow
-  !
-  !------------------------------------------------------------------
-  !
-  !------------------------------------------------------------------
-  ! Functions other than the primary ACM and ACM ET are stored
-  ! below this line.
-  !------------------------------------------------------------------
   !
   !------------------------------------------------------------------
   !
@@ -4199,6 +3693,117 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     arrhenious = a * exp( b * (t - 25d0) / (t + freeze) )
 
   end function arrhenious
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function linear_model_gradient(x,y,interval)
+
+    ! Function to calculate the gradient of a linear model for a given depentent
+    ! variable (y) based on predictive variable (x). The typical use of this
+    ! function will in fact be to assume that x is time.
+
+    implicit none
+
+    ! declare input variables
+    integer :: interval
+    double precision, dimension(interval) :: x,y
+
+    ! declare local variables
+    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+
+    ! calculate the sum of x
+    sum_x = sum(x)
+    ! calculate the sum of y
+    sum_y = sum(y)
+    ! calculate the sum of squares of x
+    !sumsq_x = sum(x*x)
+    ! calculate the sum of the product of xy
+    !sum_product_xy = sum(x*y)
+    ! calculate the gradient
+    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
+    !&
+    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    ! Linear regression done as single line to reduce assignment requirements
+    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+
+    ! for future reference here is how to calculate the intercept
+!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
+!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+
+    ! don't forget to return to the user
+    return
+
+  end function linear_model_gradient
+  !
+  !--------------------------------------------------------------------------
+  !
+  double precision function Rm_reich_Q10(air_temperature)
+
+    ! Calculate Q10 temperature adjustment used in estimation of the
+    ! Maintenance respiration (umolC.m-2.s-1) calculated based on modified
+    ! version of the Reich et al (2008) calculation.
+
+    ! arguments
+    double precision, intent(in) :: air_temperature ! input temperature of metabolising tissue (oC)
+
+    ! local variables
+    double precision, parameter :: Q10 = 2d0,  & ! Q10 response of temperature (baseline = 20oC) ;INITIAL VALUE == 2
+                                                 ! Mahecha, et al. (2010) Global Convergence in the Temperature Sensitivity
+                                                 ! of Respiration at Ecosystem Level. Science 329 , 838 (2010);
+                                                 ! DOI: 10.1126/science.1189587. value reported as 1.4
+                         Q10_baseline = 20d0     ! Baseline temperature for Q10 ;INITIAL VALUE == 20;
+
+    ! calculate instantaneous Q10 temperature response
+    Rm_reich_Q10 = Q10**((air_temperature-Q10_baseline)*0.1d0)
+
+    ! explicit return command
+    return
+
+  end function Rm_reich_Q10
+  !
+  !--------------------------------------------------------------------------
+  !
+  double precision function Rm_reich_N(CN_pool &
+                                      ,N_exponential_response  &
+                                      ,N_scaler_intercept)
+
+    ! Calculate the nitrgen response on maintenance respiration (nmolC.g-1.s-1)
+    ! calculated based on modified version of the Reich et al (2008)
+    ! calculation.
+    ! Note the output here is invarient for given CN ratio
+
+    ! NOTE: Rm_tissue =  Rm_reich_Q10 * Rm_reich_N * C_POOL * 2 * 0.001
+    !       umolC/m2/s = dimensionless * nmolC/g/s * gC/m * (correct g->gC) *
+    !       (nmolC->umolC)
+
+    ! arguments
+    double precision, intent(in) ::        CN_pool, & ! C:N ratio for current pool (gC/gN)
+                            N_exponential_response, & ! N exponential response vcoefficient (1.277/1.430)
+                                N_scaler_intercept    ! N scaler (baseline) (0.915 / 1.079)
+
+    ! local variables
+    double precision, parameter :: N_g_to_mmol = 71.42857 ! i.e. (1d0/14d0)*1d3 where 14 = atomic weight of N
+    double precision :: Nconc ! Nconc =mmol g-1
+
+    ! calculate leaf maintenance respiration (nmolC.g-1.s-1)
+    ! NOTE: that the coefficients in Reich et al., 2008 were calculated from
+    ! log10 linearised version of the model, thus N_scaler is already in log10()
+    ! scale. To remove the need of applying log10(Nconc) and 10**Rm_reich the
+    ! scaler is reverted instead to the correct scale for the exponential form
+    ! of the equations.
+
+    ! calculate N concentration per g biomass.
+    ! A function of C:N
+    Nconc = ((CN_pool*2d0)**(-1d0)) * N_g_to_mmol
+
+    ! leaf maintenance respiration (nmolC.g-1.s-1) at 20 oC
+    Rm_reich_N = (10d0**N_scaler_intercept) * Nconc ** N_exponential_response
+
+    ! explicit return command
+    return
+
+  end function Rm_reich_N  
   !
   !----------------------------------------------------------------------
   !
@@ -4253,182 +3858,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function water_retention_saxton_eqns
-  !
-  !--------------------------------------------------------------------------
-  !
-  double precision function linear_model_gradient(x,y,interval)
-
-    ! Function to calculate the gradient of a linear model for a given depentent
-    ! variable (y) based on predictive variable (x). The typical use of this
-    ! function will in fact be to assume that x is time.
-
-    implicit none
-
-    ! declare input variables
-    integer :: interval
-    double precision, dimension(interval) :: x,y
-
-    ! declare local variables
-    double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
-
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
-    ! calculate the sum of squares of x
-    !sumsq_x = sum(x*x)
-    ! calculate the sum of the product of xy
-    !sum_product_xy = sum(x*y)
-    ! calculate the gradient
-    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
-    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
-
-    ! for future reference here is how to calculate the intercept
-!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
-!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-
-    ! don't forget to return to the user
-    return
-
-  end function linear_model_gradient
-  !
-  !--------------------------------------------------------------------------
-  !
-  double precision function logistic_func(invar,max_growth,max_growth_point,min_asym,asym_offset)
-
-    ! Logistic regression output bounded between 0 and 1.
-    ! NOTE: upper bound determined by exponent value currently == 1
-    ! For further information search Generalised logistic function (Richard's Curve)
-
-    ! Arguments
-    double precision, intent(in) :: invar, & ! input variable
-                               max_growth, & ! growth rate / gradient
-                         max_growth_point, & ! if curve_offset == asym_offset
-                                             ! then this is value of invar at which maximum growth occurs
-                                 min_asym, & ! minimum asymptote value of the function
-                              asym_offset    ! must be > 0, larger value shifts the max gradient position towards max_asym
-
-    ! local parameters
-    double precision, parameter :: & !min_asym = 0d0, & ! minimum asymptote value of the function
-                                   max_asym = 1d0, & ! maximum asymptote value of the function
-                               curve_offset = 1d0    ! must be > 0, larger value shifts curve towards max_asym
-
-    ! calculate value of the logistic function
-!    logistic_func = (1d0+exp(max_growth*(max_growth_point-invar)))**(-1d0)
-    logistic_func = min_asym + &
-                   ( (max_asym-min_asym) / &
-                     (1d0+curve_offset * exp(max_growth*(max_growth_point-invar))**(1d0/asym_offset)) )
-
-    return
-
-  end function logistic_func
-  !
-  !--------------------------------------------------------------------------
-  !
-  double precision function Rm_reich_Q10(air_temperature)
-
-    ! Calculate Q10 temperature adjustment used in estimation of the
-    ! Maintenance respiration (umolC.m-2.s-1) calculated based on modified
-    ! version of the Reich et al (2008) calculation.
-
-    ! arguments
-    double precision, intent(in) :: air_temperature ! input temperature of metabolising tissue (oC)
-
-    ! local variables
-    double precision, parameter :: Q10 = 2d0,  & ! Q10 response of temperature (baseline = 20oC) ;INITIAL VALUE == 2
-                                                 ! Mahecha, et al. (2010) Global Convergence in the Temperature Sensitivity
-                                                 ! of Respiration at Ecosystem Level. Science 329 , 838 (2010);
-                                                 ! DOI: 10.1126/science.1189587. value reported as 1.4
-                         Q10_baseline = 20d0     ! Baseline temperature for Q10 ;INITIAL VALUE == 20;
-
-    ! calculate instantaneous Q10 temperature response
-    Rm_reich_Q10 = Q10**((air_temperature-Q10_baseline)*0.1d0)
-
-    ! explicit return command
-    return
-
-  end function Rm_reich_Q10
-  !
-  !--------------------------------------------------------------------------
-  !
-  double precision function Rm_heskel_polynomial(Rm_0C,air_temperature)
-
-    ! Calculate instantaneous temperature adjustment used in estimation of the
-    ! maintenance respiration (umolC.m-2leaf.s-1) calculated based on modified
-    ! version of the Heskel et al., (2016) polynomial approach
-    ! http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
-
-    ! arguments
-    double precision, intent(in) :: air_temperature, & ! input temperature of metabolising tissue (oC)
-                                    Rm_0C              ! input maintenance respiration at 0C
-
-    ! local variables
-    double precision, parameter :: b = 0.1012d0, & ! log-linear response function of Rm
-                                   c = -0.0005d0   ! log-linear exponential response function of Rm
-
-    ! calculate instantaneous temperature response per m2 of leaf area
-    ! NOTE: conversion from ln(R) -> R via exp(), * umol_to_gC converts from umolC to gC
-    Rm_heskel_polynomial = exp(Rm_0C + b*air_temperature + c*air_temperature) * umol_to_gC
-
-    ! explicit return command
-    return
-
-  end function Rm_heskel_polynomial
-  !
-  !--------------------------------------------------------------------------
-  !
-  double precision function Rm_reich_N(CN_pool &
-                                      ,N_exponential_response  &
-                                      ,N_scaler_intercept)
-
-    ! Calculate the nitrgen response on maintenance respiration (nmolC.g-1.s-1)
-    ! calculated based on modified version of the Reich et al (2008)
-    ! calculation.
-    ! Note the output here is invarient for given CN ratio
-
-    ! NOTE: Rm_tissue =  Rm_reich_Q10 * Rm_reich_N * C_POOL * 2 * 0.001
-    !       umolC/m2/s = dimensionless * nmolC/g/s * gC/m * (correct g->gC) *
-    !       (nmolC->umolC)
-
-    ! arguments
-    double precision, intent(in) ::        CN_pool, & ! C:N ratio for current pool (gC/gN)
-                            N_exponential_response, & ! N exponential response vcoefficient (1.277/1.430)
-                                N_scaler_intercept    ! N scaler (baseline) (0.915 / 1.079)
-
-    ! local variables
-    double precision, parameter :: N_g_to_mmol = 71.42857 ! i.e. (1d0/14d0)*1d3 where 14 = atomic weight of N
-    double precision :: Nconc ! Nconc =mmol g-1
-
-    ! calculate leaf maintenance respiration (nmolC.g-1.s-1)
-    ! NOTE: that the coefficients in Reich et al., 2008 were calculated from
-    ! log10 linearised version of the model, thus N_scaler is already in log10()
-    ! scale. To remove the need of applying log10(Nconc) and 10**Rm_reich the
-    ! scaler is reverted instead to the correct scale for the exponential form
-    ! of the equations.
-
-    ! calculate N concentration per g biomass.
-    ! A function of C:N
-    Nconc = ((CN_pool*2d0)**(-1d0)) * N_g_to_mmol
-
-    ! leaf maintenance respiration (nmolC.g-1.s-1) at 20 oC
-    Rm_reich_N = (10d0**N_scaler_intercept) * Nconc ** N_exponential_response
-
-    ! explicit return command
-    return
-
-  end function Rm_reich_N
-  !
-  !------------------------------------------------------------------
-  !
-  !
-  !------------------------------------------------------------------
-  ! Generic mathematical functions such as bisection and intergrator proceedures
-  ! are stored below here
-  !------------------------------------------------------------------
-  !
   !
   !------------------------------------------------------------------
   !

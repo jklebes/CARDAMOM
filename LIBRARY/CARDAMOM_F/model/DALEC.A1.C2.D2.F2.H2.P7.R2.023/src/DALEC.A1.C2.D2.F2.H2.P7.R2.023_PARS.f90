@@ -122,10 +122,11 @@ module MODEL_PARAMETERS
     PI%parmax(13) = 0.5d0
 
     ! Canopy CGI phenology gradient threshold
-    PI%parmin(14) = -0.025d0
-    PI%parmax(14) =  0.025d0
+    ! THIS COULD POSSIBLY BE HARDCODED TO ZERO
+    PI%parmin(14) = -0.01d0
+    PI%parmax(14) =  0.01d0
     ! NCCE return on new Cfol investment (gCperGPP per gCnewfol)
-    PI%parmin(15) = 0.001d0
+    PI%parmin(15) = 0.005d0
     PI%parmax(15) = 0.05d0
 
     ! Turnover rate for CWD
@@ -170,7 +171,7 @@ module MODEL_PARAMETERS
 
     ! CGI minimum temperature (oC)
     PI%parmin(34) = -10d0
-    PI%parmax(34) =  10d0
+    PI%parmax(34) =  5d0
     ! CGI Optimum temperature (oC)
     PI%parmin(35) = 10d0
     PI%parmax(35) = 40d0
@@ -212,23 +213,34 @@ module MODEL_PARAMETERS
 
     ! NCCE per gCleaf at which
     ! CMI is suppressed by 0.5
-    PI%parmin(44) = 0.0001d0 
-    PI%parmax(44) = 0.5d0
-    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(45) = -0.10d0
-    PI%parmax(45) =  0.10d0
+    PI%parmin(44) = -0.5d0!0.0001d0 
+    PI%parmax(44) =  0.5d0!0.5d0
+    ! Gradient for NCCE function for CMI logistic function
+    PI%parmin(45) = 10d0
+    PI%parmax(45) = 1000d0
 
     ! Absolute minimum temperature at which no leaf growth occurs (oC)
     PI%parmin(46) = -5d0
-    PI%parmax(46) =  10d0
+    PI%parmax(46) =  5d0
     ! Degree C above p46 at which this limitation is at 50%
-    PI%parmin(47) = 0.1d0
-    PI%parmax(47) = 10d0
+    PI%parmin(47) = 0.01d0
+    PI%parmax(47) = 2d0
 
-    ! Canopy NCCE (gC/gC) phenology gradient threshold, 
-    ! controlling foliar loss
-    PI%parmin(48) = -0.001d0
-    PI%parmax(48) =  0.001d0
+    ! Parameters linking the NCCE gradient to the CMI
+    ! via a logistic function. This is the gradient term
+    ! of the logistic function
+    PI%parmin(48) = 10d0
+    PI%parmax(48) = 5000d0
+
+    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
+    PI%parmin(49) = -0.10d0
+    PI%parmax(49) =  0.10d0
+
+    ! Parameters linking the NCCE gradient to the CMI
+    ! via a logistic function. This is the NCCE 50 % value
+    ! of the logistic function
+    PI%parmin(50) = -0.00001d0
+    PI%parmax(50) = -0.005d0
 
     !
     ! INITIAL VALUES DECLARED HERE

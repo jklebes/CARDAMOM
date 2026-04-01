@@ -411,7 +411,7 @@ module model_likelihood_module
     ! Straight forward CGI temperature bounds
     ! Minimum temperature for skewed Gaussian function must be lower 
     ! than the absolute minimum temperature
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(34) < pars(46))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(46) < pars(34))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     end if
     ! The minimum temperature for the skewed Gaussian temperature function 
@@ -428,7 +428,7 @@ module model_likelihood_module
     ! the fully unlimited soil water potential
     ! must be lower than the maximum
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(39) < pars(38))) then
-         EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
+         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil

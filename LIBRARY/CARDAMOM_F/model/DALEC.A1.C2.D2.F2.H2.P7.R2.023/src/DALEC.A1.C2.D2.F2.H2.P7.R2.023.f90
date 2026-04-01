@@ -596,7 +596,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Assign initial canopy CGI / NCCE values
     cgi_lag_history = pars(3)
-    ncce_lag_history = pars(45)
+    ncce_lag_history = pars(49)
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -960,7 +960,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,3) = pars(2)*FLUXES(n,1)
 
        ! Estimate the net canopy carbon export per gram of leaf per day
-       DIAGS(n,22) = (FLUXES(n,1) / POOLS(n,2)) - Rm_leaf_per_gC
+       if (POOLS(n,2) > 0d0) DIAGS(n,22) = (FLUXES(n,1) / POOLS(n,2)) - Rm_leaf_per_gC
 
        !
        ! Allocate remaining carbon to tissues
@@ -974,13 +974,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,5)-FLUXES(n,6)
 
        ! Accumulate this time steps labile C (gC.m-2.day-1), less demand we are already committed to
-       available_labile = max(0d0, POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,4)) * deltat(n)))
+       available_labile = POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,4)) * deltat(n))
        ! Do plant allocation
        call plant_canopy_phenology(nodays, cgi_ncce_lag_step, n, deltat(n),               & ! Timing
                                    pars(36), pars(34), pars(35), pars(37),                & ! CGI parameters
                                    pars(46), pars(47),                                    & !
-                                   pars(38), pars(39), pars(44), pars(14),pars(48),       & ! 
-                                   pars(12), pars(5),                                     & ! 
+                                   pars(38), pars(39), pars(44), pars(45),                & ! 
+                                   pars(14), pars(48), pars(50), pars(12), pars(5),       & ! 
                                    pars(17), pars(15), available_labile, POOLS(n,2),      & ! To calculate GPP return
                                    FLUXES(n,1), DIAGS(n,21), DIAGS(:,22),                 & !
                                    Rm_leaf_per_gC,                                        & !                           
@@ -3370,8 +3370,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     cgi_temperature_coef_3, cgi_temperature_coef_4,        & !
                                     cgi_temperature_coef_5, cgi_temperature_coef_6,        & !
                                     cgi_water_coef_1, cgi_water_coef_2,                    & ! 
-                                    cmi_ncce_k50,cgi_phenology_threshold,                  & !
-                                    ncce_phenology_threshold,                              & !
+                                    cmi_ncce_k50, cmi_ncce_coef,cgi_phenology_threshold,   & !
+                                    cmi_ncce_gradient_coef,cmi_ncce_gradient_k50,          & !
                                     potential_labile_turnover, potential_foliage_turnover, & ! 
                                     lca, ncce_return_threshold, available_labile, foliage, & ! To calculate GPP return
                                     current_gpp, delta_ncce_gCgC, ncce_gCgC,               & !
@@ -3415,8 +3415,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                            cgi_water_coef_1, & ! SWP at which growth fully limited (MPa)
                            cgi_water_coef_2, & ! SWP at which growth non-limited (MPa)                    
                                cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
+                              cmi_ncce_coef, & ! ncce_gCgC gradient for logistic function
                     cgi_phenology_threshold, & ! CGI gradient threshold above which leaf growth is possible 
-                   ncce_phenology_threshold, & ! NCCE gradient threshold below (negative) which leaf fall is possible
+                     cmi_ncce_gradient_coef, & ! ncce gradient, gradient for logistic function 
+                      cmi_ncce_gradient_k50, & ! ncce gradient, at which function is half saturation
                   potential_labile_turnover, & ! Potential fractional rate of labile turnover to foliage (0-1)
                  potential_foliage_turnover, & ! Potential fractional rate of foliage turnover to fine litter (0-1)                    
                                         lca, & ! leaf carbon per leaf area (gC/m2)
@@ -3454,7 +3456,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! Estimate the temperature limitation on foliage
-       ! Temperature limitation (Assuming optimum temp cmi = cgi)
        if (leafT > cgi_temperature_coef_5) then  
            leafT_limit = opt_max_scaling(cgi_temperature_coef_1,cgi_temperature_coef_2 &
                                         ,cgi_temperature_coef_3,cgi_temperature_coef_4,leafT)
@@ -3495,8 +3496,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ncce_gradient = linear_model_gradient(cgi_ncce_lag_days(1:interval),ncce_lag_history(1:interval),interval)
 
        ! Estimate the canopy mortality index following a Michaelis-Menten function
-       tmp = max(0d0,ncce_gCgC(step)) ! prevents negative values giving a positive function.
-       cmi(step) = 1d0 - (tmp / (tmp + cmi_ncce_k50))
+       !tmp = max(0d0,ncce_gCgC(step)) ! prevents negative values giving a positive function.
+       !cmi(step) = 1d0 - (tmp / (tmp + cmi_ncce_k50))
+       ! Estimate the canopy mortality index following a logistic function
+       cmi(step) = ((1d0+exp(cmi_ncce_coef*(ncce_gCgC(step)-cmi_ncce_k50)))**(-1d0)) & 
+                 * ((1d0+exp(cmi_ncce_gradient_coef*(ncce_gradient-cmi_ncce_gradient_k50)))**(-1d0))
 
        ! We can only allocate if we have labile to spend and a CGI gradient above the leaf phenology threshold.
        if (cgi_gradient > cgi_phenology_threshold .and. cgi(step) > vsmall .and. available_labile > 0d0) then
@@ -3549,45 +3553,39 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        end if ! maybe growing
 
-       ! Determine whether the NCCE is currently declining and that the CMI is above zero, but we still have C available for allocation.
-       ! Alternatively if the conditions are good but we have no available labile, we can assume that we will undergo some mortality of 
-       ! the leaves to balance the books.
-       if (ncce_gCgC(step) < 0d0 .and. foliage > 0d0) then
+       ! Only consider canopy losses if we have no growth
+       if (alloc_leaf_gCm2day == 0d0) then 
 
-           !
-           ! Leaf fall to litter (gC/m2/day)
-           ! Due to leaves not paying their way
-           !
+           ! Determine whether:
+           ! 1) we have ran out of labile C but have some leaf to potentially lose to balance the books
+           ! 2) the NCCE is declining and that the CMI is above zero
+           if (available_labile <= 0d0 .and. foliage > 0d0) then ! This line is also not compled / tested
 
-           ! Estimate the fractional loss rate of foliage to litter
-           leaf_litter_fraction = potential_foliage_turnover
-           ! Estimate the absolute flux value loss of foliage to litter
-           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
+               !
+               ! Leaf fall to litter (gC/m2/day)
+               ! Due to leaves not paying their way, not enough labile to pay for costs
+               ! 
 
-       else if (ncce_gradient <= ncce_phenology_threshold .and. cmi(step) > vsmall .and. available_labile > 0d0) then
+               ! Estimate the fractional loss rate of foliage to litter
+               leaf_litter_fraction = potential_foliage_turnover*cmi(step)
+               ! Estimate the absolute flux value loss of foliage to litter
+               leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
-           !
-           ! Leaf fall to litter (gC/m2/day)
-           ! Due to environment declining
-           !
+           else if (ncce_gradient <= 0d0 .and. cmi(step) > vsmall .and. available_labile > 0d0) then
 
-           ! Estimate the fractional loss rate of foliage to litter
-           leaf_litter_fraction = potential_foliage_turnover*cmi(step)
-           ! Estimate the absolute flux value loss of foliage to litter
-           leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
+               !
+               ! Leaf fall to litter (gC/m2/day)
+               ! Due to environment declining
+               !
 
-       else if (available_labile <= 0d0 .and. foliage > 0d0) then
+               ! Estimate the fractional loss rate of foliage to litter
+               leaf_litter_fraction = potential_foliage_turnover*cmi(step)
+               ! Estimate the absolute flux value loss of foliage to litter
+               leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
-           !
-           ! Leaf fall to litter (gC/m2/day)
-           ! Due to more demand for maintenance respiration than is available
-           !
+           end if ! ncce_gradient < 0 .and. available_labile > 0
 
-           ! Estimate that amount of leaf C needed to be lost to remove the excess demand on labile pool
-           leaf_litter_gCm2day = abs(available_labile/time) / Rm_leaf_per_gC
-           leaf_litter_fraction = 1d0-(1d0-time*(leaf_litter_gCm2day/foliage))**(1d0/time)
-
-       end if ! ncce_gradient > ncce_phenology_threshold .and. available_labile > 0
+       end if ! alloc_leaf_gCm2day == 0d0
 
        ! Return subroutine
        return

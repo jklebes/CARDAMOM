@@ -231,15 +231,15 @@ module cardamom_io
     else if (DATAin%ID == 23) then
         ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.023
         DATAin%nopools = 8
-        DATAin%nopars = 48
+        DATAin%nopars = 50
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.024
         DATAin%nopools = 8
-        DATAin%nopars = 51
-        DATAin%nofluxes = 56
-        DATAin%nodiags = 20 ! Initial value, will need updating
+        DATAin%nopars = 54
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.025
         DATAin%nopools = 8
