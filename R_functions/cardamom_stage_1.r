@@ -34,8 +34,8 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                          ,lai_all,Csom_all,forest_all
                          ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                          ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
-                         ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_mortality_all
-						 ,fire_all,fapar_all, et_all, RhetQ10_all, MTTsom_all,MaxRootDepth_all) {
+                         ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_mortality_all,fire_all
+						 ,fapar_all, et_all, RhetQ10_all, MTTsom_all,MaxRootDepth_all) {
 
    # create the file name for the met/obs binary
    filename = paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep="")
