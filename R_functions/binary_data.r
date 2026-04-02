@@ -1303,7 +1303,6 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
           PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
           
-          #PARPRIORS[34] = 0                                ; PARPRIORUNC[34] = 5    # CGI minimum temperature curve 
           PARPRIORS[35] = 30                               ; PARPRIORUNC[35] = 2.5   # CGI optimum temperature curve
           PARPRIORS[46] = 0                                ; PARPRIORUNC[46] = 1.0   # Absolute min temperature for leaf growth
           PARPRIORS[41] = 11.197440                        ; PARPRIORUNC[41] = 9.3   # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
