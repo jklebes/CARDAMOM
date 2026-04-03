@@ -3403,6 +3403,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Denning (2011), A global reanalysis of vegetation phenology, J. Geophys. Res.,
        ! 116, G03020, doi:10.1029/2010JG001545.
 
+Update ncce loss related stuff, then update the models specific bits.
+
        implicit none
 
        ! Arguments

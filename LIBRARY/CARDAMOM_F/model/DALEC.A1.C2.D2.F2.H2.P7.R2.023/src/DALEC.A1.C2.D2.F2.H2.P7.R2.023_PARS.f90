@@ -211,33 +211,27 @@ module MODEL_PARAMETERS
     PI%parmin(43) = 0.10d0 !0.645
     PI%parmax(43) = 1.10d0 !0.911
 
-    ! Parameters linking the NCCE gradient to the CMI
-    ! via a logistic function. This is the gradient term
-    ! of the logistic function
-    PI%parmin(44) = 50d0
-    PI%parmax(44) = 5000d0
+    ! Parameters linking the NCCE to the CMI
+    ! via a Michaelis-Menten function. 
+    ! This is the NCCE at which the CMI is suppressed by 0.5
+    PI%parmin(44) = -0.5d0
+    PI%parmax(44) = -0.0005d0
     ! Parameters linking the NCCE gradient to the CMI
     ! via a logistic function. This is the NCCE gradient 
     ! 50 % value of the logistic function
-    PI%parmin(45) = -0.005d0
-    PI%parmax(45) = -0.00001d0
+    PI%parmin(45) = -0.1d0
+    PI%parmax(45) = -0.00005d0
 
     ! Absolute minimum temperature at which no leaf growth occurs (oC)
     PI%parmin(46) = -5d0
     PI%parmax(46) =  5d0
     ! Degree C above p46 at which this limitation is at 50%
     PI%parmin(47) = 0.01d0
-    PI%parmax(47) = 2d0
-
-    ! Parameters linking the NCCE to the CMI
-    ! via a Michaelis-Menten function. 
-    ! This is the NCCE at which the CMI is suppressed by 0.5
-    PI%parmin(48) = -0.5d0
-    PI%parmax(48) = -0.00005d0
+    PI%parmax(47) = 1d0
 
     ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(49) = -0.10d0
-    PI%parmax(49) =  0.10d0
+    PI%parmin(48) = -0.10d0
+    PI%parmax(48) =  0.10d0
 
     !
     ! INITIAL VALUES DECLARED HERE

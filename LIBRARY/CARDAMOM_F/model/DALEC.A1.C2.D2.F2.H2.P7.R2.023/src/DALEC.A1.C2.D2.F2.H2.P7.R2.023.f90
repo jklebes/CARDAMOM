@@ -596,7 +596,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Assign initial canopy CGI / NCCE values
     cgi_lag_history = pars(3)
-    ncce_lag_history = pars(49)
+    ncce_lag_history = pars(48)
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -979,8 +979,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        call plant_canopy_phenology(nodays, cgi_ncce_lag_step, n, deltat(n),               & ! Timing
                                    pars(36), pars(34), pars(35), pars(37),                & ! CGI parameters
                                    pars(46), pars(47),                                    & !
-                                   pars(38), pars(39), pars(48),                          & ! 
-                                   pars(14), pars(44), pars(45), pars(12), pars(5),       & ! 
+                                   pars(38), pars(39), pars(44),                          & ! 
+                                   pars(14), pars(45), pars(12), pars(5),                 & ! 
                                    pars(17), pars(15), available_labile, POOLS(n,2),      & ! To calculate GPP return
                                    FLUXES(n,1), DIAGS(n,21), DIAGS(:,22),                 & !
                                    Rm_leaf_per_gC,                                        & !                           
@@ -3373,7 +3373,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     cgi_temperature_coef_5, cgi_temperature_coef_6,        & !
                                     cgi_water_coef_1, cgi_water_coef_2,                    & ! 
                                     cmi_ncce_k50, cgi_phenology_threshold,   & !
-                                    cmi_ncce_gradient_coef,cmi_ncce_gradient_k50,          & !
+                                    cmi_ncce_gradient_k50,          & !
                                     potential_labile_turnover, potential_foliage_turnover, & ! 
                                     lca, ncce_return_threshold, available_labile, foliage, & ! To calculate GPP return
                                     current_gpp, delta_ncce_gCgC, ncce_gCgC,               & !
@@ -3418,7 +3418,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                            cgi_water_coef_2, & ! SWP at which growth non-limited (MPa)                    
                                cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
                     cgi_phenology_threshold, & ! CGI gradient threshold above which leaf growth is possible 
-                     cmi_ncce_gradient_coef, & ! ncce gradient, gradient for logistic function 
                       cmi_ncce_gradient_k50, & ! ncce gradient, at which function is half saturation
                   potential_labile_turnover, & ! Potential fractional rate of labile turnover to foliage (0-1)
                  potential_foliage_turnover, & ! Potential fractional rate of foliage turnover to fine litter (0-1)                    
@@ -3499,11 +3498,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Estimate the canopy mortality index, a mean function of the net canopy carbon export (NCCE) and
        ! the gradient (trend over time) of the NCCE. These are: 
-       ! 1) A logistic function of the gradient of NCCE 
+       ! 1) A Michaelis-Menten function of the gradient of NCCE 
        ! 2) A Michaelis-Menten function of NCCE gCgCleaf set to add to turnover once NCCE is negative.
 
-       ! Logistic function where a positive gradient tends towards lower cmi
-       tmp = (1d0+exp(cmi_ncce_gradient_coef*(ncce_gradient-cmi_ncce_gradient_k50)))**(-1d0)
+       ! MM function where negative NCCE trend adds to a higher cmi
+       if (ncce_gradient < 0d0) then
+           tmp = ncce_gradient / (ncce_gradient + cmi_ncce_gradient_k50)
+       else 
+           ! Postive ncce, we will assume the contribution here is zero
+           tmp = 0d0
+       end if 
        ! MM function add additinal impact of NCCE if negative
        if (ncce_gCgC(step) < 0d0) then
            tmp1 = ncce_gCgC(step) / (ncce_gCgC(step) + cmi_ncce_k50)
@@ -3511,7 +3515,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Postive ncce, we will assume the contribution here is zero
            tmp1 = 0d0
        end if 
-       ! Combine assuming a straightforward average
+       ! Combine assuming a straight forward maximum of the loss forcings
        cmi(step) = max(tmp,tmp1)
 
        ! We can only allocate if we have labile to spend and a CGI gradient above the leaf phenology threshold.

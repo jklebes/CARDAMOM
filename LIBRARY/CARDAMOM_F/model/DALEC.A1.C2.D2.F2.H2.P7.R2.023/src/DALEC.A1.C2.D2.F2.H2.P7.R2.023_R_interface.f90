@@ -157,7 +157,7 @@ subroutine rdalec23(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,34) = FLUXES(1:nodays,36)      ! harvest extracted from wood (gC/m2/day)
      out_var1(i,1:nodays,35) = FLUXES(1:nodays,37)      ! harvest extracted from litter (gC/m2/day)
      out_var1(i,1:nodays,36) = FLUXES(1:nodays,38)      ! harvest extracted from woodlitter (gC/m2/day)
-     out_var1(i,1:nodays,37) = FLUXES(1:nodays,49)      ! harvest extracted from som (gC/m2/day)
+     out_var1(i,1:nodays,37) = FLUXES(1:nodays,39)      ! harvest extracted from som (gC/m2/day)
      out_var1(i,1:nodays,38) = FLUXES(1:nodays,40)      ! harvest litter / residue from labile (gC/m2/day)
      out_var1(i,1:nodays,39) = FLUXES(1:nodays,41)      ! harvest litter / residue from foliage (gC/m2/day)
      out_var1(i,1:nodays,40) = FLUXES(1:nodays,42)      ! harvest litter / residue from fine roots (gC/m2/day)
