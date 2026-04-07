@@ -40,8 +40,8 @@ M = Managed Grassland / arable crops (Table 10)
 | 21 | DALEC.A1.C1.D2.F2.H2.P5.021    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
 | 22 | DALEC.A1.C1.D2.F2.H2.P6.022    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
 | 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
-| 24 | DALEC.A1.C2.D2.F2.H2.P8.R2.024 | G6                  |                                                     | T. L. Smallman               | Unpublished |
-| !25 | DALEC.A1.C2.D2.F2.H2.P9.R2.025 | G7                  |                                                     | T. L. Smallman               | Unpublished |
+| 24 | NOT IN USE                     | NOT IN USE          | NOT IN USE                                          | NOT IN USE                   | Unpublished |
+| 25 | NOT IN USE                     | NOT IN USE          | NOT IN USE                                          | NOT IN USE                   | Unpublished |
 | !26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                    | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
@@ -124,9 +124,9 @@ M = Managed Grassland / arable crops (Table 10)
 | P4         | As P3 but with canopy growth dependent on a positive net canopy carbon export being estimated on the new leaf area. | Published (Famiglietti et al., 2021) |
 | P5         | As P1 except labile life span can now be >1 year                           | Unpublished               |
 | P6         | As P2 except labile life span can now be >1 year                           | Unpublished               |
-| P7         | As P4 but canopy growth simulated by non-linear version of GSI, the canopy growth index (CGI). Canopy mortality a Michaelis-Menten function of NCCE, the canopy mortality index (CMI) | Unpublished |
-| P8         | As P7 but CMI a non-linear function of temperature and Michaelis-Menten function of available labile C | Unpublished |
-| P9         | As P7 but CMI is now 1-CGI. The rolling average NCCE is used to co-determine canopy mortality via a Michaelis-Menten function. | Unpublished |
+| P7         | As P4 but canopy growth simulated by non-linear version of GSI, the canopy growth index (CGI) and the CGI gradient. Canopy mortality a Michaelis-Menten function of NCCE and the gradient of NCCE, the canopy mortality index (CMI)               | Unpublished |
+| P8         | NOT IN USE                                                                  | NOT IN USE |
+| P9         | NOT IN USE                                                                  | Unpublished |
 | P10        | As P4 but GSI is now a non-linear function of temperature alone. Canopy age is explicitly tracked from point of growth. The canopy photosynthetic efficiency declines on a per-age-class basis as a function of temperature, soil water potential and time. Canopy loss occures when an age class no-longer has a positive NCCE. | Unpublished |
 | P11        | As P1 but allocation to tissues from labile are based on potential growth rates modified by temperature, water and available labile. | Unpublished |
 | P12        | P11 modified to implement canopy growth and mortality within a P7 inspired CMP and CGI | Unpublished |

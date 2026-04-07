@@ -4348,6 +4348,174 @@ global_zonal_budget<-function(){
     zonal_names <<- c("boreal","north_temperate","north","tropics","south_temperate","south")
     outfile_zonal_names <<- c("Boreal (Lat > 60)","North Temperate (30 > Lat < 60)","North (Lat > 30)","Tropics (-30 > LAT < 30)","South Temperate (-60 > LAT < -30)","South (LAT < -30)")    
 
+    # Global variable
+    pixel_areas = PROJECT$area_m2*PROJECT$landsea
+    deltat = 365.25 # number of days per year
+    
+    ###
+    ## Forcing variables
+    ## (Annual only at this time)
+
+    # Forcings names exist in global array (met_array_names).
+    # This array carries the correct array order for extraction.
+    # Therefore, the names used here must be consistent.
+    names_forcings = c("simulated_days","daily_min_temperature_C","daily_max_temperature_C","sw_radiation_MJm2day",
+                       "atmospheric_co2_ppm","day_of_year","precipitation_kgH2Om2s","biomass_removal_fraction",
+                       "burned_fraction","21day_max_temperature_C","21day_photoperiod_s","21day_mean_vpd_Pa",
+                       "management_type","mean_temperature_C","mean_wind_speed_ms","mean_vpd_Pa")
+    seasonal_names_forcings = names_forcings
+                      
+    # Average states pixel to global without unit correction, just area weighted means
+    pixel_scalar = PROJECT$area_m2*PROJECT$landsea
+    output_prefix = "" # Prefix to output file names, end with "_" 
+    output_suffix = "" # Suffix to output file names, begin with "_"   
+    for (v in seq(1, length(names_forcings))) {
+
+         # Update user    
+         print(paste("...doing ",names_forcings[v],sep=""))
+
+         # Reset output variables, note the 3 is assumed to be low, median, high
+         global = array(0, dim=c(nos_years)) ; tropics = array(0, dim=c(nos_years)) 
+         north = array(0, dim=c(nos_years))  ; south = array(0, dim=c(nos_years))
+         boreal = array(0, dim=c(nos_years)) 
+         north_temperate = array(0, dim=c(nos_years)) ; south_temperate = array(0, dim=c(nos_years))
+         # For seasonal cycles
+         seasonal_global = array(0, dim=c(steps_per_year,nos_years)) ; seasonal_tropics = array(0, dim=c(steps_per_year,nos_years)) 
+         seasonal_north  = array(0, dim=c(steps_per_year,nos_years)) ; seasonal_south = array(0, dim=c(steps_per_year,nos_years))
+         seasonal_boreal = array(0, dim=c(steps_per_year,nos_years)) 
+         seasonal_north_temperate = array(0, dim=c(steps_per_year,nos_years)) 
+         seasonal_south_temperate = array(0, dim=c(steps_per_year,nos_years))     
+         # Counters             
+         count_a = 0 ; count_n = 0 ; count_t = 0 ; count_s = 0 ; count_b = 0 ; count_nt = 0 ; count_st = 0
+         # Loop each site         
+         for (n in seq(1, length(PROJECT$sites))) {
+
+              # Ensure the site has been processed
+              if (is.na(grid_output$i_location[n]) == FALSE) {
+
+                  # Extract grid position
+                  i = grid_output$i_location[n] ; j = grid_output$j_location[n]
+       
+                  # Global aggregation
+                  count_a = count_a + pixel_scalar[i,j]
+                  # Annual
+                  global = global + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                  # Seasonal
+                  if (seasonal_names_forcings[v] != "") {
+                      seasonal_global = seasonal_global + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                  }
+                  # Northern extra-tropics
+                  if (grid_output$lat[i,j] > 30) {
+                      count_n = count_n + pixel_scalar[i,j]
+                      # Annual
+                      north = north + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                      # Seasonal
+                      if (seasonal_names_forcings[v] != "") {
+                          seasonal_north = seasonal_north + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                      }                          
+                      # Boreal zone
+                      if (grid_output$lat[i,j] > 60) {
+                          count_b = count_b + pixel_scalar[i,j]
+                          # Annual
+                          boreal = boreal + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                          # Seasonal
+                          if (seasonal_names_forcings[v] != "") {
+                              seasonal_boreal = seasonal_boreal + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          }
+                      } else {
+                          # temperature zone by definition of being > 30 and < 60
+                          count_nt = count_nt + pixel_scalar[i,j]
+                          # Annual
+                          north_temperate = north_temperate + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                          # Seasonal
+                          if (seasonal_names_forcings[v] != "") {
+                              seasonal_north_temperate = seasonal_north_temperate + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          }
+                      } # northern boreal zone                                     
+                  } # northern extra-tropics
+                  # Tropics
+                  if (grid_output$lat[i,j] <= 30 & grid_output$lat[i,j] >= -30) {
+                      count_t = count_t + pixel_scalar[i,j]                  
+                      # Annual
+                      tropics = tropics + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                      # Seasonal
+                      if (seasonal_names_forcings[v] != "") {
+                          seasonal_tropics = seasonal_tropics + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                      }
+                  } # tropics
+                  # Southern extra-tropics
+                  if (grid_output$lat[i,j] < -30) {
+                      count_s = count_s + pixel_scalar[i,j]                 
+                      # Annual
+                      south = south + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                      # Seasonal
+                      if (seasonal_names_forcings[v] != "") {
+                          seasonal_south = seasonal_south + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                      }
+                      if (grid_output$lat[i,j] > -60) {
+                          # temperature zone by definition of being > -30 and < -60
+                          count_st = count_st + pixel_scalar[i,j]
+                          # Annual
+                          south_temperate = south_temperate + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                          # Seasonal
+                          if (seasonal_names_forcings[v] != "") {
+                              seasonal_south_temperate = seasonal_south_temperate + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          }
+                      }                
+                  } # southern extra-tropics
+                                
+              } # viable pixel
+         } # loop each site
+
+         ## Complete the average
+         # Annual
+         global  = global  / count_a
+         north   = north   / count_n
+         tropics = tropics / count_t
+         south   = south   / count_s
+         boreal  = boreal  / count_b
+         north_temperate = north_temperate  / count_nt
+         south_temperate = south_temperate  / count_st
+         # Seasonal
+         seasonal_global  = seasonal_global  / count_a
+         seasonal_north   = seasonal_north   / count_n
+         seasonal_tropics = seasonal_tropics / count_t
+         seasonal_south   = seasonal_south   / count_s
+         seasonal_boreal  = seasonal_boreal  / count_b
+         seasonal_north_temperate = seasonal_north_temperate  / count_nt
+         seasonal_south_temperate = seasonal_south_temperate  / count_st  
+         
+         # Combine into an output object       
+         output = data.frame(Year = run_years, Global_area_m2 = count_a, North_area_m2 = count_n, Tropics_area_m2 = count_t, 
+                                               South_area_m2 = count_s, Boreal_area_m2 = count_b, North_Temperate_area_m2 = count_nt, 
+                                               South_Temperate_area_m2 = count_st,
+                                               Global = global, North = north, Tropics = tropics, South = south, Boreal = boreal, 
+                                               North_Temperate = north_temperate, South_Temperate = south_temperate)
+         # Write to text file
+         write.table(output,file = paste(output_dir,"/",output_prefix,names_forcings[v],output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+         # Assign global values back into the grid_output object for later use
+         grid_output[[paste("agg_",names_forcings[v],sep="")]] <<- global
+         grid_output[[paste("agg_boreal_",names_forcings[v],sep="")]] <<- boreal         
+         grid_output[[paste("agg_north_temperate_",names_forcings[v],sep="")]] <<- north_temperate                  
+         grid_output[[paste("agg_north_",names_forcings[v],sep="")]] <<- north                  
+         grid_output[[paste("agg_tropics_",names_forcings[v],sep="")]] <<- tropics
+         grid_output[[paste("agg_south_temperate_",names_forcings[v],sep="")]] <<- south_temperate       
+         grid_output[[paste("agg_south_",names_forcings[v],sep="")]] <<- south                                  
+         # Seasonal ones too
+         grid_output[[paste("agg_seasonal_",seasonal_names_forcings[v],sep="")]] <<- seasonal_global
+         grid_output[[paste("agg_seasonal_boreal_",seasonal_names_forcings[v],sep="")]] <<- seasonal_boreal
+         grid_output[[paste("agg_seasonal_north_temperate_",seasonal_names_forcings[v],sep="")]] <<- seasonal_north_temperate
+         grid_output[[paste("agg_seasonal_north_",seasonal_names_forcings[v],sep="")]] <<- seasonal_north
+         grid_output[[paste("agg_seasonal_tropics_",seasonal_names_forcings[v],sep="")]] <<- seasonal_tropics
+         grid_output[[paste("agg_seasonal_south_temperate_",seasonal_names_forcings[v],sep="")]] <<- seasonal_south_temperate       
+         grid_output[[paste("agg_seasonal_south_",seasonal_names_forcings[v],sep="")]] <<- seasonal_south                         
+    
+    } # loop variable
+      
+    ###
+    ## Model variables
+
     ## List of variables to be iterated over
     # Annual
     vars_gCm2day    = c("mean_annual_nbp_gCm2day", "mean_annual_nbe_gCm2day", "mean_annual_nee_gCm2day",
@@ -4458,10 +4626,6 @@ global_zonal_budget<-function(){
 
     # Take each list in turn to calculate each variable and write out.
     # This allows for specific corrections to be applied to get the desired output units.
-
-    # Global variable
-    pixel_areas = PROJECT$area_m2*PROJECT$landsea
-    deltat = 365.25 # number of days per year
     
     # Aggregating fluxes pixel to global from gC/m2/day -> PgC/yr
     unit_scalar = 1e-15 # gC -> PgC
@@ -5265,6 +5429,83 @@ masked_budget<-function(landmask_grid, outfile_prefix){
     print("A full spectrium of annual time step variables are generated here, e.g. gross and net fluxes, allocation, residence times, pools")
     print("The budget area will be defined by a landmask raster object.")
 
+    ###
+    ## Forcing variables
+    ## (Annual only at this time)
+
+    # Forcings names exist in global array (met_array_names).
+    # This array carries the correct array order for extraction.
+    # Therefore, the names used here must be consistent.
+    names_forcings = c("simulated_days","daily_min_temperature_C","daily_max_temperature_C","sw_radiation_MJm2day",
+                       "atmospheric_co2_ppm","day_of_year","precipitation_kgH2Om2s","biomass_removal_fraction",
+                       "burned_fraction","21day_max_temperature_C","21day_photoperiod_s","21day_mean_vpd_Pa",
+                       "management_type","mean_temperature_C","mean_wind_speed_ms","mean_vpd_Pa")
+    seasonal_names_forcings = names_forcings
+                      
+    # Average states pixel to masked_area without unit correction, just area weighted means
+    output_prefix = paste(outfile_prefix,"_",sep="") # Prefix to output file names, end with "_" 
+    output_suffix = "" # Suffix to output file names, begin with "_"
+    for (v in seq(1, length(names_forcings))) {
+
+         # Update user    
+         print(paste("...doing ",names_forcings[v],sep=""))
+    
+         # Reset output variables, note the 3 is assumed to be low, median, high
+         masked_area = array(0, dim=c(nos_years)) 
+         # For seasonal cycles
+         seasonal_masked_area = array(0, dim=c(steps_per_year,nos_years)) 
+
+         # Counters             
+         count_a = 0 
+         # Loop each site         
+         for (n in seq(1, length(PROJECT$sites))) {
+
+              # Ensure the site has been processed
+              if (is.na(grid_output$i_location[n]) == FALSE) {
+
+                  # Extract grid position
+                  i = grid_output$i_location[n] ; j = grid_output$j_location[n]
+
+                  # Check that current location is within the land mask aera
+                  if (is.finite(landmask_grid[i,j]) && landmask_grid[i,j] > 0) {
+         
+                      ## masked_area aggregation
+                      count_a = count_a + pixel_areas[i,j]
+                      # Annual
+                      masked_area = masked_area + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                      # Seasonal
+                      if (seasonal_names_forcings[v] != "") {                                            
+                          seasonal_masked_area = seasonal_masked_area + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                      }
+                  } # in masked domain                                                                     
+
+              } # viable pixel
+         } # loop each site
+
+         ## Complete the average
+         # Annual
+         masked_area = masked_area / count_a
+         # Seasonal
+         seasonal_masked_area = seasonal_masked_area / count_a
+         
+         # Combine into an output object       
+         output = data.frame(Year = run_years, area_m2 = count_a, masked_area = masked_area)
+         # Update names                             
+         names(output)[3]<-c(names_forcings[v])
+         # Write to text file
+         write.table(output,file = paste(output_dir,"/",output_prefix,names_forcings[v],output_suffix,".txt",sep=""), sep=" ", row.names = FALSE)
+
+         # Assign masked_area values back into the grid_output object for later use
+         grid_output[[paste("agg_",outfile_prefix,"_",names_forcings[v],sep="")]] <<- masked_area
+         # Seasonal ones too
+         grid_output[[paste("agg_",outfile_prefix,"_seasonal_",seasonal_names_forcings[v],sep="")]] <<- seasonal_masked_area
+      
+    } # loop variable
+
+    ###
+    ## Model variables
+    ##
+    
     ## List of variables to be iterated over
     # Annual
     vars_gCm2day    = c("mean_annual_nbp_gCm2day", "mean_annual_nbe_gCm2day", "mean_annual_nee_gCm2day",
@@ -6175,6 +6416,9 @@ load_forcings_to_grid<-function() {
     dims = dim(grid_output$mean_lai_m2m2)
 
     ## For load into grid_output
+    # Forcings in vector form
+    met_array_timeseries <<- array(NA, dim=c(PROJECT$nosites,length(PROJECT$model$timestep_days),length(met_array_names)))
+
     # Mean annual LAI obs
     grid_output$LAIobs <<- array(NA, dim=c(dims[1],dims[2],nos_years))
     grid_output$LAIobs_unc <<- array(NA, dim=c(dims[1],dims[2],nos_years))
@@ -7043,6 +7287,13 @@ load_forcings_to_grid<-function() {
 
              # Read in pixel driving data
              drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
+
+             ## Forcing information
+             # This will not be stored in the grid_output, we want to keep only the zonal aggregate information
+             # calculated later
+             for (f in seq(1,dim(met_array_timeseries)[3])) {
+                  met_array_timeseries[n,,f]<<-drivers$met[,f]
+             }
 
              ## Key biogeochemical / biogeophysical trends
              # NBP
@@ -10670,7 +10921,609 @@ summary_plots<-function() {
 
     ### 
     ## Seasonal cycles across each year, colour gradient for over time.
-       
+
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_daily_min_temperature_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_daily_min_temperature_C), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_min_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_min_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_daily_min_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_daily_max_temperature_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_daily_max_temperature_C), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_max_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_max_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_daily_max_temperature_C), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_mean_shortwave_radiation_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_sw_radiation_MJm2day), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_sw_radiation_MJm2day), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+    
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_mean_precipitation_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_precipitation_kgH2Om2s*86400), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_mean_biomass_removal_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_biomass_removal_fraction), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_biomass_removal_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_biomass_removal_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_biomass_removal_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+    
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_mean_burned_fraction_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_burned_fraction), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_burned_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_burned_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_burned_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_burned_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_burned_fraction), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+
+    legend_todo = TRUE
+    # Create figure 
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_mean_vpd_Pa_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
+    # Define plotting space
+    par(mfrow=c(2,3), mar=c(4,4.5,2,1), omi=c(0.1,0.1,0.14,0.1))
+    ## Global
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_mean_vpd_Pa), na.rm=TRUE)
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05
+    # Create initial plot
+    plot(grid_output$agg_seasonal_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Global", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Boreal
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_boreal_mean_vpd_Pa), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Boreal (LAT > 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Add legend for the overall scheme
+    if (legend_todo) {
+        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+        legend_todo = FALSE
+    }
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## North temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## Tropics
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_tropics_mean_vpd_Pa), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    ## South temperate
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }    
+    ## South
+    # Determine axes size
+    yrange = range(as.vector(grid_output$agg_seasonal_south_mean_vpd_Pa), na.rm=TRUE)
+    # Create initial plot
+    plot(grid_output$agg_seasonal_south_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+         main = "South (LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+    # Loop through remaining years
+    for (y in seq(2, nos_years)) {
+         lines(grid_output$agg_seasonal_south_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    }
+    dev.off()
+    
     legend_todo = TRUE
     # Create figure 
     png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_GPP_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
@@ -12328,4 +13181,117 @@ create_spatially_aggregate_mean_annual_timeseries_and_anomaly<-function(do_globa
     dev.off()
     
 } # end function create_spatially_aggregate_mean_annual_timeseries_and_anomaly
+
+create_spatially_aggregate_mean_annual_timeseries_and_anomaly_forcings<-function(do_global,do_obs,outfile_prefix,
+                                                                                 masked_names,outfile_masked_names,
+                                                                                 var_and_units,outfile_var_name,outfile_var_units) {
+
+    # Number of plots to be done
+    nos_plots = length(masked_names)
+    if (do_global) {nos_plots = nos_plots + 1}
+    
+    # Determine the shape of map plots
+    if (nos_plots == 1) {
+        height = 2500 ; width = 5000
+        mfrow_ij = c(1,1)
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 2) {
+        height = 1000 ; width = 3800
+        mfrow_ij = c(1,2)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 3) {
+        height = 750 ; width = 5000
+        mfrow_ij = c(1,3)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 4) {
+        height = 2200 ; width = 3000
+        mfrow_ij = c(2,2)        
+        mar_ijkz = c(3.0,4.5,2,0.5)     
+        omi_ijkz = c(0.08,0.08,0.1,0.1)    
+    } else if (nos_plots == 5) {
+        height = 6000 ; width = 2500
+        mfrow_ij = c(5,1)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 6) {
+        height = 2200 ; width = 4000
+        mfrow_ij = c(2,3)   
+        mar_ijkz = c(4,4.5,2,1)     
+        omi_ijkz = c(0.1,0.1,0.14,0.1)        
+    } else if (nos_plots == 12) {
+        height = 2000 ; width = 4000
+        mfrow_ij = c(3,4)   
+        mar_ijkz = c(1.4,4.5,1.0,0.0)     
+        omi_ijkz = c(0.01,0.01,0.1,0.001)
+    } else {
+        stop("the number of plots requested has not been coded for")
+    } # different plotting dimensions...
+
+    # How consistent is the CARDAMOM analysis with available independent datasets?
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_",outfile_prefix,"_",outfile_var_name,"_mean_annual_timeseries.png",sep=""), width = width, height = height, res = 300)
+    # Define the plotting space
+    par(mfrow=mfrow_ij, mar=mar_ijkz+c(1.05,0,0,1.0), omi = omi_ijkz)
+
+    # Now we have used the outfile_var_name to create the output file, we will now substitute the '_' for a space for the labels
+    outfile_var_name = gsub("_", " ", outfile_var_name)
+
+    if (do_global) {
+        ## Plot each masked area
+        # Load the explicitly calculated anomaly for each term
+        var2 = get(paste("agg_",var_and_units,sep=""), pos = grid_output)
+        # Determine axes size
+        yrange = range(c(var2), na.rm=TRUE) # base ranges on the uncertainty estimate only
+        yrange[2] = yrange[2] + abs(yrange[2])*0.05 # add some buffer
+        # Determine the axis labels
+        ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+        # Create initial plot
+        plot(var2 ~ run_years, type="p", pch=16, cex = 0.5, col = "black", 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+             main = "Global", ylab = ylab.text, xlab="Year")
+        lines(var2 ~ run_years, lwd = 2, lty = 1, col = "black")
+        # Postive / negative anomaly
+        if (grepl("temperature",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+            abline(0,0,col="grey", lwd=1)
+        }
+    } # do global plot
+    
+    # Work out the y-axis for the current plot
+    yrange = c(0,0)
+    for (m in seq(1, length(masked_names))) {             
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_",var_and_units,sep=""), pos = grid_output)
+         # Determine axes size for the current masked area
+         tmp = range(c(var2), na.rm=TRUE)
+         if (m == 1) { yrange = tmp }
+         # Increment the axis range
+         if (tmp[1] < yrange[1]) { yrange[1] = tmp[1] }
+         if (tmp[2] > yrange[2]) { yrange[2] = tmp[2] }
+    } 
+    # Add some buffer
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05    
+    
+    for (m in seq(1, length(masked_names))) {            
+         ## Plot each masked area
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_",var_and_units,sep=""), pos = grid_output)
+         
+         # Determine the axis labels
+         ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+         # Create initial plot
+         plot(var2 ~ run_years, type="p", pch=16, cex = 0.5, col = "black", 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+             main = outfile_masked_names[m], ylab = ylab.text, xlab="Year")
+         lines(var2 ~ run_years, lwd = 2, lty = 1, col = "black")
+         # Postive / negative anomaly
+         if (grepl("temperature",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+             abline(0,0,col="grey", lwd=1)
+         }
+    } # masked_names loop
+    
+    dev.off()
+    
+} # end function create_spatially_aggregate_mean_annual_timeseries_and_anomaly_forcings
 

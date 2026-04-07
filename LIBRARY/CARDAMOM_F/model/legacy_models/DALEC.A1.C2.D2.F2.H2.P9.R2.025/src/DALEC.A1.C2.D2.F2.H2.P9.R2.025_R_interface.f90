@@ -23,13 +23,13 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.A1.C2.D2.F2.H2.P8.R2 and the R code
+! Subroutine to allow direct interface between DALEC.A1.C2.D2.F2.H2.P9.R2 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine rdalec24(output_dim,MTT_dim,SS_dim &
+subroutine rdalec25(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
                    ,out_var1,out_var2,out_var3,out_var4,out_var5 &
                    ,lat,nopars,nomet &
@@ -354,4 +354,4 @@ subroutine rdalec24(output_dim,MTT_dim,SS_dim &
   ! return back to the subroutine then
   return
 
-end subroutine rdalec24
+end subroutine rdalec25

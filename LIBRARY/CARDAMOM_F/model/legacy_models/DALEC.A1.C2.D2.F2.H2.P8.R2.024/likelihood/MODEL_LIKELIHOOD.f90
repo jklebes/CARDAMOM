@@ -431,15 +431,14 @@ module model_likelihood_module
          EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
-    ! Straight forward CMI temperature bounds
     ! The minimum temperature for the skewed Gaussian temperature function 
     ! must be lower than the optimum
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(51) < pars(50))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(50) < pars(49))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
     ! The optimum temperature for the skewed Gaussian temperature function 
     ! must be lower than the maximum
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(52) < pars(51))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(51) < pars(50))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 

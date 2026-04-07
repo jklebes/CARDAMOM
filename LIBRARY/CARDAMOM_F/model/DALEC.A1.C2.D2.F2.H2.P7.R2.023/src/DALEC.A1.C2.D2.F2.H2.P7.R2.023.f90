@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P7.R2
+! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P7.R2.023
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -3601,36 +3601,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
            end if ! ncce_gradient < 0 .and. available_labile > 0
-
-!           ! Determine whether:
-!           ! 1) we have ran out of labile C but have some leaf to potentially lose to balance the books
-!           ! 2) the NCCE is declining and that the CMI is above zero
-!           if (available_labile <= 0d0 .and. foliage > 0d0) then ! This line is also not compled / tested
-!
-!               !
-!               ! Leaf fall to litter (gC/m2/day)
-!               ! Due to leaves not paying their way, not enough labile to pay for costs
-!               ! 
-!
-!               ! Estimate the fractional loss rate of foliage to litter
-!               leaf_litter_fraction = potential_foliage_turnover*cmi(step)
-!               ! Estimate the absolute flux value loss of foliage to litter
-!               leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
-!
-!           !else if (ncce_gradient <= 0d0 .and. cmi(step) > vsmall .and. available_labile > 0d0) then
-!           else if (cmi(step) > vsmall .and. available_labile > 0d0) then
-!
-!               !
-!               ! Leaf fall to litter (gC/m2/day)
-!               ! Due to environment declining
-!               !
-!
-!               ! Estimate the fractional loss rate of foliage to litter
-!               leaf_litter_fraction = potential_foliage_turnover*cmi(step)
-!               ! Estimate the absolute flux value loss of foliage to litter
-!               leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
-!
-!           end if ! ncce_gradient < 0 .and. available_labile > 0
 
        end if ! alloc_leaf_gCm2day == 0d0
 

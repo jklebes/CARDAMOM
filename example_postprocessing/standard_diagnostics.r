@@ -82,8 +82,8 @@ plot_clustering()
 # Conduct between pixel correlations for parameters and then parameters~key variables
 tmp = grid_output$landmask ; tmp[tmp == 0] = NA
 key_variables_parameters_spatial_correlation(tmp,"Global")
-
-# Do timeseries and anomaly plots
+                  
+# Do timeseries and anomaly plots - modelled
 var_and_units    = c("wSWP_MPa","SurfWater_kgH2Om2","CiCa","lai_m2m2","nbp_PgCyr", "nbe_PgCyr", "nee_PgCyr","npp_PgCyr", "gpp_PgCyr", "reco_PgCyr","rhet_PgCyr", "rhet_litter_PgCyr", "rhet_som_PgCyr", 
                     "rauto_PgCyr", "fire_PgCyr", "harvest_PgCyr","combined_alloc_foliage_PgCyr","alloc_roots_PgCyr","alloc_wood_PgCyr","dnbp_PgCyr", "dnbe_PgCyr", 
                     "dnee_PgCyr","dnpp_PgCyr", "dgpp_PgCyr","dreco_PgCyr","drhet_PgCyr", "drhet_litter_PgCyr","drhet_som_PgCyr", 
@@ -95,7 +95,7 @@ outfile_var_name    = c("wSWP","SurfWater","CiCa","LAI","NBP", "NBE", "NEE", "NP
                         "GPP_anomaly", "Reco_anomaly","Rhet_anomaly", "Rhet_litter_anomaly","Rhet_som_anomaly", "Rauto_anomaly", "Fire_anomaly", "Harvest_anomaly",
                         "Biomass", "DOM", "Labile", "Foliage", "FineRoots", "Wood","Litter", "SOM","Biomass_anomaly", "DOM_anomaly", "Labile_anomaly",
                         "Foliage_anomaly", "FineRoots_anomaly", "Wood_anomaly","Litter_anomaly", "SOM_anomaly","CiCa_anomaly","wSWP_anomaly","SurfWater_anomaly")
-outfile_var_units    = c(expression('(MPa)'),expression(paste('kgH2Om'^-2,,sep="")),expression('(0-1)'),expression(paste('m'^2,'m'^-2,sep="")),expression('(PgC/yr)'),
+outfile_var_units    = c(expression('(MPa)'),expression(paste('kgH2Om'^-2,sep="")),expression('(0-1)'),expression(paste('m'^2,'m'^-2,sep="")),expression('(PgC/yr)'),
                          expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),
                          expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),
                          expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),expression('(PgC/yr)'),
@@ -106,12 +106,24 @@ outfile_var_units    = c(expression('(MPa)'),expression(paste('kgH2Om'^-2,,sep="
                          expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),
                          expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),
                          expression('(PgC)'),expression('(PgC)'),expression('(PgC)'),expression('(0-1)'),expression('(MPa)'),
-                         expression(paste('kgH2Om'^-2,,sep="")))
+                         expression(paste('kgH2Om'^-2,sep="")))
 for (i in seq(1, length(var_and_units))) { 
      create_spatially_aggregate_mean_annual_timeseries_and_anomaly(do_global = FALSE, do_obs = TRUE, outfile_prefix = "zonal",
                                                                    zonal_names[c(-3,-6)], outfile_zonal_names[c(-3,-6)], 
                                                                    var_and_units[i], outfile_var_name[i], outfile_var_units[i]) 
 }
+# Do timeseries and anomaly plots - forcings
+var_and_units     = c("daily_min_temperature_C","daily_max_temperature_C","mean_temperature_C","sw_radiation_MJm2day","precipitation_kgH2Om2s","mean_vpd_Pa","biomass_removal_fraction",
+                     "burned_fraction","mean_wind_speed_ms")
+outfile_var_name  = c("Min_Air_Temperature","Max_Air_Temperature","Air_Temperature","SW_radiation","Precipitation","VPD","LUC","BA","Wind_Speed")
+outfile_var_units = c(expression('(Celsius)'),expression('(Celsius)'),expression('(Celsius)'),expression(paste('MJm'^-2,'d'^-1,sep="")),
+                      expression(paste('kgH2Om'^-2,'s'^-1,sep="")),expression('(Pa)'),expression('(0-1)'),expression('(0-1)'),expression(paste('ms'^-1,sep="")))
+for (i in seq(1, length(var_and_units))) { 
+     create_spatially_aggregate_mean_annual_timeseries_and_anomaly_forcings(do_global = FALSE, do_obs = TRUE, outfile_prefix = "zonal",
+                                                                            zonal_names[c(-3,-6)], outfile_zonal_names[c(-3,-6)], 
+                                                                            var_and_units[i], outfile_var_name[i], outfile_var_units[i]) 
+}
+
 # NPP
 npp_plots()
 # MRT
