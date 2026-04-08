@@ -45,7 +45,6 @@ module MODEL_PARAMETERS
   public :: pars_info
 
   contains
-
   !
   !------------------------------------------------------------------
   !

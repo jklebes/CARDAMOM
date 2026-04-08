@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P10.R2
+! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P10.R2.026
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -33,7 +33,6 @@
 ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
 ! Subsequent modifications by:
 ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-! J. F. Exbrayat (University of Edinburgh)
 ! See function / subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -537,7 +536,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! The Aggregated Canopy Model for Gross Primary Productivity and
     ! Evapotranspiration (ACM-GPP-ET) simulates coupled
     ! photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (4 layers).
+    ! evaporation and soil water balance (3 layers).
     !
     ! Carbon allocation based on fixed fraction and turnover follows first order
     ! kinetics with the following exceptions.
@@ -548,7 +547,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! dependency.
     !
     ! This version was coded by T. Luke Smallman (t.l.smallman@ed.ac.uk)
-    ! Version 1: 11/10/2020
+    ! Version 1.0: 11/10/2020
+    ! Version 1.1: 11/04/2026
 
     implicit none
 
@@ -915,12 +915,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         meant_time = (met(2,:)+met(3,:)) * 0.5d0
         ! Determin fraction of temperture period above freezing
         airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Create canopy aging vector
         do n = 1, size(canopy_days)
            ! estimate cumulative age in days
            canopy_days(n) = n
         end do
-
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
         ! mean days per step
@@ -976,7 +977,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         call update_soil_initial_conditions(pars(41))
 
     endif ! deltat_1 allocated
-
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! load ACM-GPP-ET parameters
     NUE_optimum = pars(42) ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                            ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day)
@@ -1066,7 +1067,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !print*,"NUE1",NUE_vector(1:365)
     ! Aggregate across canopy age and NUE distribution
     NUE = canopy_aggregate_NUE(1,oldest_leaf)
-
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Set initial photosynthetic traits
     avN = 10d0**pars(11)   ! foliar N gN/m2
 !    ceff = avN*NUE         ! canopy efficiency, used to avoid what in most cases is a reductance multiplication
@@ -1139,14 +1140,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Store soil water content of the surface zone (mm)
     POOLS(1,8) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
-
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! assign climate sensitivities
     fol_turn_crit = pars(34)
 
     ! Calculate NUE decline environmental factors ranges
     Tfac_range_1 = (pars(15)-pars(14))**(-1d0)
     SWPfac_range_1 = (pars(26)-pars(25))**(-1d0)
-
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!
     ! assign climate sensitivities
     !!!!!!!!!!!!
@@ -1187,7 +1188,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
-
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ! Apply todays environmentally related NUE decline
        call calculate_NUE_decline(pars(28),pars(48),pars(14),Tfac_range_1,pars(25),SWPfac_range_1)
 
@@ -1211,6 +1212,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! track rolling mean of NUE
        NUE_mean = ( NUE_mean * (1d0 - (deltat(n) * 0.002737851d0)) ) + ( NUE * (deltat(n) * 0.002737851d0) )
 !FLUXES(n,17) = NUE ; FLUXES(n,21) = canopy_age
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !!!!!!!!!!
        ! Adjust snow balance balance based on temperture
        !!!!!!!!!!
@@ -1268,11 +1270,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        call calculate_radiation_balance
        canopy_par_MJday_time(n) = canopy_par_MJday
-
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ! Determine the appropriate canopy top
        ! Estimate the total canopy N, then scale to the "top leaf" and multiple by NUE
        ceff = (((avN * lai) / leaf_canopy_light_scaling) * NUE_mean_annual)
-
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
        ! soil water potential and total hydraulic resistance
@@ -1352,7 +1354,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!
        ! Calculate canopy phenology
        !!!!!!!!!!
-
+!BEGIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ! assign labile C available in current time step, less that needed for
        ! maintenance respiration
        avail_labile = max(0d0,POOLS(n,1) - (Rm_leaf(n)*deltat(n)))
@@ -1388,7 +1390,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                leaf_life = (tmp + leaf_life) * 0.5d0
            end if
        endif ! n /= 1 and new calendar year
-
+!END!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        !
        ! litter creation with time dependancies
        !
@@ -3916,7 +3918,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Subroutine determines whether leaves are growing or dying.
     ! 1) Update canopy mean age and the impact on PNUE
-    ! 2) Performes marginal return calculation, including mean age updates
+    ! 2) Performs marginal return calculation, including mean age updates
 
     ! Thomas & Williams (2014):
     ! A model using marginal efficiency of investment to analyze carbon and nitrogen interactions in terrestrial ecosystems
@@ -4167,6 +4169,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Marginal return of leaf growth
     !
 
+!!!TLS: This should / could now be updated to bring in line with code in DALEC33 or DALEC23?
+
     ! If there is not labile available no growth can occur moreover we should not consider growing more leaves if
     ! there is a positive marginal return on losing leaf area.
     ! NOTE: that C shortage linked mortality was calculated earlier in the code
@@ -4287,7 +4291,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Only apply if oldest leaf is beyond maturation lag
     if (oldest_leaf > canopy_maturation_lag) then
-
+!TLS: Temperature effects, assume non-linear in new version??
         ! Calculate GSI style Components
         Tfac = min(1d0,max(0d0,((mint+freeze)-Tfac_min) * Tfac_range_1)) ! oC
         VPDfac = min(1d0,max(0d0,(wSWP-SWPfac_min) * SWPfac_range_1)) ! MPa

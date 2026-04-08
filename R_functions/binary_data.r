@@ -521,8 +521,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
@@ -588,11 +588,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
-          #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -624,11 +620,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
-          #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -696,11 +688,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
-          #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[2] = 0.54                ; OTHERPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
@@ -729,11 +717,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
-          #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           PARPRIORS[40] = 11.197440                        ; PARPRIORUNC[40] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
           PARPRIORS[43] = 275.1452                         ; PARPRIORUNC[43] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # Other priors
@@ -764,11 +748,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[30] = 0.87                             ; PARPRIORUNC[30] = 0.41 # Resilience factor
-          #PARPRIORS[31] = 0.5                              ; PARPRIORUNC[31] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[32] = 0.1                              ; PARPRIORUNC[32] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          #PARPRIORS[34] = 0.25                             ; PARPRIORUNC[34]] = 0.25 # Foliage + root litter combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           PARPRIORS[41] = 11.197440                        ; PARPRIORUNC[41] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
           PARPRIORS[44] = 275.1452                         ; PARPRIORUNC[44] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
           # Other priors
@@ -995,9 +975,6 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[27] = OBS$MaxRootDepth     ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
-          #PARPRIORS[28] = 0.5                  ; PARPRIORUNC[28] = 0.25 # Resilience factor
-          #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           # Other priors
           #OTHERPRIORS[1] =       ; OTHERPRIORUNC[1] =  # Initial soil water fraction 
@@ -1029,11 +1006,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
 #                                                                                   # based on median from Fan et al., (2017) 
 #                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-          #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
-          #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-          #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
           # Other priors
           #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
@@ -1089,12 +1062,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
           PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
           PARPRIORS[33] = OBS$minLWP                       ; PARPRIORUNC[33] = OBS$minLWP_unc # minLWP prior
-          #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
-          #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-          #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
-          #PARPRIORS[33] = -1.8                             ; PARPRIORUNC[33] = 0.5 # minimum leaf water potential
           # Other priors
           #OTHERPRIORS[1] =       ; OTHERPRIORUNC[1] =  # Initial soil water fraction 
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
@@ -1117,11 +1085,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[23] = OBS$Csom_initial       ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[27] = OBS$MaxRootDepth       ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
 #          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-#          PARPRIORS[28] = 0.87                ; PARPRIORUNC[28] = 0.41 # Resilience factor
-#          PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-#          PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-#          PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
 #          PARPRIORS[33] = 0.05                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
           PARPRIORS[36] = 1.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which foliage and root growth totally suppressed (oC)
           PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 1.0 # temperature at which wood growth totally suppressed (oC)
@@ -1149,7 +1113,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[11] = 54.165                  ; PARPRIORUNC[11]= 20.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax: Mean of reported PFT values from Oliver et al., (2022)
                                                                           # Note that this prior is difference from DALEC.C1.D1.F2.P1.
                                                                           # due to the different temperature response functions used in ACM2 vs ACM 1
-          PARPRIORS[12] = -2.0                ; PARPRIORUNC[12] = 0.5 # minimum leaf water potential (MPa)
+          PARPRIORS[12] = -2.0                   ; PARPRIORUNC[12] = 0.5 # minimum leaf water potential (MPa)
           PARPRIORS[17] = OBS$lca                ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
           PARPRIORS[19] = OBS$Cfol_initial       ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[20] = OBS$Croots_initial     ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
@@ -1158,11 +1122,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[23] = OBS$Csom_initial       ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
           PARPRIORS[27] = OBS$MaxRootDepth       ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
 #          PARPRIORS[27] = 1.0                    ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, based on median from Fan et al., (2017) https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
-#          PARPRIORS[28] = 0.87                   ; PARPRIORUNC[28] = 0.41 # Resilience factor
-#          PARPRIORS[29] = 0.5                    ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-#          PARPRIORS[30] = 0.1                    ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
           PARPRIORS[31] = 0.01                   ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-#          PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
 #          PARPRIORS[33] = 0.01                 ; PARPRIORUNC[33] = 0.05 # labile:biomass at which growth limited by 50 %
           PARPRIORS[36] = 5.0                 ; PARPRIORUNC[36] = 5.0 # temperature at which foliage and root growth totally suppressed (oC)
           PARPRIORS[37] = 5.0                 ; PARPRIORUNC[37] = 1.0 # temperature at which wood growth totally suppressed (oC)
@@ -1180,28 +1140,34 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
               #}
           }                    
       } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.030") {
-          PARPRIORS[2] = 0.54                  ; PARPRIORUNC[2] = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-#          PARPRIORS[11] = 1.89*14.77735        ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
+          PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
+          PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Global Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+#          PARPRIORS[10] = 0.0334798                        ; PARPRIORUNC[10] = 0.015 #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
+#          PARPRIORS[11] = 1.89*14.77735                    ; PARPRIORUNC[11] = 1.89*0.4696238 # Derived from ACM2 recalibration.
                                                                                # Note despite having the same name as ecosystem property of Amax per gN or SPA's kappaC
                                                                                # These observational constraints are not the same and would lead to
                                                                                # overestimation of GPP (SPA = 34, ACM2 = 15), but here multiple by avN (1.89) to get Ceff
-#          PARPRIORS[11] = 65.0                 ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
-          PARPRIORS[10] = OBS$RhetQ10            ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
-          PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
-                                                                          # Note that this prior is difference from DALEC.C1.D1.F2.P1.
-                                                                          # due to the different temperature response functions used in ACM2 vs ACM 1
-          PARPRIORS[17] = OBS$lca              ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
-          PARPRIORS[19] = OBS$Cfol_initial     ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
-          PARPRIORS[20] = OBS$Croots_initial   ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
-          PARPRIORS[21] = OBS$Cwood_initial    ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
-          PARPRIORS[22] = OBS$Clit_initial     ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
-          PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
-          PARPRIORS[27] = OBS$MaxRootDepth     ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
-          #PARPRIORS[28] = 0.87                 ; PARPRIORUNC[28] = 0.41 # Resilience factor
-          #PARPRIORS[29] = 0.5                  ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
-          #PARPRIORS[30] = 0.1                  ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
-          PARPRIORS[31] = 0.01                 ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
-          #PARPRIORS[32] = 0.25                 ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
+#          PARPRIORS[11] = 65.0                             ; PARPRIORUNC[11] = 30.0 #; PARPRIORWEIGHT[11] = 1 # Vcmax (gC/m2/day): Wullscheller (1993)
+          PARPRIORS[11] = 21.1491                            ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values 
+                                                                                        # from Kattge et al., (2011)
+                                                                                        # Note that this prior is difference from DALEC.C1.D1.F2.P1.
+                                                                                        # due to the different temperature response functions used in ACM2 vs ACM 1
+          PARPRIORS[17] = OBS$lca                          ; PARPRIORUNC[17] = OBS$lca_unc #; PARPRIORWEIGHT[17] = noyears
+          PARPRIORS[19] = OBS$Cfol_initial                 ; PARPRIORUNC[19] = OBS$Cfol_initial_unc # Cfoliar prior
+          PARPRIORS[20] = OBS$Croots_initial               ; PARPRIORUNC[20] = OBS$Croots_initial_unc # Croots prior
+          PARPRIORS[21] = OBS$Cwood_initial                ; PARPRIORUNC[21] = OBS$Cwood_initial_unc # Cwood prior
+          PARPRIORS[22] = OBS$Clit_initial                 ; PARPRIORUNC[22] = OBS$Clit_initial_unc # Clitter prior
+          PARPRIORS[23] = OBS$Csom_initial                 ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[25] = OBS$frac_Cwood_coarse_root_prior ; PARPRIORUNC[25] = OBS$frac_Cwood_coarse_root_prior_unc # Fraction Cwood coarse root prior
+          PARPRIORS[27] = OBS$MaxRootDepth                 ; PARPRIORUNC[27] = OBS$MaxRootDepth_unc # Maximum rooting depth prior, 
+#          PARPRIORS[27] = 1.0                              ; PARPRIORUNC[27] = 0.5 # Maximum rooting depth prior, 
+#                                                                                   # based on median from Fan et al., (2017) 
+#                                                                                   # https://www.pnas.org/doi/epdf/10.1073/pnas.1712381114
+          #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
+          #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
+          #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
+          #PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
           PARPRIORS[33] = 0.43                 ; PARPRIORUNC[33] = 0.05 # Canopy NIR reflectance
           PARPRIORS[34] = 0.16                 ; PARPRIORUNC[34] = 0.05 # Canopy PAR reflectance
           PARPRIORS[35] = 0.26                 ; PARPRIORUNC[35] = 0.05 # Canopy NIR transmittance
@@ -1209,9 +1175,18 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[37] = 0.023                ; PARPRIORUNC[37] = 0.05 # Soil reflectance to near infrared radiation
           PARPRIORS[38] = 0.033                ; PARPRIORUNC[38] = 0.05 # Foliage + root litter combustion completeness
           # Other priors
-          #OTHERPRIORS[1] =       ; OTHERPRIORUNC[1] =  # Initial soil water fraction 
+          #OTHERPRIORS[1] =        ; OTHERPRIORUNC[1] =  # Initial soil water fraction (GLEAM v3.1a)
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
+          OTHERPRIORS[6] = OBS$MTTsom          ; OTHERPRIORUNC[6] = OBS$MTTsom_unc # Prior on the MTT of soil
+          # Hack to remove LAI observations out of growing season for high LCA areas
+          if (PARPRIORS[17] > 100) {
+#              if (lat_degrees > 50) {
+                  filter = which(MET[,6] < 175 | MET[,6] > 250)
+                  OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
+                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+#              }
+          }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.021") {
           PARPRIORS[2] = 0.54                              ; PARPRIORUNC[2]  = 0.12 #; PARPRIORWEIGHT[2] = noyears # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[10] = OBS$RhetQ10                      ; PARPRIORUNC[10] = OBS$RhetQ10_unc #; PARPRIORWEIGHT[10] = 1 # Heterotrophic exponential temperature response (Global Q10 = 1.4, Hashimoto et al., 2015; doi:10.5194/bg-12-4121-2015)
@@ -1300,9 +1275,8 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           #PARPRIORS[28] = 0.87                             ; PARPRIORUNC[28] = 0.41 # Resilience factor
           #PARPRIORS[29] = 0.5                              ; PARPRIORUNC[29] = 0.25 # Foliar combustion completeness
           #PARPRIORS[30] = 0.1                              ; PARPRIORUNC[30] = 0.25 # Root / wood combustion completeness
+          PARPRIORS[31] = 0.01                             ; PARPRIORUNC[31] = 0.05 # Soil combustion completeness
           PARPRIORS[32] = 0.25                             ; PARPRIORUNC[32] = 0.25 # Foliage + root litter combustion completeness
-          PARPRIORS[33] = 0.01                             ; PARPRIORUNC[33] = 0.05 # Soil combustion completeness
-          
           PARPRIORS[35] = 30                               ; PARPRIORUNC[35] = 2.5   # CGI optimum temperature curve
           PARPRIORS[46] = 0                                ; PARPRIORUNC[46] = 1.0   # Absolute min temperature for leaf growth
           PARPRIORS[41] = 11.197440                        ; PARPRIORUNC[41] = 9.3   # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution

@@ -73,11 +73,11 @@ module MODEL_PARAMETERS
     PI%parmax(2) = 0.6d0
 
     ! Potential rate of labile to foliage (gC/m2/day)
-    PI%parmin(3) = 0.01d0
+    PI%parmin(3) = 0.1d0
     PI%parmax(3) = 20d0
 
     ! Potential rate of labile to fine root (gC/m2/day)
-    PI%parmin(4) = 0.01d0
+    PI%parmin(4) = 0.1d0
     PI%parmax(4) = 20d0
 
     ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
@@ -89,12 +89,12 @@ module MODEL_PARAMETERS
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! Turnover of fine roots (fraction / day)
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmin(7) = 0.001368925d0 !  2 years !0.0006844627d0 ! 4 years
+    PI%parmax(7) = 0.017d0       ! 60 days
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
-    PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
+    PI%parmin(8) = 0.0001141d0 ! 24 years at 0oC
+    PI%parmax(8) = 0.017d0     ! 60 days at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
@@ -122,7 +122,7 @@ module MODEL_PARAMETERS
     PI%parmax(13) = -0.0005d0
     ! Parameters linking the NCCE gradient to the CMI
     ! via a Michaelis-Menten function. This is the NCCE gradient 
-    ! 50 % value of the logistic function
+    ! 50 % value
     PI%parmin(14) = -0.1d0
     PI%parmax(14) = -0.00005d0
        
@@ -202,29 +202,25 @@ module MODEL_PARAMETERS
     PI%parmin(42) = -5d0
     PI%parmax(42) =  0d0
 
-    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
-    PI%parmin(43) = -8d0
-    PI%parmax(43) = -0.5d0
-
     ! Baseline leaf maintenance respiration.
     ! For details see Table S3, Heskel et al., (2016), doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
-    PI%parmin(44) = -4.4d0
-    PI%parmax(44) = -0.6d0
+    PI%parmin(43) = -4.4d0
+    PI%parmax(43) = -0.6d0
 
     ! Potential loss rate for foliage to litter (fraction/day)
     ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
-    PI%parmin(45) = 0.0003424658 ! 8 years
-    PI%parmax(45) = 0.0333333333 ! 30 days
+    PI%parmin(44) = 0.0003424658 ! 8 years
+    PI%parmax(44) = 0.0333333333 ! 30 days
 
     ! Minimum foliar loss proposal (gC/m2/day)
     ! for dNCCE calculation
-    PI%parmin(46) = 0.01d0   
-    PI%parmax(46) = 4d0    
+    PI%parmin(45) = 0.001d0   
+    PI%parmax(45) = 1d0    
 
     ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
     ! A credible iWUE range spans atleast 0.00001 -> 0.01
-    PI%parmin(47) = 1d-6
-    PI%parmax(47) = 1d-1
+    PI%parmin(46) = 1d-6
+    PI%parmax(46) = 1d-1
 
     !
     ! INITIAL VALUES DECLARED HERE

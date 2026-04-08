@@ -4102,30 +4102,30 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
       # Tidy up variables
       rm(output,output_mean,output_annual,MTT_years,SS_gCm2)
   } else if (model_name == "DALEC.A3.C1.D2.F2.H2.P1.030") {
-      output_dim = 62 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 65 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec30",output_dim=as.integer(output_dim)
-                             ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
-                             ,met=as.double(t(met))
-                             ,pars=as.double(pars_in)
-                             ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
-                             ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
-                             ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
-                             ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
-                             ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                    
-                             ,lat=as.double(lat)
-                             ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
-                             ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
-                             ,nodays=as.integer(dim(met)[1])
-                             ,nos_years=as.integer(noyears)
-                             ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
-                             ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
-                             ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2])))
+                              ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
+                              ,met=as.double(t(met))
+                              ,pars=as.double(pars_in)
+                              ,out_var1=as.double(array(0,dim=c(nos_iter,(dim(met)[1]),output_dim)))
+                              ,out_var2=as.double(array(0,dim=c(nos_iter,MTT_dim)))
+                              ,out_var3=as.double(array(0,dim=c(nos_iter,SS_dim)))
+                              ,out_var4=as.double(array(0,dim=c(nos_iter,output_dim)))
+                              ,out_var5=as.double(array(0,dim=c(nos_iter,noyears,output_dim)))                                    
+                              ,lat=as.double(lat)
+                              ,nopars=as.integer(PROJECT$model$nopars[site]),nomet=as.integer(dim(met)[2])
+                              ,nofluxes=as.integer(PROJECT$model$nofluxes[site]),nopools=as.integer(PROJECT$model$nopools[site])
+                              ,nodiags=as.integer(PROJECT$model$nodiags[site]),nodays=as.integer(dim(met)[1])
+                              ,nos_years=as.integer(noyears)
+                              ,deltat=as.double(array(0,dim=c(as.integer(dim(met)[1])))),nos_iter=as.integer(nos_iter)
+                              ,soil_frac_clay_in=as.double(c(soil_info[3],soil_info[4],soil_info[4]))
+                              ,soil_frac_sand_in=as.double(c(soil_info[1],soil_info[2],soil_info[2])))
       output = tmp$out_var1        ; output = array(output, dim=c(nos_iter,(dim(met)[1]),output_dim))
       output_mean = tmp$out_var4   ; output_mean = array(output_mean, dim=c(nos_iter,output_dim))
       output_annual = tmp$out_var5 ; output_annual = array(output_annual, dim=c(nos_iter,noyears,output_dim))      
-      MTT_years = tmp$out_var2 ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
-      SS_gCm2 = tmp$out_var3   ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
+      MTT_years = tmp$out_var2     ; MTT_years = array(MTT_years, dim=c(nos_iter,MTT_dim))
+      SS_gCm2 = tmp$out_var3       ; SS_gCm2 = array(SS_gCm2, dim=c(nos_iter,SS_dim))
       # Unload the current dalec shared object
       dyn.unload(paste(PROJECT$exepath,"/dalec.so", sep=""))
       rm(tmp) ; gc()
@@ -4324,6 +4324,17 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       RootDepth_m = output[,,62],
                       mean_RootDepth_m = output_mean[,62],
                       mean_annual_RootDepth_m = output_annual[,,62],
+                      # Leaf water potential
+                      LWP_MPa = output[,,63],
+                      mean_LWP_MPa = output_mean[,63],
+                      mean_annual_LWP_MPa = output_annual[,,63], 
+                      # Canopy aerodynamic diagnostics
+                      canopy_area_scaling_light = output[,,64],
+                      mean_canopy_area_scaling_light = output_mean[,64],
+                      mean_annual_canopy_area_scaling_light = output_annual[,,64],                          
+                      canopy_area_scaling_wind = output[,,65],
+                      mean_canopy_area_scaling_wind = output_mean[,65],
+                      mean_annual_canopy_area_scaling_wind = output_annual[,,65],
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

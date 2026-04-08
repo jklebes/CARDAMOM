@@ -565,9 +565,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_radiation_commons(lat)
 
     ! Leaf maintence respiration constant
-    Rm_leaf_const = pars(44)
+    Rm_leaf_const = pars(43)
     ! load ACM-GPP-ET parameters
-    iWUE = pars(47) ! load the inherent water use efficiency
+    iWUE = pars(46) ! load the inherent water use efficiency
     minlwp = pars(12) ! Minimum leaf water potential
     Vcmax_ref = pars(11) ! Canopy efficiency (umolC/m2/s)
                          ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
@@ -1087,7 +1087,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    sum(POOLS(n,2:4)), POOLS(n,2),         & ! C pools
                                    POOLS(n,4), POOLS(n,3),                & !
                                    pars(17), DIAGS(:,22),                 & ! LCA / foliar net carbon export
-                                   pars(46), pars(45), pars(14), pars(13),& ! potential foliar loss for NCCE and environmental 
+                                   pars(45), pars(44), pars(14), pars(13),& ! potential foliar loss for NCCE and environmental 
                                    pars(15),                              & ! NCCE gCgCday return threshold for loss
                                    pars(6),pars(7),                       & ! wood and fine root turnovers
                                    FLUXES(n,10),FLUXES(n,12),FLUXES(n,11),& ! Natural litter fluxes (fol, root, wood)
@@ -1099,7 +1099,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !       as these are fundementally continuous processes.
        !
 
-       ! Reduce growth by the previous timesteps losses and vice versa.
+       ! Reduce canopy growth by the previous timesteps losses and vice versa.
        ! The objective is to avoid large losses directly after large inputs
        ! and large growths directly after large losses
        ! NOTE: this intentionally excluded losses driven by disturbance

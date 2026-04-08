@@ -157,7 +157,7 @@ module CARBON_MODEL_MOD
      canopy_iso_to_net_coef_SW = 1.480105d-02,  & ! Coefficient relating SW to the adjustment between isothermal and net LW
        canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
     canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
-                          iWUE = 4.6875d-04,    & ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                          iWUE = 4.6875d-04       ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
                                                   ! A credible iWUE range spans atleast 0.00001 -> 0.01
 
   ! Module level variables for the Sellers (1985) 2-stream radiative transfer scheme approximation
@@ -265,6 +265,8 @@ module CARBON_MODEL_MOD
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+          canopy_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
+            soil_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)                                 
                           stomatal_conductance, & ! canopy scale stomatal conductance (mmolH2O.m-2.d-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
@@ -2192,8 +2194,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Description
 
     ! Declare arguments
-    double precision, intent(in) :: lat!, & ! site latitude in degrees
-                               !rad_pars(6) !
+    double precision, intent(in) :: lat ! site latitude in degrees
+    double precision, dimension(6), intent(in) :: rad_pars
 
     ! Calculate some common variables and place into memory
     latitude = lat
@@ -3485,6 +3487,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     arrhenious = a * exp( b * (t - 25d0) / (t + freeze) )
 
   end function arrhenious
+  !
+  !----------------------------------------------------------------------
+  !
+  double precision function calculate_declination(doy)
+
+    implicit none
+
+     ! Declare arguments
+     double precision, intent(in) :: doy
+
+     ! Declination calculation
+     ! NOTE: 0.002739726d0 = 1/365
+     !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
+     !    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+     calculate_declination = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
+
+     ! return to user
+     return
+
+  end function calculate_declination  
   !
   !----------------------------------------------------------------------
   !
