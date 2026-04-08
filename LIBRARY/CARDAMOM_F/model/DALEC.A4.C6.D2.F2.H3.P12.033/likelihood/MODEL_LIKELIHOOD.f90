@@ -401,7 +401,7 @@ module model_likelihood_module
     endif
     ! Weighted soil water potential (MPa) at which full suppression of foliar growth 
     ! is achieved must be greater than minlwp, i.e. growth should be more limited than photosynthesis
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(43) > pars(41)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(12) > pars(41)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
 
@@ -422,27 +422,6 @@ module model_likelihood_module
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif    
-
-    ! Temperature at which cold foliar loss is 50 % (p12) should not be larger than the mean air temperature.
-    ! + 1 degree for safety
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(12) > meantemp + 1d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
-    endif
-    ! Temperature at which heat foliar loss is 50 % (p13) should not be lower than the mean air temperature.
-    ! + 1 degree for safety
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(13) < meantemp - 1d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
-    endif
-    ! High temperature constraint should now have a significant value at mean temperature
-    tmp = 1d0 - (1d0+exp(pars(14)*(meantemp-pars(13))))**(-1d0)
-    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.01d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
-    endif
-    ! Low temperature constraint should now have a significant value at mean temperature
-    tmp = (1d0+exp(pars(14)*(meantemp-pars(12))))**(-1d0) 
-    if ((EDC1 == 1 .or. DIAG == 1) .and. tmp > 0.01d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
-    endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
@@ -869,18 +848,6 @@ module model_likelihood_module
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
-        endif        
-    endif ! EDC2 == 1 .or. DIAG == 1
-
-    ! Leaf fall has a logistic function to suppress turnover at a parameterisable low LAI value.
-    ! This is to account for the lack of explicit over- and understores which may have contrasting 
-    ! phenologies. However, we must make sure that the retrieved parameters do not allow complete 
-    ! suppression of the canopy turnover
-    if (EDC2 == 1 .or. DIAG == 1) then
-        tmp = (1d0 - (1d0+exp(pars(46)*(0d0-pars(47))))**(-1d0))   
-        if (tmp < 0.1d0) then
-            ! We assume suppression is probably too great and reject parameter combination
-            EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 

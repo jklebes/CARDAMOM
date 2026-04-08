@@ -187,6 +187,11 @@ module CARBON_MODEL_MOD
                                                            nodepred, & ! prediction value for each tree
                                                             bestvar    ! for randomForests
 
+  ! Canopy phenology model
+  integer :: ncce_lag_step ! Number of model time steps over which CGI / NCCE  is lagged for gradient calculation
+  double precision, allocatable, dimension(:) :: ncce_lag_days, & ! Number of days equivelent over which CGI / NCCE is lagged
+                                              ncce_lag_history    ! Local storage of the NCCE values to be worked on.
+                                                  
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
   double precision, dimension(nos_soil_layers) :: &
@@ -562,8 +567,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Leaf maintence respiration constant
     Rm_leaf_const = pars(44)
     ! load ACM-GPP-ET parameters
-    iWUE = pars(48) ! load the inherent water use efficiency
-    minlwp = pars(43) ! Minimum leaf water potential
+    iWUE = pars(47) ! load the inherent water use efficiency
+    minlwp = pars(12) ! Minimum leaf water potential
     Vcmax_ref = pars(11) ! Canopy efficiency (umolC/m2/s)
                          ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
                          ! and average foliar nitrogen gN/m2leaf
@@ -635,6 +640,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         field_capacity_initial = field_capacity
         porosity_initial = porosity
 
+        ! Initialise the ncce gradiant calculation for canopy phenology model
+
+        ! Determine the number of model time steps over which NCCE will be lagged
+        ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
+        ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
+        allocate(ncce_lag_days(ncce_lag_step),ncce_lag_history(ncce_lag_step))
+        call initialise_ncce(mean_days_per_step,ncce_lag_step,ncce_lag_days)
+
     else ! deltat_1 allocated?
 
         !
@@ -648,7 +661,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! update SWP and soil conductivity accordingly
         call update_soil_initial_conditions(pars(24))
 
+        ! Initialise the ncce gradiant calculation for canopy phenology model
+
+        ! Determine the number of model time steps over which NCCE will be lagged
+        ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
+        ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
+        ! We assume the other initialised variables are stored in memory.
+
     endif ! deltat_1 allocated
+
+    ! Assign initial canopy NCCE values
+    ncce_lag_history = pars(5)
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -987,9 +1010,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            DIAGS(n,4) = ci / co2
            ! Estimate the full 24 hours leaf maintenance respiration (gC/m2/day)
            FLUXES(n,3) = dark_respiration * umol_to_gC * seconds_per_day
-           ! Determine the daily photosynthetic C return.
+           ! Determine the daily photosynthetic C return and convert to a per gC leaf basis
            ! i.e. GPP(dayl)-leaf Rm(24hrs)
-           DIAGS(n,22) = FLUXES(n,1) - FLUXES(n,3)
+           DIAGS(n,22) = (FLUXES(n,1) - FLUXES(n,3)) / POOLS(n,2)
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
@@ -1006,9 +1029,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Autotrophic respiration will continue to be assumed 
            ! to include the explicitly calculated leaf maintenance respiration
            FLUXES(n,3) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)
-           ! Determine the daily photosynthetic C return.
+           ! Determine the daily photosynthetic C return and convert to a per gC leaf basis
            ! i.e. GPP(dayl)-leaf Rm(24hrs)s
-           DIAGS(n,22) = FLUXES(n,1) - FLUXES(n,3)
+           ! NOTE it is assumed that the DIAGS is reset to zero
+           if (POOLS(n,2) > 0d0) DIAGS(n,22) = (FLUXES(n,1) - FLUXES(n,3)) / POOLS(n,2)
        endif
 
        ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
@@ -1059,15 +1083,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! Do plant natural turnovers
-       call plant_natural_turnover(deltat(n),                             & ! time related
-                                   available_labile, sum(POOLS(n,2:4)),   & ! C pools
-                                   POOLS(n,2),POOLS(n,4),POOLS(n,3),      & !
-                                   pars(17),DIAGS(n,22),                  & ! LCA / foliar net carbon export
-                                   pars(5),pars(45),pars(46),pars(47),    & ! potential foliar loss for NCCE and environmental 
-                                   pars(12),pars(13),pars(14),pars(15),   & ! temperature pars for foliar loss
+       call plant_natural_turnover(nodays, n, deltat(n),                  & ! time related
+                                   sum(POOLS(n,2:4)), POOLS(n,2),         & ! C pools
+                                   POOLS(n,4), POOLS(n,3),                & !
+                                   pars(17), DIAGS(:,22),                 & ! LCA / foliar net carbon export
+                                   pars(46), pars(45), pars(14), pars(13),& ! potential foliar loss for NCCE and environmental 
+                                   pars(15),                              & ! NCCE gCgCday return threshold for loss
                                    pars(6),pars(7),                       & ! wood and fine root turnovers
                                    FLUXES(n,10),FLUXES(n,12),FLUXES(n,11),& ! Natural litter fluxes (fol, root, wood)
-                                   DIAGS(n,30))
+                                   DIAGS(n,26),DIAGS(n,30),DIAGS(n,27))     ! combined index of NCCE and gradient, dNCCE_loss, NCCE_gradient
 
        !
        ! Balance between canopy growth and mortality fluxes
@@ -2016,6 +2040,32 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     leaf_canopy_wind_scaling = leaf_canopy_wind_scaling / exp(canopy_decay)
                                  
   end subroutine calculate_aerodynamic_conductance
+  !
+  !----------------------------------------------------------------------
+  !
+  subroutine initialise_ncce(mean_days_per_step,ncce_lag_step,ncce_lag_days)
+
+    ! Subroutine tidys away the calculation of the 
+    ! number of days for the net canopy carbon export lag period
+
+    implicit none
+
+    ! Arguments
+    integer, intent(in) :: ncce_lag_step
+    double precision, intent(in) :: mean_days_per_step
+    double precision, dimension(ncce_lag_step), intent(out) :: ncce_lag_days
+    ! Local variables
+    integer :: f          
+
+    ! Determine the number of days equivalent for the lag period
+    do f = 1, ncce_lag_step
+       ncce_lag_days(f) = dble(f) * mean_days_per_step
+    end do
+
+    ! Return
+    return
+
+  end subroutine initialise_ncce
   !
   !------------------------------------------------------------------
   !
@@ -3971,18 +4021,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine plant_natural_turnover(time,                                   & ! time related
-                                    available_labile, biomass,              & ! C pools
-                                    foliage, wood, root,                    & 
-                                    lca, ncce_gCm2day,                      & ! LCA / foliar net carbon export
-                                    nce_foliar_fall_rate,                   & ! reference foliar fall rate for NCCE calculation
-                                    env_foliar_fall_rate,                   & ! reference foliar fall rate for environmental calculation
-                                    lai_limiter_coef, lai_limiter_constant, & ! Logistic function to limit LAI turnover
-                                    leafT_low, leafT_high, leafT_coef,      & ! foliar temperature parameters    
+  subroutine plant_natural_turnover(nodays,step,time,                       & ! time related
+                                    biomass, foliage, wood, root,           & ! C pools
+                                    lca, ncce_gCgCday,                      & ! LCA / net canopy carbon export per gC leaf
+                                    pot_foliar_fall_gCm2day,                & ! reference foliar fall rate for dNCCE est. from potential leaf falls 
+                                    pot_foliar_fall_fraction,               & ! reference foliar fall rate for current NCCE and gradient
+                                    cmi_ncce_k50, cmi_ncce_gradient_k50,    & ! MM function of NCCE and NCCE trend driven leaf fall
                                     foliar_loss_threshold,                  &                               
                                     wood_turn, root_turn,                   & ! wood and fine root turnovers
                                     foliage_litter,root_litter,wood_litter, & ! Natural litter fluxes (fol, root, wood)
-                                    delta_ncce_gCgC)                          ! NCCE change for canopy loss, avg foliar MTT
+                                    cmi,delta_ncce_gCgC,ncce_gradient)        ! CMI, NCCE change for canopy loss, NCCE gradient
 
        ! Subroutine deals with the determining litter generates from foliage, fine roots and wood.
        ! Specifically litter due to non-disturbance related forcings, i.e. age or climate
@@ -3990,73 +4038,103 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        implicit none
 
        ! Arguments
+       integer, intent(in) :: nodays, step
        double precision, intent(in) :: time, & ! number of days in current time step
-                           available_labile, & ! available labile in the current time step (gC/m2)
                                     biomass, & ! total live biomass in current time step (gC/m2)
                                     foliage, & ! foliage pool (gC/m2)
                                        wood, & ! wood pool (gC/m2)
                                        root, & ! fine root pool (gC/m2)    
                                         lca, & ! leaf carbon per unit leaf area (gC/m2)
-                               ncce_gCm2day, & ! current leaf net canopy carbon export (gC/m2/day)
-                       nce_foliar_fall_rate, & ! Initial proposed rate of leaf fall for NCCE calculation (gC/m2/day)
-                       env_foliar_fall_rate, & ! Initial proposed rate of leaf fall for environmental limits (fraction/day)        
-!                             lai_MM_limiter, & ! Michaelis-Menten limiter on foliar loss based on lai
-                           lai_limiter_coef, & ! Gradient on logistic function for LAI loss limiter
-                       lai_limiter_constant, & ! Constant (i.e. LAI at which function == 0.5) on logistic function for LAI loss limiter
-                                  leafT_low, & ! leaf temperature (oC) below which cold stress induced loss 
-                                 leafT_high, & ! leaf temperature (oC) above which heat stress induced loss 
-                                 leafT_coef, & ! degrees over which heat or cold stress reaches 50 %                  
+                    pot_foliar_fall_gCm2day, & ! Initial proposed rate of leaf fall for NCCE calculation (gC/m2/day)
+                   pot_foliar_fall_fraction, & ! Initial proposed rate of leaf fall for NCCE dynamics limits (fraction/day)        
+                               cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
+                      cmi_ncce_gradient_k50, & ! ncce gradient, at which function is half saturation
                       foliar_loss_threshold, & ! NCCE return required to support a foliar loss (gC/gC/m2/d)
                                   wood_turn, & ! wood turnover rate (fraction / day)
                                   root_turn    ! fine root turnover rate (fraction / day)
-
+       double precision, dimension(nodays), intent(in) :: ncce_gCgCday ! current leaf net canopy carbon export (gC/gC/day)
        double precision, intent(out) :: &
                              foliage_litter, & ! foliage litter (gC/m2/day)
                                 root_litter, & ! fine root litter (gC/m2/day)
                                 wood_litter, & ! wood litter (gC/m2/day)
+                                        cmi, & ! Canopy mortality index, describing the most limiting factor of the current and recent NCCE history
+                              ncce_gradient, & ! NCCE gradient over the lag period (gC/gCleaf/day / day)                                                          
                             delta_ncce_gCgC    ! Change in net canopy C export for leaf loss
 
        ! Local variables
        logical :: ncce_positive
-       integer :: i
-       double precision :: &
-                        leafT_limit, &
-                          high, low, &
-                 env_foliage_litter, &
-                             tmp(5), &
-                   proposed_fall(5), &
-                           lai_orig, & ! Original values for lai
-                            gs_orig, & ! stomatal conductance
-                       scaling_orig    ! leaf->canopy scaling based on light                           
+       integer :: i, interval
+       double precision :: tmp1,tmp2, &
+                  env_foliage_litter, &
+                              tmp(5), &
+                    proposed_fall(5), &
+                            lai_orig, & ! Original values for lai
+                             gs_orig, & ! stomatal conductance
+                        scaling_orig    ! leaf->canopy scaling based on light                           
 
        ! Reset
-       leafT_limit = 0d0 ; foliage_litter = 0d0 ; root_litter = 0d0 ; wood_litter = 0d0
+       foliage_litter = 0d0 ; root_litter = 0d0 ; wood_litter = 0d0
 
        !
        ! Foliage
        !
-      
+
        ! Quantify the impact of reducing LAI on GPP, less Rd(24)
        if (foliage > 0d0) then
-   
-           !! Determine environmental potential foliage loss rate
 
-           ! Calculate high temperature limitation
-           high = 1d0 - (1d0+exp(leafT_coef*(leafT-leafT_high)))**(-1d0)
-           ! Calculate low temperature limitation
-           low =  (1d0+exp(leafT_coef*(leafT-leafT_low)))**(-1d0)
-           ! Assign which ever is greater
-           if (high > low) then
-               leafT_limit = high
-           else 
-               leafT_limit = low
+           ! Estimate canopy mortality, a function of the net canopy carbon export (NCCE) and
+           ! the gradient (trend over time) of the NCCE. These are: 
+           ! 1) A Michaelis-Menten function of the gradient of NCCE 
+           ! 2) A Michaelis-Menten function of NCCE gCgCleaf set to add to turnover once NCCE is negative.
+           ! 3) Testing whether a smaller canopy will improve the NCCE per gC/m2/day
+
+           ! Update the NCCE gradient over the averaging period (21-days or 1 month)
+           if (step < ncce_lag_step) then
+               if (step == 1) then
+                   ncce_lag_history(2) = ncce_gCgCday(step)
+                   interval = 2
+               else
+                   ncce_lag_history(1:step) = ncce_gCgCday(1:step)             
+                   interval = step
+               endif
+           else
+               ncce_lag_history(1:ncce_lag_step) = ncce_gCgCday((step-ncce_lag_step+1):step)
+               interval = ncce_lag_step
            end if
+           ! Now calculate the linear gradients
+           ncce_gradient = linear_model_gradient(ncce_lag_days(1:interval),ncce_lag_history(1:interval),interval)
+
+           !! Determine loss based on the ncce_gCgCday trajectory
+
+           ! MM function where negative NCCE trend adds to a higher canopy mortality
+           if (ncce_gradient < 0d0) then
+               tmp1 = ncce_gradient / (ncce_gradient + cmi_ncce_gradient_k50)
+           else 
+               ! Postive ncce, we will assume the contribution here is zero
+               tmp1 = 0d0
+           end if 
+
+           !! Determine loss based on the current NCCE_gCgC
+
+           ! MM function add additinal impact of NCCE if negative
+           if (ncce_gCgCday(step) < 0d0) then
+               tmp2 = ncce_gCgCday(step) / (ncce_gCgCday(step) + cmi_ncce_k50)
+           else 
+               ! Positive ncce, we will assume the contribution here is zero
+               tmp2 = 0d0
+           end if 
+
+           !! Determine most limiting factor on current and historical NCCE impacts
+
+           ! Combine assuming maximum of the two factors
+           cmi = max(tmp1,tmp2)
+
            ! Calculate loss fraction
-           env_foliage_litter = env_foliar_fall_rate * leafT_limit
+           env_foliage_litter = pot_foliar_fall_fraction * cmi
            ! Convert to gC/m2/day
            env_foliage_litter = foliage * (1d0-(1d0-env_foliage_litter)**time)/time
 
-           !! Determine NCCE based potential loss rate
+           !! Determine cost-benefit on NCCE of potential losses
 
            ! Store the existing LAI and canopy_scaling
            lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
@@ -4065,12 +4143,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            do while (ncce_positive) 
               i = i + 1
               ! Calculate the new LAI proposal
-              proposed_fall(i) = nce_foliar_fall_rate*dble(i)
+              proposed_fall(i) = pot_foliar_fall_gCm2day*dble(i)
               lai = lai_orig - ((proposed_fall(i) * time) / lca)
               ! If this result in zero LAI, then we know the delta is the inverse sign of the current flux
               if (lai <= 0d0) then
                   ! Estimate the per gC loss on investment per day
-                  tmp(i) = 0d0 - ncce_gCm2day
+                  tmp(i) = 0d0 - (ncce_gCgCday(step) * foliage)
                   ncce_positive = .false.
               else 
                   ! Update the shortwave radiation
@@ -4079,10 +4157,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                   call acm_gpp_stage_1      
                   ! Update stomatal conductance
                   stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
-                  ! Estimate the per gC loss on investment per day
+                  ! Estimate the impact on canopy scale NCCE from proposed loss
                   tmp(i) = (((acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
                              * umol_to_gC * dayl_seconds) - (dark_respiration * umol_to_gC * seconds_per_day)) &
-                            - ncce_gCm2day
+                            - (ncce_gCgCday(step) * foliage)
               end if ! new lai <= 0 
               if (tmp(i) <= 0d0 .or. i == 5) ncce_positive = .false.  
            end do
@@ -4092,11 +4170,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            delta_ncce_gCgC = maxval(tmp(1:i)) 
            ! Lose leaves if that will give a positive return, 
            ! scaled by whether we have on average exported more
-           ! C from the canopy (i.e. NCCE) than spent by the plant
-           ! over the MTT of the leaf - NOT IMPLEMENTED...
-           ! TODO: 1) Track total plant C spend
-           !       2) work out way to select the average for the MTT leaf period
-           !       3) output these metrics along with MTT leaf for diagnosis.
+           ! C from the canopy (i.e. NCCE) 
            if (delta_ncce_gCgC > foliar_loss_threshold ) then
                ! Assume we lose carbon to gain the benefit.
                ! (which is already assigned above)
@@ -4117,12 +4191,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            call acm_gpp_stage_1      
 
            !! Assume largest potential loss rate
-           ! Take maximum loss rate of environment or NCCE
-           ! and then apply logistic function LAI limiter.
-           ! NOTE: this function must have a EDC to disallow 
-           !       gradients which result in near zero turnovers by zero LAI
-           foliage_litter = max(foliage_litter,env_foliage_litter) &
-                          * (1d0 - (1d0+exp(lai_limiter_coef*(lai-lai_limiter_constant)))**(-1d0))   
+           foliage_litter = max(foliage_litter,env_foliage_litter) 
 
        end if ! foliage > 0
 
@@ -4144,6 +4213,182 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        return
 
   end subroutine plant_natural_turnover
+  !
+  !------------------------------------------------------------------
+  !
+!  subroutine plant_natural_turnover(time,                                   & ! time related
+!                                    available_labile, biomass,              & ! C pools
+!                                    foliage, wood, root,                    & 
+!                                    lca, ncce_gCm2day,                      & ! LCA / foliar net carbon export
+!                                    nce_foliar_fall_rate,                   & ! reference foliar fall rate for NCCE calculation
+!                                    env_foliar_fall_rate,                   & ! reference foliar fall rate for environmental calculation
+!                                    lai_limiter_coef, lai_limiter_constant, & ! Logistic function to limit LAI turnover
+!                                    leafT_low, leafT_high, leafT_coef,      & ! foliar temperature parameters    
+!                                    foliar_loss_threshold,                  &                               
+!                                    wood_turn, root_turn,                   & ! wood and fine root turnovers
+!                                    foliage_litter,root_litter,wood_litter, & ! Natural litter fluxes (fol, root, wood)
+!                                    delta_ncce_gCgC)                          ! NCCE change for canopy loss, avg foliar MTT
+!
+!       ! Subroutine deals with the determining litter generates from foliage, fine roots and wood.
+!       ! Specifically litter due to non-disturbance related forcings, i.e. age or climate
+!
+!       implicit none
+!
+!       ! Arguments
+!       double precision, intent(in) :: time, & ! number of days in current time step
+!                           available_labile, & ! available labile in the current time step (gC/m2)
+!                                    biomass, & ! total live biomass in current time step (gC/m2)
+!                                    foliage, & ! foliage pool (gC/m2)
+!                                       wood, & ! wood pool (gC/m2)
+!                                       root, & ! fine root pool (gC/m2)    
+!                                        lca, & ! leaf carbon per unit leaf area (gC/m2)
+!                               ncce_gCm2day, & ! current leaf net canopy carbon export (gC/m2/day)
+!                       nce_foliar_fall_rate, & ! Initial proposed rate of leaf fall for NCCE calculation (gC/m2/day)
+!                       env_foliar_fall_rate, & ! Initial proposed rate of leaf fall for environmental limits (fraction/day)        
+!!                             lai_MM_limiter, & ! Michaelis-Menten limiter on foliar loss based on lai
+!                           lai_limiter_coef, & ! Gradient on logistic function for LAI loss limiter
+!                       lai_limiter_constant, & ! Constant (i.e. LAI at which function == 0.5) on logistic function for LAI loss limiter
+!                                  leafT_low, & ! leaf temperature (oC) below which cold stress induced loss 
+!                                 leafT_high, & ! leaf temperature (oC) above which heat stress induced loss 
+!                                 leafT_coef, & ! degrees over which heat or cold stress reaches 50 %                  
+!                      foliar_loss_threshold, & ! NCCE return required to support a foliar loss (gC/gC/m2/d)
+!                                  wood_turn, & ! wood turnover rate (fraction / day)
+!                                  root_turn    ! fine root turnover rate (fraction / day)
+!
+!       double precision, intent(out) :: &
+!                             foliage_litter, & ! foliage litter (gC/m2/day)
+!                                root_litter, & ! fine root litter (gC/m2/day)
+!                                wood_litter, & ! wood litter (gC/m2/day)
+!                            delta_ncce_gCgC    ! Change in net canopy C export for leaf loss
+!
+!       ! Local variables
+!       logical :: ncce_positive
+!       integer :: i
+!       double precision :: &
+!                        leafT_limit, &
+!                          high, low, &
+!                 env_foliage_litter, &
+!                             tmp(5), &
+!                   proposed_fall(5), &
+!                           lai_orig, & ! Original values for lai
+!                            gs_orig, & ! stomatal conductance
+!                       scaling_orig    ! leaf->canopy scaling based on light                           
+!
+!       ! Reset
+!       leafT_limit = 0d0 ; foliage_litter = 0d0 ; root_litter = 0d0 ; wood_litter = 0d0
+!
+!       !
+!       ! Foliage
+!       !
+!      
+!       ! Quantify the impact of reducing LAI on GPP, less Rd(24)
+!       if (foliage > 0d0) then
+!   
+!           !! Determine environmental potential foliage loss rate
+!
+!           ! Calculate high temperature limitation
+!           high = 1d0 - (1d0+exp(leafT_coef*(leafT-leafT_high)))**(-1d0)
+!           ! Calculate low temperature limitation
+!           low  =       (1d0+exp(leafT_coef*(leafT-leafT_low)))**(-1d0)
+!           ! Assign which ever is greater
+!           if (high > low) then
+!               leafT_limit = high
+!           else 
+!               leafT_limit = low
+!           end if
+!           ! Calculate loss fraction
+!           env_foliage_litter = env_foliar_fall_rate * leafT_limit
+!           ! Convert to gC/m2/day
+!           env_foliage_litter = foliage * (1d0-(1d0-env_foliage_litter)**time)/time!
+!
+!           !! Determine NCCE based potential loss rate
+!
+!           ! Store the existing LAI and canopy_scaling
+!           lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
+!           ! Now make multiple proposals at different extraction levels
+!           i = 0 ; tmp = 0d0 ; proposed_fall = 0d0 ; ncce_positive = .true.
+!           do while (ncce_positive) 
+!              i = i + 1
+!              ! Calculate the new LAI proposal
+!              proposed_fall(i) = nce_foliar_fall_rate*dble(i)
+!              lai = lai_orig - ((proposed_fall(i) * time) / lca)
+!              ! If this result in zero LAI, then we know the delta is the inverse sign of the current flux
+!              if (lai <= 0d0) then
+!                  ! Estimate the per gC loss on investment per day
+!                  tmp(i) = 0d0 - ncce_gCm2day
+!                  ncce_positive = .false.
+!              else 
+!                  ! Update the shortwave radiation
+!                  call calculate_shortwave_balance
+!                  ! Update acm_gpp_stage_1
+!                  call acm_gpp_stage_1      
+!                  ! Update stomatal conductance
+!                  stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
+!                  ! Estimate the per gC loss on investment per day
+!                  tmp(i) = (((acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
+!                             * umol_to_gC * dayl_seconds) - (dark_respiration * umol_to_gC * seconds_per_day)) &
+!                            - ncce_gCm2day
+!              end if ! new lai <= 0 
+!              if (tmp(i) <= 0d0 .or. i == 5) ncce_positive = .false.  
+!           end do
+!           ! Scale to per-gC
+!           tmp = tmp / min(foliage,proposed_fall * time) ! 
+!           ! Find the proposal that gives the maximum return 
+!           delta_ncce_gCgC = maxval(tmp(1:i)) 
+!           ! Lose leaves if that will give a positive return, 
+!           ! scaled by whether we have on average exported more
+!           ! C from the canopy (i.e. NCCE) than spent by the plant
+!           ! over the MTT of the leaf - NOT IMPLEMENTED...
+!           ! TODO: 1) Track total plant C spend
+!           !       2) work out way to select the average for the MTT leaf period
+!           !       3) output these metrics along with MTT leaf for diagnosis.
+!           if (delta_ncce_gCgC > foliar_loss_threshold ) then
+!               ! Assume we lose carbon to gain the benefit.
+!               ! (which is already assigned above)
+!               foliage_litter = proposed_fall(maxloc(tmp(1:i), dim=1))           
+!           else 
+!               ! Set as zero - unless also absolute NCCE loss
+!               foliage_litter = 0d0
+!           end if
+!          ! Convert to fractional loss and convert to gC/m2/day
+!           foliage_litter = min(1d0,foliage_litter / foliage) 
+!           foliage_litter = foliage * (1d0-(1d0-foliage_litter)**time)/time
+!
+!           ! Return initial values
+!           lai = lai_orig ; stomatal_conductance = gs_orig
+!           ! Update the shortwave radiation
+!           call calculate_shortwave_balance
+!           ! Update acm_gpp_stage_1
+!           call acm_gpp_stage_1      
+!
+!           !! Assume largest potential loss rate
+!           ! Take maximum loss rate of environment or NCCE
+!           ! and then apply logistic function LAI limiter.
+!           ! NOTE: this function must have a EDC to disallow 
+!           !       gradients which result in near zero turnovers by zero LAI
+!           foliage_litter = max(foliage_litter,env_foliage_litter) &
+!                          * (1d0 - (1d0+exp(lai_limiter_coef*(lai-lai_limiter_constant)))**(-1d0))   
+!
+!       end if ! foliage > 0
+!
+!       !
+!       ! Wood / structural 
+!       !
+!
+!       ! total wood litter production
+!       wood_litter = wood*(1d0-(1d0-wood_turn)**time)/time
+!
+!       !
+!       ! Fine roots
+!       !
+!
+!       ! total root litter production
+!       root_litter = root*(1d0-(1d0-root_turn)**time)/time
+!
+!       ! Return subroutine
+!       return
+!
+!  end subroutine plant_natural_turnover
   !
   !------------------------------------------------------------------
   !
@@ -4196,6 +4441,48 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     return
 
   end function modified_arrhenious
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function linear_model_gradient(x,y,interval)
+
+    ! Function to calculate the gradient of a linear model for a given depentent
+    ! variable (y) based on predictive variable (x). The typical use of this
+    ! function will in fact be to assume that x is time.
+
+    implicit none
+
+    ! declare input variables
+    integer :: interval
+    double precision, dimension(interval) :: x,y
+
+    ! declare local variables
+    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+
+    ! calculate the sum of x
+    sum_x = sum(x)
+    ! calculate the sum of y
+    sum_y = sum(y)
+    ! calculate the sum of squares of x
+    !sumsq_x = sum(x*x)
+    ! calculate the sum of the product of xy
+    !sum_product_xy = sum(x*y)
+    ! calculate the gradient
+    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
+    !&
+    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    ! Linear regression done as single line to reduce assignment requirements
+    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+
+    ! for future reference here is how to calculate the intercept
+!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
+!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+
+    ! don't forget to return to the user
+    return
+
+  end function linear_model_gradient
   !
   !----------------------------------------------------------------------
   !

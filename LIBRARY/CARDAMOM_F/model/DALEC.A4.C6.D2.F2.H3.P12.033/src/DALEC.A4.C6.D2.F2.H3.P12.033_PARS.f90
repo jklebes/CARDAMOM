@@ -80,10 +80,9 @@ module MODEL_PARAMETERS
     PI%parmin(4) = 0.01d0
     PI%parmax(4) = 20d0
 
-    ! Minimum foliar loss proposal (gC/m2/day)
-    ! for dNCCE calculation
-    PI%parmin(5) = 0.01d0   
-    PI%parmax(5) = 4d0     
+    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
+    PI%parmin(5) = -0.10d0
+    PI%parmax(5) =  0.10d0
 
     ! Turnover of wood (fraction / day)
     PI%parmin(6) = 0.000009d0 ! 304  years
@@ -112,16 +111,21 @@ module MODEL_PARAMETERS
     PI%parmin(11) = 10d0
     PI%parmax(11) = 100d0
 
-    ! Temperature (oC) at which cold induced loss is at 50 %
-    PI%parmin(12) =-40d0
-    PI%parmax(12) = 20d0
-    ! Temperature at which heat induced loss is at 50 %
-    PI%parmin(13) = 30d0
-    PI%parmax(13) = 50d0
-    ! Gradient for logistic function, i.e. function change per degree 
-    PI%parmin(14) = 0.1d0 
-    PI%parmax(14) = 10d0 
+    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
+    PI%parmin(12) = -8d0
+    PI%parmax(12) = -0.5d0
 
+    ! Parameters linking the NCCE to the CMI
+    ! via a Michaelis-Menten function. 
+    ! This is the NCCE at which the CMI is suppressed by 0.5
+    PI%parmin(13) = -0.5d0
+    PI%parmax(13) = -0.0005d0
+    ! Parameters linking the NCCE gradient to the CMI
+    ! via a Michaelis-Menten function. This is the NCCE gradient 
+    ! 50 % value of the logistic function
+    PI%parmin(14) = -0.1d0
+    PI%parmax(14) = -0.00005d0
+       
     ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
     PI%parmin(15) =-0.2d0 ! allow losses if losses are small negative, accounts for lack of leaf aging model
     PI%parmax(15) = 0.2d0
@@ -208,26 +212,19 @@ module MODEL_PARAMETERS
     PI%parmax(44) = -0.6d0
 
     ! Potential loss rate for foliage to litter (fraction/day)
-    ! for environmental factors
+    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
     PI%parmin(45) = 0.0003424658 ! 8 years
     PI%parmax(45) = 0.0333333333 ! 30 days
 
-    ! Gradient for logistic function controlling limiting / suppression of 
-    ! leaf area index (m2/m2) turnover.
-    ! This is a hack to account for the model representing whole ecosystem,
-    ! within which competing leaf stratagies will be at play.
-    PI%parmin(46) = 0.1d0
-    PI%parmax(46) = 5d0
-    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
-    ! This is a hack to account for the model representing whole ecosystem,
-    ! within which competing leaf stratagies will be at play.
-    PI%parmin(47) = 0.1d0
-    PI%parmax(47) = 1d0
+    ! Minimum foliar loss proposal (gC/m2/day)
+    ! for dNCCE calculation
+    PI%parmin(46) = 0.01d0   
+    PI%parmax(46) = 4d0    
 
     ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
     ! A credible iWUE range spans atleast 0.00001 -> 0.01
-    PI%parmin(48) = 1d-6
-    PI%parmax(48) = 1d-1
+    PI%parmin(47) = 1d-6
+    PI%parmax(47) = 1d-1
 
     !
     ! INITIAL VALUES DECLARED HERE

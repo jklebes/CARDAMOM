@@ -584,10 +584,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! update SWP and soil conductivity accordingly
         call update_soil_initial_conditions(pars(40))
 
-        ! Initialise the Growing Season Index (GSI)
-        ! canopy phenology model
+        ! Initialise the canopy growth index and ncce gradiant calculation
+        ! for canopy phenology model
 
-        ! Determine the number of model time steps over which GSI will be lagged
+        ! Determine the number of model time steps over which CGI / NCCE will be lagged
         ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
         cgi_ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
         ! We assume the other initialised variables are stored in memory.
@@ -976,7 +976,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Accumulate this time steps labile C (gC.m-2.day-1), less demand we are already committed to
        available_labile = POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,4)) * deltat(n))
        ! Do plant allocation
-       call plant_canopy_phenology(nodays, cgi_ncce_lag_step, n, deltat(n),               & ! Timing
+       call plant_canopy_phenology(nodays, n, deltat(n),                                  & ! Timing
                                    pars(36), pars(34), pars(35), pars(37),                & ! CGI parameters
                                    pars(46), pars(47),                                    & !
                                    pars(38), pars(39), pars(44),                          & ! 
@@ -986,7 +986,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    Rm_leaf_per_gC,                                        & !                           
                                    FLUXES(n,16), FLUXES(n,8), FLUXES(n,9), FLUXES(n,10),  & ! Output variables
                                    DIAGS(n,18), DIAGS(n,19), DIAGS(n,20), DIAGS(n,17),    & !
-                                   DIAGS(:,16), DIAGS(:,23)) 
+                                   DIAGS(:,16), DIAGS(n,23)) 
 
        !
        ! those with time dependancies
@@ -3367,7 +3367,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine plant_canopy_phenology(nodays, cgi_ncce_lag_step, step, time,                 & ! Timing
+  subroutine plant_canopy_phenology(nodays, step, time,                                    & ! Timing
                                     cgi_temperature_coef_1, cgi_temperature_coef_2,        & ! CGI parameters
                                     cgi_temperature_coef_3, cgi_temperature_coef_4,        & !
                                     cgi_temperature_coef_5, cgi_temperature_coef_6,        & !
@@ -3405,8 +3405,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Arguments
        integer, intent(in) :: step, & ! current model time step
-                            nodays, & ! Number of time steps in the analysis
-                 cgi_ncce_lag_step    ! Number of model time steps over which ncce / cgi gradient calculations will be made.
+                            nodays    ! Number of time steps in the analysis
        double precision, intent(in) :: time, & ! number of days in current time step
                      cgi_temperature_coef_1, & ! max temperature for skewed Gaussian growth curve (oC)
                      cgi_temperature_coef_2, & ! min temperature for skewed Gaussian growth curve (oC)
@@ -3428,6 +3427,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                 current_gpp, & ! current time step GPP estimate (gC/m2/day)
                              Rm_leaf_per_gC    ! Maintenance demand for leaves per gC/d                                
        double precision, intent(out) :: &
+                                        cmi, & ! canopy mortality index (cmi, 0-1)                                           
                             delta_ncce_gCgC, & ! change in net canopy carbon export from investment (gC/gCinvested/day)
                         alloc_leaf_fraction, & ! allocation to lablile to leaf (0-1)
                          alloc_leaf_gCm2day, & ! allocation to labile to leaf (gC/m2/day)
@@ -3439,8 +3439,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                 leafW_limit    ! water limitation on foliage (0-1)
        double precision, dimension(nodays), intent(inout) ::    &
                                   ncce_gCgC, & ! current net canopy carbon export (gC/gCleaf/day)     
-                                        cgi, & ! canopy growing index (cgi, 0-1)   
-                                        cmi    ! canopy mortality index (cmi, 0-1)                                           
+                                        cgi    ! canopy growing index (cgi, 0-1)   
+
 
        ! Local variables
        integer :: interval
@@ -3505,18 +3505,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (ncce_gradient < 0d0) then
            tmp = ncce_gradient / (ncce_gradient + cmi_ncce_gradient_k50)
        else 
-           ! Postive ncce, we will assume the contribution here is zero
+           ! Positive ncce, we will assume the contribution here is zero
            tmp = 0d0
        end if 
        ! MM function add additinal impact of NCCE if negative
        if (ncce_gCgC(step) < 0d0) then
            tmp1 = ncce_gCgC(step) / (ncce_gCgC(step) + cmi_ncce_k50)
        else 
-           ! Postive ncce, we will assume the contribution here is zero
+           ! Positive ncce, we will assume the contribution here is zero
            tmp1 = 0d0
        end if 
        ! Combine assuming a straight forward maximum of the loss forcings
-       cmi(step) = max(tmp,tmp1)
+       cmi = max(tmp,tmp1)
 
        ! We can only allocate if we have labile to spend and a CGI gradient above the leaf phenology threshold.
        if (cgi_gradient > cgi_phenology_threshold .and. cgi(step) > vsmall .and. available_labile > 0d0) then
@@ -3588,7 +3588,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 
            !else if (ncce_gradient <= 0d0 .and. cmi(step) > vsmall .and. available_labile > 0d0) then
-           else if (cmi(step) > vsmall .and. available_labile > 0d0) then
+           else if (cmi > vsmall .and. available_labile > 0d0) then
 
                !
                ! Leaf fall to litter (gC/m2/day)
@@ -3596,7 +3596,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                !
 
                ! Estimate the fractional loss rate of foliage to litter
-               leaf_litter_fraction = potential_foliage_turnover*cmi(step)
+               leaf_litter_fraction = potential_foliage_turnover*cmi
                ! Estimate the absolute flux value loss of foliage to litter
                leaf_litter_gCm2day = foliage * (1d0-(1d0-leaf_litter_fraction)**time)/time
 

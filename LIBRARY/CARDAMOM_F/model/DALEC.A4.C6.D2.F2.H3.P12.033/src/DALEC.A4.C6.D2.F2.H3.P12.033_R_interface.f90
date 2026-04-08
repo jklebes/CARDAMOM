@@ -204,15 +204,16 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,72) = DIAGS(1:nodays,19)          ! wSWP limitation on foliage growth (0-1)
      out_var1(i,1:nodays,73) = DIAGS(1:nodays,20)          ! NOT IN USE wSWP limitation on fine root growth (0-1)
      out_var1(i,1:nodays,74) = DIAGS(1:nodays,21)          ! wSWP limitation on wood growth (0-1)
-     out_var1(i,1:nodays,75) = DIAGS(1:nodays,22)          ! Canopy photosynthetic return (i.e. GPP(dayl) - Rm_leaf(24hr))
+     out_var1(i,1:nodays,75) = DIAGS(1:nodays,22) &        ! NCCE (gC/gCleaf/m2/day -> gC/m2/day)     
+                             * POOLS(1:nodays,2)
      ! Canopy aerodynamic diagnostics
      out_var1(i,1:nodays,76) = DIAGS(1:nodays,23)          ! Canopy area scaling as a function of light
      out_var1(i,1:nodays,77) = DIAGS(1:nodays,24)          ! Canopy area scaling as a function of wind
      ! Canopy phenology
      out_var1(i,1:nodays,78) = DIAGS(1:nodays,25)          ! Combined limitation on canopy growth
-     out_var1(i,1:nodays,79) = DIAGS(1:nodays,26)          ! NOT IN USE Foliage MTT rolling average over last year (days)
-     out_var1(i,1:nodays,80) = DIAGS(1:nodays,27)          ! NOT IN USE Rolling average NCCE - whole plant C spend (gC/m2/day)
-     out_var1(i,1:nodays,81) = DIAGS(1:nodays,28)          ! ?
+     out_var1(i,1:nodays,79) = DIAGS(1:nodays,26)          ! Combined index of NCCE(step) and NCCE gradient driven foliar loss
+     out_var1(i,1:nodays,80) = DIAGS(1:nodays,27)          ! NCCE gradient (gC/gC/day)
+     out_var1(i,1:nodays,81) = DIAGS(1:nodays,28)          ! 
      out_var1(i,1:nodays,82) = DIAGS(1:nodays,29)          ! NCCE of canopy growth (gC/gC-1)
      out_var1(i,1:nodays,83) = DIAGS(1:nodays,30)          ! NCCE of canopy loss   (gC/gC-1)
 

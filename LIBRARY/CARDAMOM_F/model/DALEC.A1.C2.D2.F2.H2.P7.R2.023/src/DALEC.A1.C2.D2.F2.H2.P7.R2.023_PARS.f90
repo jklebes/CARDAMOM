@@ -217,7 +217,7 @@ module MODEL_PARAMETERS
     PI%parmin(44) = -0.5d0
     PI%parmax(44) = -0.0005d0
     ! Parameters linking the NCCE gradient to the CMI
-    ! via a logistic function. This is the NCCE gradient 
+    ! via a Michaelis-Menten function. This is the NCCE gradient 
     ! 50 % value of the logistic function
     PI%parmin(45) = -0.1d0
     PI%parmax(45) = -0.00005d0
