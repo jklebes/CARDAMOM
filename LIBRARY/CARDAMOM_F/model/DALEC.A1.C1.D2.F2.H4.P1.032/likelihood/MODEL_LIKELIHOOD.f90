@@ -6,25 +6,25 @@
 ! used as a fully integrated component of CARDAMOM or independently. 
 ! Copyright (C) 2024  University of Edinburgh,
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
-!                     T. Luke Smallman (t.l.smallman@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
-
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+!
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A4.C6.D2.F2.H2.P11 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C1.D2.F2.H4.P1 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -37,6 +37,17 @@
 
 module model_likelihood_module
   implicit none
+
+  !!!!!!!!!!!
+  ! Authorship contributions
+  !
+  ! This code is based on the original C verion of the University of Edinburgh
+  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+  ! All code translation into Fortran, integration into the University of
+  ! Edinburgh CARDAMOM code and subsequent modifications by:
+  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+  ! See function / subroutine specific comments for exceptions and contributors
+  !!!!!!!!!!!
 
   ! make all private
   private
@@ -83,7 +94,7 @@ module model_likelihood_module
     ! set MCMC options needed for EDC run
     MCO%APPEND = 0
     MCO%nADAPT = 500
-    MCO%fADAPT = 1.0d0
+    MCO%fADAPT = 1d0
     MCO%nOUT = 100000
     MCO%nPRINT = 0
     MCO%nWRITE = 0
@@ -213,16 +224,16 @@ module model_likelihood_module
 
     ! assess post running EDCs
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                    ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                    ,PI%parmax,PARS,DATAin%MET &
-                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                    ,DATAin%meantemp,EDC2)
+                    ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                    ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                    ,DATAin%meantemp,EDC2)      
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
 !    tot_exp = 0d0
 !    do n = 1, EDCD%nedc
-!       tot_exp = tot_exp+(1d0-EDCD%PASSFAIL(n))
+!       tot_exp=tot_exp+(1d0-EDCD%PASSFAIL(n))
 !       if (EDCD%PASSFAIL(n) /= 1) print*,"failed edcs are: ", n
 !    end do ! checking EDCs
 !   ! for testing purposes, stop the model when start achieved
@@ -283,7 +294,8 @@ module model_likelihood_module
     if (diags_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         pool_error  > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         flux_error  > (tiny(0d0)*(DATAin%nofluxes*DATAin%nodays)) .or. &
-        pool_error /= pool_error .or. flux_error /= flux_error ) then
+        pool_error /= pool_error .or. flux_error /= flux_error .or. &
+        diags_error /= diags_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
@@ -300,18 +312,10 @@ module model_likelihood_module
            print*,"Sum abs error over time: diags = ",i
            print*,sum(abs(DATAin%M_DIAGS(:,i) - local_diags(:,i)))
         end do
-        print*,"First time step for all pools in run 1"
-        print*,local_pools(1,:)
-        print*,"First time step for all pools in run 2"
-        print*,DATAin%M_POOLS(1,:)        
         print*,"First time step for all fluxes in run 1"
         print*,local_fluxes(1,:)
         print*,"First time step for all fluxes in run 2"
         print*,DATAin%M_FLUXES(1,:)
-        print*,"First time step for all diags in run 1"
-        print*,local_diags(1,:)
-        print*,"First time step for all diags in run 2"
-        print*,DATAin%M_DIAGS(1,:)
         stop
     end if
 
@@ -342,8 +346,6 @@ module model_likelihood_module
   !
   subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1)
 
-    use carbon_model_mod, only: minlwp
-
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom & Williams 2015).
 
@@ -358,12 +360,29 @@ module model_likelihood_module
 
     ! declare local variables
     integer :: n, DIAG
+    double precision :: fauto & ! Fractions of GPP to autotrophic respiration
+             ,ffol  & ! Fraction of GPP to foliage
+             ,flab  & ! Fraction of GPP to labile pool
+             ,froot & ! Fraction of GPP to root
+             ,fwood & ! Fraction of GPP to wood
+             ,fsom    ! fraction of GPP som under eqilibrium conditions
 
-    double precision :: torfol, tmp ! yearly leaf loss fraction
+    double precision :: torfol ! yearly leaf loss fraction
 
     ! set initial value
     EDC1 = 1
     DIAG = EDCD%DIAG
+
+    ! estimate GPP allocation fractions
+    fauto = pars(2)
+    ffol = (1d0-fauto)*pars(3)
+    flab = (1d0-fauto-ffol)*pars(13)
+    froot = (1d0-fauto-ffol-flab)*pars(4)
+    fwood = 1d0-fauto-ffol-flab-froot
+    fsom = fwood+(froot+flab+ffol)*pars(1)/(pars(1)+pars(8))
+
+    ! yearly leaf loss fraction
+    torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
     EDCD%nedc = 100
@@ -374,69 +393,50 @@ module model_likelihood_module
     !
 
     ! Turnover of litter faster than turnover of som
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(9) > ((1d0-pars(1)) * pars(8)))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(8) < pars(9))) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(1) = 0
     endif
 
     ! litter2som greater than som to atm rate
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(9) > (pars(1)*pars(8)) ) then
-       EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(1) < pars(9))) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(2) = 0
     endif
+
+    ! turnover of foliage faster than turnover of wood
+    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(6) > torfol) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
+    end if
 
     ! root turnover greater than som turnover at mean temperature
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(7) < (pars(9)*exp(pars(10)*meantemp)))) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(3) = 0
-    endif
-
-    ! Weighted soil water potential (MPa) at which suppression of wood growth begins 
-    ! is smaller (i.e. more negative) than full suppression
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(40) < pars(39)) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(4) = 0
-    endif
-
-    ! Weighted soil water potential (MPa) at which suppression of foliar growth
-    ! begins is smaller (i.e. more negative) than full suppression
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) < pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif
-    ! Weighted soil water potential (MPa) at which full suppression of foliar growth 
-    ! is achieved must be greater than minlwp, i.e. growth should be more limited than photosynthesis
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(12) > pars(41)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
-    endif
-
-    ! Wood growth should be more sensitive than foliage growth.
-    ! We impose this by assuming that the min/max parameters for wood 
-    ! must be less negative than their corresponding one for foliage
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(42) > pars(40)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
-    endif
-    ! Wood growth should be more sensitive than foliage growth.
-    ! We impose this by assuming that the min/max parameters for wood 
-    ! must be less negative than their corresponding one for foliage
-    if ((EDC1 == 1 .or. DIAG == 1) .and. pars(41) > pars(39)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! Initial leaf area index should not be larger than ~10 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
     endif    
+
+    !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
+    !! difference from GPP allocation to roots
+    !if ((EDC1 == 1 .or. DIAG == 1) .and. ((ffol+flab) > (5d0*froot) .or. ((ffol+flab)*5d0) < froot)) then
+    !    EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
+    !endif
 
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
     ! Combustion completeness for foliage should be greater than non-photosynthetic tissues
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(29) < pars(30)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(6) = 0
     endif
     ! Combustion completeness for non-photosynthetic tissue should be greater than soil
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(30) < pars(31)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(7) = 0
     endif
-    ! Combustion completeness for foliar + fine root litter should be greater than foliage
+    ! Combustion completeness for foliar + fine root litter should be greater foliage
     if ((EDC1 == 1 .or. DIAG == 1) .and. pars(32) < pars(29)) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
+        EDC1 = 0d0 ; EDCD%PASSFAIL(8) = 0
     endif
 
     ! could always add more / remove some
@@ -445,11 +445,11 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodiags,nodays,deltat,steps_per_year &
+  subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
                         ,meantemp,EDC2)
+
     use cardamom_structures, only: DATAin
-    use math_functions, only: linear_model_gradient
 
     ! Determines whether the dynamical contraints for the search of the initial
     ! parameters has been successful or whether or not we should abandon the
@@ -463,7 +463,7 @@ module model_likelihood_module
                           ,nofluxes       & ! number of fluxes from model
                           ,nopools        & ! number of pools in model
                           ,nodays         & ! number of days in simulation
-                          ,nodiags        & ! number of diagnostic variables
+                          ,nodiags        & ! number of diagnostic variables                          
                           ,steps_per_year
 
     double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
@@ -472,18 +472,19 @@ module model_likelihood_module
                                    ,met(nomet,nodays)           & ! array of met drivers
                                    ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
                                    ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
-                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model
+                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model                                   
                                    ,meantemp                      ! site mean temperature (oC)
 
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
 
     ! declare local variables
-    integer :: n, nn, nnn, DIAG, y, PEDC, steps_per_month, nd, fl, fs, &
+    integer :: n, nn, nnn, DIAG, y, steps_per_month, nd, fl, fs, &
                io_start, io_finish
-    double precision :: infi, tmp, tmp1, tmp2, & !, EQF, etol
+    double precision :: infi, tmp, tmp1, tmp2, &!, EQF, etol
                         jan_sd_lai, jan_mean_lai, jan_first_lai
-    double precision, dimension(nodays) :: lab_ratio, pool_hak, tmp_vec
-    double precision, dimension(nopools) :: mean_pools, Fin, Fout, &
+    !double precision, dimension(nodays) :: tmp1, tmp2
+    double precision, dimension(nopools) :: jan_mean_pools, jan_first_pools, &
+                                            mean_pools, Fin, Fout, Rm, Rs, &
                                             Fin_yr1, Fout_yr1, Fin_yr2, Fout_yr2
     double precision, dimension(nofluxes) :: FT, FT_yr1, FT_yr2
 
@@ -507,14 +508,14 @@ module model_likelihood_module
     infi = 0d0
 
     ! derive mean pools for first year
-    do n = 1, nopools
-       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
-    end do
+!    do n = 1, nopools
+!       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
+!    end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
 
-    ! Calculate total flux for the simulation period
+    ! First calculate total flux for the simulation period
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
@@ -536,17 +537,17 @@ module model_likelihood_module
     ! get total in and out for each pool
     ! labile
     Fin(1)  = FT(5)
-    Fout(1) = FT(4)+FT(6)+FT(7)+FT(8)+FT(9)+FT(18)+FT(24)+FT(31)+FT(37)
+    Fout(1) = FT(8)+FT(18)+FT(24)+FT(31)+FT(37)
     Fin_yr1(1)  = FT_yr1(5)
-    Fout_yr1(1) = FT_yr1(4)+FT_yr1(6)+FT_yr1(7)+FT_yr1(8)+FT_yr1(9)+FT_yr1(18)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)
+    Fout_yr1(1) = FT_yr1(8)+FT_yr1(18)+FT_yr1(24)+FT_yr1(31)+FT_yr1(37)
 !    Fin_yr2(1)  = FT_yr2(5)
-!    Fout_yr2(1) = FT_yr2(4)+FT_yr2(6)+FT_yr2(7)+FT_yr2(8)+FT_yr2(9)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
+!    Fout_yr2(1) = FT_yr2(8)+FT_yr2(18)+FT_yr2(24)+FT_yr2(31)+FT_yr2(37)
     ! foliar
-    Fin(2)  = FT(4)
+    Fin(2)  = FT(4)+FT(8)
     Fout(2) = FT(10)+FT(19)+FT(25)+FT(32)+FT(38)
-    Fin_yr1(2)  = FT_yr1(4)
+    Fin_yr1(2)  = FT_yr1(4)+FT_yr1(8)
     Fout_yr1(2) = FT_yr1(10)+FT_yr1(19)+FT_yr1(25)+FT_yr1(32)+FT_yr1(38)
-!    Fin_yr2(2)  = FT_yr2(4)
+!    Fin_yr2(2)  = FT_yr2(4)+FT_yr2(8)
 !    Fout_yr2(2) = FT_yr2(10)+FT_yr2(19)+FT_yr2(25)+FT_yr2(32)+FT_yr2(38)
     ! root
     Fin(3)  = FT(6)
@@ -577,7 +578,7 @@ module model_likelihood_module
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
     ! Surface water pool (0-30cm)
-    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil 
+    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
     Fin(7)  = FT(47) 
     Fout(7) = FT(42)+FT(41)+FT(46) 
     Fin_yr1(7)  = FT_yr1(47) 
@@ -589,52 +590,11 @@ module model_likelihood_module
     ! Begin EDCs here
     !
 
-!    ! Mean foliage pool in 1st year should not differ from roots by more than 5 fold 
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. (mean_pools(2)) > (5d0*mean_pools(3))) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
-!    endif
-!    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-!    if ((EDC2 == 1 .or. DIAG == 1) .and. ((mean_pools(2))*5d0) < mean_pools(3)) then
-!        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
-!    endif
-
-     ! What are in effect the potential growth rates are modulated by the current 
-     ! fixed temperature sub-model used in the model. This means that the parameterised 
-     ! potential rates might never be achievable even if plausible. Thus the maximum 
-     ! parameter bound for the potential growth rates need to be increased. These EDCs 
-     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
-     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
-     if ((EDC2 == 1 .or. DIAG == 1)) then
-         ! Foliage
-         if (maxval(M_FLUXES(:,4)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-         end if
-         ! Fine roots
-         if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-         end if
-         ! Wood
-         if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-         end if
-     end if
-
-    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-    if ((EDC2 == 1 .or. DIAG == 1) .and. FT(4) > (5d0*FT(6))) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(20) = 0
-    endif
-    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
-    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)*5d0) < FT(6)) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(21) = 0
-    endif
-
-    ! While it is possible for the CiCa to be greater than 1 
-    ! when using a model with an explicit model of dark respiration, 
-    ! the ratio of internal to external leaf CO2 concentrations 
-    ! it should not on average be greater than 1
-    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_DIAGS(:,4))/dble(nodays) > 1d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
-    endif
+!    ! ensure ratio between Cfoliar and Croot is less than 5
+!    if ((EDC2 == 1 .or. DIAG == 1) .and. &
+!        (mean_pools(2) > (mean_pools(3)*5d0) .or. (mean_pools(2)*5d0) < mean_pools(3)) ) then
+!        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+!    end if
 
     ! Determine the mean and standard deviation of January LAIs 
     jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
@@ -654,7 +614,7 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
     ! Determine the mean and standard deviation of January wSWPs 
@@ -675,18 +635,81 @@ module model_likelihood_module
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
     if ((EDC2 == 1 .or. DIAG == 1) .and. &
         abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+    end if
+
+    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
+    ! the empirical phenology but mechanistic hydrology / photosynthesis
+    if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 
     ! The mean annual carbon stock change for soils is unlikely to be >500 gC/m2/yr
     ! an informed guess.
     if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 500d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(25) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     end if
+
+    ! Equilibrium factor (in comparison with initial conditions)
+!    EQF = 10d0 ! TLS 06/11/2019 !10d0 ! JFE replaced 10 by 2 - 27/06/2018
+    ! Pool exponential decay tolerance
+!    etol = 0.3d0 !0.1d0
+
+    ! first calculate total flux for the whole simulation period
+!    do fl = 1, nofluxes
+!        FT(fl) = 0
+!        do nd = 1, nodays
+!            FT(fl) = FT(fl) + M_FLUXES(nd,fl)*deltat(nd)
+!        end do
+!    end do
 
     ! Iterate through C pools to determine whether they have their ratio of
     ! input and outputs are outside of steady state approximation.
     ! See Bloom et al., 2016 PNAS for details
+
+!    ! iterate to check whether Fin/Fout is within EQF limits
+!    Rm = Fin/Fout
+!    Rs = Rm * (jan_mean_pools / jan_first_pools)
+!    do n = 1, nopools-1
+!       ! Restrict rates of increase
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(log(Rm(n))) > log(EQF10)) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(13+n-1) = 0
+!       end if
+!       ! Restrict exponential decay
+!       if ((EDC2 == 1 .or. DIAG == 1) .and. abs(Rs(n)-Rm(n)) > 0.1d0) then
+!           EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!       end if
+!    end do
+
+     ! What are in effect the potential growth rates are modulated by the current 
+     ! fixed temperature sub-model used in the model. This means that the parameterised 
+     ! potential rates might never be achievable even if plausible. Thus the maximum 
+     ! parameter bound for the potential growth rates need to be increased. These EDCs 
+     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+     if ((EDC2 == 1 .or. DIAG == 1)) then
+         ! Foliage
+         if (maxval(M_FLUXES(:,4) + M_FLUXES(:,8)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(14) = 0
+         end if
+         ! Fine roots
+         if (maxval(M_FLUXES(:,6)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
+         end if
+         ! Wood
+         if (maxval(M_FLUXES(:,7)) > 10d0) then
+             EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+         end if
+     end if
+
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(4)+FT(8)) > (5d0*FT(6))) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+    endif
+    ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
+    if ((EDC2 == 1 .or. DIAG == 1) .and. ((FT(4)+FT(8))*5d0) < FT(6)) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+    endif
 
     if (EDC2 == 1 .or. DIAG == 1) then
 
@@ -694,137 +717,70 @@ module model_likelihood_module
 !        do n = 1, 3
 !           ! Restrict mean rates of increase
 !           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !           end if
 !           ! Restrict rates from deviating unrealistically from the mean
-!!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!!                    abs(log(Fin(n)/Fout(n))) ) > EQF2 ) then
-!!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!!           end if
 !           if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
 !                     abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n) = 0
+!               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
 !           end if
-!           ! Restrict exponential behaviour at initialisation
-!           !if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!           !    EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!           !end if
 !        end do
-!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
-        n = 3
+!        ! Foliage pool, note that in CDEA EDCs Fin has already been multiplied by time step
+!        n = 2
+!        ! Restrict mean rates of increase
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n) = 0
-         end if
+!        ! Restrict exponential behaviour at initialisation         
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-!        ! Specific wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
+        ! Fine root pool, note that in CDEA EDCs Fin has already been multiplied by time step
+        n = 3
+!        ! Restrict mean rates of increase
+!        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+        ! Restrict rates from deviating unrealistically from the mean
+        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+        end if
+!        ! Wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-!!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!!        end if
-!         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-!                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!             EDC2 = 0d0 ; EDCD%PASSFAIL(30+n) = 0
-!         end if
-!!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!!        end if
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!        end if
         ! Dead pools
         do n = 5, 6
            ! Restrict rates of increase
-           if (abs(log(Fin(n)/Fout(n))) > EQF2) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
+           if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
            end if
            ! Restrict rates from deviating unrealistically from the mean
-!           if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                    abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!           end if
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
-!           ! Restrict exponential behaviour at initialisation
-!           if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
-!               EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!           end if
         end do
 
         ! Water pool(s)
         n = 7  ! surface water pool
         ! Restrict rates of increase
-        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
+        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
         end if
         ! Restrict rates from deviating unrealistically from the mean
-!        if ( abs(abs(log((Fin_yr1(n)+Fin_yr2(n))/(Fout_yr1(n)+Fout_yr2(n)))) - &
-!                 abs(log(Fin(n)/Fout(n))) ) > EQF1_5 ) then
-!             EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!        end if
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
         end if
-!        ! Restrict exponential behaviour at initialisation
-!        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > H2O_etol) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n) = 0
-!        end if
 
     end if ! EDC2 == 1 .or. DIAG == 1
-
-    ! Finally we would not expect that the mean labile stock is greater than
-    ! 8 % of the total ecosystem carbon stock, as we need structure to store
-    ! labile.
-    ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
-    ! (Max across species for branch, bole and coarse roots). Provides evidence that
-    ! branches accumulate labile C prior to bud burst from other areas.
-    ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
-    ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
-    ! Estimate the labile ratio, also used below
-    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Assume max value can't be twice the observed values
-        if (maxval(lab_ratio) > 0.25d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
-        endif
-    endif ! EDC2 == 1 .or. DIAG == 1
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Assume the mean value can't be greater than largest observed value
-        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
-        endif        
-    endif ! EDC2 == 1 .or. DIAG == 1
-!    if (EDC2 == 1 .or. DIAG == 1) then
-!        ! Assume the mean value can't be greater than largest observed value
-!        if (sum(lab_ratio)/dble(nodays) < 0.01d0) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
-!        endif        
-!    endif ! EDC2 == 1 .or. DIAG == 1    
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Mean transit time for labile from natural processes, 
-        ! i.e. not including any disturbance should be greater than 1 day
-        pool_hak = 1d0 ; tmp_vec = 0d0 ; tmp = 0d0
-        where (M_POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
-               pool_hak = 0d0 
-               ! Vector of fractional losses
-               tmp_vec = ((M_FLUXES(1:nodays,4)  + M_FLUXES(1:nodays,6) + &
-                           M_FLUXES(1:nodays,7)  + M_FLUXES(1:nodays,9)) / M_POOLS(1:nodays,1))                    
-        end where
-        ! Mean fractional removals, invert to the day residence time
-        tmp = (sum(tmp_vec) / (dble(nodays)-sum(pool_hak)))**(-1d0)
-        if (tmp < 1d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
-        endif        
-    endif ! EDC2 == 1 .or. DIAG == 1    
 
     ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
     ! leaf economic spectrum (LES).
@@ -845,11 +801,11 @@ module model_likelihood_module
         tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
             ! The current leaf lifespan is shorter than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
         endif        
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -867,7 +823,6 @@ module model_likelihood_module
               maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
               minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
               EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
-              !print*,n,minval(M_POOLS(1:nodays,n)),maxval(M_POOLS(1:nodays,n))
           endif
        end do
 
@@ -889,15 +844,16 @@ module model_likelihood_module
   !
   double precision function cal_mean_pools(pools,averaging_period)
 
-    ! Function calculate the mean values of model pools / states across the
-    ! entire simulation run
+    ! Function calculate the mean values of model pools / states
 
     implicit none
 
     ! declare input variables
     integer, intent(in) :: averaging_period   !
+    double precision, dimension(averaging_period), intent (in) :: pools
 
-    double precision,dimension(averaging_period), intent (in) :: pools
+    ! declare local variables
+    integer :: c
 
     ! loop through now
     cal_mean_pools = sum(pools(1:averaging_period))/dble(averaging_period)
@@ -919,16 +875,15 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year           & ! which year are we working on
                           ,averaging_period ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
-    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
+    endday   = floor(365.25d0*dble(year)  /(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
     cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
@@ -950,9 +905,8 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year            & ! which year are we working on
                           ,averaging_period  ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
@@ -968,6 +922,73 @@ module model_likelihood_module
     return
 
   end function cal_max_annual_pools
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function expdecay2(pools,interval,averaging_period)
+
+   ! Function to calculate the exponential decay coefficients used several EDCs.
+   ! We assumpe the equation Cexp= a + b*exp(c*t)
+
+   implicit none
+
+   ! declare input variables
+   integer, intent(in) :: averaging_period ! i.e. nodays + 1
+
+   double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
+                                  ,interval((averaging_period-1))      ! model time step in decimal days
+
+   ! declare local variables
+   integer :: n, aw_int
+   integer, parameter :: os = 1 ! offset days
+   double precision :: aw, aw_1 &
+                      ,MP0   & ! mean pool (year 1 to year end-2)
+                      ,MP1   & ! mean pool (year 2 to year end-1)
+                      ,MP0os & ! mean pool (year 1+os to year end-2+os)
+                      ,MP1os & ! mean pool (year 2+os to year end-2+os)
+                      ,dcdt1 & ! gradient of exponential over time in second year
+                      ,dcdt0   ! gradient of exponential over time in first year
+
+   ! declare initial values / constants
+   aw = floor(365.25d0/(sum(interval)/dble(averaging_period-1))) ! averaging window
+   aw_1 = aw ** (-1d0) ; aw_int = int(aw)
+   MP0 = 0d0 ; MP1 = 0d0 ; MP0os = 0d0 ; MP1os = 0d0
+
+   ! estimate mean stock for first year
+   MP0 = sum(pools(1:aw_int))
+   MP0 = MP0*aw_1
+
+   ! estimate mean stock for second year
+   MP1 = sum(pools((aw_int+1):(aw_int*2)))
+   MP1 = MP1*aw_1
+
+   ! estimate mean stock for first year with offset
+   MP0os = sum(pools((1+os):(aw_int+os)))
+   MP0os = MP0os*aw_1
+
+   ! estimate mean stock for second year with offset
+   MP1os = sum(pools((aw_int+os+1):((aw_int*2)+os)))
+   MP1os = MP1os*aw_1
+
+   ! derive mean gradient ratio (dcdt1/dcdt0)
+   ! where dcdt1 is the numeric gradient between n+1 and n+365+1
+   ! and dcdt0 os the numeric gradient between n and n+365
+   dcdt1 = MP1os-MP0os
+   dcdt0 = MP1-MP0
+
+   ! using multiple year mean to determine c
+   if ((dcdt1 > 0d0 .and. dcdt0 < 0d0) .or. (dcdt1 < 0d0 .and. dcdt0 > 0d0) &
+       .or. dcdt1 == 0d0 .or. dcdt0 == 0d0) then
+       ! then return error values
+       expdecay2 = 1d0
+   else
+       expdecay2 = log(dcdt1/dcdt0) / (dble(os)*(sum(interval)/dble(averaging_period-1)))
+   end if
+
+   ! ensure return
+   return
+
+  end function expdecay2
   !
   !------------------------------------------------------------------
   !
@@ -1020,10 +1041,10 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                        ,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                        ,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                        ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1091,10 +1112,10 @@ module model_likelihood_module
 
         ! check edc2
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
-                        ,DATAin%nodiags,DATAin%nodays,DATAin%deltat,DATAin%steps_per_year     &
-                        ,PI%parmax,PARS,DATAin%MET &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS &
-                        ,DATAin%meantemp,EDC2)
+                        ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
+                        ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1114,7 +1135,6 @@ module model_likelihood_module
   !------------------------------------------------------------------
   !
   double precision function likelihood_p(npars,parpriors,parpriorunc,parpriorweight,pars)
-
     ! function calculates the parameter based log-likelihood for the current set
     ! of parameters. This assumes that we have any actual priors / prior
     ! uncertainties to be working with. This does include initial states, as we
@@ -1174,7 +1194,7 @@ module model_likelihood_module
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
                                              1d0,DATAin%M_DIAGS(1:DATAin%nodays,1))
-    end if
+    end if ! nLAI > 0
 
     !
     ! Do pools (POOLS)
@@ -1282,15 +1302,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
-                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
+                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1435,15 +1455,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                             DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                                      DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
-    ! Calculate log-likelihood for total wood mortality, without fire and management imposed losses
+    ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
-                                             DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
+                                                      DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1465,8 +1485,7 @@ module model_likelihood_module
     ! local variable
     integer :: dummy_nodays = 1, dummy_noobs = 1
     integer, dimension(1) :: dummy_pts = 1, dummy_lag = 0
-    double precision, dimension(1) :: mod, obs, unc
-    double precision, dimension(DATAin%nodays) :: tmp
+    double precision, dimension(1) :: mod
     double precision :: dummy_scaling = 1d0
 
     ! Initial soil water condition
@@ -1505,21 +1524,25 @@ module model_likelihood_module
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
         mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
-            * ((sum(DATAin%M_POOLS(1:DATAin%nodays,4)/(DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) &
-              / dble(DATAin%nodays))
+            * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) / dble(DATAin%nodays))
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
 
-    ! Hardcoded prior assumption that when we are photosynthsising (i.e. gs_demand_supply_ratio > 0)
-    ! but not supply limited (i.e. gs_demand_supply_ratio < 1) we expect a mean CiCa of 0.7.
-    ! DIAGS(:,4) = CiCa ; DIAGS(:,7) = gs_demand_supply_ratio
-    obs = 0.7d0 ; unc = 0.1d0 ; tmp = 0d0 
-    ! Identify time steps which fit the criteria
-    where (DATAin%M_DIAGS(:,7) > 0d0 .and. DATAin%M_DIAGS(:,7) < 1d0) tmp = 1d0
-    mod = sum(DATAin%M_DIAGS(:,4) * tmp) / sum(tmp)
-    ML_obs_out = ML_obs_out + (DATAin%nos_years*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
-                                                           obs,unc,dummy_lag,dummy_scaling,mod))
+    ! Estimate the biological mean transist time for soil C.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal). This is because the current observation based estimates
+    ! come from soilC / Rhet assumptions.
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Mean SOM pool
+        mod = sum(DATAin%M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays) 
+        ! Divided by the mean Rhet_som
+        mod = mod / (sum(DATAin%M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays)) 
+        ! Scaling from number of days to years (1/365.25 = 0.002737851)
+        mod = mod * 0.002737851d0 
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(6)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(6),DATAin%otherpriorunc(6),dummy_lag,dummy_scaling,mod))
+    end if
 
     return
 
@@ -1530,6 +1553,7 @@ module model_likelihood_module
   double precision function likelihood(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
 
     ! Generic function to estimate the likelihood of diagnostic.
+    ! Assumes a symmetric Gausian uncertainty.
 
     ! Arguments
     integer, intent(in) :: nodays, & ! number of time steps
@@ -1572,8 +1596,62 @@ module model_likelihood_module
        likelihood = log(infini)
     end if
 
-  end function likelihood
+  end function likelihood  
   !
   !------------------------------------------------------------------
   !
+  double precision function likelihood_asym_pos(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
+
+    ! Generic function to estimate the likelihood of diagnostic.
+    ! This function assumes that we asymetrically apply the Gaussian
+    ! function to not limit positive values.
+
+    ! Arguments
+    integer, intent(in) :: nodays, & ! number of time steps
+                             nobs    ! number of observed estimates
+    integer, dimension(nobs), intent(in) :: obspts ! location of observations in time series
+    integer, dimension(nodays), intent(in) :: lag    ! observation lag period
+    double precision, intent(in) :: scaling ! scaling factor to account for differing number of observations
+    double precision, dimension(nodays), intent(in) :: obs, & ! observation time series
+                                                       unc, & ! observation uncertainty
+                                                       mod    ! model equivalent of the obs
+
+    ! local variables
+    integer :: dn, n, s
+    double precision :: infini
+    
+    ! Set initial value
+    infini = 0d0
+
+    ! Reset the output variable
+    likelihood_asym_pos = 0d0
+
+    ! Begin looping through observations
+    do n = 1, nobs
+       ! Extract the time location of the current observation
+       dn = obspts(n)
+       ! Determine the lag period starting point
+       s = max(1,dn-lag(dn))
+       ! Estimate the mean over the lag period and accumulate the log-likelihood score
+       likelihood_asym_pos = likelihood_asym_pos + &
+                            ( min(0d0,(sum(mod(s:dn)) / dble(lag(dn)+1)) - obs(dn)) / unc(dn) ) ** 2
+    end do
+    ! Apply the appropriate scaling, flip sign and multiply by 0.5.
+    ! The likelihood scores for each observation should be subject to *-0.5
+    ! in the algebraic formulation of the cost function. To avoid repeat calculation
+    ! it is applied here once per data stream
+    likelihood_asym_pos = -0.5d0 * likelihood_asym_pos * scaling ! e.g. 1/dble(DATAin%nCwood_inc)
+
+    ! check that log-likelihood is an actual number
+    if (likelihood_asym_pos /= likelihood_asym_pos) then
+        likelihood_asym_pos = log(infini)
+    end if
+
+  end function likelihood_asym_pos
+  !
+  !------------------------------------------------------------------
+  !
+!
+!------------------------------------------------------------------
+!
 end module model_likelihood_module

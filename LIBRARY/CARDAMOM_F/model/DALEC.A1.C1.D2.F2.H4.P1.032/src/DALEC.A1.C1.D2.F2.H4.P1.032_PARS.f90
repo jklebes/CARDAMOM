@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A4.C6.D2.F2.H2.P11 model.
+! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H4.P1 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -59,42 +59,49 @@ module MODEL_PARAMETERS
 
     implicit none
 
+    ! NOTE: that these parameter ranges have been matched with Bloom's C code
+    ! 22/11/2019 - try not to lose this information as it is needed for comparability
+
     !
     ! declare parameters
     !
 
-    ! Decomposition efficiency of litter/CWD to som (fraction)
-    PI%parmin(1) = 0.25d0
-    PI%parmax(1) = 0.75d0
+    ! Decomposition of litter to som (fraction / day-1)
+    ! Note is modified by exponential temperature function (p10)
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
-    ! Fraction of GPP respired as autotrophic respiration
-    ! for maintenance of wood and fine roots
-    PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.5d0
+    ! Fraction of GPP respired as autotrophic (Ra:GPP),
+    ! i.e. 1-CUE
+    PI%parmin(2) = 0.2d0
+    PI%parmax(2) = 0.8d0
 
-    ! Potential rate of labile to foliage (gC/m2/day)
-    PI%parmin(3) = 1d0
-    PI%parmax(3) = 20d0
+    ! Fraction of (1-fgpp) to foliage
+    PI%parmin(3) = 0.1d0
+    PI%parmax(3) = 0.5d0
 
-    ! Potential rate of labile to fine root (gC/m2/day)
-    PI%parmin(4) = 1d0
-    PI%parmax(4) = 20d0
+    ! Fraction of (1-fgpp) to roots*/
+    PI%parmin(4) = 0.1d0
+    PI%parmax(4) = 0.80d0
 
-    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(5) = -0.10d0
-    PI%parmax(5) =  0.10d0
+    ! Leaf Lifespan (yr)
+    ! Wright et al. 2004
+    PI%parmin(5) = 1.001d0
+    PI%parmax(5) = 6d0 !8d0
 
-    ! Turnover of wood (fraction / day)
+    ! TOR wood* - 1% loss per year value
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! Turnover of fine roots (fraction / day)
-    PI%parmin(7) = 0.001368925d0 !  2 years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.017d0       ! 60 days
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
+    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
-    PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC    
+    PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
@@ -106,34 +113,34 @@ module MODEL_PARAMETERS
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
-    ! Vcmax, the maximum rate of carboxylation at the canopy top
-    ! umolC/m2/s
-    PI%parmin(11) = 10d0
-    PI%parmax(11) = 100d0
+    ! Canopy Efficiency
+    ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
+    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
+    ! Here, to be cautious we will expand accepted range
+    ! Thus CUE = NUE * avN -> 1.64 / 42.0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
-    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
-    PI%parmin(12) = -8d0
-    PI%parmax(12) = -0.5d0
+    ! max bud burst day
+    PI%parmin(12) = 365.25d0
+    PI%parmax(12) = 365.25d0*4d0
 
-    ! Parameters linking the NCCE to the CMI
-    ! via a Michaelis-Menten function. 
-    ! This is the NCCE at which the CMI is suppressed by 0.5
-    PI%parmin(13) = -0.5d0
-    PI%parmax(13) = -0.0005d0
-    ! Parameters linking the NCCE gradient to the CMI
-    ! via a Michaelis-Menten function. This is the NCCE gradient 
-    ! 50 % value
-    PI%parmin(14) = -0.1d0
-    PI%parmax(14) = -0.00005d0
-       
-    ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
-    ! POSSIBLY THIS PARAMETER IS NOT NEED AND CODE JUST BE CODED AS A VERY SMALL POSITIVE NUMBER?
-    PI%parmin(15) = 0.005d0
-    PI%parmax(15) = 0.2d0
-    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
-    
-    PI%parmin(16) = 0.005d0
-    PI%parmax(16) = 0.2d0
+    ! Fraction to Clab*/
+    PI%parmin(13) = 0.01d0
+    PI%parmax(13) = 0.5d0
+
+    ! Clab Release period
+    PI%parmin(14) = 10d0
+    PI%parmax(14) = 100d0
+
+    ! max leaf fall day
+    PI%parmin(15) = 365.25d0
+    PI%parmax(15) = 365.25d0*4d0
+
+    ! Leaf fall period
+    PI%parmin(16) = 20d0
+    PI%parmax(16) = 150d0
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -147,7 +154,7 @@ module MODEL_PARAMETERS
     ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 100d0
-    PI%parmax(26) = 1000d0 !500d0
+    PI%parmax(26) = 2500d0 !500d0
 
     ! BUCKET - maximum rooting depth
     PI%parmin(27) = 0.35d0
@@ -169,60 +176,25 @@ module MODEL_PARAMETERS
     PI%parmin(32) = 0.01d0
     PI%parmax(32) = 0.99d0
 
-    ! labile:biomass at which growth is limited by 50 %
-    PI%parmin(33) = 0.0001d0 ! 0.01 %
-    PI%parmax(33) = 0.01d0   ! 1 %
-
-    ! Temperature (oC) above p36 at which foliage and fine root growth is limited by 50 %
-    PI%parmin(34) = 0.1d0
-    PI%parmax(34) = 5d0
-    ! Temperature (oC) above p37 at which wood growth is limited by 50 %
-    PI%parmin(35) = 0.1d0
-    PI%parmax(35) = 5d0
-    ! Temperature (oC) at which foliage and fine root growth is prevented
-    PI%parmin(36) =-8d0 
-    PI%parmax(36) = 8d0
-    ! Temperature (oC) at which wood growth is prevented
-    PI%parmin(37) = 0d0
-    PI%parmax(37) = 8d0
-
-    ! Potential growth rate of wood (gC/m2/day)
-    PI%parmin(38) = 0.1d0
-    PI%parmax(38) = 20d0
-
-    ! wSWP water potential (MPa) at which wood growth is fully suppressed
-    PI%parmin(39) = -5d0
-    PI%parmax(39) = -0.001d0
-    ! wSWP water potential (MPa) at which wood growth suppression begins
-    PI%parmin(40) = -5d0
-    PI%parmax(40) = -0.001d0
-
-    ! wSWP water potential (MPa) at which leaf growth is fully suppressed
-    PI%parmin(41) = -5d0
-    PI%parmax(41) = -0.001d0
-    ! wSWP water potential (MPa) at which leaf growth suppression begins
-    PI%parmin(42) = -5d0
-    PI%parmax(42) = -0.001d0
-
-    ! Baseline leaf maintenance respiration.
-    ! For details see Table S3, Heskel et al., (2016), doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
-    PI%parmin(43) = -4.4d0
-    PI%parmax(43) = -0.6d0
-
-    ! Potential loss rate for foliage to litter (fraction/day)
-    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
-    PI%parmin(44) = 0.0003424658 ! 8 years
-    PI%parmax(44) = 0.0333333333 ! 30 days
-
-    ! Minimum foliar loss proposal (gC/m2/day)
-    ! for dNCCE calculation
-    PI%parmin(45) = 0.001d0   
-    PI%parmax(45) = 1d0    
-
-    ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
-    ! A credible iWUE range spans atleast 0.00001 -> 0.01
-    PI%parmin(46) = 1d-6
-    PI%parmax(46) = 1d-1
+    ! Top of soil profile porosity,
+    ! aka saturated water fraction (m3/m3)
+    PI%parmin(33) = 0.30d0
+    PI%parmax(33) = 0.95d0
+    ! Top of soil profile residual water fraction (m3/m3)
+    PI%parmin(34) = 0.01d0
+    PI%parmax(34) = 0.25d0    
+    ! Top of soil profile saturated_conductivity (m/s)
+    PI%parmin(35) = 7d-7
+    PI%parmax(35) = 1d-1
+    ! Top of soil profile pore size distribution (-)
+    ! larger is a more uniform pore size
+    PI%parmin(36) = 1.0d0
+    PI%parmax(36) = 10d0
+    ! Air entry pressure (m-1)
+    ! Can be converted to MPa equivalent, see code for examples
+    ! larger is a coarser texture
+    PI%parmin(37) = 0.1d0
+    PI%parmax(37) = 100d0
 
     !
     ! INITIAL VALUES DECLARED HERE

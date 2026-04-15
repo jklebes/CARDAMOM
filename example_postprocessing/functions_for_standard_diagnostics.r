@@ -3062,7 +3062,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3071,7 +3071,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3080,7 +3080,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3089,7 +3089,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3098,7 +3098,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3107,7 +3107,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3116,7 +3116,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3125,7 +3125,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3134,7 +3134,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3223,7 +3223,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3232,7 +3232,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3241,7 +3241,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3250,7 +3250,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3259,7 +3259,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3268,7 +3268,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3277,7 +3277,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0,1), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3286,7 +3286,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3295,7 +3295,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3384,7 +3384,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3393,7 +3393,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3402,7 +3402,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3411,7 +3411,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3429,7 +3429,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3438,7 +3438,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3447,7 +3447,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3456,7 +3456,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3545,7 +3545,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3554,7 +3554,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0,1), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3563,7 +3563,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3572,7 +3572,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3581,7 +3581,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3590,7 +3590,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3599,7 +3599,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3608,7 +3608,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3617,7 +3617,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3706,7 +3706,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3715,7 +3715,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3724,7 +3724,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3733,7 +3733,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3742,7 +3742,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3751,7 +3751,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3760,7 +3760,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0,1), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3769,7 +3769,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3778,7 +3778,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3867,7 +3867,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3876,7 +3876,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3885,7 +3885,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3894,7 +3894,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0,1), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3903,7 +3903,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3912,7 +3912,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0,1), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3921,7 +3921,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3930,7 +3930,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3939,7 +3939,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -4028,7 +4028,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0,1), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -4037,7 +4037,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -4046,7 +4046,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -4055,7 +4055,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -4064,7 +4064,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -4073,7 +4073,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -4082,7 +4082,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -4091,7 +4091,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -4100,7 +4100,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -4189,7 +4189,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -4198,7 +4198,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -4207,7 +4207,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -4216,7 +4216,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -4225,7 +4225,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -4234,7 +4234,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -4243,7 +4243,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -4252,7 +4252,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -4261,7 +4261,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.01,0.99), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -4402,7 +4402,7 @@ global_zonal_budget<-function(){
                   global = global + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                   # Seasonal
                   if (seasonal_names_forcings[v] != "") {
-                      seasonal_global = seasonal_global + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                      seasonal_global = seasonal_global + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                   }
                   # Northern extra-tropics
                   if (grid_output$lat[i,j] > 30) {
@@ -4411,7 +4411,7 @@ global_zonal_budget<-function(){
                       north = north + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                       # Seasonal
                       if (seasonal_names_forcings[v] != "") {
-                          seasonal_north = seasonal_north + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          seasonal_north = seasonal_north + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                       }                          
                       # Boreal zone
                       if (grid_output$lat[i,j] > 60) {
@@ -4420,7 +4420,7 @@ global_zonal_budget<-function(){
                           boreal = boreal + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                           # Seasonal
                           if (seasonal_names_forcings[v] != "") {
-                              seasonal_boreal = seasonal_boreal + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                              seasonal_boreal = seasonal_boreal + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                           }
                       } else {
                           # temperature zone by definition of being > 30 and < 60
@@ -4429,7 +4429,7 @@ global_zonal_budget<-function(){
                           north_temperate = north_temperate + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                           # Seasonal
                           if (seasonal_names_forcings[v] != "") {
-                              seasonal_north_temperate = seasonal_north_temperate + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                              seasonal_north_temperate = seasonal_north_temperate + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                           }
                       } # northern boreal zone                                     
                   } # northern extra-tropics
@@ -4440,7 +4440,7 @@ global_zonal_budget<-function(){
                       tropics = tropics + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                       # Seasonal
                       if (seasonal_names_forcings[v] != "") {
-                          seasonal_tropics = seasonal_tropics + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          seasonal_tropics = seasonal_tropics + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                       }
                   } # tropics
                   # Southern extra-tropics
@@ -4450,7 +4450,7 @@ global_zonal_budget<-function(){
                       south = south + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                       # Seasonal
                       if (seasonal_names_forcings[v] != "") {
-                          seasonal_south = seasonal_south + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          seasonal_south = seasonal_south + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                       }
                       if (grid_output$lat[i,j] > -60) {
                           # temperature zone by definition of being > -30 and < -60
@@ -4459,7 +4459,7 @@ global_zonal_budget<-function(){
                           south_temperate = south_temperate + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
                           # Seasonal
                           if (seasonal_names_forcings[v] != "") {
-                              seasonal_south_temperate = seasonal_south_temperate + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                              seasonal_south_temperate = seasonal_south_temperate + (grid_output$met_array_timeseries[n,,v]*pixel_scalar[i,j])
                           }
                       }                
                   } # southern extra-tropics
@@ -5429,6 +5429,10 @@ masked_budget<-function(landmask_grid, outfile_prefix){
     print("A full spectrium of annual time step variables are generated here, e.g. gross and net fluxes, allocation, residence times, pools")
     print("The budget area will be defined by a landmask raster object.")
 
+    # Global variable
+    pixel_areas = PROJECT$area_m2*PROJECT$landsea
+    deltat = 365.25 # number of days per year
+    
     ###
     ## Forcing variables
     ## (Annual only at this time)
@@ -5441,7 +5445,7 @@ masked_budget<-function(landmask_grid, outfile_prefix){
                        "burned_fraction","21day_max_temperature_C","21day_photoperiod_s","21day_mean_vpd_Pa",
                        "management_type","mean_temperature_C","mean_wind_speed_ms","mean_vpd_Pa")
     seasonal_names_forcings = names_forcings
-                      
+                                            
     # Average states pixel to masked_area without unit correction, just area weighted means
     output_prefix = paste(outfile_prefix,"_",sep="") # Prefix to output file names, end with "_" 
     output_suffix = "" # Suffix to output file names, begin with "_"
@@ -5472,10 +5476,10 @@ masked_budget<-function(landmask_grid, outfile_prefix){
                       ## masked_area aggregation
                       count_a = count_a + pixel_areas[i,j]
                       # Annual
-                      masked_area = masked_area + (grid_output$met_array_annual_averages[i,j,,v]*pixel_scalar[i,j])
+                      masked_area = masked_area + (grid_output$met_array_annual_averages[i,j,,v]*pixel_areas[i,j])
                       # Seasonal
                       if (seasonal_names_forcings[v] != "") {                                            
-                          seasonal_masked_area = seasonal_masked_area + (met_array_timeseries[n,,v]*pixel_scalar[i,j])
+                          seasonal_masked_area = seasonal_masked_area + (grid_output$met_array_timeseries[n,,v]*pixel_areas[i,j])
                       }
                   } # in masked domain                                                                     
 
@@ -5616,10 +5620,6 @@ masked_budget<-function(landmask_grid, outfile_prefix){
 
     # Take each list in turn to calculate each variable and write out.
     # This allows for specific corrections to be applied to get the desired output units.
-    
-    # Global variable
-    pixel_areas = PROJECT$area_m2*PROJECT$landsea
-    deltat = 365.25 # number of days per year
         
     # Aggregating fluxes pixel to global from gC/m2/day -> PgC/yr
     unit_scalar = 1e-15 # gC -> PgC
@@ -6417,7 +6417,7 @@ load_forcings_to_grid<-function() {
 
     ## For load into grid_output
     # Forcings in vector form
-    met_array_timeseries <<- array(NA, dim=c(PROJECT$nosites,length(PROJECT$model$timestep_days),length(met_array_names)))
+    grid_output$met_array_timeseries <<- array(NA, dim=c(PROJECT$nosites,length(PROJECT$model$timestep_days),length(met_array_names)))
 
     # Mean annual LAI obs
     grid_output$LAIobs <<- array(NA, dim=c(dims[1],dims[2],nos_years))
@@ -7291,8 +7291,8 @@ load_forcings_to_grid<-function() {
              ## Forcing information
              # This will not be stored in the grid_output, we want to keep only the zonal aggregate information
              # calculated later
-             for (f in seq(1,dim(met_array_timeseries)[3])) {
-                  met_array_timeseries[n,,f]<<-drivers$met[,f]
+             for (f in seq(1,dim(grid_output$met_array_timeseries)[3])) {
+                  grid_output$met_array_timeseries[n,,f]<<-drivers$met[,f]
              }
 
              ## Key biogeochemical / biogeophysical trends
@@ -13294,4 +13294,272 @@ create_spatially_aggregate_mean_annual_timeseries_and_anomaly_forcings<-function
     dev.off()
     
 } # end function create_spatially_aggregate_mean_annual_timeseries_and_anomaly_forcings
+
+create_spatially_aggregate_seasonal_cycles<-function(do_global,do_obs,outfile_prefix,
+                                                     masked_names,outfile_masked_names,
+                                                     var_and_units,outfile_var_name,outfile_var_units) {
+
+    # Number of plots to be done
+    nos_plots = length(masked_names)
+    if (do_global) {nos_plots = nos_plots + 1}
+    
+    # Determine the shape of map plots
+    if (nos_plots == 1) {
+        height = 2500 ; width = 5000
+        mfrow_ij = c(1,1)
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 2) {
+        height = 1000 ; width = 3800
+        mfrow_ij = c(1,2)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 3) {
+        height = 750 ; width = 5000
+        mfrow_ij = c(1,3)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 4) {
+        height = 2200 ; width = 3000
+        mfrow_ij = c(2,2)        
+        mar_ijkz = c(3.0,4.5,2,0.5)     
+        omi_ijkz = c(0.08,0.08,0.1,0.1)    
+    } else if (nos_plots == 5) {
+        height = 6000 ; width = 2500
+        mfrow_ij = c(5,1)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 6) {
+        height = 2200 ; width = 4000
+        mfrow_ij = c(2,3)   
+        mar_ijkz = c(4,4.5,2,1)     
+        omi_ijkz = c(0.1,0.1,0.14,0.1)        
+    } else if (nos_plots == 12) {
+        height = 2000 ; width = 4000
+        mfrow_ij = c(3,4)   
+        mar_ijkz = c(1.4,4.5,1.0,0.0)     
+        omi_ijkz = c(0.01,0.01,0.1,0.001)
+    } else {
+        stop("the number of plots requested has not been coded for")
+    } # different plotting dimensions...
+
+    # How consistent is the CARDAMOM analysis with available independent datasets?
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_",outfile_prefix,"_",outfile_var_name,"_seasonal_cycles.png",sep=""), width = width, height = height, res = 300)
+    # Define the plotting space
+    par(mfrow=mfrow_ij, mar=mar_ijkz+c(1.05,0,0,1.0), omi = omi_ijkz)
+
+    # Now we have used the outfile_var_name to create the output file, we will now substitute the '_' for a space for the labels
+    outfile_var_name = gsub("_", " ", outfile_var_name)
+
+    legend_todo = TRUE
+    if (do_global) {
+        ## Plot each masked area
+        # Load the explicitly calculated anomaly for each term
+        var2 = get(paste("agg_seasonal_",var_and_units,sep=""), pos = grid_output)[2,,] 
+        # Determine axes size
+        yrange = range(var2, na.rm=TRUE) # base ranges on the uncertainty estimate only
+        yrange[2] = yrange[2] + abs(yrange[2])*0.05 # add some buffer
+        # Determine the axis labels
+        ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+        # Create initial plot
+        plot(var2[,1], type="l", pch=16, cex = 0.5, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+             main = "Global", ylab = ylab.text, xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(var2[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Postive / negative anomaly
+        if (grepl("NBE",outfile_var_name) | grepl("NBP",outfile_var_name) | grepl("NEE",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+            abline(0,0,col="grey", lwd=1)
+        }
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        
+    } # do global plot
+    
+    # Work out the y-axis for the current plot
+    yrange = c(0,0)
+    for (m in seq(1, length(masked_names))) {             
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_seasonal_",var_and_units,sep=""), pos = grid_output)[2,,] 
+         # Determine axes size for the current masked area
+         tmp = range(var2, na.rm=TRUE)
+         # Increment the axis range
+         if (tmp[1] < yrange[1]) { yrange[1] = tmp[1] }
+         if (tmp[2] > yrange[2]) { yrange[2] = tmp[2] }
+    } 
+    # Add some buffer
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05    
+    
+    for (m in seq(1, length(masked_names))) {            
+         ## Plot each masked area
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_seasonal_",var_and_units,sep=""), pos = grid_output)[2,,]         
+         # Determine axes size
+#         yrange = range(c(var1,var3), na.rm=TRUE) # base ranges on the uncertainty estimate only
+#         yrange[2] = yrange[2] + abs(yrange[2])*0.05 # add some buffer
+         # Determine the axis labels
+         ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+         # Create initial plot
+         plot(var2[,1], type="l", pch=16, cex = 0.5, col = colour_choices_years[2], 
+              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+              main = outfile_masked_names[m], ylab = ylab.text, xlab="Step of year")
+         # Loop through remaining years
+         for (y in seq(2, nos_years)) {
+              lines(var2[,y], col = colour_choices_years[y+1], lwd=2) 
+         }
+         # Postive / negative anomaly
+         if (grepl("NBE",outfile_var_name) | grepl("NBP",outfile_var_name) | grepl("NEE",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+             abline(0,0,col="grey", lwd=1)
+         }
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+    } # masked_names loop
+    
+    dev.off()
+    
+} # end function create_spatially_aggregate_seasonal_cycles
+
+create_spatially_aggregate_seasonal_cycles_forcings<-function(do_global,do_obs,outfile_prefix,
+                                                              masked_names,outfile_masked_names,
+                                                              var_and_units,outfile_var_name,outfile_var_units) {
+
+    # Number of plots to be done
+    nos_plots = length(masked_names)
+    if (do_global) {nos_plots = nos_plots + 1}
+    
+    # Determine the shape of map plots
+    if (nos_plots == 1) {
+        height = 2500 ; width = 5000
+        mfrow_ij = c(1,1)
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 2) {
+        height = 1000 ; width = 3800
+        mfrow_ij = c(1,2)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 3) {
+        height = 750 ; width = 5000
+        mfrow_ij = c(1,3)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 4) {
+        height = 2200 ; width = 3000
+        mfrow_ij = c(2,2)        
+        mar_ijkz = c(3.0,4.5,2,0.5)     
+        omi_ijkz = c(0.08,0.08,0.1,0.1)    
+    } else if (nos_plots == 5) {
+        height = 6000 ; width = 2500
+        mfrow_ij = c(5,1)        
+        mar_ijkz = c(0.05,0.9,0.9,6.2)     
+        omi_ijkz = c(0.01,0.2,0.3,0.1)
+    } else if (nos_plots == 6) {
+        height = 2200 ; width = 4000
+        mfrow_ij = c(2,3)   
+        mar_ijkz = c(4,4.5,2,1)     
+        omi_ijkz = c(0.1,0.1,0.14,0.1)        
+    } else if (nos_plots == 12) {
+        height = 2000 ; width = 4000
+        mfrow_ij = c(3,4)   
+        mar_ijkz = c(1.4,4.5,1.0,0.0)     
+        omi_ijkz = c(0.01,0.01,0.1,0.001)
+    } else {
+        stop("the number of plots requested has not been coded for")
+    } # different plotting dimensions...
+
+    # How consistent is the CARDAMOM analysis with available independent datasets?
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_",outfile_prefix,"_",outfile_var_name,"_seasonal_cycles.png",sep=""), width = width, height = height, res = 300)
+    # Define the plotting space
+    par(mfrow=mfrow_ij, mar=mar_ijkz+c(1.05,0,0,1.0), omi = omi_ijkz)
+
+    # Now we have used the outfile_var_name to create the output file, we will now substitute the '_' for a space for the labels
+    outfile_var_name = gsub("_", " ", outfile_var_name)
+
+    legend_todo = TRUE
+    if (do_global) {
+        ## Plot each masked area
+        # Load the explicitly calculated anomaly for each term
+        var2 = get(paste("agg_seasonal_",var_and_units,sep=""), pos = grid_output)
+        # Determine axes size
+        yrange = range(var2, na.rm=TRUE) # base ranges on the uncertainty estimate only
+        yrange[2] = yrange[2] + abs(yrange[2])*0.05 # add some buffer
+        # Determine the axis labels
+        ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+        # Create initial plot
+        plot(var2[,1], type="l", pch=16, cex = 0.5, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+             main = "Global", ylab = ylab.text, xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(var2[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Postive / negative anomaly
+        if (grepl("NBE",outfile_var_name) | grepl("NBP",outfile_var_name) | grepl("NEE",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+            abline(0,0,col="grey", lwd=1)
+        }
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        
+    } # do global plot
+    
+    # Work out the y-axis for the current plot
+    yrange = c(0,0)
+    for (m in seq(1, length(masked_names))) {             
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_seasonal_",var_and_units,sep=""), pos = grid_output)
+         # Determine axes size for the current masked area
+         tmp = range(var2, na.rm=TRUE)
+         # Increment the axis range
+         if (tmp[1] < yrange[1]) { yrange[1] = tmp[1] }
+         if (tmp[2] > yrange[2]) { yrange[2] = tmp[2] }
+    } 
+    # Add some buffer
+    yrange[2] = yrange[2] + abs(yrange[2])*0.05    
+    
+    for (m in seq(1, length(masked_names))) {            
+         ## Plot each masked area
+         # Load the explicitly calculated anomaly for each term
+         var2 = get(paste("agg_",masked_names[m],"_seasonal_",var_and_units,sep=""), pos = grid_output)     
+         # Determine axes size
+#         yrange = range(c(var1,var3), na.rm=TRUE) # base ranges on the uncertainty estimate only
+#         yrange[2] = yrange[2] + abs(yrange[2])*0.05 # add some buffer
+         # Determine the axis labels
+         ylab.text = eval(bquote(expression(.(outfile_var_name) ~ .(outfile_var_units[[1]]))))
+         # Create initial plot
+         plot(var2[,1], type="l", pch=16, cex = 0.5, col = colour_choices_years[2], 
+              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange, 
+              main = outfile_masked_names[m], ylab = ylab.text, xlab="Step of year")
+         # Loop through remaining years
+         for (y in seq(2, nos_years)) {
+              lines(var2[,y], col = colour_choices_years[y+1], lwd=2) 
+         }
+         # Postive / negative anomaly
+         if (grepl("NBE",outfile_var_name) | grepl("NBP",outfile_var_name) | grepl("NEE",outfile_var_name) | grepl("anomaly",outfile_var_name)) {
+             abline(0,0,col="grey", lwd=1)
+         }
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.6, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+    } # masked_names loop
+    
+    dev.off()
+    
+} # end function create_spatially_aggregate_seasonal_cycles_forcings
 

@@ -68,9 +68,9 @@ module MODEL_PARAMETERS
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
-    ! Fraction of GPP respired as Rm(fol,root,wood)
+    ! Fraction of GPP respired as Rm(root,wood)
     PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.7d0
+    PI%parmax(2) = 0.5d0
 
     ! Initial canopy growing index value 
     PI%parmin(3) = 0d0
