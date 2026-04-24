@@ -24,7 +24,7 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A1.C2.D2.F2.H1.P3.R1 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C2.D2.F2.H1.P3.R1.008 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -744,18 +744,6 @@ module model_likelihood_module
                EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
            end if
         end do
-
-!        ! Water pool(s)
-!        n = 8  ! surface water pool
-!        ! Restrict rates of increase
-!        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
-!        end if
-!        ! Restrict rates from deviating unrealistically from the mean
-!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
-!                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
-!        end if
 
         ! Determine the steady state estimate of wood (gC/m2)
         SSwood = (Fin(4)/Fout(4)) * mean_pools(4)

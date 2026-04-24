@@ -32,8 +32,8 @@ M = Managed Grassland / arable crops (Table 10)
 | 13 | DALEC.C5.D1.F2.P1.013          | DALEC_CDEA_no_lit_root, S4                 | Fire model updated from F1 to F2| Famiglietti et al., 2021  | Published   |
 | 14 | DALEC.C3.M1.014                | DALEC_CROP          | Developmental arable crop model                     | Sus et al., 2010             | Published   |
 | 15 | DALEC.A3.C3.H2.M1.015          | DALEC_CROP_BUCKET   | Developmental arable crop model                     | Sus et al., 2010, T. L. Smallman | Unpublished |
-| !16 | DALEC.M2.016                   | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
-| !17 | DALEC.A3.H2.M2.017             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
+| 16 | DALEC.A3.H1.M2.016             | DALEC_GRASS         | Managed grassland                                   | Myrgiotis et al., 2020       | Published   |
+| 17 | DALEC.A3.H2.M2.017             | DALEC_GRASS_BUCKET  | Managed grassland                                   | Myrgiotis et al., 2020       | Unpublished |
 | 18 | DALEC.A1.C1.D2.F2.H2.P2.018    | DALEC_CDEA_ACM2_BUCKET_wMRT                |                              | T. L. Smallman               | Unpublished |
 | 19 | DALEC.A1.C2.D2.F2.H2.P2.R3.019 | DALEC_CDEA_ACM2_BUCKET_RmHeskel_Rg_CWD_wMRT|                              | T. L. Smallman               | Unpublished |
 | 20 | DALEC.A2.C1.D2.F2.H2.P1.020    | DALEC_CDEA_ACM_FARQUHAR_BUCKET             |                              | T. L. Smallman               | Unpublished |
@@ -48,7 +48,7 @@ M = Managed Grassland / arable crops (Table 10)
 | !29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Published   |
 | !30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
-| !32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
+| 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 | !34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
 | !35 | DALEC.A1.C7.D2.F2.H2.P1.035    |                     | As DALEC.4. with branch turnover                    | D. T. Milodowski             | Unpublished   |

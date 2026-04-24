@@ -426,7 +426,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }             
       } else if (modelname == "DALEC.C1.D1.F2.P1.002") {
@@ -451,7 +451,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }               
       } else if (modelname == "DALEC.A1.C1.D2.F2.H1.P1.003") {
@@ -491,7 +491,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.004") {
@@ -528,12 +528,18 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 #; OTHERPRIORWEIGHT[4] = noyears # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
           OTHERPRIORS[6] = OBS$MTTsom          ; OTHERPRIORUNC[6] = OBS$MTTsom_unc # Prior on the MTT of soil
+          # Hack to remove loss terms in pixels with disturbance
+          if (max(MET[,8]) > 0 | max(MET[,9]) > 0) {
+              OBSMAT[,52] = -9999            # Mean woody loss over lag period (gC/m2/day)
+              OBSMAT[,53] = -9999            # Mean woody loss varince
+              OBSMAT[,54] = -9999            # Lag period over which to average  (steps)          
+          }
           # Hack to remove LAI observations out of growing season for high LCA areas
           if (PARPRIORS[17] > 100) {
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P1.R1.005") {
@@ -568,7 +574,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P1.R1.006") {
@@ -600,7 +606,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R1.007") {
@@ -632,7 +638,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P3.R1.008") {
@@ -668,7 +674,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.009") {
@@ -700,7 +706,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H1.P4.R2.010") {
@@ -731,7 +737,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P4.R2.011") {
@@ -762,7 +768,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.C4.D1.F2.012") {
@@ -959,7 +965,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }         
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P2.R3.019") {
@@ -987,7 +993,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }         
   } else if (modelname == "DALEC.A2.C1.D2.F2.H2.P1.020") {
@@ -1016,7 +1022,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC_1005") {
@@ -1100,7 +1106,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }           
       } else if (modelname == "DALEC.A1.C1.D2.F2.H4.P1.032") {
@@ -1145,7 +1151,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                                       
       } else if (modelname == "DALEC.A4.C6.D2.F2.H3.P12.033") {
@@ -1181,7 +1187,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
               #if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4] = -9999 ; OBSMAT[filter,5] = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
               #}
           }                    
       } else if (modelname == "DALEC.A3.C1.D2.F2.H2.P1.030") {
@@ -1229,7 +1235,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P5.021") {
@@ -1271,7 +1277,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC.A1.C1.D2.F2.H2.P6.022") {
@@ -1300,7 +1306,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }         
       } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P7.R2.023") {
@@ -1338,7 +1344,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                    
       } else if (modelname == "DALEC...024") {
@@ -1390,7 +1396,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           PARPRIORS[18] = OBS$Croots_initial   ; PARPRIORUNC[18] = OBS$Croots_initial_unc # Croots prior
           PARPRIORS[19] = OBS$Clit_initial     ; PARPRIORUNC[19] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
-          PARPRIORS[37] = OBS$MaxRootDepth     ; PARPRIORUNC[37] = OBS$MaxRootDepth_unc # Maximum rooting depth prior,           
+          PARPRIORS[25] = OBS$MaxRootDepth     ; PARPRIORUNC[25] = OBS$MaxRootDepth_unc # Maximum rooting depth prior,           
           # other priors
 #          OTHERPRIORS[2] =        ; OTHERPRIORUNC[2] =  # Initial soil water fraction 
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
@@ -1433,7 +1439,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }           
       } else if (modelname == "DALEC.A1.C1.D2.F2.H5.P1.037") {
@@ -1477,7 +1483,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #              if (lat_degrees > 50) {
                   filter = which(MET[,6] < 175 | MET[,6] > 250)
                   OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
-                  #OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
+                  OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 #              }
           }                                       
       } else if (modelname == "ACM") {

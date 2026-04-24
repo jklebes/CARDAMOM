@@ -301,10 +301,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$MTT_som_years_to_NEE_gCm2day_correlation = cor(states_all$MTT_som_years,ensNEE)
       states_all$MTT_som_years_to_Rauto_gCm2day_correlation = cor(states_all$MTT_som_years,ensRauto)
       states_all$MTT_som_years_to_Rhet_gCm2day_correlation = cor(states_all$MTT_som_years,ensRhet)
-      states_all$MTT_som_years_to_wood_gCm2_correlation = cor(states_all$MTT_som_years,ensWood)   
       states_all$MTT_som_years_to_som_gCm2_correlation = cor(states_all$MTT_som_years,ensSOM)   
       states_all$MTT_som_years_to_lai_m2m2_correlation = cor(states_all$MTT_som_years,ensLAI)      
-      states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,dCwood) 
       states_all$MTT_som_years_to_dCsom_gCm2_correlation = cor(states_all$MTT_som_years,dCsom)
       # As MTT som exists we must also be able to work out the correlations for change in som over time
       # Note reuse of dCbio
@@ -312,10 +310,19 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
       states_all$dCsom_gCm2_to_rauto_gCm2day_correlation = cor(dCsom,ensRauto) 
       states_all$dCsom_gCm2_to_nee_gCm2day_correlation = cor(dCsom,ensNEE)    
       states_all$dCsom_gCm2_to_rhet_gCm2day_correlation = cor(dCsom,ensRhet)    
-      states_all$dCsom_gCm2_to_wood_gCm2_correlation = cor(dCsom,ensWood)          
       states_all$dCsom_gCm2_to_som_gCm2_correlation = cor(dCsom,ensSOM)
-      tmp = rowMeans(states_all$wood_to_litter_gCm2day + states_all$litter_to_som_gCm2day)
-      states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCsom,tmp)
+      # Special case for the managed grassland model
+      if (exists("ensWood")) {
+          states_all$MTT_som_years_to_dCwood_gCm2_correlation = cor(states_all$MTT_som_years,dCwood) 
+          states_all$MTT_som_years_to_wood_gCm2_correlation = cor(states_all$MTT_som_years,ensWood)   
+          states_all$dCsom_gCm2_to_wood_gCm2_correlation = cor(dCsom,ensWood)          
+          tmp = rowMeans(states_all$wood_to_litter_gCm2day + states_all$litter_to_som_gCm2day)
+          states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCsom,tmp)
+      } else {
+          tmp = rowMeans(states_all$litter_to_som_gCm2day)
+          states_all$dCsom_gCm2_to_som_input_gCm2_correlation = cor(dCsom,tmp)
+      }
+
   }   
 
   # Tidy multi-use variables

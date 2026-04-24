@@ -316,7 +316,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.5) model.
+    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.9) model.
     ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
@@ -900,7 +900,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Note that soil mass balance will be calculated after phenology
        ! adjustments
 
-       ! Reset output variable
+       ! Estimate photosynthesis and transpiration
        if (stomatal_conductance > vsmall) then
            ! Gross primary productivity (gC/m2/day)
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation

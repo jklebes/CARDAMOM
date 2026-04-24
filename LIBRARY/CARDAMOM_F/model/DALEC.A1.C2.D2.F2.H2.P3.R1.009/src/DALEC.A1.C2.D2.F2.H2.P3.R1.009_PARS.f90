@@ -116,7 +116,7 @@ module MODEL_PARAMETERS
     PI%parmin(11) = 10d0 !5d0
     PI%parmax(11) = 100d0 !42d0 !50d0
 
-    ! Max labile turnover fraction to foliage
+    ! Potential labile turnover fraction to foliage
     PI%parmin(12) = 0.002737851d0 !  1 years
     PI%parmax(12) = 0.025d0       ! 40 days
 

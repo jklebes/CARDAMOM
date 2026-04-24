@@ -196,7 +196,17 @@ cardamom_stage_1<-function(PROJECT) {
                                                                unc_var_name_out = "",
                                                                lag_var_name_out = "burnt_area_lag",
                                                                default_lag = 0)
-
+#           # Leaf area index change between time steps (m2/m2)
+#           dlai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+#                                                              lai_change_source,path_to_lai,prefix = "leaf_area_index_change_m2m2_",
+#                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+#                                                              est_var_name_in = "dLAI",
+#                                                              unc_var_name_in = "",
+#                                                              lag_var_name_in = "dLAI_lag",
+#                                                              est_var_name_out = "dlai_m2m2",
+#                                                              unc_var_name_out = "",
+#                                                              lag_var_name_out = "dlai_lag_day",
+#                                                              default_lag = 0) 
            ## Load all time varying spatial observations
            # Leaf area index (m2/m2)
            lai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
@@ -211,15 +221,15 @@ cardamom_stage_1<-function(PROJECT) {
                                                              default_lag = 1)      
            # fraction of Absorbed Photosynthetically Active Radation (0-1)
            fapar_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-                                                             fapar_source,path_to_fapar,prefix = "fraction_absorbed_par_",
-                                                             as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-                                                             est_var_name_in = "fAPAR",
-                                                             unc_var_name_in = "fAPAR_SD",
-                                                             lag_var_name_in = "fAPAR_lag",
-                                                             est_var_name_out = "fapar",
-                                                             unc_var_name_out = "fapar_unc",
-                                                             lag_var_name_out = "fapar_lag_day",
-                                                             default_lag = 0)                   
+                                                               fapar_source,path_to_fapar,prefix = "fraction_absorbed_par_",
+                                                               as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+                                                               est_var_name_in = "fAPAR",
+                                                               unc_var_name_in = "fAPAR_SD",
+                                                               lag_var_name_in = "fAPAR_lag",
+                                                               est_var_name_out = "fapar",
+                                                               unc_var_name_out = "fapar_unc",
+                                                               lag_var_name_out = "fapar_lag_day",
+                                                               default_lag = 0)                   
            # Net Biome Exchange (gC/m2/day)
            nbe_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
                                                              nbe_source,path_to_nbe,prefix = "net_biome_exchange_gCm2day_",
@@ -309,7 +319,9 @@ cardamom_stage_1<-function(PROJECT) {
                                                              unc_var_name_out = "Cwood_loss_uncertainty_gCm2day",
                                                              lag_var_name_out = "Cwood_loss_lag",
                                                              default_lag = 0)                      
-     # Write uncertainty to file
+# Still need to consider how this will be read into the damn model...new timeserie and everything - is really horrible for all analyses input files will need to be update for the new number of forcings...                                                             
+
+
            # Surface soil water content (m3/m3)
 #           soilwater_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
 #                                                             soilwater_source,path_to_soil_water,prefix = "soil_water_m3m3_",

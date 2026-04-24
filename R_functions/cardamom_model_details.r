@@ -62,25 +62,25 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nofluxes = array(48,dim=c(length(ctessel_pft)))
     nodiags  = array(20,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A3.C3.H2.M1.015",shortname="DALEC.15.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
-  } else if (modelname == "DALEC.M2.016" | modelname == "DALEC.16.") {
+  } else if (modelname == "DALEC.A3.H1.M2.016" | modelname == "DALEC.16.") {
     # information contains is
     # The model name
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools  = array(5,dim=c(length(ctessel_pft)))
     nopars   = array(34,dim=c(length(ctessel_pft)))
-    nofluxes = array(45,dim=c(length(ctessel_pft)))
-    nodiags  = array(20,dim=c(length(ctessel_pft)))
-    cardamom_model_details=list(name="DALEC.M2.016",shortname="DALEC.16.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
+    nofluxes = array(57,dim=c(length(ctessel_pft)))
+    nodiags  = array(23,dim=c(length(ctessel_pft)))
+    cardamom_model_details=list(name="DALEC.A3.H1.M2.016",shortname="DALEC.16.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A3.H2.M2.017" | modelname == "DALEC.17.") {
     # information contains is
     # The model name
     # Number of met parameters
     # Number of model parameters to be optimised
     nopools  = array(6,dim=c(length(ctessel_pft)))
-    nopars   = array(37,dim=c(length(ctessel_pft)))
+    nopars   = array(35,dim=c(length(ctessel_pft)))
     nofluxes = array(57,dim=c(length(ctessel_pft)))
-    nodiags  = array(20,dim=c(length(ctessel_pft)))
+    nodiags  = array(23,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A3.H2.M2.017",shortname="DALEC.17.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.C1.D1.F2.P1.002" | modelname == "DALEC.2.") {
     # Information contains is

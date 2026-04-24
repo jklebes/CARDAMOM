@@ -1174,11 +1174,11 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (deforestation_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_met.csv",sep="")
         deforestation = read_site_specific_obs("deforestation_fraction",infile)
+        # If the default variable can't be found, check for the lai_loss variable
+        # used in the managed grassland system
         if (length(deforestation) == 1 && deforestation == -9999) {
             deforestation = read_site_specific_obs("lai_loss",infile)
         }
-        deforestation_lag = read_site_specific_obs("deforestation_fraction_lag_step",infile)
-        if (length(deforestation_lag) == 1) {deforestation_lag = rep(0, times = length(deforestation))}
         forest_management = read_site_specific_obs("management_type",infile)
         if (length(forest_management) == 1) {forest_management = rep(2, times = length(deforestation))}
         yield_class = -9999 #read_site_specific_obs("yield_class",infile)
@@ -1186,17 +1186,22 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
         if (length(age) > 1) {age = age[1]} # we only want the age at the beginning of the simulation
     } else if (deforestation_source == "Gridded_nc" | deforestation_source == "Gridded_tif") {
         # Extract from the gridded array
-        output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                     forest_all,agg_func = "sum", na_flag = 0,
-                                                                     est_var_name_in="loss_fraction",lag_var_name_in="loss_fraction_lag",
-                                                                     est_var_name_out="deforestation",lag_var_name_out="deforestation_lag")      
-        deforestation = output$deforestation ; deforestation_lag = output$deforestation_lag
+#        output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+#                                                                     forest_all,agg_func = "sum", na_flag = 0,
+#                                                                     est_var_name_in="loss_fraction",lag_var_name_in="loss_fraction_lag",
+#                                                                     est_var_name_out="deforestation",lag_var_name_out="deforestation_lag")      
+#        deforestation = output$deforestation ; deforestation_lag = output$deforestation_lag
+        output = extract_timeseries_forcing(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                            forest_all,agg_func = "sum", fraction = TRUE,na_flag = 0,
+                                            est_var_name_in="loss_fraction",lag_var_name_in="loss_fraction_lag",
+                                            est_var_name_out="deforestation")
+        deforestation = output$deforestation 
         yield_class = -9999
         age = -9999
         forest_management = 2 # Default option, check model specific code for their actual effects
     } else {
         # assume no data available
-        deforestation = 0 ; deforestation_lag = 0
+        deforestation = 0
         forest_management = 2
         yield_class = 0
         age = -9999
@@ -1208,18 +1213,21 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     if (burnt_area_source == "site_specific") {
         infile = paste(path_to_site_obs,site_name,"_timeseries_met.csv",sep="")
         burnt_area = read_site_specific_obs("burnt_area_fraction",infile)
-        burnt_area_lag = read_site_specific_obs("burnt_area_fraction_lag_step",infile)
     } else if (burnt_area_source == " "){
         # assume no data available
-        burnt_area = 0 ; burnt_area_lag = 0
+        burnt_area = 0 
     } else {
         # Extract from the gridded array
-        output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                                                     burnt_all,agg_func = "sum",na_flag = 0,
-                                                                     est_var_name_in="burnt_area",lag_var_name_in="burnt_area_lag",
-                                                                     est_var_name_out="burnt_area",lag_var_name_out="burnt_area_lag")
+#        output = extract_timeseries_observations_without_uncertainty(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+#                                                                     burnt_all,agg_func = "sum",na_flag = 0,
+#                                                                     est_var_name_in="burnt_area",lag_var_name_in="burnt_area_lag",
+#                                                                     est_var_name_out="burnt_area",lag_var_name_out="burnt_area_lag")
+        output = extract_timeseries_forcing(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                            burnt_all,agg_func = "sum",fraction = TRUE, na_flag = 0,
+                                            est_var_name_in="burnt_area",lag_var_name_in="burnt_area_lag",
+                                            est_var_name_out="burnt_area")
         # Extract out of the output object
-        burnt_area = output$burnt_area ; burnt_area_lag = output$burnt_area_lag
+        burnt_area = output$burnt_area 
     }
 
     ###
@@ -1325,9 +1333,9 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 Cwood_initial = Cwood_initial, Cwood_initial_unc = Cwood_initial_unc, 
                 Croots_initial = Croots_initial, Croots_initial_unc = Croots_initial_unc, 
                 Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc, 
-                deforestation = deforestation, deforestation_lag = deforestation_lag, 
+                deforestation = deforestation, 
                 age = age, forest_management = forest_management, yield_class = yield_class,
-                burnt_area = burnt_area, burnt_area_lag = burnt_area_lag,
+                burnt_area = burnt_area,
                 planting_doy = planting_doy, planting_doy_unc = planting_doy, 
                 growing_season_doy = growing_season_doy, growing_season_doy_unc = growing_season_doy_unc,              
                 Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, 

@@ -2810,11 +2810,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! Do any vertical profile scaling for various parameters to their depths....
         ! These will need to be updated each time the rooting depth modifies the soil profile
-        saturated_conductivity(2) = exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
-        saturated_conductivity(3) = exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
+        !saturated_conductivity(2) = exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
+        saturated_conductivity(3) = saturated_conductivity(1) &
+                                  * exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
         ! Sensible boundings
-        saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
-        saturated_conductivity(3) = max(0.1d0,min(1d0,saturated_conductivity(3)))
+        !saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
+        saturated_conductivity(3) = min(saturated_conductivity(1)*1d0,saturated_conductivity(3))
+        saturated_conductivity(3) = max(saturated_conductivity(1)*0.1d0,saturated_conductivity(3))
 
     else if (root_reach < depth_change .and. previous_depth > depth_change) then
 
@@ -2843,11 +2845,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! Do any vertical profile scaling for various parameters to their depths....
         ! These will need to be updated each time the rooting depth modifies the soil profile
-        saturated_conductivity(2) = exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
-        saturated_conductivity(3) = exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
+        !saturated_conductivity(2) = exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
+        saturated_conductivity(3) = saturated_conductivity(1) &
+                                  * exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
         ! Sensible boundings
-        saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
-        saturated_conductivity(3) = max(0.1d0,min(1d0,saturated_conductivity(3)))
+        !saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
+        saturated_conductivity(3) = min(saturated_conductivity(1)*1d0,saturated_conductivity(3))
+        saturated_conductivity(3) = max(saturated_conductivity(1)*0.1d0,saturated_conductivity(3))
 
     else ! root_reach > (top_soil_depth + min_layer)
 
@@ -3137,19 +3141,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! load parameters into their memory variables
     porosity = input_porosity 
     residual_waterfrac = input_residual_waterfrac
-    saturated_conductivity = input_saturated_conductivity
+    saturated_conductivity(1:2) = input_saturated_conductivity
     pore_size_dist = input_pore_size_dist
     air_entry = input_air_entry
 
     ! Do any vertical profile scaling for various parameters to their depths....
     ! These will need to be updated each time the rooting depth modifies the soil profile
-    saturated_conductivity(2) = exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
-    saturated_conductivity(3) = exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
-    saturated_conductivity(4) = exp(soil_depth_decay * (sum(layer_thickness(1:nos_soil_layers)) - 0.3d0))
+    !saturated_conductivity(2) = saturated_conductivity(1) * exp(soil_depth_decay * (layer_thickness(1) + (layer_thickness(2) * 0.5d0) - 0.3d0))
+    saturated_conductivity(3) = input_saturated_conductivity & 
+                              * exp(soil_depth_decay * (sum(layer_thickness(1:2)) + (layer_thickness(3) * 0.5d0) - 0.3d0))
+    saturated_conductivity(4) = input_saturated_conductivity & 
+                              * exp(soil_depth_decay * (sum(layer_thickness(1:nos_soil_layers)) - 0.3d0))
     ! Sensible boundings
-    saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
-    saturated_conductivity(3) = max(0.1d0,min(1d0,saturated_conductivity(3)))
-    saturated_conductivity(4) = max(0.1d0,min(1d0,saturated_conductivity(4)))
+    !saturated_conductivity(2) = max(0.1d0,min(1d0,saturated_conductivity(2)))
+    saturated_conductivity(3) = min(saturated_conductivity(1)*1d0,saturated_conductivity(3))
+    saturated_conductivity(3) = max(saturated_conductivity(1)*0.1d0,saturated_conductivity(3))    
+    saturated_conductivity(4) = min(saturated_conductivity(1)*1d0,saturated_conductivity(4))
+    saturated_conductivity(4) = max(saturated_conductivity(1)*0.1d0,saturated_conductivity(4))    
+
 
     ! Estimation of parameter m. This parameter is related to the pore size distribution (pore_size_dist)
     ! parameter from the VGM Model. This parameter simplifies the calculation of hydraulic conductivity
@@ -3302,7 +3311,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     integer :: i
 
     ! Estimate soil water potential using the VGM model and parameters
-    SWP = head * (-1.0d0 / air_entry) * &
+    SWP = head * (-1d0 / air_entry) * &
           (relative_water_frac**(-1d0/m_pore_size_dist) - 1d0) ** (1d0/pore_size_dist)
 
     ! NOTE: profiling indicates that 'where' is slower for very short vectors
