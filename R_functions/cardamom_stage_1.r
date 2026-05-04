@@ -35,7 +35,7 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                          ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                          ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                          ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_growth_all
-                         ,Cwood_mortality_all,fire_all
+                         ,Cwood_mortality_all,fire_all, dlai_all
                          ,fapar_all, et_all, RhetQ10_all, MTTsom_all,MaxRootDepth_all) {
 
    # create the file name for the met/obs binary
@@ -96,7 +96,7 @@ write_bin_files<-function(n,PROJECT,cardamom_ext,latlon,timestep_days,noyears
                              ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                              ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                              ,nbe_all,lca_all,gpp_all,Cwood_change_all,Cwood_growth_all,Cwood_mortality_all
-                             ,fire_all,fapar_all, et_all, RhetQ10_all, MTTsom_all, MaxRootDepth_all
+                             ,fire_all,dlai_all,fapar_all, et_all, RhetQ10_all, MTTsom_all, MaxRootDepth_all
                              ,PROJECT$ctessel_pft[n],PROJECT$sites[n],PROJECT$start_year,PROJECT$end_year
                              ,timestep_days,PROJECT$spatial_type,PROJECT$resolution,PROJECT$grid_type,PROJECT$model$name)
             # update ctessel pft in the project and potentially the model information
@@ -196,17 +196,17 @@ cardamom_stage_1<-function(PROJECT) {
                                                                unc_var_name_out = "",
                                                                lag_var_name_out = "burnt_area_lag",
                                                                default_lag = 0)
-#           # Leaf area index change between time steps (m2/m2)
-#           dlai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
-#                                                              lai_change_source,path_to_lai,prefix = "leaf_area_index_change_m2m2_",
-#                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
-#                                                              est_var_name_in = "dLAI",
-#                                                              unc_var_name_in = "",
-#                                                              lag_var_name_in = "dLAI_lag",
-#                                                              est_var_name_out = "dlai_m2m2",
-#                                                              unc_var_name_out = "",
-#                                                              lag_var_name_out = "dlai_lag_day",
-#                                                              default_lag = 0) 
+           # Leaf area index change between time steps (m2/m2)
+           dlai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
+                                                              lai_change_source,path_to_lai_change,prefix = "leaf_area_index_change_m2m2_",
+                                                              as.character(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)),
+                                                              est_var_name_in = "dLAI",
+                                                              unc_var_name_in = "",
+                                                              lag_var_name_in = "dLAI_lag",
+                                                              est_var_name_out = "dlai_m2m2",
+                                                              unc_var_name_out = "",
+                                                              lag_var_name_out = "dlai_lag_day",
+                                                              default_lag = 0) 
            ## Load all time varying spatial observations
            # Leaf area index (m2/m2)
            lai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,
@@ -436,7 +436,7 @@ cardamom_stage_1<-function(PROJECT) {
                            burnt_all = burnt_all, soilwater_all = soilwater_all, nbe_all = nbe_all, 
                            lca_all = lca_all, gpp_all = gpp_all, Cwood_change_all = Cwood_change_all,
                            Cwood_growth_all = Cwood_growth_all, Cwood_mortality_all = Cwood_mortality_all, 
-                           fire_all = fire_all, 
+                           fire_all = fire_all, dlai_all = dlai_all,
                            fapar_all = fapar_all, et_all = et_all, RhetQ10_all = RhetQ10_all,
                            MTTsom_all = MTTsom_all, MaxRootDepth_all = MaxRootDepth_all)
 
@@ -453,7 +453,7 @@ cardamom_stage_1<-function(PROJECT) {
                               ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                               ,sand_clay_all,crop_man_all,burnt_all,soilwater_all
                               ,nbe_all, lca_all,gpp_all,Cwood_change_all,Cwood_growth_all
-                              ,Cwood_mortality_all,fire_all
+                              ,Cwood_mortality_all,fire_all, dlai_all
                               ,fapar_all, et_all, RhetQ10_all, MTTsom_all, MaxRootDepth_all)    
 
           } # site loop

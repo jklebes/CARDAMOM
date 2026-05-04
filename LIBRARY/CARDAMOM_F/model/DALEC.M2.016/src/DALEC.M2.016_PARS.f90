@@ -70,10 +70,10 @@ module MODEL_PARAMETERS
 
     ! GPP to resp fraction [~0.54]
     PI%parmin(2) = 0.20d0 
-    PI%parmax(2) = 0.80d0 
+    PI%parmax(2) = 0.70d0 
 
     ! Canopy GSI phenology gradient threshold
-    PI%parmin(3) = -1d-2
+    PI%parmin(3) = -1d-3
     PI%parmax(3) =  1d-2
 
     ! NPP belowground allocation exponential parameter [0.01, 1.00]
@@ -105,8 +105,8 @@ module MODEL_PARAMETERS
     PI%parmax(9) = 0.08d0 
 
     ! Potential labile turnover fraction to foliage
-    PI%parmin(10) = 0.002737851d0 !  1 years
-    PI%parmax(10) = 0.025d0       ! 40 days
+    PI%parmin(10) = 0.002737851d0*2d0 !  6 months
+    PI%parmax(10) = 0.025d0           ! 40 days
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
@@ -137,11 +137,11 @@ module MODEL_PARAMETERS
     PI%parmin(20) = 3600d0*3d0  !  3 hours
     PI%parmax(20) = 3600d0*21d0 ! 21 hours
 
-    ! GSI min VPD (Pa) [1, 5500] 
+    ! GSI min VPD (Pa) [10, 5500] 
     PI%parmin(21) = 10d0 
     PI%parmax(21) = 5500d0 
 
-    ! GSI max VPD (Pa) [1, 5500]
+    ! GSI max VPD (Pa) [10, 5500]
     PI%parmin(22) = 10d0 
     PI%parmax(22) = 5500d0 
 
@@ -170,12 +170,13 @@ module MODEL_PARAMETERS
     PI%parmax(28) = 3000d0*0.0475d0 
 
     ! leaf:stem allocation [0.05, 0.75]
+    ! NOT CURRENTLY IN USE...
     PI%parmin(29) = 0.25d0 
     PI%parmax(29) = 0.75d0 
 
     ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
     PI%parmin(30) = 0.001d0
-    PI%parmax(30) = 0.1d0
+    PI%parmax(30) = 0.05d0
 
     ! livestock demand in DM (1-3% of animal weight) 
     ! NOT CURRENTLY IN USE...
@@ -198,23 +199,23 @@ module MODEL_PARAMETERS
     ! INITIAL VALUES DECLARED HERE
     !
 
-    ! initial labile pool size [1, 1000]
+    ! initial labile pool size, gC/m2 [1, 500]
     PI%parmin(16) = 1d0 
-    PI%parmax(16) = 1000d0 
+    PI%parmax(16) = 500d0 
 
-    ! initial foliar pool size [1, 1000]
+    ! initial foliar pool size, gC/m2 [1, 500]
     PI%parmin(17) = 1d0 
-    PI%parmax(17) = 1000d0 
+    PI%parmax(17) = 500d0 
 
-    ! initial root pool size [1, 1000]
+    ! initial root pool size, gC/m2 [1, 500]
     PI%parmin(18) = 1d0 
-    PI%parmax(18) = 1000d0 
+    PI%parmax(18) = 500d0 
 
-    ! initial litter pool size [1, 10000]
+    ! initial litter pool size, gC/m2 [1, 500]
     PI%parmin(19) = 1d0 
-    PI%parmax(19) = 1000d0 
+    PI%parmax(19) = 500d0 
 
-    ! initial SOM pool size [5000, 10000] (UK) 19000, 21000
+    ! initial SOM pool size, gC/m2 [5000, 10000] (UK) 19000, 21000
     PI%parmin(23) = 200d0
     PI%parmax(23) = 250000d0 !90000d0
 

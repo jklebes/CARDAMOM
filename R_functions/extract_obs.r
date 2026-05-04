@@ -35,7 +35,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                      ,Cwood_initial_all,Cwood_stock_all,Cwood_potential_all
                      ,sand_clay_all,crop_man_all,burnt_all,soilwater_all,nbe_all
                      ,lca_all,gpp_all,Cwood_change_all,Cwood_growth_all,Cwood_loss_all
-                     ,fire_all,fapar_all,et_all,RhetQ10_all,MTTsom_all,MaxRootDepth_all
+                     ,fire_all,dlai_all,fapar_all,et_all,RhetQ10_all,MTTsom_all,MaxRootDepth_all
                      ,ctessel_pft,site_name,start_year,end_year
                      ,timestep_days,spatial_type,resolution,grid_type,modelname) {
 
@@ -1231,6 +1231,27 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     }
 
     ###
+    ## Get some LAI change forcing information (m2/m2 time series)
+    ## Currently used for managed grasslands to enforce periods of loss due to cutting or grazing.
+    ## NOTE: the time series here will have both LAI losses and gains provided, the bounding will
+    ##       occur specifically in binary_data.r for the grassland models only (DALEC.16/17)
+
+    if (lai_change_source == "site_specific") {
+        infile = paste(path_to_site_obs,site_name,"_timeseries_met.csv",sep="")
+        lai_change = read_site_specific_obs("lai_change_m2m2",infile) # NOTE "lai_loss" should be changed to "lai_change"
+    } else if (lai_change_source == "Gridded_nc" | lai_change_source == "Gridded_tif") {
+        # Extract from the gridded array
+        output = extract_timeseries_forcing(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
+                                            dlai_all,agg_func = "sum", fraction = TRUE,na_flag = 0,
+                                            est_var_name_in="dlai_m2m2",lag_var_name_in="dlai_lag_day",
+                                            est_var_name_out="lai_change")
+        lai_change = output$lai_change 
+    } else {
+        # assume no data available
+        lai_change = 0
+    }
+
+    ###
     ## Extract the local information for static information without observations,
     ## i.e. those values which are forcings
     ###
@@ -1335,7 +1356,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
                 Clit_initial = Clit_initial, Clit_initial_unc = Clit_initial_unc, 
                 deforestation = deforestation, 
                 age = age, forest_management = forest_management, yield_class = yield_class,
-                burnt_area = burnt_area,
+                burnt_area = burnt_area, lai_change = lai_change,
                 planting_doy = planting_doy, planting_doy_unc = planting_doy, 
                 growing_season_doy = growing_season_doy, growing_season_doy_unc = growing_season_doy_unc,              
                 Cwood_potential = Cwood_potential, Cwood_potential_unc = Cwood_potential_unc, 

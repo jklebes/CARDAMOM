@@ -949,12 +949,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! CUTTING 
       ! ------------------------------------------------------------------------------------------------------------- ! 
 
-      if (met(8,n) == -1d0) then
+      ! LAI losses which have precise value of 1 are assumed to be a cutting
+      if (met(8,n) == 1d0) then
 
           ! Estimate labile stored above ground assuming uniform distribution across biomass
           labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
           call grass_cutting(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
-                             POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n), &
+                             POOLS(n+1,4),POOLS(n+1,5),met(6,n), &
                              FLUXES(:,22),FLUXES(n,25),FLUXES(n,26),FLUXES(n,27), &
                              FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
                              n,nodays,deltat(n), & 
@@ -965,12 +966,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! GRAZING 
           ! ------------------------------------------------------------------------------------------------------------- ! 
 
-          ! Estimate LAI change for the next time step. This structure allows the grazing to include consumption of new growth
-          gsi_lai_reduction = met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
-          !print*,gsi_lai_reduction,met(8,n),((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
+          ! Estimate LAI change for the next time step. 
+          ! This structure allows the grazing to include consumption of new growth.
+          ! NOTE: met(8,n) sign change to make the lai losses now positive
+          gsi_lai_reduction = -met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
           ! ...if LAI has increased but the driver suggests a loss 
           !    or which is greater than already simulated consider grazing
-          if (met(8,n) > 0d0 .and. gsi_lai_reduction > 0d0 .and. FLUXES(n,4)+FLUXES(n,7) > pars(34)) then
+          if (met(8,n) < 0d0 .and. gsi_lai_reduction > 0d0 .and. FLUXES(n,4)+FLUXES(n,7) > pars(34)) then
               ! Estimate labile stored above ground assuming uniform distribution across biomass
               labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
               call grass_grazing(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3),  & 
@@ -3093,7 +3095,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine grass_cutting(labile_ratio,labile,foliage,roots,litter,som,doy,  &
-                           lai_reduction,harvest,HARVESTextracted_labile,     & 
+                           harvest,HARVESTextracted_labile,     & 
                            HARVESTextracted_foliage,HARVESTextracted_roots,   &
                            HARVESTlitter_labile,HARVESTlitter_foliage,        &
                            HARVESTlitter_roots,                               &
@@ -3109,7 +3111,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: doy, &
                             step_length, &
                            labile_ratio, &
-                          lai_reduction, &
                       cutting_threshold, &
                post_cutting_labile_loss
     

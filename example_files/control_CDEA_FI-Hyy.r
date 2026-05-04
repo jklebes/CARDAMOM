@@ -46,94 +46,101 @@ use_lcm="ECMWF" # coded choices exist for other maps however only "ECMWF" map is
 pft_wanted=FALSE # Impacts crop model only
 path_to_landsea="default" # If gridded analysis, any raster layer with >0 values will be taken as the mask area. To ignore = "default"
 
-## Met paths
-path_to_met_source=" "
-path_to_lai = " "
-path_to_fapar = " "
+## Forcings paths
+path_to_burnt_area=" "
+path_to_co2 = " "
 path_to_crop_management=" "
+path_to_forestry=" "
+path_to_lai_change = " "
+path_to_landsea = "default"
+path_to_met_source=" "
 path_to_sand_clay=" "
-path_to_MTTsom = " " 
-path_to_RhetQ10 = " " 
-path_to_Csom = " "
-path_to_Cwood_inc = " "
-path_to_Cwood_mortality = " "
+met_interp=FALSE
+## Observations paths
 path_to_Cwood = " "
+path_to_Cwood_change = " "
+path_to_Cwood_growth = " "
+path_to_Cwood_mortality = " "
+path_to_fapar = " "
+path_to_fire = " "
+path_to_gpp = " "
+path_to_lai = " "
+path_to_nbe = " "
+path_to_soilwater=" "
+## Parameter / Other prior paths
+path_to_Csom = " "
 path_to_Cwood_initial=" "
 path_to_Cwood_potential=" "
-path_to_soilwater=" "
-path_to_nbe = " "
-path_to_gpp = " "
-path_to_fire = " "
-path_to_forestry=" "
-path_to_burnt_area=" "
 path_to_lca = " "
-path_to_landsea = "default"
-path_to_co2 = " "
+path_to_MaxRootDepth = " "
+path_to_MTTsom = " " 
+path_to_RhetQ10 = " " 
+## Site specific csv files
 path_to_site_obs="./example_files/inputs/"
-met_interp=FALSE
 
-## Data streams
+## Forcing streams
+burnt_area_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+crop_management_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+deforestation_source = "site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+lai_change_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
 met_source="site_specific" # "ERA" or "trendy"
-lai_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-fapar_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
 sand_clay_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific or " "
-MTTsom_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-RhetQ10_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-Csom_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-soilwater_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-et_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-Cwood_inc_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-Cwood_mortality_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-gpp_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-fire_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-Reco_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-nee_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-nbe_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-harvest_source = "" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-foliage_to_litter_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-# i.e. single value valid for beginning of simulation
-Cfol_initial_source=" " #"site_specific" 	# " " or "site_specific"
-Cwood_initial_source=" " #"site_specific" 	# " " or "site_specific"
-Croots_initial_source=" " #"site_specific" 	# " " or "site_specific"
-Clit_initial_source=" " #"site_specific"  	# " " or "site_specific"
-# i.e. time series of stock estimates
+## Observations streams
+Cagb_stock_source=" " 	# " " or "site_specific"
+Cbranch_stock_source=" "      # " " or "site_specific"
+Ccoarseroot_stock_source=" " 	# " " or "site_specific"
 Cfol_stock_source=" " 	# " " or "site_specific"
 Cfolmax_stock_source=" " 	# " " or "site_specific"
-Cwood_stock_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-Cstem_stock_source=" "      # " " or "site_specific"
-Cbranch_stock_source=" "      # " " or "site_specific"
-Cagb_stock_source=" " 	# " " or "site_specific"
-Ccoarseroot_stock_source=" " 	# " " or "site_specific"
-Croots_stock_source=" " 	# " " or "site_specific"
 Clit_stock_source=" "  	# " " or "site_specific"
+Cstem_stock_source=" "      # " " or "site_specific"
+Croots_stock_source=" " 	# " " or "site_specific"
 Csom_stock_source=" "  	# " " or "site_specific"
-# Parameter priors
-lca_source = "Gridded_tif" # "Gridded_nc" or "Gridded_tif" or "site_specific"
+Cwood_stock_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+Cwood_change_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
+Cwood_growth_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
+Cwood_mortality_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
+et_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+fapar_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+fire_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+foliage_to_litter_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+gpp_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+harvest_source = "" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+lai_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+nbe_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+nee_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+Reco_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+snow_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+soilwater_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+## Parameter / Other priors
+Cfol_initial_source=" " #"site_specific" 	# " " or "site_specific"
+Clit_initial_source=" " #"site_specific"  	# " " or "site_specific"
+Croots_initial_source=" " #"site_specific" 	# " " or "site_specific"
+Csom_source="site_specific" # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
+Cwood_initial_source=" " #"site_specific" 	# " " or "site_specific"
 frac_Cwood_coarse_root_source = "" # " " or "site_specific"
+lca_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
+MaxRootDepth_source = " " # " " or "site_specific" or "Gridded_tif" or "Gridded_nc"
 minLWP_source = "" # " " or "site_specific"
+MTTsom_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
+RhetQ10_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific"
 # Steady state attractor
 Cwood_potential_source = " " # "site_specific" or ""
-# Management drivers
-burnt_area_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-deforestation_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-crop_management_source = " " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
-snow_source=" " # "Gridded_nc" or "Gridded_tif" or "site_specific" or " "
 
 ## sites for analysis
 # start year
-years_to_do=as.character(c(1999:2014)) 
+years_to_do = as.character(c(1999:2014)) 
 # is this run "site" level or over a "grid"?
-cardamom_type="site"
-cardamom_grid_type=" " # "UK" or "wgs84", no value needed if site run
+cardamom_type = "site"
+cardamom_grid_type = " " # "UK" or "wgs84", no value needed if site run
 # if type = "grid" then at what spatial resolution (UK = m, wgs84 = degree)?
-cardamom_resolution=1e5
+cardamom_resolution = 1e5
 
 # site names if specific locations e.g. "UKGri"
-sites_cardamom=c("FI-Hyy")
+sites_cardamom = c("FI-Hyy")
 # lat/long of sites, if type = "grid" then these these are bottom left and top right corners
-sites_cardamom_lat=61.84741
-sites_cardamom_long=24.29477
-timestep_type="monthly"
+sites_cardamom_lat = 61.84741
+sites_cardamom_long = 24.29477
+timestep_type = "monthly"
 select_country = FALSE # If gridded run and path_to_landsea = "default", 
                        # select country based on site_cardamom. Use function
                        # available_countries() for compatible country names.
@@ -141,15 +148,15 @@ select_country = FALSE # If gridded run and path_to_landsea = "default",
 ## Define the project setup
 # NOTE: if these are not set CARDAMOM will ask you for them
 # Some interactive node options
-use_parallel=FALSE             # use parallel functions or not
-numWorkers=4                   # number of parallel tasks when using a interactive node
+use_parallel = FALSE             # use parallel functions or not
+numWorkers = 4                   # number of parallel tasks when using a interactive node
 # Some Slurm server option
 slurm_account = "" # Slurm research account, if using the slurm cluster
 slurm_concurrent_cpus = 60     # maximum number of concurrent cpus for slurm, impacts stage 3
 slurm_max_run_time = 12        # Number of hours per task to be requested in stage 3, if using slurm
 # Control where to run
 request_use_server = FALSE     # Use remote server? Currently coded for UoE Eddie.
-request_use_local_slurm = FALSE # Only applies if request_use_server == FALSE
+request_use_local_slurm = FALSE# Only applies if request_use_server == FALSE
 request_compile_server = FALSE # Copy and compile current source code on remote server
 request_compile_local = TRUE   # Compile local executable even if not running on local
 # Remote server options

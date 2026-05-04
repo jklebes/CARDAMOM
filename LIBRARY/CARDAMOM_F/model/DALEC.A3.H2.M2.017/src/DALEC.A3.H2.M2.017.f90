@@ -948,43 +948,59 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,54) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
        FLUXES(n,55) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)       
 
-      ! CUTTING 
-      ! ------------------------------------------------------------------------------------------------------------- ! 
+       !!!!!!!!!!
+       ! Assess grassland cutting and grazing management
+       !!!!!!!!!!
 
-      if (met(8,n) == -1d0) then
+       ! Estimate LAI change for the next time step. 
+       ! This structure allows the grazing to include consumption of new growth.
+       ! NOTE: met(8,n) sign change to make the lai losses now positive
+       gsi_lai_reduction = -met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
+       ! ...if LAI has increased but the driver suggests a loss 
+       !    or which is greater than already simulated consider grazing
 
-          ! Estimate labile stored above ground assuming uniform distribution across biomass
-          labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
-          call grass_cutting(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
-                             POOLS(n+1,4),POOLS(n+1,5),met(6,n),met(8,n), &
-                             FLUXES(:,22),FLUXES(n,25),FLUXES(n,26),FLUXES(n,27), &
-                             FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
-                             n,nodays,deltat(n), & 
-                             pars(28),pars(33))
+       ! If observed LAI is declining and the GSI model has not already environmentally explained this,
+       ! we will consider whether there is grazing or cutting.
+       if (met(8,n) < 0d0 .and. gsi_lai_reduction > 0d0) then
 
-      else 
+           ! If LAI loss is greater than 80 % of the existing LAI we will consider whether a cutting has occured
+           if (abs(met(8,n)) > lai*0.80d0) then
 
-          ! GRAZING 
-          ! ------------------------------------------------------------------------------------------------------------- ! 
+               ! CUTTING 
+               ! ------------------------------------------------------------------------------------------------------------- ! 
 
-          ! Estimate LAI change for the next time step. This structure allows the grazing to include consumption of new growth
-          gsi_lai_reduction = met(8,n) - ((POOLS(n,2)-POOLS(n+1,2)) / pars(15))
-          ! ...if LAI has increased but the driver suggests a loss 
-          !    or which is greater than already simulated consider grazing
-          if (met(8,n) > 0d0 .and. gsi_lai_reduction > 0d0 .and. FLUXES(n,4)+FLUXES(n,7) > pars(34)) then
-              ! Estimate labile stored above ground assuming uniform distribution across biomass
-              labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
-              call grass_grazing(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3),  & 
-                                 POOLS(n+1,4),POOLS(n+1,5),met(6,n),gsi_lai_reduction, &
-                                 FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
-                                 FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
-                                 FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
-                                 n,nodays,deltat(n), & 
-                                 pars(15),pars(27),pars(32),pars(34))
-          end if                      
-      end if 
+               ! Estimate labile stored above ground assuming uniform distribution across biomass
+               labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
+               call grass_cutting(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3), & 
+                                  POOLS(n+1,4),POOLS(n+1,5),met(6,n), &
+                                  FLUXES(:,22),FLUXES(n,25),FLUXES(n,26),FLUXES(n,27), &
+                                  FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
+                                  n,nodays,deltat(n), & 
+                                  pars(28),pars(33))
 
-      ! NO FIRE MODEL HAS BEEN IMPLEMENTED AT THIS TIME - THIS IS SOMETHING WE SHOULD CONSIDER...
+           else 
+
+               ! GRAZING 
+               ! ------------------------------------------------------------------------------------------------------------- ! 
+
+               ! Growth in the previous period must be above a minimum threshold for grazing to be allowed
+               if (FLUXES(n,4)+FLUXES(n,7) > pars(34)) then
+                   ! Estimate labile stored above ground assuming uniform distribution across biomass
+                   labile_ratio = POOLS(n+1,2) / (POOLS(n+1,2)+POOLS(n+1,3))
+                   call grass_grazing(labile_ratio,POOLS(n+1,1),POOLS(n+1,2),POOLS(n+1,3),  & 
+                                      POOLS(n+1,4),POOLS(n+1,5),met(6,n),gsi_lai_reduction, &
+                                      FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
+                                      FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
+                                      FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
+                                      n,nodays,deltat(n), & 
+                                      pars(15),pars(27),pars(32),pars(34))
+               end if ! minimum growth bounds for grazing
+
+           end if ! LAI loss not large enough to imply cutting
+
+       end if ! LAI loss cannot be explained by GSI
+
+       ! NO FIRE MODEL HAS BEEN IMPLEMENTED AT THIS TIME - THIS IS SOMETHING WE SHOULD CONSIDER...
       
     end do ! nodays loop
 
@@ -3091,7 +3107,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine grass_cutting(labile_ratio,labile,foliage,roots,litter,som,doy,  &
-                           lai_reduction,harvest,HARVESTextracted_labile,     & 
+                           harvest,HARVESTextracted_labile,     & 
                            HARVESTextracted_foliage,HARVESTextracted_roots,   &
                            HARVESTlitter_labile,HARVESTlitter_foliage,        &
                            HARVESTlitter_roots,                               &
@@ -3107,7 +3123,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, intent(in) :: doy, &
                             step_length, &
                            labile_ratio, &
-                          lai_reduction, &
                       cutting_threshold, &
                post_cutting_labile_loss
     
@@ -3136,7 +3151,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine whether cutting is plausible
     ! 1) Labile+leaf C > cutting threshold 
     ! 2) LAI > 3 (note replaced here with day of year constraints?)
-    ! 3) & LAI reduction = -1 & no cut in past month 
+    ! 3) no cut in past month 
     ! TLS: Question, conditions here are very temperate centric, can these be modifed?
     ! TLS: The timestepping of the cutting assumptions need to be dynamics in code to timestep
     if ( (labile+foliage) >= cutting_threshold   & 
@@ -3154,7 +3169,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         foliar_residue = foliar_loss * foliage_frac_res
         roots_residue  = roots_loss  * roots_frac_res
 
-        ! if havest yields > 1500 kg.DM.ha-1 proceed with cut
+        ! if harvest yields > 1500 kg.DM.ha-1 proceed with cut
         ! Note converted to gC/m2 equivalent assuming 47.5 % C content
         ! yields 71.25 gC/m2
         if ( ( (foliar_loss-foliar_residue)+ &

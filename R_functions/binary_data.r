@@ -790,6 +790,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
        
           # Crop model specific adjustment - disallow observational constraints during the first 12 months
           OBSMAT[1:steps_per_year,1:dim(OBSMAT)[2]] = -9999
+          # Remove early and late growing season LAI which are often pretty poor
+          filter = which(MET[,6] < 95 | MET[,6] > 250)
+          OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
+          OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 
           PARPRIORS[11] = 11.197440              ; PARPRIORUNC[11] = 9.3 # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution      
           PARPRIORS[13] = 0.21875                ; PARPRIORUNC[13] = 0.01 # Respiratory costs of labile transfer
@@ -813,6 +817,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
     
           # Crop model specific adjustment - disallow observational constraints during the first 12 months
           OBSMAT[1:steps_per_year,1:dim(OBSMAT)[2]] = -9999
+          # Remove early and late growing season LAI which are often pretty poor
+          filter = which(MET[,6] < 95 | MET[,6] > 250)
+          OBSMAT[filter,4]  = -9999 ; OBSMAT[filter,5]  = -9999 # Filter LAI estimates
+          OBSMAT[filter,34] = -9999 ; OBSMAT[filter,35] = -9999 # Filter fAPAR estimates
 
 #          # Parameter priors for Winter Wheat (yes something better needs to be done for the storing of these)
 #          # derived from the ATEC experiment field (but not assimilated) or Sus et al., (2010)
@@ -1374,6 +1382,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           OTHERPRIORS[4] = 0.66                ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
           OTHERPRIORS[5] = OBS$Cwood_potential ; OTHERPRIORUNC[5] = OBS$Cwood_potential_unc # Steady state attractor for wood
       } else if (modelname == "DALEC.M2.016") {
+          # Override the default deforestation fraction forcing with the grassland LAI change variable.
+          # Note the positive values, i.e. implied growth, will be ignored by the model
+          MET[,8]  = OBS$lai_change  # m2/m2
+
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[10] = 16.9                 ; PARPRIORUNC[10] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
           #PARPRIORS[15] = OBS$lca              ; PARPRIORUNC[15] = OBS$lca_unc
@@ -1386,6 +1398,10 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          OTHERPRIORS[2] =        ; OTHERPRIORUNC[2] =  # Initial soil water fraction 
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
       } else if (modelname == "DALEC.A3.H2.M2.017") {
+          # Override the default deforestation fraction forcing with the grassland LAI change variable.
+          # Note the positive values, i.e. implied growth, will be ignored by the model
+          MET[,8]  = OBS$lai_change  # m2/m2
+                
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                             # Note that this prior is difference from DALEC.C1.D1.F2.P1.
