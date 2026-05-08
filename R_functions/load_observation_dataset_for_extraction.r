@@ -199,7 +199,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  }                 
                  # Read lag variable, if present
                  if (length(which(names(data1$var) == lag_var_name_in)) > 0) {
-                     lag_in = ncvar_get(data1, unc_var_name_in) # Variable standard deviation 
+                     lag_in = ncvar_get(data1, lag_var_name_in) # Variable standard deviation 
                      lag_present = TRUE
                      if (twodim) {lag_in = array(lag_in, dim=c(dim(lag_in),1))}
                  } else {

@@ -33,13 +33,13 @@ nos_days_in_year<-function(year) {
 
     # is current year a leap or not
     nos_days = 365
-    mod=as.numeric(year)-round((as.numeric(year)/4))*4
+    mod = as.numeric(year)-round((as.numeric(year)/4))*4
     if (mod == 0) {
         nos_days = 366
-        mod=as.numeric(year)-round((as.numeric(year)/100))*100
+        mod = as.numeric(year)-round((as.numeric(year)/100))*100
         if (mod == 0) {
             nos_days  = 365
-            mod=as.numeric(year)-round((as.numeric(year)/400))*400
+            mod = as.numeric(year)-round((as.numeric(year)/400))*400
             if (mod == 0) {
                 nos_days  = 366
             }

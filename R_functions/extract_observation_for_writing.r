@@ -360,7 +360,7 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
 
    # declare output variable
    obs_out = array(NA, dim=length(doy_obs))
-   obs_lag_out = array(, dim=length(doy_obs))
+   obs_lag_out = array(NA, dim=length(doy_obs))
 
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
@@ -392,22 +392,22 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
        ## Lags for distributing a variable backwards in time must now be applied before any temporal aggregation
        for (y in seq(1, length(obs_out))) {
             # If the lag is == zero then we don't need to do anything as its is instantaneously applied
-            if (obs_lag[y] != 0) {
+            if (obs_lag_out[y] != 0) {
                 if (fraction) {
                     # If this is a fraction, i.e. not an absolute rate, 
                     # then we do a time varied average based on compound 
                     # interest calculation to preserve the mass balance
                     # If lag is not zero then we should go through and distribute
-                    obs_out[max(1,y-obs_lag[y]):y] = 1-(1-obs_out[y])**(1/obs_lag[y])
+                    obs_out[max(1,y-obs_lag_out[y]):y] = 1-(1-obs_out[y])**(1/obs_lag_out[y])
                     # We also must update the lag now to be instantanuous
-                    obs_lag[max(1,y-obs_lag[y]):y] = 0
+                    obs_lag_out[max(1,y-obs_lag_out[y]):y] = 0
                 } else {
                     # If this is an absolute, i.e. not a fractional rate, then we do a direct averaging
                     # to preserve the mass balance
                     # If lag is not zero then we should go through and distribute
-                    obs_out[max(1,y-obs_lag[y]):y] = obs_out[y] / obs_lag[y]
+                    obs_out[max(1,y-obs_lag_out[y]):y] = obs_out[y] / obs_lag_out[y]
                     # We also must update the lag now to be instantanuous
-                    obs_lag[max(1,y-obs_lag[y]):y] = 0
+                    obs_lag_out[max(1,y-obs_lag_out[y]):y] = 0
                 } 
            }
        } #  lag distributing loop
@@ -459,11 +459,15 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
        } else {
             stop("A non-valid function has been specified for the extract_timeseries_observations_without_uncertainty()")
        }
+
        # Convert the lag periods into model time steps
        obs_lag_agg = ceiling(obs_lag_agg / mean(timestep_days))             
 
        # As these are intended to be forcings we need to now distribute the values over the lagged periods.
        # We will use the inverse of the compound interest approach to achieve this.
+
+       # For the following loop all NA lags must now be set to zero
+       obs_lag_agg[is.na(obs_lag_agg)] = 0
 
        ## Lags for distributing a variable backwards in time
        if (sum(obs_lag_agg, na.rm=TRUE) != 0) {

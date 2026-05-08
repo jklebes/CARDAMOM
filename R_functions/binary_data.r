@@ -241,7 +241,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       # if this is so we need to now adjust that
       if (length(OBS$forest_management) != length(met$run_day)) {
           # we will assume that this is a constant value and will now repeast it
-          OBS$forest_management=array(OBS$forest_management, dim=c(length(met$run_day)))
+          OBS$forest_management = array(OBS$forest_management, dim=c(length(met$run_day)))
       }
 
       steps_per_year = floor(length(met$run_day)[1] / noyears)
@@ -1401,7 +1401,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
           # Override the default deforestation fraction forcing with the grassland LAI change variable.
           # Note the positive values, i.e. implied growth, will be ignored by the model
           MET[,8]  = OBS$lai_change  # m2/m2
-                
+
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
           PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
                                                                             # Note that this prior is difference from DALEC.C1.D1.F2.P1.

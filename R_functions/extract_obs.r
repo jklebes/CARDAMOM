@@ -1242,7 +1242,7 @@ extract_obs<-function(grid_long_loc,grid_lat_loc,latlon_wanted,lai_all,Csom_all,
     } else if (lai_change_source == "Gridded_nc" | lai_change_source == "Gridded_tif") {
         # Extract from the gridded array
         output = extract_timeseries_forcing(grid_long_loc,grid_lat_loc,timestep_days,years_to_load,doy_obs,
-                                            dlai_all,agg_func = "sum", fraction = TRUE,na_flag = 0,
+                                            dlai_all,agg_func = "sum", fraction = FALSE, na_flag = 0,
                                             est_var_name_in="dlai_m2m2",lag_var_name_in="dlai_lag_day",
                                             est_var_name_out="lai_change")
         lai_change = output$lai_change 

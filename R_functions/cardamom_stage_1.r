@@ -207,6 +207,7 @@ cardamom_stage_1<-function(PROJECT) {
                                                               unc_var_name_out = "",
                                                               lag_var_name_out = "dlai_lag_day",
                                                               default_lag = 0) 
+
            ## Load all time varying spatial observations
            # Leaf area index (m2/m2)
            lai_all = load_observation_dataset_for_extraction(latlon,cardamom_ext,PROJECT$grid_type,

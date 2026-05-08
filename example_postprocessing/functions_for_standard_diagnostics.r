@@ -3062,7 +3062,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3071,7 +3071,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3080,7 +3080,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3089,7 +3089,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3098,7 +3098,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3107,7 +3107,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3116,7 +3116,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3125,7 +3125,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3134,7 +3134,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3223,7 +3223,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3232,7 +3232,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3241,7 +3241,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3250,7 +3250,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3259,7 +3259,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3268,7 +3268,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3277,7 +3277,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3286,7 +3286,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3295,7 +3295,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3384,7 +3384,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3393,7 +3393,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3402,7 +3402,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3411,7 +3411,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3429,7 +3429,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3438,7 +3438,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3447,7 +3447,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3456,7 +3456,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3545,7 +3545,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3554,7 +3554,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3563,7 +3563,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3572,7 +3572,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3581,7 +3581,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3590,7 +3590,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3599,7 +3599,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3608,7 +3608,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3617,7 +3617,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3706,7 +3706,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3715,7 +3715,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3724,7 +3724,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3733,7 +3733,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3742,7 +3742,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3751,7 +3751,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3760,7 +3760,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3769,7 +3769,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3778,7 +3778,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -3867,7 +3867,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -3876,7 +3876,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -3885,7 +3885,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -3894,7 +3894,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -3903,7 +3903,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -3912,7 +3912,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -3921,7 +3921,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -3930,7 +3930,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -3939,7 +3939,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -4028,7 +4028,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -4037,7 +4037,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -4046,7 +4046,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -4055,7 +4055,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -4064,7 +4064,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -4073,7 +4073,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -4082,7 +4082,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -4091,7 +4091,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -4100,7 +4100,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
@@ -4189,7 +4189,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
     e[3] = ee[3] ; e[4] = ee[4]
     # create axis
-    zrange1 = quantile(values(var1), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange1 = quantile(values(var1), prob=c(0.10,0.90), na.rm=TRUE)
     var1[var1 < zrange1[1]] = zrange1[1] ; var1[var1 > zrange1[2]] = zrange1[2]
     if (zrange1[1] < 0 & zrange1[2] > 0) {
         zrange1 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in1 = colour_choices_sign
@@ -4198,7 +4198,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in1 = colour_choices_gain
     }
-    zrange2 = quantile(values(var2), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange2 = quantile(values(var2), prob=c(0.10,0.90), na.rm=TRUE)
     var2[var2 < zrange2[1]] = zrange2[1] ; var2[var2 > zrange2[2]] = zrange2[2]    
     if (zrange2[1] < 0 & zrange2[2] > 0) {
         zrange2 = c(-1,1) * max(abs(zrange1)) ; colour_choices_in2 = colour_choices_sign
@@ -4207,7 +4207,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in2 = colour_choices_gain
     }
-    zrange3 = quantile(values(var3), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange3 = quantile(values(var3), prob=c(0.10,0.90), na.rm=TRUE)
     var3[var3 < zrange3[1]] = zrange3[1] ; var3[var3 > zrange3[2]] = zrange3[2]            
     if (zrange3[1] < 0 & zrange3[2] > 0) {
         zrange3 = c(-1,1) * max(abs(zrange3)) ; colour_choices_in3 = colour_choices_sign
@@ -4216,7 +4216,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in3 = colour_choices_gain
     }
-    zrange4 = quantile(values(var4), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange4 = quantile(values(var4), prob=c(0.10,0.90), na.rm=TRUE)
     var4[var4 < zrange4[1]] = zrange4[1] ; var4[var4 > zrange4[2]] = zrange4[2]                
     if (zrange4[1] < 0 & zrange4[2] > 0) {
         zrange4 = c(-1,1) * max(abs(zrange4)) ; colour_choices_in4 = colour_choices_sign
@@ -4225,7 +4225,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in4 = colour_choices_gain
     }
-    zrange5 = quantile(values(var5), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange5 = quantile(values(var5), prob=c(0.10,0.90), na.rm=TRUE)
     var5[var5 < zrange5[1]] = zrange5[1] ; var5[var5 > zrange5[2]] = zrange5[2]                    
     if (zrange5[1] < 0 & zrange5[2] > 0) {
         zrange5 = c(-1,1) * max(abs(zrange5)) ; colour_choices_in5 = colour_choices_sign
@@ -4234,7 +4234,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in5 = colour_choices_gain
     }
-    zrange6 = quantile(values(var6), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange6 = quantile(values(var6), prob=c(0.10,0.90), na.rm=TRUE)
     var6[var6 < zrange6[1]] = zrange6[1] ; var6[var6 > zrange6[2]] = zrange6[2]        
     if (zrange6[1] < 0 & zrange6[2] > 0) {
         zrange6 = c(-1,1) * max(abs(zrange6)) ; colour_choices_in6 = colour_choices_sign
@@ -4243,7 +4243,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in6 = colour_choices_gain
     }
-    zrange7 = quantile(values(var7), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange7 = quantile(values(var7), prob=c(0.10,0.90), na.rm=TRUE)
     var7[var7 < zrange7[1]] = zrange7[1] ; var7[var7 > zrange7[2]] = zrange7[2]            
     if (zrange7[1] < 0 & zrange7[2] > 0) {
         zrange7 = c(-1,1) * max(abs(zrange7)) ; colour_choices_in7 = colour_choices_sign
@@ -4252,7 +4252,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in7 = colour_choices_gain
     }
-    zrange8 = quantile(values(var8), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange8 = quantile(values(var8), prob=c(0.10,0.90), na.rm=TRUE)
     var8[var8 < zrange8[1]] = zrange8[1] ; var8[var8 > zrange8[2]] = zrange8[2]                
     if (zrange8[1] < 0 & zrange8[2] > 0) {
         zrange8 = c(-1,1) * max(abs(zrange8)) ; colour_choices_in8 = colour_choices_sign
@@ -4261,7 +4261,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     } else { 
         colour_choices_in8 = colour_choices_gain
     }
-    zrange9 = quantile(values(var9), prob=c(0.05,0.95), na.rm=TRUE)
+    zrange9 = quantile(values(var9), prob=c(0.10,0.90), na.rm=TRUE)
     var9[var9 < zrange9[1]] = zrange9[1] ; var9[var9 > zrange9[2]] = zrange9[2]                    
     if (zrange9[1] < 0 & zrange9[2] > 0) {
         zrange9 = c(-1,1) * max(abs(zrange9)) ; colour_choices_in9 = colour_choices_sign
