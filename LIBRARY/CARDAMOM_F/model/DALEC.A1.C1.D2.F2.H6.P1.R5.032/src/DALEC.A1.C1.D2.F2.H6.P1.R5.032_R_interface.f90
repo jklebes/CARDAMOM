@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.A1.C1.D2.F2.H4.P1 and the R code
+! Subroutine to allow direct interface between DALEC.A1.C1.D2.F2.H6.P1.R5.032 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 !

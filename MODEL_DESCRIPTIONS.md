@@ -40,7 +40,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 21 | DALEC.A1.C1.D2.F2.H2.P5.021    | DALEC_CDEA_ACM2_BUCKET_LAB                 |                              | T. L. Smallman               | Unpublished |
 | 22 | DALEC.A1.C1.D2.F2.H2.P6.022    | DALEC_CDEA_ACM2_BUCKET_LAB_wMRT            |                              | T. L. Smallman               | Unpublished |
 | 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
-| 24 | NOT IN USE                     | NOT IN USE          | NOT IN USE                                          | NOT IN USE                   | Unpublished |
+| 24 | DALEC.A1.C1.D2.F2.H4.P1.024    | NA                  | As DALEC.4. but with van Genuchten hydrology        | T. L. Smallman               | Unpublished |
 | 25 | NOT IN USE                     | NOT IN USE          | NOT IN USE                                          | NOT IN USE                   | Unpublished |
 | !26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
@@ -48,7 +48,7 @@ M = Managed Grassland / arable crops (Table 10)
 | !29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Published   |
 | !30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
-| 32 | DALEC.A1.C1.D2.F2.H4.P1.032    | NA                  | As DALEC.4. but with van Genuchten hydrology        | Orci-Fernandez               | Unpublished |
+| 32 | DALEC.A1.C1.D2.F2.H6.P1.R5.032 | NA                  | As DALEC.24. but with 2 soil layers and soil dependent Rh | Orci-Fernandez         | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 | !34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
 | !35 | DALEC.A1.C7.D2.F2.H2.P1.035    |                     | As DALEC.4. with branch turnover                    | D. T. Milodowski             | Unpublished   |
@@ -105,6 +105,7 @@ M = Managed Grassland / arable crops (Table 10)
 | H3         | As H2 but min LWP parameterisable                                     | Unpublished (D. T. Milodowski) |
 | H4         | As H2 but Saxton pedotransfer functions replaced with van Genuchten   | Unpublished (L. Orci-Fernandez)|
 | H5         | As H3 but with iWUE parameterisable                                   | Unpublished (T. L. Smallman)   | 
+| H6         | As H4 but with 2 soil layers                                          | Unpublished (L. Orci-Fernandez)|
 
 #### TABLE 7. Nitrogen pools represented and connected structure sub-models
 
@@ -140,7 +141,7 @@ M = Managed Grassland / arable crops (Table 10)
 | R2         | Leaf maintenance respiration estimated by the Reich et al., 2008 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Famiglietti et al., 2021)  |
 | R3         | Leaf maintenance respiration estimated by the Heskel et al., 2016 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Unpublished |
 | R4         | Autotrophic respiration as R0. Heterotrophic respiration following an implementation of microbial decomposition | Xenakis & Williams (2014) |
-
+| R5         | Heterotrophic respiration now modified by water table depth                | Unpublished |
 #### TABLE 10. Managed agricultural ecosystem sub-models
 
 | Model Name | Short Description                                                          | Details                   |
