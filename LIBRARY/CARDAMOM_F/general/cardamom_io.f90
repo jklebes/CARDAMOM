@@ -235,11 +235,11 @@ module cardamom_io
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC...024 NOT IN USE
-        DATAin%nopools = 8
-        DATAin%nopars = 52
-        DATAin%nofluxes = 57
-        DATAin%nodiags = 23 ! Initial value, will need updating
+        ! ID = 24 - DALEC.A1.C1.D2.F2.H4.P1.024
+        DATAin%nopools = 7
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC...025 NOT IN USE
         DATAin%nopools = 8
@@ -283,7 +283,7 @@ module cardamom_io
         DATAin%nofluxes = 51
         DATAin%nodiags = 24
     else if (DATAin%ID == 32) then
-        ! ID = 32 - DALEC.A1.C1.D2.F2.H4.P1.032
+        ! ID = 32 - DALEC.A1.C1.D2.F2.H6.P1.R5.032
         DATAin%nopools = 7
         DATAin%nopars = 37
         DATAin%nofluxes = 51

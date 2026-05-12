@@ -2419,7 +2419,7 @@ key_variables_parameters_spatial_correlation<-function(mask_area,mask_name) {
     plot(landmask, add=TRUE, lwd=0.5)
     plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
          cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
-    ylab.text = eval(bquote(expression("NPPflux wood ~ "*Delta*"Wood (r = "*.(round(mean(values(var8),na.rm=TRUE),digits=2))*")")))    
+    ylab.text = eval(bquote(expression("NPPflux wood ~ "*Delta*"Soil (r = "*.(round(mean(values(var8),na.rm=TRUE),digits=2))*")")))    
     mtext(ylab.text, side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
     plot(landmask, add=TRUE, lwd=0.5)
     plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",

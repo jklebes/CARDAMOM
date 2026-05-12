@@ -2953,6 +2953,134 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !-----------------------------------------------------------------
   !
+!  subroutine gravitational_drainage(time_period_days)
+!
+!    ! Integrator for soil gravitational drainage.
+!    ! Due to the longer time steps undertake by ACM / DALEC and the fact that
+!    ! drainage is a concurrent processes we assume that drainage occurs at
+!    ! the bottom of the column first creating space into which water can drain
+!    ! from the top down. Therefore we draing from the bottom first and then the top.
+!    ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
+!    !       has already been updated in soil mass balance
+!
+!    implicit none
+!
+!    ! arguments
+!    integer, intent(in) :: time_period_days
+!
+!    ! local variables..
+!    integer :: t
+!    double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
+!                                               halfway, & ! half way point between start and end point of integration
+!                                                liquid, & ! liquid water in local soil layer (m3/m3)
+!                                         avail_to_flow, & ! liquid content above field capacity (m3/m3)
+!                                               iceprop, & ! fraction of soil layer which is ice
+!                                          pot_drainage    ! estimats of time step potential drainage rate (m/s)
+!    double precision  :: tmp1,tmp2,tmp3, tmp4 &
+!                                       ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
+!                                      ,change   ! absolute volume of water drainage in current layer (m3/day)
+!
+!
+!    ! calculate soil ice proportion; at the moment
+!    ! assume everything liquid
+!    iceprop = 0d0
+!
+!    ! except the surface layer in the mean daily temperature is < 0oC
+!    if (meant < 1d0) iceprop(1) = 1d0
+!
+!    ! zero water fluxes
+!    waterchange = 0d0
+!
+!    ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+!    ! therefore we must convert
+!    underflow = underflow * 1d-3
+!    water_grav_flow = water_grav_flow * 1d-3
+!
+!    ! estimate potential drainage rate for the current time period
+!    liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
+!    ! estimate how much liquid is available to flow
+!    avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
+!    ! trapezium rule scaler and the half-way point between current and field capacity
+!    dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
+!    do t = 1, nos_soil_layers
+!       if (avail_to_flow(t) > 0d0) then
+!           ! Trapezium rule for approximating integral of drainage rate
+!           ! At current soil water content
+!           call calculate_relative_water_frac(t,liquid(t),tmp4)
+!           call calculate_soil_conductivity(t,tmp4,tmp1)       
+!		   ! At field capacity
+!           call calculate_relative_water_frac(t,field_capacity(t),tmp4)
+!           call calculate_soil_conductivity(t,tmp4,tmp2)
+!           ! Half way to field capacity
+!           call calculate_relative_water_frac(t,halfway(t),tmp4)
+!           call calculate_soil_conductivity(t,tmp4,tmp3)
+!           ! Combine
+!           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
+!	   else
+!           ! We are at field capacity currently even after rainfall has been infiltrated.
+!           ! Assume that the potential drainage rate is that at field capacity
+!           call calculate_relative_water_frac(t,field_capacity(t),tmp4)
+!           call calculate_soil_conductivity(t,tmp4,pot_drainage(t))
+!       endif ! water above field capacity to flow?
+!    end do ! soil layers
+!    ! Scale potential drainage from per second to per day
+!    pot_drainage = pot_drainage * seconds_per_day
+!
+!    ! Integrate drainage over each day until time period has been reached or
+!    ! each soil layer has reached field capacity
+!    t = 1
+!    do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
+!
+!       ! Estimate liquid content and how much is available to flow / drain
+!       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
+!                     - field_capacity(1:nos_soil_layers)
+!
+!       ! ...then from the top down
+!       do soil_layer = 1, nos_soil_layers
+!
+!          ! initial conditions; i.e. is there liquid water and more water than
+!          ! layer can hold
+!          if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
+!
+!              ! Unsaturated volume of layer below (m3 m-2)
+!              unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
+!                    * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
+!              ! Restrict potential rate calculate above for the available water
+!              ! and available space in the layer below.
+!              ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
+!              change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
+!              ! update soil layer below with drained liquid
+!              waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
+!              waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+!              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+!              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
+!
+!          end if ! some liquid water and drainage possible
+!
+!       end do ! soil layers
+!
+ !      ! update soil water profile
+ !      soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+ !                                        + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
+ !      ! estimate drainage from bottom of soil column (MgH2O/m2/day)
+ !      ! NOTES: that underflow is reset outside of the daily soil loop
+ !      underflow = underflow + waterchange(nos_soil_layers+1)
+!
+!       ! Reset now we have moves that liquid
+!       waterchange = 0d0
+!       ! integerate through time period
+!       t = t + 1
+!
+!    end do ! while condition
+!
+!    ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
+!    underflow = underflow * 1d3
+!    water_grav_flow = water_grav_flow * 1d3
+!
+!  end subroutine gravitational_drainage
+  !
+  !-----------------------------------------------------------------
+  !
   subroutine gravitational_drainage(time_period_days)
 
     ! Integrator for soil gravitational drainage.
@@ -2969,7 +3097,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     integer, intent(in) :: time_period_days
 
     ! local variables..
-    integer :: t
+    integer :: t, d
     double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
                                                halfway, & ! half way point between start and end point of integration
                                                 liquid, & ! liquid water in local soil layer (m3/m3)
@@ -2988,14 +3116,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! except the surface layer in the mean daily temperature is < 0oC
     if (meant < 1d0) iceprop(1) = 1d0
 
-    ! zero water fluxes
-    waterchange = 0d0
-
     ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
     water_grav_flow = water_grav_flow * 1d-3
 
+    ! zero water fluxes
+    waterchange = 0d0
+
+! Integrate drainage over each 30 min within day until time period has been reached or
+! each soil layer has reached field capacity
+do while (d < 49 .and. maxval(soil_waterfrac - field_capacity) > vsmall) 
+
+!BASED ON THE RK4_STEP AND THE RHS EQUATION, I CAN REWRITE THIS SECTION TO ITERATE UNTIL THE END OF THE DAY OR SOME STATIONARY THRESHOLD IS MET
     ! estimate potential drainage rate for the current time period
     liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
     ! estimate how much liquid is available to flow
@@ -3003,85 +3136,60 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! trapezium rule scaler and the half-way point between current and field capacity
     dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
     do t = 1, nos_soil_layers
-       if (avail_to_flow(t) > 0d0) then
-           ! Trapezium rule for approximating integral of drainage rate
-           ! At current soil water content
-           call calculate_relative_water_frac(t,liquid(t),tmp4)
-           call calculate_soil_conductivity(t,tmp4,tmp1)       
-		   ! At field capacity
-           call calculate_relative_water_frac(t,field_capacity(t),tmp4)
-           call calculate_soil_conductivity(t,tmp4,tmp2)
-           ! Half way to field capacity
-           call calculate_relative_water_frac(t,halfway(t),tmp4)
-           call calculate_soil_conductivity(t,tmp4,tmp3)
-           ! Combine
-           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
-	   else
-           ! We are at field capacity currently even after rainfall has been infiltrated.
-           ! Assume that the potential drainage rate is that at field capacity
-           call calculate_relative_water_frac(t,field_capacity(t),tmp4)
-           call calculate_soil_conductivity(t,tmp4,pot_drainage(t))
-       endif ! water above field capacity to flow?
+       ! At current soil water content
+       call calculate_relative_water_frac(t,liquid(t),tmp4)
+       call calculate_soil_conductivity(t,tmp4,pot_drainage(t))       
     end do ! soil layers
-    ! Scale potential drainage from per second to per day
-    pot_drainage = pot_drainage * seconds_per_day
+    ! Scale potential drainage from per second to per time step
+    pot_drainage = pot_drainage * 1800d0
+!END THIS SECTION TO REWRITE - thiS WOULD REQUIRE SOME SORT OF MAD THING BELOW TO UPDATE DUPLICATE LOCAL VARIABLE BEFORE DOING SO TO MEMORY VALUES
+    ! Estimate liquid content and how much is available to flow / drain
+    avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
+                  - field_capacity(1:nos_soil_layers)
 
-    ! Integrate drainage over each day until time period has been reached or
-    ! each soil layer has reached field capacity
-    t = 1
-    do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
+    ! ...then from the top down
+    do soil_layer = 1, nos_soil_layers
 
-       ! Estimate liquid content and how much is available to flow / drain
-       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
-                     - field_capacity(1:nos_soil_layers)
+       ! initial conditions; i.e. is there liquid water and more water than
+       ! layer can hold
+       if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
 
-       ! ...then from the top down
-       do soil_layer = 1, nos_soil_layers
+           ! Unsaturated volume of layer below (m3 m-2)
+           unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
+                 * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
+           ! Restrict potential rate calculate above for the available water
+           ! and available space in the layer below.
+           ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
+           change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
+           ! update soil layer below with drained liquid
+           waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
+           waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+           ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+           water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
 
-          ! initial conditions; i.e. is there liquid water and more water than
-          ! layer can hold
-          if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
+       end if ! some liquid water and drainage possible
 
-              ! Unsaturated volume of layer below (m3 m-2)
-              unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
-                    * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
-              ! Restrict potential rate calculate above for the available water
-              ! and available space in the layer below.
-              ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
-              change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
-              ! update soil layer below with drained liquid
-              waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
-              waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
-              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
-              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
+    end do ! soil layers
 
-          end if ! some liquid water and drainage possible
+    ! update soil water profile
+    soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+                                      + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
+    ! estimate drainage from bottom of soil column (MgH2O/m2/day)
+    ! NOTES: that underflow is reset outside of the daily soil loop
+    underflow = underflow + waterchange(nos_soil_layers+1)
 
-       end do ! soil layers
+    ! Reset now we have moves that liquid
+    waterchange = 0d0
+    ! integerate through time period
+    d = d + 1
 
-       ! update soil water profile
-       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                         + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
-       ! estimate drainage from bottom of soil column (MgH2O/m2/day)
-       ! NOTES: that underflow is reset outside of the daily soil loop
-       underflow = underflow + waterchange(nos_soil_layers+1)
-
-       ! Reset now we have moves that liquid
-       waterchange = 0d0
-       ! integerate through time period
-       t = t + 1
-
-    end do ! while condition
+end do ! while condition
 
     ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
     underflow = underflow * 1d3
     water_grav_flow = water_grav_flow * 1d3
 
   end subroutine gravitational_drainage
-  !
-  !-----------------------------------------------------------------
-  !
-
   !
   !-----------------------------------------------------------------
   !
