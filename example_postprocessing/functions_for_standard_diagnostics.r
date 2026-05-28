@@ -10264,6 +10264,636 @@ summary_plots<-function() {
     plot(landmask, add=TRUE, lwd=0.5)
     dev.off()
 
+
+    ###
+    ## Create maps of the confidence locations across 95 %CI and 68 % quantiles
+
+
+    ###
+    ## Create maps of the confidence locations across 95 %CI and 68 % quantiles
+
+    # Determine the correct quantiles
+    ee = length(grid_output$num_quantiles)
+    ss = 1
+    ci95 = rep(NA, 2)
+    ci68 = rep(NA, 2)    
+    for (i in seq(1, floor(length(grid_output$num_quantiles)*0.5))) {
+         tmp1 = grid_output$num_quantiles[ss] ; tmp2 = grid_output$num_quantiles[ee]         
+         if (round(tmp2-tmp1, digits=2) == 0.95) { ci95[1] = ss ; ci95[2] = ee }
+         if (round(tmp2-tmp1, digits=2) == 0.68) { ci68[1] = ss ; ci68[2] = ee  }
+         ss = ss + 1 ; ee = ee - 1
+    }
+
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci95[2]]-grid_output$final_dCtotal_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCbiomass_gCm2[,,ci95[2]]-grid_output$final_dCbiomass_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCdom_gCm2[,,ci95[2]]-grid_output$final_dCdom_gCm2[,,ci95[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    biomass_sinkC = which(var2 > 0 & grid_output$final_dCbiomass_gCm2[,,ci95[1]] > 0)
+    biomass_sourceC = which(var2 < 0 & grid_output$final_dCbiomass_gCm2[,,ci95[2]] < 0)
+    biomass_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCbiomass_gCm2[,,ci95[2]] > 0 & grid_output$final_dCbiomass_gCm2[,,ci95[1]] < 0)
+    dom_sinkC = which(var3 > 0 & grid_output$final_dCdom_gCm2[,,ci95[1]] > 0)
+    dom_sourceC = which(var3 < 0 & grid_output$final_dCdom_gCm2[,,ci95[2]] < 0)
+    dom_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCdom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCdom_gCm2[,,ci95[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    biomass_sinkC = which(var2 > 0 & grid_output$final_dCbiomass_gCm2[,,ci95[1]] > 0)
+    biomass_sourceC = which(var2 < 0 & grid_output$final_dCbiomass_gCm2[,,ci95[2]] < 0)
+    biomass_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCbiomass_gCm2[,,ci95[2]] > 0 & grid_output$final_dCbiomass_gCm2[,,ci95[1]] < 0)
+    dom_sinkC = which(var3 > 0 & grid_output$final_dCdom_gCm2[,,ci95[1]] > 0)
+    dom_sourceC = which(var3 < 0 & grid_output$final_dCdom_gCm2[,,ci95[2]] < 0)
+    dom_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCdom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCdom_gCm2[,,ci95[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    biomass_filter = unique(c(biomass_sinkC,biomass_sourceC,biomass_neutralC)) ; biomass_filter = possible_points[-biomass_filter]
+    dom_filter = unique(c(dom_sinkC,dom_sourceC,dom_neutralC)) ; dom_filter = possible_points[-dom_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[biomass_filter] = NA ; var3[dom_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1       ; var1[total_sourceC] = -1       ; var1[total_neutralC] = 0
+    var2[biomass_sinkC] = 1     ; var2[biomass_sourceC] = -1     ; var2[biomass_neutralC] = 0
+    var3[dom_sinkC] = 1         ; var3[dom_sourceC] = -1         ; var3[dom_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # legend position
+    ee = ext(var1) ; e = rep(NA, 4)
+    e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+    e[3] = ee[3] ; e[4] = ee[4]
+    # ranges
+    zrange1 = c(-1,1)
+    zrange2 = zrange1
+    zrange3 = zrange1
+    main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_Total_biomass_DOM_change_classification_maps_significant_only.png",sep=""), height = 1800, width = 5000, res = 300)
+    par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,6),omi=c(0.01,0.3,0.01,0.01))
+    # Final stock changes, sign change at 95 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste("NBP (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Biomass (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"DOM (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci68[2]]-grid_output$final_dCtotal_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCbiomass_gCm2[,,ci68[2]]-grid_output$final_dCbiomass_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCdom_gCm2[,,ci68[2]]-grid_output$final_dCdom_gCm2[,,ci68[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    biomass_sinkC = which(var2 > 0 & grid_output$final_dCbiomass_gCm2[,,ci68[1]] > 0)
+    biomass_sourceC = which(var2 < 0 & grid_output$final_dCbiomass_gCm2[,,ci68[2]] < 0)
+    biomass_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCbiomass_gCm2[,,ci68[2]] > 0 & grid_output$final_dCbiomass_gCm2[,,ci68[1]] < 0)
+    dom_sinkC = which(var3 > 0 & grid_output$final_dCdom_gCm2[,,ci68[1]] > 0)
+    dom_sourceC = which(var3 < 0 & grid_output$final_dCdom_gCm2[,,ci68[2]] < 0)
+    dom_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCdom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCdom_gCm2[,,ci68[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    biomass_sinkC = which(var2 > 0 & grid_output$final_dCbiomass_gCm2[,,ci68[1]] > 0)
+    biomass_sourceC = which(var2 < 0 & grid_output$final_dCbiomass_gCm2[,,ci68[2]] < 0)
+    biomass_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCbiomass_gCm2[,,ci68[2]] > 0 & grid_output$final_dCbiomass_gCm2[,,ci68[1]] < 0)
+    dom_sinkC = which(var3 > 0 & grid_output$final_dCdom_gCm2[,,ci68[1]] > 0)
+    dom_sourceC = which(var3 < 0 & grid_output$final_dCdom_gCm2[,,ci68[2]] < 0)
+    dom_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCdom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCdom_gCm2[,,ci68[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    biomass_filter = unique(c(biomass_sinkC,biomass_sourceC,biomass_neutralC)) ; biomass_filter = possible_points[-biomass_filter]
+    dom_filter = unique(c(dom_sinkC,dom_sourceC,dom_neutralC)) ; dom_filter = possible_points[-dom_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[biomass_filter] = NA ; var3[dom_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1       ; var1[total_sourceC] = -1       ; var1[total_neutralC] = 0
+    var2[biomass_sinkC] = 1     ; var2[biomass_sourceC] = -1     ; var2[biomass_neutralC] = 0
+    var3[dom_sinkC] = 1         ; var3[dom_sourceC] = -1         ; var3[dom_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # Final stock changes, sign change at 68 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"NBP (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Biomass (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"DOM (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    dev.off()
+
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCwood_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci95[2]]-grid_output$final_dCtotal_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCwood_gCm2[,,ci95[2]]-grid_output$final_dCwood_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCsom_gCm2[,,ci95[2]]-grid_output$final_dCsom_gCm2[,,ci95[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci95[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci95[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci95[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci95[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci95[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci95[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    wood_filter = unique(c(wood_sinkC,wood_sourceC,wood_neutralC)) ; wood_filter = possible_points[-wood_filter]
+    som_filter = unique(c(som_sinkC,som_sourceC,som_neutralC)) ; som_filter = possible_points[-som_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[wood_filter] = NA ; var3[som_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1 ; var1[total_sourceC] = -1 ; var1[total_neutralC] = 0
+    var2[wood_sinkC] = 1  ; var2[wood_sourceC] = -1  ; var2[wood_neutralC] = 0
+    var3[som_sinkC] = 1   ; var3[som_sourceC] = -1   ; var3[som_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # legend position
+    ee = ext(var1) ; e = rep(NA, 4)
+    e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+    e[3] = ee[3] ; e[4] = ee[4]
+    # ranges
+    zrange1 = c(-1,1)
+    zrange2 = zrange1
+    zrange3 = zrange1
+    main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_Total_wood_SOM_change_classification_maps_significant_only.png",sep=""), height = 1800, width = 5000, res = 300)
+    par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,6),omi=c(0.01,0.3,0.01,0.01))
+    # Final stock changes, sign change at 95 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste("NBP (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Wood (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Soil (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCwood_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci68[2]]-grid_output$final_dCtotal_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCwood_gCm2[,,ci68[2]]-grid_output$final_dCwood_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCsom_gCm2[,,ci68[2]]-grid_output$final_dCsom_gCm2[,,ci68[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci68[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci68[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci68[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci68[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci68[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci68[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    wood_filter = unique(c(wood_sinkC,wood_sourceC,wood_neutralC)) ; wood_filter = possible_points[-wood_filter]
+    som_filter = unique(c(som_sinkC,som_sourceC,som_neutralC)) ; som_filter = possible_points[-som_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[wood_filter] = NA ; var3[som_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1 ; var1[total_sourceC] = -1 ; var1[total_neutralC] = 0
+    var2[wood_sinkC] = 1  ; var2[wood_sourceC] = -1  ; var2[wood_neutralC] = 0
+    var3[som_sinkC] = 1   ; var3[som_sourceC] = -1   ; var3[som_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # Final stock changes, sign change at 68 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"NBP (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Wood (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Soil (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    dev.off()
+
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCwood_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci95[2]]-grid_output$final_dCtotal_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCwood_gCm2[,,ci95[2]]-grid_output$final_dCwood_gCm2[,,ci95[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCsom_gCm2[,,ci95[2]]-grid_output$final_dCsom_gCm2[,,ci95[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci95[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci95[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci95[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci95[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci95[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci95[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci95[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci95[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci95[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci95[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci95[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci95[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    wood_filter = unique(c(wood_sinkC,wood_sourceC,wood_neutralC)) ; wood_filter = possible_points[-wood_filter]
+    som_filter = unique(c(som_sinkC,som_sourceC,som_neutralC)) ; som_filter = possible_points[-som_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[wood_filter] = NA ; var3[som_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1 ; var1[total_sourceC] = -1 ; var1[total_neutralC] = 0
+    var2[wood_sinkC] = 1  ; var2[wood_sourceC] = -1  ; var2[wood_neutralC] = 0
+    var3[som_sinkC] = 1   ; var3[som_sourceC] = -1   ; var3[som_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # legend position
+    ee = ext(var1) ; e = rep(NA, 4)
+    e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+    e[3] = ee[3] ; e[4] = ee[4]
+    # ranges
+    zrange1 = c(-1,1)
+    zrange2 = zrange1
+    zrange3 = zrange1
+    main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_Total_wood_SOM_change_classification_maps_significant_only.png",sep=""), height = 1800, width = 5000, res = 300)
+    par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
+    # Final stock changes, sign change at 95 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste("NBP (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Wood (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=(colour_choices_default), type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Soil (95 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    # Change stocks for 95 % CI
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCwood_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,ci68[2]]-grid_output$final_dCtotal_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCwood_gCm2[,,ci68[2]]-grid_output$final_dCwood_gCm2[,,ci68[1]])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCsom_gCm2[,,ci68[2]]-grid_output$final_dCsom_gCm2[,,ci68[1]])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    #print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    #print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci68[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci68[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci68[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] < 0)
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,ci68[2]] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,ci68[2]] > 0 & grid_output$final_dCtotal_gCm2[,,ci68[1]] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,ci68[2]] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,ci68[2]] > 0 & grid_output$final_dCwood_gCm2[,,ci68[1]] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,ci68[2]] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,ci68[2]] > 0 & grid_output$final_dCsom_gCm2[,,ci68[1]] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    wood_filter = unique(c(wood_sinkC,wood_sourceC,wood_neutralC)) ; wood_filter = possible_points[-wood_filter]
+    som_filter = unique(c(som_sinkC,som_sourceC,som_neutralC)) ; som_filter = possible_points[-som_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[wood_filter] = NA ; var3[som_filter] = NA
+    # Reset values to -1 for source, +1 for sink, 0 neutral
+    var1[total_sinkC] = 1 ; var1[total_sourceC] = -1 ; var1[total_neutralC] = 0
+    var2[wood_sinkC] = 1  ; var2[wood_sourceC] = -1  ; var2[wood_neutralC] = 0
+    var3[som_sinkC] = 1   ; var3[som_sourceC] = -1   ; var3[som_neutralC] = 0    
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # Final stock changes, sign change at 68 % CI
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"NBP (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Wood (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(cex=legend_cex),
+         main = "", col=colour_choices_default, type="classes", levels = c("source","neutral","sink"))
+    mtext(expression(paste(Delta,"Soil (68 % CI)",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    dev.off()
+
+    ###
+    ## Confidence in source/sink/neutral?
+    
+    # Change stocks
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCbiomass_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,high_quant]-grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCbiomass_gCm2[,,high_quant]-grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCdom_gCm2[,,high_quant]-grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,low_quant] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,high_quant] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,high_quant] > 0 & grid_output$final_dCtotal_gCm2[,,low_quant] < 0)
+    biomass_sinkC = which(var2 > 0 & grid_output$final_dCbiomass_gCm2[,,low_quant] > 0)
+    biomass_sourceC = which(var2 < 0 & grid_output$final_dCbiomass_gCm2[,,high_quant] < 0)
+    biomass_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCbiomass_gCm2[,,high_quant] > 0 & grid_output$final_dCbiomass_gCm2[,,low_quant] < 0)
+    dom_sinkC = which(var3 > 0 & grid_output$final_dCdom_gCm2[,,low_quant] > 0)
+    dom_sourceC = which(var3 < 0 & grid_output$final_dCdom_gCm2[,,high_quant] < 0)
+    dom_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCdom_gCm2[,,high_quant] > 0 & grid_output$final_dCdom_gCm2[,,low_quant] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    biomass_filter = unique(c(biomass_sinkC,biomass_sourceC,biomass_neutralC)) ; biomass_filter = possible_points[-biomass_filter]
+    dom_filter = unique(c(dom_sinkC,dom_sourceC,dom_neutralC)) ; dom_filter = possible_points[-dom_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[biomass_filter] = NA ; var3[dom_filter] = NA
+    var4[total_filter] = NA ; var5[biomass_filter] = NA ; var6[dom_filter] = NA
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var4[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var5[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var6[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var4 = rast(vals = t((var4)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var5 = rast(vals = t((var5)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var6 = rast(vals = t((var6)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # legend position
+    ee = ext(var1) ; e = rep(NA, 4)
+    e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+    e[3] = ee[3] ; e[4] = ee[4]
+    # ranges
+    zrange1 = c(-1.01,1.01)*max(abs(quantile(c(values(var1),values(var2),values(var3)), prob=c(0.001,0.999),na.rm=TRUE)))
+    zrange2 = zrange1
+    zrange3 = zrange1
+    zrange4 = c(0,1)*quantile(c(values(var4),values(var5),values(var6)), prob=c(0.999),na.rm=TRUE)
+    zrange5 = zrange4
+    zrange6 = zrange4
+    main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_Total_biomass_DOM_change_and_CI_maps_significant_only.png",sep=""), height = 1800, width = 5000, res = 300)
+    par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
+    # Final stock changes, median estimates
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+#    mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    mtext(expression(paste("NBP (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+    mtext(expression(paste(Delta,"Biomass (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+    mtext(expression(paste(Delta,"DOM (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    # Final stock changes, confidence interval
+    plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+#    mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    mtext(expression(paste(Delta,"NBP CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+    mtext(expression(paste(Delta,"Biomass CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+    mtext(expression(paste(Delta,"DOM CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    dev.off()
+
+    # Change stocks
+    # Assign variables
+    var1 = grid_output$final_dCtotal_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var2 = grid_output$final_dCwood_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var3 = grid_output$final_dCsom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
+    var4 = (grid_output$final_dCtotal_gCm2[,,high_quant]-grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
+    var5 = (grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant])*1e-2*(1/nos_years)
+    var6 = (grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant])*1e-2*(1/nos_years)  
+    # Update information - what is the proportion of pixels we can assign source / sink / neutral too?
+    print("=== Filter for pixels which are > 95 % confident in source or sink or neutral ===")
+    print(" Note: Neutral defined as < 0.1 MgC/ha/yr and 95 % CI spanning zero")
+    total_sinkC = which(var1 > 0 & grid_output$final_dCtotal_gCm2[,,low_quant] > 0)
+    total_sourceC = which(var1 < 0 & grid_output$final_dCtotal_gCm2[,,high_quant] < 0)
+    total_neutralC = which(abs(var1) < 0.1 & grid_output$final_dCtotal_gCm2[,,high_quant] > 0 & grid_output$final_dCtotal_gCm2[,,low_quant] < 0)
+    wood_sinkC = which(var2 > 0 & grid_output$final_dCwood_gCm2[,,low_quant] > 0)
+    wood_sourceC = which(var2 < 0 & grid_output$final_dCwood_gCm2[,,high_quant] < 0)
+    wood_neutralC = which(abs(var2) < 0.1 & grid_output$final_dCwood_gCm2[,,high_quant] > 0 & grid_output$final_dCwood_gCm2[,,low_quant] < 0)
+    som_sinkC = which(var3 > 0 & grid_output$final_dCsom_gCm2[,,low_quant] > 0)
+    som_sourceC = which(var3 < 0 & grid_output$final_dCsom_gCm2[,,high_quant] < 0)
+    som_neutralC = which(abs(var3) < 0.1 & grid_output$final_dCsom_gCm2[,,high_quant] > 0 & grid_output$final_dCsom_gCm2[,,low_quant] < 0)
+    # Create a filter for keeping these, this involves finding the locations which are not in the current filter
+    possible_points = c(1:prod(dim(grid_output$final_dCtotal_gCm2)[1:2]))
+    total_filter = unique(c(total_sinkC,total_sourceC,total_neutralC)) ; total_filter = possible_points[-total_filter]
+    wood_filter = unique(c(wood_sinkC,wood_sourceC,wood_neutralC)) ; wood_filter = possible_points[-wood_filter]
+    som_filter = unique(c(som_sinkC,som_sourceC,som_neutralC)) ; som_filter = possible_points[-som_filter]
+    # Filter by sink / source / neutral
+    var1[total_filter] = NA ; var2[wood_filter] = NA ; var3[som_filter] = NA
+    var4[total_filter] = NA ; var5[wood_filter] = NA ; var6[som_filter] = NA
+    # Apply filter by non-land pixels
+    var1[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var2[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var3[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var4[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var5[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    var6[which(grid_output$land_fraction == 0 | is.na(grid_output$land_fraction) == TRUE)] = NA
+    # Convert to raster
+    var1 = rast(vals = t((var1)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext)) 
+    var2 = rast(vals = t((var2)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var3 = rast(vals = t((var3)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var4 = rast(vals = t((var4)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var5 = rast(vals = t((var5)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    var6 = rast(vals = t((var6)[,dim(PROJECT$area_m2)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+    # legend position
+    ee = ext(var1) ; e = rep(NA, 4)
+    e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+    e[3] = ee[3] ; e[4] = ee[4]
+    # ranges
+    zrange1 = c(-1.01,1.01)*max(abs(quantile(c(values(var1),values(var2),values(var3)), prob=c(0.001,0.999),na.rm=TRUE)))
+    zrange2 = zrange1
+    zrange3 = zrange1
+    zrange4 = c(0,1)*quantile(c(values(var4),values(var5),values(var6)), prob=c(0.999),na.rm=TRUE)
+    zrange5 = zrange4
+    zrange6 = zrange4
+    main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+    png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_Total_wood_SOM_change_and_CI_maps_significant_only.png",sep=""), height = 1800, width = 5000, res = 300)
+    par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
+    # Final stock changes, median estimates
+    plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+#    mtext(expression(paste(Delta,"Total (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    mtext(expression(paste("NBP (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var2, range=zrange2, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+    mtext(expression(paste(Delta,"Wood (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var3, range=zrange3, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=(colour_choices_sign))
+    mtext(expression(paste(Delta,"Soil (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    # Final stock changes, confidence interval
+    plot(var4, range=zrange4, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+#    mtext(expression(paste(Delta,"Total CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    mtext(expression(paste(Delta,"NBP CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)    
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var5, range=zrange5, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+    mtext(expression(paste(Delta,"Wood CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    plot(var6, range=zrange6, xaxt = "n", yaxt = "n", cex.lab=2, cex.main=2.5, mar=NA, bty = "n",
+         cex.axis = 2.5, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex),
+         main = "", col=colour_choices_CI)
+    mtext(expression(paste(Delta,"Soil CI (MgC h",a^-1,"y",r^-1,")",sep="")), side=3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+    plot(landmask, add=TRUE, lwd=0.5)
+    dev.off()
+
     ###
     ## Temporal trend maps
     

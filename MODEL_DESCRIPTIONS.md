@@ -42,7 +42,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 23 | DALEC.A1.C2.D2.F2.H2.P7.R2.023 | G5                  |                                                     | T. L. Smallman               | Unpublished |
 | 24 | DALEC.A1.C1.D2.F2.H4.P1.024    | NA                  | As DALEC.4. but with van Genuchten hydrology        | T. L. Smallman               | Unpublished |
 | 25 | NOT IN USE                     | NOT IN USE          | NOT IN USE                                          | NOT IN USE                   | Unpublished |
-| !26 | DALEC.A1.C2.D2.F2.H2.P10.R2.026| DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
+| 26 | DALEC.A4.C6.D2.F2.H3.P10.026   | DALEC_BUCKET_CanAGE |                                                     | T. L. Smallman               | Unpublished |
 | 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                    | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
 | !29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Published   |
@@ -52,7 +52,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |
 | !34 | DALEC.A1.C1.D3.F2.H2.P1.034    | NA                  | As DALEC.4. with degradation flux                   | D. T. Milodowski             | Unpublished |
 | !35 | DALEC.A1.C7.D2.F2.H2.P1.035    |                     | As DALEC.4. with branch turnover                    | D. T. Milodowski             | Unpublished   |
-| 36 | DALEC.A1.C8.D2.F2.H2.P1.R4.035 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014      | Published   |
+| 36 | DALEC.A1.C8.D2.F2.H2.P1.R4.036 | DecoBio             | As DALEC.6. with DecoBio sub-model added            | Xenakis & Williams 2014      | Published   |
 | 37 | DALEC.A1.C1.D2.F2.H5.P1.037    | NA                  | As DALEC.4. with paramterisable minLWP and iWUE     | T. L. Smallman                | Unpublished   |
 #### TABLE 2. Assimilation due to photosynthetic activity sub-models
 
@@ -128,7 +128,7 @@ M = Managed Grassland / arable crops (Table 10)
 | P7         | As P4 but canopy growth simulated by non-linear version of GSI, the canopy growth index (CGI) and the CGI gradient. Canopy mortality a Michaelis-Menten function of NCCE and the gradient of NCCE, the canopy mortality index (CMI)               | Unpublished |
 | P8         | NOT IN USE                                                                  | NOT IN USE |
 | P9         | NOT IN USE                                                                  | Unpublished |
-| P10        | As P4 but GSI is now a non-linear function of temperature alone. Canopy age is explicitly tracked from point of growth. The canopy photosynthetic efficiency declines on a per-age-class basis as a function of temperature, soil water potential and time. Canopy loss occures when an age class no-longer has a positive NCCE. | Unpublished |
+| P10        | As P12 with an explicit canopy age driving growth and loss of individual cohorts. | Unpublished |
 | P11        | As P1 but allocation to tissues from labile are based on potential growth rates modified by temperature, water and available labile. | Unpublished |
 | P12        | P11 modified to implement canopy growth and mortality within a P7 inspired CMP and CGI | Unpublished |
 

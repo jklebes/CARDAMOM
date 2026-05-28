@@ -130,8 +130,7 @@ module MODEL_PARAMETERS
     ! POSSIBLY THIS PARAMETER IS NOT NEED AND CODE JUST BE CODED AS A VERY SMALL POSITIVE NUMBER?
     PI%parmin(15) = 0.005d0
     PI%parmax(15) = 0.2d0
-    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
-    
+    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)   
     PI%parmin(16) = 0.005d0
     PI%parmax(16) = 0.2d0
 
