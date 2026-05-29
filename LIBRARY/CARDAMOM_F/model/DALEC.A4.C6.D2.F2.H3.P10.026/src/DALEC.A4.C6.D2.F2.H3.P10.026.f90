@@ -215,7 +215,10 @@ module CARBON_MODEL_MOD
 
   ! Module-level cohort array and live count
   type(cohort_leaf_t) :: leaf_cohorts(max_leaf_cohorts)
-  integer             :: n_live_cohorts = 0
+  integer             :: n_live_cohorts = 0, & ! Initially set no live cohorts
+                     newest_cohort_slot = 0    ! Initally no newest cohort as there none.
+  double precision :: days_since_last_cohort = 0d0 ! Accumulated days elapsed since the most recent cohort creation event.
+  double precision, parameter :: cohort_birth_period = 30d0  ! Minimum interval between cohort creation events (days).                 
                                                   
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
@@ -926,6 +929,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * days_per_step
+       days_since_last_cohort = days_since_last_cohort + days_per_step ! Accumulate days since leaf cohort birth
 
        !!!!!!!!!!
        ! Adjust snow balance balance based on temperature
@@ -1137,35 +1141,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! NOTE: this intentionally excluded losses driven by disturbance
        FLUXES(n,4)  = max(0d0,FLUXES(n,4)  - last_leaf_loss) ! Growth
        FLUXES(n,10) = max(0d0,FLUXES(n,10) - last_leaf_grow) ! Loss
-
-       ! Assume that only the largest flux of 
-       ! growth and mortality occurs
-       !if (FLUXES(n,4) > FLUXES(n,10)) then
-       !    ! Growth allocation is greater than loss desired
-       !    FLUXES(n,10) = 0d0
-       !else 
-       !    ! Mortality allocation is greater than growth desired
-       !    FLUXES(n,4) = 0d0
-       !end if
        ! Store canopy growth and loss information for the next time step
        last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4)
 
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-       ! Cohort birth: create a new monthly leaf cohort when DALEC
-       ! allocates carbon to foliage and a new calendar month begins.
-       ! Monthly trigger: every 30 days from DOY 1 (mod 30 == 1 mapping
-       ! avoids leap-year complications while maintaining ~12/yr rhythm).
-       ! FLUXES(n,4) is used before the growth respiration deduction so
-       ! that the full C investment is recorded as the cohort construction
-       ! cost, consistent with the Kikuzawa (1991) framework.
-       ! pars(47) = LCC  (leaf C construction cost coefficient)
-       ! pars(48) = r_opp (daily opportunity cost rate, d-1)
-       ! pars(49) = T_leaf_ref_days (reference lifespan for amortisation)
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-       if (FLUXES(n,4) > vsmall .and. mod(nint(doy)-1, 30) == 0) then
+       ! Create a new monthly leaf cohort when at least one cohort_birth_period
+       ! (30 days) has elapsed since the previous birth and DALEC is actively
+       ! allocating carbon to foliage. The elapsed-time approach is time-step
+       ! agnostic: daily, weekly and monthly stepping all produce one cohort
+       ! per 30-day interval without relying on DOY divisibility.
+       ! days_since_last_cohort has already been incremented by days_per_step
+       ! above, so the condition is correctly evaluated against the current step.
+       if (FLUXES(n,4) > vsmall .and. days_since_last_cohort >= cohort_birth_period) then
            call create_cohort(FLUXES(n,4)*days_per_step, pars(47), pars(48), pars(49))
+            days_since_last_cohort = 0d0   ! reset counter after birth
        end if
-
+! 1) Make Rg assumption consistent
+! 2) Check that additions to cohort track the same accumulation for the construction costs...
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ! Cohort age update and economic shedding.
        ! update_and_shed_cohorts advances cohort ages, applies the
@@ -1181,7 +1172,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        call update_and_shed_cohorts(days_per_step, DIAGS(n,22), &
                                     pars(49), pars(50), pars(51), &
-                                    POOLS(n+1,2), &
                                     cohort_litter_flux, resorb_flux)
 
        ! Combine age-driven and NCCE/environmental foliar litter: take the
@@ -4817,7 +4807,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Local variables
     integer :: N_years, y, m, k, age_d, age_mo, &
-               birth_doy_m, days_elapsed
+               birth_doy_m, days_elapsed, & 
+               youngest_slot, youngest_age  
     double precision :: w_y, &
                         kappa, theta, mu_rad, nd, &
                         vm_sum_yr, cohort_mass, scale, sum_cf
@@ -4837,7 +4828,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         leaf_cohorts(k)%N_rel        = 1d0 ! relative N content (0-1), declines with age
         leaf_cohorts(k)%is_alive     = .false.  
     end do
-    n_live_cohorts = 0
+    n_live_cohorts = 0 ! No live cohorts yet
+    newest_cohort_slot = 0 ! Therefore, there is no newest cohort
+    days_since_last_cohort = 0d0 ! overwritten after year loop
 
     ! Guard: no foliar carbon to distribute
     !if (Cf_init <= vsmall) return
@@ -4918,6 +4911,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Rescale cohort Cf so their sum equals Cf_init exactly (carbon conservation)
     call rescale_cohort_cf(Cf_init)
 
+    ! Identify newest_cohort_slot: the living cohort with the smallest age_days.
+    ! This is the cohort whose birth DOY was nearest to (but before) start_doy,
+    ! i.e. the cohort representing the most recently produced leaf area at the
+    ! simulation start. Between the start of the simulation and the first monthly
+    ! cohort creation event, rescale_cohort_cf will direct any new foliar carbon
+    ! to this cohort — the correct target since it is the currently growing cohort.
+    !
+    youngest_slot = 0 ; youngest_age  = huge(0)
+    do k = 1, max_leaf_cohorts
+        if (leaf_cohorts(k)%is_alive) then
+            if (leaf_cohorts(k)%age_days < youngest_age) then
+                youngest_age  = leaf_cohorts(k)%age_days
+                youngest_slot = k
+            end if
+        end if
+    end do
+    newest_cohort_slot = youngest_slot
+
+    ! Initialise days_since_last_cohort from the age of the youngest cohort.
+    if (newest_cohort_slot > 0) then
+        days_since_last_cohort = dble(leaf_cohorts(newest_cohort_slot)%age_days)
+    else
+        days_since_last_cohort = cohort_birth_period
+    end if
+    
   end subroutine initialise_cohorts
   !
   !------------------------------------------------------------------
@@ -4956,15 +4974,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     if (slot > 0) then
         ! Initialise new cohort
         Cc_new = dCf * lcc
-        leaf_cohorts(slot)%Cf          = dCf
-        leaf_cohorts(slot)%Cc          = Cc_new
+        leaf_cohorts(slot)%Cf          = dCf       ! Leaf initially in pool
+        leaf_cohorts(slot)%Cc          = Cc_new    ! Construction cost
         leaf_cohorts(slot)%Pi_threshold= Cc_new * r_opp / max(T_leaf_ref, 1d0)
-        leaf_cohorts(slot)%age_days    = 0
-        leaf_cohorts(slot)%age_months  = 0
+        leaf_cohorts(slot)%age_days    = 0         ! New born
+        leaf_cohorts(slot)%age_months  = 0         ! New born
         leaf_cohorts(slot)%cum_profit  = -Cc_new   ! start in construction debt
-        leaf_cohorts(slot)%N_rel       = 1d0        ! fresh leaves
-        leaf_cohorts(slot)%is_alive    = .true.
-        n_live_cohorts = n_live_cohorts + 1
+        leaf_cohorts(slot)%N_rel       = 1d0       ! fresh leaves start will optimal photosynthetic capacity
+        leaf_cohorts(slot)%is_alive    = .true.    ! Assign cohort as alive
+        n_live_cohorts = n_live_cohorts + 1 ! count number of live cohorts
+        ! Record this slot so rescale_cohort_cf can direct future inter-birth
+        ! carbon gains here rather than distributing them across all cohorts.
+        newest_cohort_slot = slot        
     else
         ! No free slot: add dCf proportionally to the youngest 6 living cohorts
         ! (youngest = smallest age_days). This avoids silent carbon loss.
@@ -4990,9 +5011,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine update_and_shed_cohorts(dt, ncce_gCgCday, T_leaf_ref, &
-                                      k_N_decline, f_resorb, &
-                                      foliar_pool, &
-                                      cohort_litter_flux, resorb_flux)
+                                     k_N_decline, f_resorb, &
+                                     cohort_litter_flux, resorb_flux)
 
     ! Advance cohort ages, update relative N content, evaluate the Kikuzawa
     ! economic shedding criterion and maximum-age hard constraint, and return
@@ -5007,30 +5027,45 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Maximum-age criterion:
     !   Shed cohort k if: age_months >= max_age_months
     !   where max_age_months = T_leaf_ref / 30 (rounded up to nearest month).
+    ! 
+    ! Oldest-6 identification:
+    !   The result (oldest_idx, n_oldest) is available for downstream use
+    !   such as prioritised shedding reporting, diagnostics, or any future
+    !   logic that needs to act on the most age-vulnerable cohorts first.
     !
     ! Carbon conservation:
     !   Shed cohort carbon is partitioned: f_resorb -> labile, (1-f_resorb) -> litter.
-    !   The returned fluxes are per-day rates [gC m-2 d-1].
-    !
-    ! Arguments:
-    !   dt              : time step [days]
-    !   ncce_gCgCday    : current canopy NCCE per unit leaf C [gC gC-1 d-1] = DIAGS(n,22)
-    !   T_leaf_ref      : reference leaf lifespan [days]                     = pars(49)
-    !   k_N_decline     : N decline rate [month-1]                           = pars(50)
-    !   f_resorb        : fraction of shed Cf returned to labile [0-1]       = pars(51)
-    !   foliar_pool     : current foliar pool POOLS(n+1,2) for disturbance check [gC m-2]
-    !   cohort_litter_flux : age-driven foliar litter [gC m-2 d-1]  (out)
-    !   resorb_flux        : labile resorption from shed cohorts [gC m-2 d-1] (out)
+    !   The returned fluxes are per-day rates (gC m-2 d-1).
 
     implicit none
 
-    double precision, intent(in)  :: dt, ncce_gCgCday, T_leaf_ref, &
-                                     k_N_decline, f_resorb, foliar_pool
-    double precision, intent(out) :: cohort_litter_flux, resorb_flux
+    ! Arguments
+    double precision, intent(in)  :: dt, & ! time step (days)
+                           ncce_gCgCday, & ! current canopy NCCE per unit leaf C (gC gC-1 d-1)
+                             T_leaf_ref, & ! reference leaf lifespan (days)
+                            k_N_decline, & ! N decline rate (month-1)         
+                               f_resorb    ! fraction of shed Cf returned to labile (0-1)
+    double precision, intent(out) :: cohort_litter_flux, & ! age-driven foliar litter (gC m-2 d-1)
+                                            resorb_flux    ! labile resorption from shed cohorts (gC m-2 d-1)
+    ! Local variables
+    ! Scalar loop variables and shedding temporaries
+    integer, parameter :: k_oldest = 6 ! oldest 6-months
+    integer :: k, j, tmp_idx, tmp_age, & 
+                       max_age_months, & 
+                             n_oldest, & ! number of entries currently in the oldest set (0-6)
+                       min_pos_in_set, & ! position within oldest_idx/oldest_age of that minimum
+                       min_age_in_set    ! current minimum age_days across oldest_age(1:n_oldest)
+    integer, dimension(k_oldest) :: oldest_idx, & ! slot indices of the n_oldest oldest living cohorts
+                                    oldest_age    ! their corresponding age_days values (kept in sync)
+    double precision :: effective_ncce, & ! 
+                              litter_k, & !
+                              resorb_k, & ! 
+                                  dt_1
+    ! Membership mask for Pass 2b: in_oldest_set(k) = .true. iff slot k
+    ! is in oldest_idx(1:n_oldest) after the insertion sort.
+    logical :: in_oldest_set(max_leaf_cohorts)
 
-    integer          :: k, max_age_months
-    double precision :: effective_ncce, litter_k, resorb_k, dt_1
-
+    ! Reset / initialise local variables
     cohort_litter_flux = 0d0
     resorb_flux        = 0d0
     dt_1               = 1d0 / max(dt, vsmall)
@@ -5038,6 +5073,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Maximum age in months derived from the reference lifespan parameter
     max_age_months = max(1, ceiling(T_leaf_ref / 30d0))
 
+    ! Initialise oldest cohort information
+    n_oldest       = 0 ; oldest_idx     = 0 ; oldest_age     = 0
+    min_age_in_set = 0 ; min_pos_in_set = 1
+
+    ! Loop through the living cohorts
     do k = 1, max_leaf_cohorts
         if (.not. leaf_cohorts(k)%is_alive) cycle
 
@@ -5049,6 +5089,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Exponential decay: N_rel = exp(-k_N_decline * age_months)
         ! N_rel declines from 1 at birth towards 0 for very old cohorts,
         ! reducing their effective NCCE return proportionally.
+        ! ΔN_rel(t) = N_rel(t+1) − N_rel(t) = N_rel(t) · [exp(−k) − 1] ! Actual decline in the specified month
         leaf_cohorts(k)%N_rel = exp(-k_N_decline * dble(leaf_cohorts(k)%age_months))
         leaf_cohorts(k)%N_rel = max(0d0, min(1d0, leaf_cohorts(k)%N_rel))
 
@@ -5057,29 +5098,122 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    + ncce_gCgCday * leaf_cohorts(k)%N_rel &
                                    * leaf_cohorts(k)%Cf * dt
 
-        ! --- Shedding decision ---
-        ! Effective NCCE for this cohort scaled by its relative N content
+        ! --- Oldest-set update ---
+        if (n_oldest < K_OLDEST) then
+            ! Phase A: set not full — insert unconditionally
+            n_oldest = n_oldest + 1
+            oldest_idx(n_oldest) = k
+            oldest_age(n_oldest) = leaf_cohorts(k)%age_days
+            ! Incremental minimum tracking — O(1) per insertion
+            if (n_oldest == 1) then
+                min_age_in_set = oldest_age(1)
+                min_pos_in_set = 1
+            else
+                if (oldest_age(n_oldest) < min_age_in_set) then
+                    min_age_in_set = oldest_age(n_oldest)
+                    min_pos_in_set = n_oldest
+                end if
+            end if
+        else
+            ! Phase B: set full — evict youngest if current cohort is older
+            if (leaf_cohorts(k)%age_days > min_age_in_set) then
+                oldest_idx(min_pos_in_set) = k
+                oldest_age(min_pos_in_set) = leaf_cohorts(k)%age_days
+                ! Rescan for new minimum — O(K_OLDEST) = O(6), constant cost
+                min_pos_in_set = minloc(oldest_age(1:K_OLDEST), 1)
+                min_age_in_set = oldest_age(min_pos_in_set)
+            end if
+        end if
+
+    end do ! Pass 1: age update + oldest-set
+
+    ! =========================================================================
+    ! PASS 2 — Shedding in oldest-first order
+    !
+    ! Step 2a: sort oldest_idx by descending age_days (insertion sort, O(k^2)).
+    ! Step 2b: shed from oldest_idx(1:n_oldest) first (oldest to youngest).
+    ! Step 2c: shed remaining living cohorts not in the oldest set.
+    ! =========================================================================
+
+    ! --- Step 2a: insertion sort of oldest_idx by descending age_days ---
+    ! Stable; at most 15 comparisons for K_OLDEST=6; no allocation.
+    ! After sort: oldest_idx(1) = oldest cohort, oldest_idx(n_oldest) = youngest
+    ! within the top-K set.
+    do j = 2, n_oldest
+        tmp_idx = oldest_idx(j)
+        tmp_age = oldest_age(j)
+        i = j - 1
+        do while (i >= 1 .and. oldest_age(i) < tmp_age)
+            oldest_age(i+1) = oldest_age(i)
+            oldest_idx(i+1) = oldest_idx(i)
+            i = i - 1
+        end do
+        oldest_age(i+1) = tmp_age
+        oldest_idx(i+1) = tmp_idx
+    end do
+
+    ! --- Step 2b: assess oldest K_OLDEST cohorts first ---
+    do j = 1, n_oldest
+        k = oldest_idx(j)
+        if (.not. leaf_cohorts(k)%is_alive) cycle
+
+        ! Determine the effective net canopy export for the current cohort
+        ! this will likely be removed for a similar approach
+        effective_ncce = ncce_gCgCday * leaf_cohorts(k)%N_rel
+
+        ! If the cohort is older than max allowed or the NCCE has fallen below
+        ! critical threshold then it will be shed. This condition will likely be changed
+        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
+            effective_ncce < leaf_cohorts(k)%Pi_threshold) then
+
+            resorb_k = f_resorb * leaf_cohorts(k)%Cf
+            litter_k = (1d0 - f_resorb) * leaf_cohorts(k)%Cf
+            cohort_litter_flux = cohort_litter_flux + litter_k * dt_1
+            resorb_flux        = resorb_flux        + resorb_k * dt_1
+
+            leaf_cohorts(k)%is_alive = .false.
+            leaf_cohorts(k)%Cf       = 0d0
+            n_live_cohorts = max(0, n_live_cohorts - 1)
+            oldest_idx(j)  = 0   ! mark slot as vacated for mask construction
+
+        end if
+
+    end do ! Step 2b: oldest set shedding
+
+    ! --- Step 2c: build membership mask then assess remaining cohorts ---
+    ! Build in_oldest_set in O(K_OLDEST) time; lookup is O(1) per cohort slot.
+    in_oldest_set = .false.
+    do j = 1, n_oldest
+        if (oldest_idx(j) >= 1 .and. oldest_idx(j) <= max_leaf_cohorts) then
+            in_oldest_set(oldest_idx(j)) = .true.
+        end if
+    end do
+
+! This section assesses all cohorts not already assessed in the oldest loop.
+! This could be used only if we have not achieved the desired leaf loss from the oldest leaves already.
+! Will have to think about whether this is inconsistent with the objective set out....
+
+    do k = 1, max_leaf_cohorts
+        if (.not. leaf_cohorts(k)%is_alive) cycle
+        if (in_oldest_set(k)) cycle   ! already assessed in step 2b
+
         effective_ncce = ncce_gCgCday * leaf_cohorts(k)%N_rel
 
         if (leaf_cohorts(k)%age_months >= max_age_months .or. &
             effective_ncce < leaf_cohorts(k)%Pi_threshold) then
 
-            ! Partition shed carbon into litter and labile resorption
             resorb_k = f_resorb * leaf_cohorts(k)%Cf
             litter_k = (1d0 - f_resorb) * leaf_cohorts(k)%Cf
-
-            ! Convert from pool mass to per-day flux
             cohort_litter_flux = cohort_litter_flux + litter_k * dt_1
             resorb_flux        = resorb_flux        + resorb_k * dt_1
 
-            ! Kill cohort
-            leaf_cohorts(k)%is_alive    = .false.
-            leaf_cohorts(k)%Cf          = 0d0
+            leaf_cohorts(k)%is_alive = .false.
+            leaf_cohorts(k)%Cf       = 0d0
             n_live_cohorts = max(0, n_live_cohorts - 1)
 
         end if
 
-    end do ! cohort loop
+    end do ! Step 2c: remaining cohort shedding
 
   end subroutine update_and_shed_cohorts
   !
@@ -5087,46 +5221,134 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   subroutine rescale_cohort_cf(target_Cf)
 
-    ! Rescale all living cohort Cf values proportionally so their sum equals
-    ! target_Cf. This is the carbon conservation enforcement step: the aggregate
-    ! foliar pool equation (POOLS(n+1,2)) is authoritative; the cohort
-    ! bookkeeping is kept consistent with it via this normalisation.
+    ! Reconcile the sum of living cohort Cf values with the authoritative
+    ! aggregate foliar pool target_Cf = POOLS(n+1,2).
     !
-    ! Called once per time step after pool updates.
+    ! The treatment of the difference (target_Cf - sum_cf) depends on its sign:
+    !
+    !   GAIN  (target_Cf > sum_cf):
+    !     The difference represents new foliar carbon allocated by DALEC
+    !     between monthly cohort creation events.  This carbon is added
+    !     entirely to the MOST RECENTLY CREATED cohort (newest_cohort_slot),
+    !     because between births all new leaf area belongs to the current
+    !     growing cohort rather than being distributed among older cohorts
+    !     that are no longer actively growing.
+    !
+    !     If newest_cohort_slot is 0 or refers to a dead cohort (defensive
+    !     fallback), the youngest living cohort (minimum age_days) is used.
+    !
+    !   LOSS  (target_Cf < sum_cf):
+    !     The difference represents carbon removed from the canopy by
+    !     processes such as fire, disturbance, or model numerical adjustment.
+    !     These losses are distributed proportionally across all living
+    !     cohorts — the same as the original implementation.  Proportional
+    !     loss is physically correct for disturbance events that thin the
+    !     canopy uniformly without age-selectivity.
+    !
+    !   NO CHANGE  (target_Cf == sum_cf to machine precision):
+    !     No action required; subroutine returns immediately.
+    !
+    ! Carbon conservation:
+    !     After the call, sum(leaf_cohorts%Cf * is_alive) == target_Cf
+    !     to machine precision.
+    !
+    ! Arguments:
+    !   target_Cf : authoritative foliar pool [gC m-2] = POOLS(n+1,2)
 
     implicit none
 
-    ! Arguments
-    double precision, intent(in) :: target_Cf ! authoritative foliar pool value (gC m-2) = POOLS(n+1,2)
+    double precision, intent(in) :: target_Cf
 
-    ! Local variables
-    integer          :: k
-    double precision :: sum_cf, scale
+    integer          :: k, fallback_slot, fallback_age
+    double precision :: sum_cf, scale, delta_Cf
 
+    ! --- Handle zero or negligible foliar pool ---
     if (target_Cf <= vsmall) then
         ! No foliar carbon: kill all cohorts cleanly
         do k = 1, max_leaf_cohorts
             leaf_cohorts(k)%Cf       = 0d0
             leaf_cohorts(k)%is_alive = .false.
         end do
-        n_live_cohorts = 0
+        n_live_cohorts     = 0
+        newest_cohort_slot = 0
         return
     end if
 
-    ! Sum living cohort carbon
+    ! --- Sum living cohort carbon ---
     sum_cf = 0d0
     do k = 1, max_leaf_cohorts
         if (leaf_cohorts(k)%is_alive) sum_cf = sum_cf + leaf_cohorts(k)%Cf
     end do
 
-    ! TLS: this error statement would be silent if sum_cf is small, but target_Cf is not.
-    ! if (sum_cf <= vsmall) return 
+    ! Guard: no living cohorts but target_Cf > 0
+    ! This should not occur in normal operation but is handled defensively.
+    if (sum_cf <= vsmall) return
 
-    ! Apply proportional scaling
-    scale = target_Cf / sum_cf
-    do k = 1, max_leaf_cohorts
-        if (leaf_cohorts(k)%is_alive) leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf * scale
-    end do
+    delta_Cf = target_Cf - sum_cf
+
+    ! --- No meaningful difference: return early ---
+    if (abs(delta_Cf) <= vsmall) return
+
+    if (delta_Cf > 0d0) then
+
+        ! =====================================================================
+        ! GAIN — add all new carbon to the most recently created cohort.
+        !
+        ! Validate newest_cohort_slot: it must refer to a living cohort.
+        ! If it does not (e.g. the newest cohort was shed this step or no
+        ! cohort has yet been created), fall back to the youngest living
+        ! cohort identified by the smallest age_days in a single O(n) scan.
+        ! =====================================================================
+
+        if (newest_cohort_slot < 1 .or. newest_cohort_slot > max_leaf_cohorts) then
+            newest_cohort_slot = 0   ! force fallback
+        end if
+
+        if (newest_cohort_slot > 0) then
+            if (.not. leaf_cohorts(newest_cohort_slot)%is_alive) then
+                newest_cohort_slot = 0   ! force fallback: newest was shed
+            end if
+        end if
+
+        if (newest_cohort_slot == 0) then
+            ! Fallback: find youngest living cohort by minimum age_days
+            fallback_slot = 0
+            fallback_age  = huge(0)
+            do k = 1, max_leaf_cohorts
+                if (leaf_cohorts(k)%is_alive) then
+                    if (leaf_cohorts(k)%age_days < fallback_age) then
+                        fallback_age  = leaf_cohorts(k)%age_days
+                        fallback_slot = k
+                    end if
+                end if
+            end do
+            newest_cohort_slot = fallback_slot
+        end if
+
+        ! Add the gain to the newest cohort
+        if (newest_cohort_slot > 0) then
+            leaf_cohorts(newest_cohort_slot)%Cf = &
+                leaf_cohorts(newest_cohort_slot)%Cf + delta_Cf
+        end if
+
+    else
+
+        ! =====================================================================
+        ! LOSS — distribute proportionally across all living cohorts.
+        !
+        ! Proportional scaling preserves the relative carbon fractions of
+        ! cohorts of different ages, which is appropriate for non-selective
+        ! disturbance processes (fire, deforestation, large-scale mortality).
+        ! scale = target_Cf / sum_cf, always in (0, 1) for a loss.
+        ! =====================================================================
+
+        scale = target_Cf / sum_cf
+        do k = 1, max_leaf_cohorts
+            if (leaf_cohorts(k)%is_alive) &
+                leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf * scale
+        end do
+
+    end if
 
   end subroutine rescale_cohort_cf
   !
