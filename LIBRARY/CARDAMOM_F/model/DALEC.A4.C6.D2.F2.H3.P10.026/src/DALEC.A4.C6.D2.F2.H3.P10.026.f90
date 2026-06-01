@@ -208,17 +208,22 @@ module CARBON_MODEL_MOD
       double precision :: Cf           = 0d0, & ! leaf carbon (gC m-2)
                           Cc           = 0d0, & ! construction cost at birth (gC m-2)
                           cum_profit   = 0d0, & ! cumulative NCCE since birth (gC m-2)
-                          N_rel        = 1d0, & ! relative N content (0-1), declines with age
+                          NUE_rel      = 1d0, & ! relative NUE [0-1], declines with age
                           Pi_threshold = 0d0    ! economic shedding threshold (gC gC-1 d-1)
       logical          :: is_alive     = .false.
   end type cohort_leaf_t
 
   ! Module-level cohort array and live count
   type(cohort_leaf_t) :: leaf_cohorts(max_leaf_cohorts)
-  integer             :: n_live_cohorts = 0, & ! Initially set no live cohorts
-                     newest_cohort_slot = 0    ! Initally no newest cohort as there none.
-  double precision :: days_since_last_cohort = 0d0 ! Accumulated days elapsed since the most recent cohort creation event.
-  double precision, parameter :: cohort_birth_period = 30d0  ! Minimum interval between cohort creation events (days).                 
+  integer             :: n_live_cohorts = 0
+  ! Cohort foliage-weighted mean relative foliar NUE across all living cohorts [0-1].
+  double precision :: canopy_NUE_rel = 1d0
+  ! Index of the most recently created cohort slot.
+  integer             :: newest_cohort_slot = 0
+  ! Elapsed days since the most recent cohort creation event (days)
+  double precision    :: days_since_last_cohort = 0d0
+  ! Minimum interval between consecutive cohort creation events (days).
+  double precision, parameter :: cohort_birth_period = 30d0
                                                   
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
@@ -314,7 +319,7 @@ module CARBON_MODEL_MOD
                               cos2theta, & ! Analytical correction for leaf angle (radians) on light scattering within the canopy
                                  Vc, Vg, & ! Define the vegetated and covered soil (i.e. by litter) fractions
                                 mu_obar, & ! The average inverse diffuse optical depth per unit leaf area.
-                                 O1,O2    ! Empirical coefficients related to the leaf angle distribution
+                                  O1,O2    ! Empirical coefficients related to the leaf angle distribution
   double precision, dimension(no_wavelength) :: &
                      canopy_reflectance = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
                    canopy_transmittance = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
@@ -377,11 +382,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                    cosine_solar_zenith_angle    ! Cosine zenith angle of the timestep
 
   double precision, dimension(:), allocatable :: deltat_1, & ! inverse of decimal days
-                                  airt_zero_fraction_time, &
-                                            rainfall_time, &
-                                          daylength_hours, &
-                                        daylength_seconds, &
-                                      daylength_seconds_1
+                                  airt_zero_fraction_time, & ! fraction of temperature above zero for each time step
+                                            rainfall_time, & ! Realism checked rainfall
+                                          daylength_hours, & ! Store of day lengths in hours
+                                        daylength_seconds, & ! Store of day lengths in seconds
+                                      daylength_seconds_1    ! Inverse of store of day lengths in seconds
 
   contains
   !
@@ -444,14 +449,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,last_leaf_loss & ! leaf loss from t-1
                        ,last_leaf_grow & ! leaf growth from t-1
                   ,cohort_litter_flux  & ! cohort-age driven foliar litter flux (gC/m2/day)
-                         ,resorb_flux    ! cohort resorption flux returned to labile (gC/m2/day)
+                         ,resorb_flux  & ! cohort resorption flux returned to labile (gC/m2/day)
+                      ,env_litter_out    ! environmental component of cohort litter (gC/m2/day)
 
     ! Combustion efficiencies and fire resilience
     double precision :: burnt_area
     double precision, dimension(nodays) :: tmp_nodays
-    double precision, dimension(6) :: cf,rfac
+    double precision, dimension(6) :: cf, rfac ! Tissue specific combustion completeness and resilence 
     ! local deforestation related variables
-    double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
+    double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after harvest
                                      ,foliage_frac_res       &
                                      ,roots_frac_res         &
                                      ,rootcr_frac_res        &
@@ -587,7 +593,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! as a function of nitrogen for a link to photosynthesis
     Rm_leaf_const = pars(43)
     ! load ACM-GPP-ET parameters
-    iWUE = pars(46) ! load the inherent water use efficiency
+    iWUE = pars(44) ! load the inherent water use efficiency
     minlwp = pars(12) ! Minimum leaf water potential
     Vcmax_ref = pars(11) ! Canopy efficiency (umolC/m2/s)
                          ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
@@ -606,26 +612,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     POOLS(1,5) = pars(22) ! litter
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
-    ! ...for states
-    ! Load initial forcing 
-    lai = POOLS(1,2)/pars(17)
-    ! ...for forcing
-    mint = met(2,1)  ! minimum temperature (oC)
-    maxt = met(3,1)  ! maximum temperature (oC)
-    swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
-    co2 = met(5,1)   ! CO2 (ppm)
-    doy = met(6,1)   ! Day of year
-    rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
-    wind_spd = met(15,1) ! wind speed (m/s)
-    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
-    meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
-    leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
-    soilT = leafT ! initially assume that the soil and canopy temperature are the same
-    dayT = leafT  ! initially assume that the air and canopy temperature are the same
-    ! ...for time
-    seconds_per_step = deltat(1) * seconds_per_day
-    days_per_step =  deltat(1)
-    days_per_step_1 =  deltat_1(1)
 
     ! Some time consuming variables we only want to set once
     if (.not.allocated(deltat_1)) then
@@ -690,11 +676,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         call initialise_ncce(mean_days_per_step,ncce_lag_step,ncce_lag_days)
 
         ! Initialise the leaf cohort age structure
-        ! pars(47) = LCC, pars(48) = r_opp, pars(49) = T_leaf_ref_days,
-        ! pars(50) = k_N_decline, pars(52) = mean_leaf_doy, pars(53) = StandardDev_leaf_doy
-        call initialise_cohorts(POOLS(1,2),nint(doy), &
-                                pars(47),pars(48),pars(49), &
-                                pars(50),pars(52),pars(53))
+        ! pars(45) = r_opp, pars(46) = leaf_age_ref_days,
+        ! pars(47) = k_N_decline, pars(49) = mean_leaf_doy, pars(50) = sigma_leaf_doy
+        call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
+                                pars(45),pars(46), &
+                                pars(47),pars(49),pars(50))
 
     else ! deltat_1 allocated?
 
@@ -717,9 +703,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! We assume the other initialised variables are stored in memory.
 
         ! Re-initialise leaf cohort age structure
-        call initialise_cohorts(POOLS(1,2),nint(doy), &
-                                pars(47),pars(48),pars(49), &
-                                pars(50),pars(52),pars(53))
+        call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
+                                pars(45),pars(46), &
+                                pars(47),pars(49),pars(50))
 
     endif ! deltat_1 allocated
 
@@ -876,6 +862,26 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Begin looping through each time step
     !
 
+    ! ...for states 
+    lai = POOLS(1,2)/pars(17)
+    ! ...for forcing
+    mint = met(2,1)  ! minimum temperature (oC)
+    maxt = met(3,1)  ! maximum temperature (oC)
+    swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
+    co2 = met(5,1)   ! CO2 (ppm)
+    doy = met(6,1)   ! Day of year
+    rainfall = rainfall_time(1) ! rainfall (kgH2O/m2/s)
+    wind_spd = met(15,1) ! wind speed (m/s)
+    vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
+    meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
+    leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
+    soilT = leafT ! initially assume that the soil and canopy temperature are the same
+    dayT = leafT  ! initially assume that the air and canopy temperature are the same
+    ! ...for time
+    seconds_per_step = deltat(1) * seconds_per_day
+    days_per_step    = deltat(1)
+    days_per_step_1  = deltat_1(1)
+
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(dayT,dayT+freeze,vpd_kPa)
 
@@ -929,7 +935,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
        seconds_per_step = seconds_per_day * days_per_step
-       days_since_last_cohort = days_since_last_cohort + days_per_step ! Accumulate days since leaf cohort birth
+
+       ! Accumulate elapsed time since last cohort creation.
+       days_since_last_cohort = days_since_last_cohort + days_per_step
 
        !!!!!!!!!!
        ! Adjust snow balance balance based on temperature
@@ -1106,14 +1114,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                              pars(3),pars(4),pars(38),              & ! potential growth rates 
                              pars(34),pars(35),pars(36),pars(37),   & ! temperature limitations
                              pars(39),pars(40),pars(41),pars(42),   & ! water limitations
-                             pars(33),pars(16),                     & ! labile:biomass limitations
+                             pars(33),pars(15),                     & ! labile:biomass limitations
                              available_labile,sum(POOLS(n,2:4)),    & ! C pools
                              FLUXES(n,4),FLUXES(n,6),FLUXES(n,7),   & ! tissue specific allocated C 
                              DIAGS(n,15),DIAGS(n,16),DIAGS(n,17),   & ! lab:bio, temperature and water limiters
                              DIAGS(n,18),DIAGS(n,19),DIAGS(n,21),   & ! 
                              DIAGS(n,25),DIAGS(n,22),DIAGS(n,29))     ! current foliar growth limitation, current NCCE and delta NCCE
     
-
        !
        ! Biomass turnovers (gC/m2/day)
        !
@@ -1123,16 +1130,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    sum(POOLS(n,2:4)), POOLS(n,2),         & ! C pools
                                    POOLS(n,4), POOLS(n,3),                & !
                                    pars(17), DIAGS(:,22),                 & ! LCA / foliar net carbon export
-                                   pars(45), pars(44), pars(14), pars(13),& ! potential foliar loss for NCCE and environmental 
+                                   pars(16), pars(14), pars(13),          & ! potential foliar loss for NCCE trend
                                    pars(15),                              & ! NCCE gCgCday return threshold for loss
                                    pars(6),pars(7),                       & ! wood and fine root turnovers
                                    FLUXES(n,10),FLUXES(n,12),FLUXES(n,11),& ! Natural litter fluxes (fol, root, wood)
-                                   DIAGS(n,26),DIAGS(n,30),DIAGS(n,27))     ! combined index of NCCE and gradient, dNCCE_loss, NCCE_gradient
+                                   DIAGS(n,26),DIAGS(n,27))                 ! combined index of NCCE and gradient, dNCCE_loss, NCCE_gradient
 
        !
        ! Balance between canopy growth and mortality fluxes
        ! NOTE: this is not applied to wood and root allocation 
-       !       as these are fundementally continuous processes.
+       !       as these are assumed to be continuous processes.
        !
 
        ! Reduce canopy growth by the previous timesteps losses and vice versa.
@@ -1144,53 +1151,55 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Store canopy growth and loss information for the next time step
        last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4)
 
-       ! Create a new monthly leaf cohort when at least one cohort_birth_period
-       ! (30 days) has elapsed since the previous birth and DALEC is actively
-       ! allocating carbon to foliage. The elapsed-time approach is time-step
-       ! agnostic: daily, weekly and monthly stepping all produce one cohort
-       ! per 30-day interval without relying on DOY divisibility.
-       ! days_since_last_cohort has already been incremented by days_per_step
-       ! above, so the condition is correctly evaluated against the current step.
-       if (FLUXES(n,4) > vsmall .and. days_since_last_cohort >= cohort_birth_period) then
-           call create_cohort(FLUXES(n,4)*days_per_step, pars(47), pars(48), pars(49))
-            days_since_last_cohort = 0d0   ! reset counter after birth
+       !
+       ! Add new / update foliage cohorts
+       !
+
+       if (FLUXES(n,4) > vsmall .and. &
+           days_since_last_cohort >= cohort_birth_period) then
+           ! Birth new cohort
+           call create_cohort(FLUXES(n,4)*one_Rg_fraction*days_per_step, & ! Allocation that makes it to leaves 
+                              FLUXES(n,4)*days_per_step, &                 ! Total allocation costs
+                              pars(45), pars(46))
+           days_since_last_cohort = 0d0
+       else
+           ! Inter-birth step: add allocation to current cohort
+           if (FLUXES(n,4) > vsmall) then
+               call add_foliage_to_cohort(FLUXES(n,4)*one_Rg_fraction*days_per_step, & ! Allocation that makes it to leaves 
+                                          FLUXES(n,4)*days_per_step, &                 ! Total allocation costs
+                                          pars(45), pars(46))
+           end if
        end if
-! 1) Make Rg assumption consistent
-! 2) Check that additions to cohort track the same accumulation for the construction costs...
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-       ! Cohort age update and economic shedding.
-       ! update_and_shed_cohorts advances cohort ages, applies the
-       ! exponential N-decline (pars(50) = k_N_decline), evaluates the
-       ! Kikuzawa economic criterion (NCCE*N_rel vs Pi_threshold) and the
-       ! maximum-age hard constraint, then returns:
-       !   cohort_litter_flux : age-driven foliar litter  [gC m-2 d-1]
-       !   resorb_flux        : labile resorption from shed cohorts [gC m-2 d-1]
-       ! The cohort litter flux is then combined with the NCCE/environmental
-       ! loss from plant_natural_turnover using max(), preserving the existing
-       ! DALEC loss mechanisms while adding the age-based pathway.
-       ! pars(51) = f_resorb_cohort (fraction of shed Cf returned to labile)
-       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+       !
+       ! Age and shed cohorts
+       !
+
        call update_and_shed_cohorts(days_per_step, DIAGS(n,22), &
-                                    pars(49), pars(50), pars(51), &
-                                    cohort_litter_flux, resorb_flux)
+                                    pars(46), pars(47), pars(48), pars(17), &
+                                    FLUXES(n,10), &
+                                    FLUXES(n,1), POOLS(n,2), &
+                                    cohort_litter_flux, resorb_flux, &
+                                    env_litter_out)
 
-       ! Combine age-driven and NCCE/environmental foliar litter: take the
-       ! larger of the two loss pathways as the effective foliar litter flux.
-       ! This is consistent with the max() combination already used within
-       ! plant_natural_turnover for env_foliage_litter vs economic loss.
-       FLUXES(n,10) = max(FLUXES(n,10), cohort_litter_flux)
+       ! cohort_litter_flux contains both environmental and economic litter.
+       ! Replaces FLUXES(n,10) directly — environmental loss has been explicitly
+       ! applied to specific cohorts inside update_and_shed_cohorts.
+       FLUXES(n,10) = cohort_litter_flux
+       ! Store diagnostic: resorption from economic shed cohorts [gC m-2 d-1]
+       FLUXES(n,52) = resorb_flux
+       ! Store diagnostic: environmental component of cohort litter [gC m-2 d-1]
+       FLUXES(n,53) = env_litter_out
 
-       ! Add the resorption flux from shed cohorts to the labile pool.
-       ! This is applied before the pool update equations below so that
-       ! the labile pool correctly reflects the recovered carbon.
-       POOLS(n+1,1) = POOLS(n,1) + resorb_flux * days_per_step
-
-       ! Store diagnostic: cohort-age-driven litter flux [gC m-2 d-1]
-       DIAGS(n,31) = cohort_litter_flux
-       ! Store diagnostic: resorption from shed cohorts [gC m-2 d-1]
-       DIAGS(n,32) = resorb_flux
+       ! Compute Cf-weighted canopy mean NUE_rel from current cohort state.
+       ! Must be called after update_and_shed_cohorts (ages and NUE_rel values
+       ! are current for this step) and before calculate_stomatal_conductance
+       ! (which calls acm_gpp_stage_1 that uses canopy_NUE_rel to scale Vcmax).
+       call compute_canopy_NUE_rel       
        ! Store diagnostic: number of living cohorts
-       DIAGS(n,33) = dble(n_live_cohorts)
+       DIAGS(n,30) = dble(n_live_cohorts)
+       ! Store diagnostic: canopy mean NUE_rel [0-1]
+       DIAGS(n,31) = canopy_NUE_rel
 
        !
        ! Calculate growth respiration and adjust allocation to pools assuming
@@ -1206,7 +1215,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,7) = FLUXES(n,7) * one_Rg_fraction ! Fine root
 
        !
-       ! Dead organic matter decomposition and mineralisation (gC/m2/day)
+       ! Calculate decomposition and heterotrophic respiration
        !
 
        ! turnover of litter (mineralisation + decomposition)
@@ -1220,13 +1229,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
        ! update pools for next timestep
        !
+       ! Add the resorption flux from economic shed cohorts to the labile pool.
+       POOLS(n+1,1) = POOLS(n,1) + resorb_flux * days_per_step
 
        ! labile pool - include bounding to prevent zero labile if C exhaustion occurs
        ! NOTE: cohort resorption (resorb_flux) was pre-added to POOLS(n+1,1) above.
        ! The standard labile balance uses POOLS(n,1) as base; resorb_flux augments
        ! the result additively via the pre-set POOLS(n+1,1). We therefore add the
        ! standard fluxes ON TOP of the resorption-augmented base.
-       POOLS(n+1,1) = POOLS(n+1,1) + (FLUXES(n,5)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)- &
+       POOLS(n+1,1) = POOLS(n+1,1) + (FLUXES(n,5)+FLUXES(n,52)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)- &
                                        FLUXES(n,9)-FLUXES(n,8))*days_per_step
        POOLS(n+1,1) = max(0d0,POOLS(n+1,1))
        ! foliar pool
@@ -1459,7 +1470,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Cold shutdown developed from Eddy covariance analysis at Boreal forest sites by Tim Green
     airt_adj = (dT_Vc_minT / (dT_Vc_minT + Vc_coef)) &
              * modified_arrhenious(298.15d0,Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT_freeze)
-    metabolic_limited_photosynthesis = Vcmax_ref * leaf_canopy_light_scaling &
+    ! canopy_NUE_rel scales Vcmax_ref by the Cf-weighted mean relative foliar N.
+    ! As leaves age, NUE_rel declines exponentially (exp(-k_N_decline * age_months)),
+    ! reducing the effective carboxylation capacity of the canopy. This couples
+    ! the cohort nitrogen decline model to canopy photosynthesis without
+    ! introducing additional free parameters.
+    metabolic_limited_photosynthesis = Vcmax_ref * canopy_NUE_rel * leaf_canopy_light_scaling &
                                      * airt_adj
     ! Determine dark respiration (i.e. maintenance) at the current temperature
     ! as a fraction of Vcmax_ref. Most likely will be replaced by Heskel or Reich approaches.
@@ -1498,7 +1514,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Jmax calculation in umolE/umolPAR, a key requirement for aggregating to
     ! the daily time scale is to scale by day light fraction.
     ! Jmax ~ Vcmax (Walker et al., 2017, doi: 10.1111/nph.14623, equ. 1)
-    Jmax = dayl_hours_fraction*2.787095d0*(Vcmax_ref**0.890d0) * leaf_canopy_light_scaling &
+    ! canopy_NUE_rel applied inside the power so Jmax scales with the effective
+    ! (nitrogen-adjusted) Vcmax rather than the reference value.
+    Jmax = dayl_hours_fraction*2.787095d0*((Vcmax_ref*canopy_NUE_rel)**0.890d0) * leaf_canopy_light_scaling &
           * modified_arrhenious(298.15d0,Ha_Jmax,Hd_Vcmax_Jmax,dS_Jmax,leafT_freeze)
     ! Ratio of Jmax25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! R2 of fit 0.66
@@ -4350,13 +4368,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine plant_natural_turnover(nodays,step,time,                       & ! time related
                                     biomass, foliage, wood, root,           & ! C pools
                                     lca, ncce_gCgCday,                      & ! LCA / net canopy carbon export per gC leaf
-                                    pot_foliar_fall_gCm2day,                & ! reference foliar fall rate for dNCCE est. from potential leaf falls 
                                     pot_foliar_fall_fraction,               & ! reference foliar fall rate for current NCCE and gradient
-                                    cmi_ncce_k50, cmi_ncce_gradient_k50,    & ! MM function of NCCE and NCCE trend driven leaf fall
-                                    foliar_loss_threshold,                  &                               
+                                    cmi_ncce_k50, cmi_ncce_gradient_k50,    & ! MM function of NCCE and NCCE trend driven leaf fall                     
                                     wood_turn, root_turn,                   & ! wood and fine root turnovers
                                     foliage_litter,root_litter,wood_litter, & ! Natural litter fluxes (fol, root, wood)
-                                    cmi,delta_ncce_gCgC,ncce_gradient)        ! CMI, NCCE change for canopy loss, NCCE gradient
+                                    cmi,ncce_gradient)                        ! CMI, NCCE change for canopy loss, NCCE gradient
 
        ! Subroutine deals with the determining litter generates from foliage, fine roots and wood.
        ! Specifically litter due to non-disturbance related forcings, i.e. age or climate
@@ -4371,11 +4387,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                        wood, & ! wood pool (gC/m2)
                                        root, & ! fine root pool (gC/m2)    
                                         lca, & ! leaf carbon per unit leaf area (gC/m2)
-                    pot_foliar_fall_gCm2day, & ! Initial proposed rate of leaf fall for NCCE calculation (gC/m2/day)
                    pot_foliar_fall_fraction, & ! Initial proposed rate of leaf fall for NCCE dynamics limits (fraction/day)        
                                cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
                       cmi_ncce_gradient_k50, & ! ncce gradient, at which function is half saturation
-                      foliar_loss_threshold, & ! NCCE return required to support a foliar loss (gC/gC/m2/d)
                                   wood_turn, & ! wood turnover rate (fraction / day)
                                   root_turn    ! fine root turnover rate (fraction / day)
        double precision, dimension(nodays), intent(in) :: ncce_gCgCday ! current leaf net canopy carbon export (gC/gC/day)
@@ -4384,19 +4398,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                 root_litter, & ! fine root litter (gC/m2/day)
                                 wood_litter, & ! wood litter (gC/m2/day)
                                         cmi, & ! Canopy mortality index, describing the most limiting factor of the current and recent NCCE history
-                              ncce_gradient, & ! NCCE gradient over the lag period (gC/gCleaf/day / day)                                                          
-                            delta_ncce_gCgC    ! Change in net canopy C export for leaf loss
+                              ncce_gradient  & ! NCCE gradient over the lag period (gC/gCleaf/day / day)                                                          
 
        ! Local variables
        logical :: ncce_positive
        integer :: i, interval
-       double precision :: tmp1,tmp2, &
-                  env_foliage_litter, &
-                              tmp(5), &
-                    proposed_fall(5), &
-                            lai_orig, & ! Original values for lai
-                             gs_orig, & ! stomatal conductance
-                        scaling_orig    ! leaf->canopy scaling based on light                           
+       double precision :: tmp1,tmp2
 
        ! Reset
        foliage_litter = 0d0 ; root_litter = 0d0 ; wood_litter = 0d0
@@ -4456,68 +4463,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            cmi = max(tmp1,tmp2)
 
            ! Calculate loss fraction
-           env_foliage_litter = pot_foliar_fall_fraction * cmi
+           foliage_litter = pot_foliar_fall_fraction * cmi
            ! Convert to gC/m2/day
-           env_foliage_litter = foliage * (1d0-(1d0-env_foliage_litter)**time)/time
-
-           !! Determine cost-benefit on NCCE of potential losses
-
-           ! Store the existing LAI and canopy_scaling
-           lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling ; gs_orig = stomatal_conductance
-           ! Now make multiple proposals at different extraction levels
-           i = 0 ; tmp = 0d0 ; proposed_fall = 0d0 ; ncce_positive = .true.
-           do while (ncce_positive) 
-              i = i + 1
-              ! Calculate the new LAI proposal
-              proposed_fall(i) = pot_foliar_fall_gCm2day*dble(i)
-              lai = lai_orig - ((proposed_fall(i) * time) / lca)
-              ! If this result in zero LAI, then we know the delta is the inverse sign of the current flux
-              if (lai <= 0d0) then
-                  ! Estimate the per gC loss on investment per day
-                  tmp(i) = 0d0 - (ncce_gCgCday(step) * foliage)
-                  ncce_positive = .false.
-              else 
-                  ! Update the shortwave radiation
-                  call calculate_shortwave_balance
-                  ! Update acm_gpp_stage_1
-                  call acm_gpp_stage_1      
-                  ! Update stomatal conductance
-                  stomatal_conductance = (stomatal_conductance / scaling_orig) * leaf_canopy_light_scaling
-                  ! Estimate the impact on canopy scale NCCE from proposed loss
-                  tmp(i) = (((acm_gpp_stage_2(stomatal_conductance) + dark_respiration) &
-                             * umol_to_gC * dayl_seconds) - (dark_respiration * umol_to_gC * seconds_per_day)) &
-                            - (ncce_gCgCday(step) * foliage)
-              end if ! new lai <= 0 
-              if (tmp(i) <= 0d0 .or. i == 5) ncce_positive = .false.  
-           end do
-           ! Scale to per-gC
-           tmp = tmp / min(foliage,proposed_fall * time) ! 
-           ! Find the proposal that gives the maximum return 
-           delta_ncce_gCgC = maxval(tmp(1:i)) 
-           ! Lose leaves if that will give a positive return, 
-           ! scaled by whether we have on average exported more
-           ! C from the canopy (i.e. NCCE) 
-           if (delta_ncce_gCgC > foliar_loss_threshold ) then
-               ! Assume we lose carbon to gain the benefit.
-               ! (which is already assigned above)
-               foliage_litter = proposed_fall(maxloc(tmp(1:i), dim=1))           
-           else 
-               ! Set as zero - unless also absolute NCCE loss
-               foliage_litter = 0d0
-           end if
-           ! Convert to fractional loss and convert to gC/m2/day
-           foliage_litter = min(1d0,foliage_litter / foliage) 
            foliage_litter = foliage * (1d0-(1d0-foliage_litter)**time)/time
-
-           ! Return initial values
-           lai = lai_orig ; stomatal_conductance = gs_orig
-           ! Update the shortwave radiation
-           call calculate_shortwave_balance
-           ! Update acm_gpp_stage_1
-           call acm_gpp_stage_1      
-
-           !! Assume largest potential loss rate
-           foliage_litter = max(foliage_litter,env_foliage_litter) 
 
        end if ! foliage > 0
 
@@ -4771,14 +4719,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine initialise_cohorts(Cf_init, start_doy, lcc, r_opp, T_leaf_ref, &
-                                 k_N_decline, mean_leaf_doy, sigma_leaf_doy)
+  subroutine initialise_cohorts(foliage, start_doy, r_opp, leaf_age_ref, &
+                                k_N_decline, mean_leaf_doy, sigma_leaf_doy)
 
     ! Initialise the leaf cohort array using a Von Mises multi-year age-structure
     ! distribution (Kikuzawa 1991; Givnish 2002).
     !
-    ! The initial foliar carbon Cf_init is distributed across N_coh_init monthly
-    ! cohorts spanning N_years_init = ceil(T_leaf_ref / 365) past growing seasons.
+    ! The initial foliar carbon foliage is distributed across n monthly
+    ! cohorts spanning N_years_init = ceiling(leaf_age_ref / 365) past growing seasons.
     !
     ! Annual weights follow the linearly increasing sequence from the Von Mises
     ! multi-year example (year_weights_linear logic inlined below):
@@ -4792,27 +4740,31 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! sigma_leaf_doy (days). The Von Mises PDF handles year-boundary wrap-around
     ! correctly; monthly mid-point DOYs are used as cohort birth representatives.
     !
+    ! Construction cost convention (consistent with DALEC growth respiration):
+    !   Cf = cohort_mass                    (post-Rg carbon in the pool)
+    !   Cc = cohort_mass / one_Rg_fraction  (implied pre-Rg total investment)
+    ! This is the same relationship used in create_cohort and add_foliage_to_cohort.
+    !
 
     implicit none
 
     ! Arguments
-    double precision, intent(in) :: Cf_init, & ! total initial foliar carbon (gC m-2)
-                                        lcc, & ! leaf C construction cost coefficient (gC_cost/gC_leaf)
+    double precision, intent(in) :: foliage, & ! total initial foliar carbon (gC m-2)
                                       r_opp, & ! daily opportunity cost rate (d-1)           
-                                 T_leaf_ref, & ! reference leaf lifespan (days)
+                               leaf_age_ref, & ! reference leaf lifespan (days)
                                 k_N_decline, & ! leaf N decline rate (month-1)               
                               mean_leaf_doy, & ! peak leaf-out DOY for Von Mises PDF (1-365)
-                             sigma_leaf_doy    ! seasonal spread of leaf production (days) 
+                             sigma_leaf_doy    ! seasonal spread of leaf production (days)
     integer, intent(in) :: start_doy ! day-of-year at simulation start (integer)
 
     ! Local variables
     integer :: N_years, y, m, k, age_d, age_mo, &
-               birth_doy_m, days_elapsed, & 
-               youngest_slot, youngest_age  
+               birth_doy_m, days_elapsed,       &
+               youngest_slot, youngest_age          ! for newest_cohort_slot identification
     double precision :: w_y, &
                         kappa, theta, mu_rad, nd, &
                         vm_sum_yr, cohort_mass, scale, sum_cf
-    double precision, dimension(12) :: vm_pdf
+    double precision, dimension(12) :: vm_pdf ! 12 months
 
     ! Month mid-point DOYs (1-based, non-leap year)
     integer, parameter :: month_mid_doy(12) = (/15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349/)
@@ -4825,24 +4777,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         leaf_cohorts(k)%Cc           = 0d0 ! construction cost at birth (gC m-2)
         leaf_cohorts(k)%Pi_threshold = 0d0 ! economic shedding threshold (gC gC-1 d-1)        
         leaf_cohorts(k)%cum_profit   = 0d0 ! cumulative NCCE since birth (gC m-2)
-        leaf_cohorts(k)%N_rel        = 1d0 ! relative N content (0-1), declines with age
+        leaf_cohorts(k)%NUE_rel      = 1d0 ! relative NUE content (0-1), declines with age
         leaf_cohorts(k)%is_alive     = .false.  
     end do
-    n_live_cohorts = 0 ! No live cohorts yet
-    newest_cohort_slot = 0 ! Therefore, there is no newest cohort
-    days_since_last_cohort = 0d0 ! overwritten after year loop
-
-    ! Guard: no foliar carbon to distribute
-    !if (Cf_init <= vsmall) return
+    n_live_cohorts         = 0   ! No living cohorts yet
+    newest_cohort_slot     = 0   ! no cohort born yet for this MCMC sample
+    days_since_last_cohort = 0d0 ! overwritten at end of subroutine; safe default
 
     ! Number of past growing seasons to span
-    N_years = max(1, ceiling(T_leaf_ref / 365d0))
+    N_years = max(1, ceiling(leaf_age_ref / 365d0))
 
     ! Von Mises concentration parameter (kappa) for 365-day year (nd)
     ! sigma_to_kappa: kappa = 0.5 / sin(pi * sigma / N_days)^2
     nd    = 365d0
     kappa = 0.5d0 / (sin(pi * sigma_leaf_doy / nd))**2d0
-
     ! mean day of year in radians
     mu_rad = two_pi * (mean_leaf_doy - 1d0) / nd
 
@@ -4868,15 +4816,16 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         do m = 1, 12
 
             ! Assign current cohort based on the fractional weight allocated to the current month
-            cohort_mass = Cf_init * w_y * (vm_pdf(m) / max(vm_sum_yr, vsmall))
+            cohort_mass = foliage * w_y * (vm_pdf(m) / max(vm_sum_yr, vsmall))
 
             ! Skip small cohorts
             if (cohort_mass <= vsmall) cycle
 
             ! Find a free slot
             k = k + 1
-            if (k > max_leaf_cohorts) exit   ! array full: stop adding cohorts
+            if (k > max_leaf_cohorts) stop   ! array full: stop adding cohorts
                                              ! strictly speaking we should do something else here as this is an error.
+                                             ! As the number of years been distributed across should be less than the maximum number of cohorts.
 
             ! Compute age: days from birth (monthly mid-DOY, y years ago) to start_doy
             ! year y=N_years is the most recent (0 full years ago for y=N_years)
@@ -4892,33 +4841,30 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             age_mo = ceiling(age_d / 30)  ! assign approximate age in months
 
             ! Load into the cohort tracking type
+            ! Cf  = cohort_mass (post-Rg carbon already in pool)
+            ! Cc  = cohort_mass / one_Rg_fraction (implied pre-Rg total investment,
+            !       consistent with create_cohort and add_foliage_to_cohort)
             leaf_cohorts(k)%Cf          = cohort_mass
-            leaf_cohorts(k)%Cc          = cohort_mass * lcc
-            leaf_cohorts(k)%Pi_threshold= leaf_cohorts(k)%Cc * r_opp / max(T_leaf_ref, 1d0)
+            leaf_cohorts(k)%Cc          = cohort_mass / one_Rg_fraction
+            leaf_cohorts(k)%Pi_threshold= leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
             leaf_cohorts(k)%age_days    = age_d
             leaf_cohorts(k)%age_months  = age_mo
             leaf_cohorts(k)%cum_profit  = 0d0 ! TLS: May need to initialise this also with a real value.
-            leaf_cohorts(k)%N_rel       = exp(-k_N_decline * dble(age_mo))
+            leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
             leaf_cohorts(k)%is_alive    = .true.
             n_live_cohorts = n_live_cohorts + 1
 
         end do ! month loop
 
-        if (k >= max_leaf_cohorts) exit
-
     end do ! year loop
 
-    ! Rescale cohort Cf so their sum equals Cf_init exactly (carbon conservation)
-    call rescale_cohort_cf(Cf_init)
+    ! Rescale cohort Cf so their sum equals foliage exactly (carbon conservation)
+    call rescale_cohort_cf(foliage)
 
-    ! Identify newest_cohort_slot: the living cohort with the smallest age_days.
-    ! This is the cohort whose birth DOY was nearest to (but before) start_doy,
-    ! i.e. the cohort representing the most recently produced leaf area at the
-    ! simulation start. Between the start of the simulation and the first monthly
-    ! cohort creation event, rescale_cohort_cf will direct any new foliar carbon
-    ! to this cohort — the correct target since it is the currently growing cohort.
-    !
-    youngest_slot = 0 ; youngest_age  = huge(0)
+    ! Identify newest_cohort_slot, this should actually just be the first or last cohort assigned above,
+    ! to be checked.
+    youngest_slot = 0
+    youngest_age  = huge(0)
     do k = 1, max_leaf_cohorts
         if (leaf_cohorts(k)%is_alive) then
             if (leaf_cohorts(k)%age_days < youngest_age) then
@@ -4935,30 +4881,30 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     else
         days_since_last_cohort = cohort_birth_period
     end if
-    
+
   end subroutine initialise_cohorts
   !
   !------------------------------------------------------------------
   !
-  subroutine create_cohort(dCf, lcc, r_opp, T_leaf_ref)
+  subroutine create_cohort(dCf, dCc, r_opp, leaf_age_ref)
 
     ! Create a new leaf cohort from a pulse of foliar carbon allocation.
     ! A free slot (is_alive == .false.) is found by sequential search.
     ! If no slot is available the carbon is distributed proportionally
     ! across the youngest 6 living cohorts to maintain carbon conservation.
     !
-    ! Arguments:
-    !   dCf        : new cohort carbon [gC m-2] (allocation * days_per_step)
-    !   lcc        : leaf C construction cost coefficient  [gC/gC]  = pars(47)
-    !   r_opp      : daily opportunity cost rate [d-1]              = pars(48)
-    !   T_leaf_ref : reference leaf lifespan [days]                 = pars(49)
 
     implicit none
 
-    double precision, intent(in) :: dCf, lcc, r_opp, T_leaf_ref
+    ! Arguments
+    double precision, intent(in) :: dCf, & ! Allocation that becomes foliage (gC/m2)
+                                    dCc, & ! Total cost of foliage allocation (gC/m2)
+                                  r_opp, & ! daily opportunity cost rate (day-1)
+                           leaf_age_ref    ! reference leaf lifespan (days)      
 
+    ! Local variables
     integer          :: k, slot, youngest(6), ny, i
-    double precision :: sum_young, Cc_new
+    double precision :: sum_young, delta_Cf, delta_Cc
 
     if (dCf <= vsmall) return
 
@@ -4973,133 +4919,259 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     if (slot > 0) then
         ! Initialise new cohort
-        Cc_new = dCf * lcc
-        leaf_cohorts(slot)%Cf          = dCf       ! Leaf initially in pool
-        leaf_cohorts(slot)%Cc          = Cc_new    ! Construction cost
-        leaf_cohorts(slot)%Pi_threshold= Cc_new * r_opp / max(T_leaf_ref, 1d0)
-        leaf_cohorts(slot)%age_days    = 0         ! New born
-        leaf_cohorts(slot)%age_months  = 0         ! New born
-        leaf_cohorts(slot)%cum_profit  = -Cc_new   ! start in construction debt
-        leaf_cohorts(slot)%N_rel       = 1d0       ! fresh leaves start will optimal photosynthetic capacity
-        leaf_cohorts(slot)%is_alive    = .true.    ! Assign cohort as alive
-        n_live_cohorts = n_live_cohorts + 1 ! count number of live cohorts
-        ! Record this slot so rescale_cohort_cf can direct future inter-birth
-        ! carbon gains here rather than distributing them across all cohorts.
-        newest_cohort_slot = slot        
+        leaf_cohorts(slot)%Cf          = dCf ! Actual leaves
+        leaf_cohorts(slot)%Cc          = dCc ! Total construction cost
+        leaf_cohorts(slot)%Pi_threshold= dCc * r_opp / max(leaf_age_ref, 1d0)
+        leaf_cohorts(slot)%age_days    = 0   
+        leaf_cohorts(slot)%age_months  = 0
+        leaf_cohorts(slot)%cum_profit  = -dCc ! start in construction debt
+        leaf_cohorts(slot)%NUE_rel     = 1d0  ! fresh leaves
+        leaf_cohorts(slot)%is_alive    = .true. ! IT'S ALIVE
+        n_live_cohorts = n_live_cohorts + 1
+        ! Record this slot so add_foliage_to_cohort and rescale_cohort_cf
+        ! direct future inter-birth carbon here correctly.
+        newest_cohort_slot = slot
     else
-        ! No free slot: add dCf proportionally to the youngest 6 living cohorts
-        ! (youngest = smallest age_days). This avoids silent carbon loss.
-        ny = 0 ; sum_young = 0d0
-        do k = 1, max_leaf_cohorts
-            if (leaf_cohorts(k)%is_alive .and. leaf_cohorts(k)%age_days < 45) then
-                ny = ny + 1
-                youngest(ny) = k
-                sum_young = sum_young + leaf_cohorts(k)%Cf
-                if (ny == 6) exit
-            end if
-        end do
-        if (ny > 0 .and. sum_young > vsmall) then
-            do i = 1, ny
-                k = youngest(i)
-                leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf + dCf * (leaf_cohorts(k)%Cf / sum_young)
-            end do
-        end if
+        ! No free slot: distribute dCf to the youngest living cohort
+        k = newest_cohort_slot
+        leaf_cohorts(k)%Cf           = leaf_cohorts(k)%Cf + dCf
+        leaf_cohorts(k)%Cc           = leaf_cohorts(k)%Cc + dCc
+        leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
+        leaf_cohorts(k)%cum_profit   = leaf_cohorts(k)%cum_profit - dCc
     end if
 
   end subroutine create_cohort
   !
   !------------------------------------------------------------------
   !
-  subroutine update_and_shed_cohorts(dt, ncce_gCgCday, T_leaf_ref, &
-                                     k_N_decline, f_resorb, &
-                                     cohort_litter_flux, resorb_flux)
+  subroutine add_foliage_to_cohort(dCf, dCc, r_opp, leaf_age_ref)
 
-    ! Advance cohort ages, update relative N content, evaluate the Kikuzawa
-    ! economic shedding criterion and maximum-age hard constraint, and return
-    ! aggregate litter and resorption fluxes.
-    !
-    ! Economic criterion (Kikuzawa 1991):
-    !   Shed cohort k if: ncce_gCgCday * N_rel(k) < Pi_threshold(k)
-    !   N_rel(k) accounts for the declining photosynthetic capacity of old
-    !   leaves; an older cohort has a lower effective NCCE return than the
-    !   canopy-average NCCE implies for a fresh leaf.
-    !
-    ! Maximum-age criterion:
-    !   Shed cohort k if: age_months >= max_age_months
-    !   where max_age_months = T_leaf_ref / 30 (rounded up to nearest month).
-    ! 
-    ! Oldest-6 identification:
-    !   The result (oldest_idx, n_oldest) is available for downstream use
-    !   such as prioritised shedding reporting, diagnostics, or any future
-    !   logic that needs to act on the most age-vulnerable cohorts first.
-    !
-    ! Carbon conservation:
-    !   Shed cohort carbon is partitioned: f_resorb -> labile, (1-f_resorb) -> litter.
-    !   The returned fluxes are per-day rates (gC m-2 d-1).
+    ! Add a pulse of inter-birth foliar carbon to the most recently created
+    ! cohort (newest_cohort_slot), with full economic field updates.
+    !   
 
     implicit none
 
     ! Arguments
-    double precision, intent(in)  :: dt, & ! time step (days)
-                           ncce_gCgCday, & ! current canopy NCCE per unit leaf C (gC gC-1 d-1)
-                             T_leaf_ref, & ! reference leaf lifespan (days)
-                            k_N_decline, & ! N decline rate (month-1)         
-                               f_resorb    ! fraction of shed Cf returned to labile (0-1)
-    double precision, intent(out) :: cohort_litter_flux, & ! age-driven foliar litter (gC m-2 d-1)
-                                            resorb_flux    ! labile resorption from shed cohorts (gC m-2 d-1)
+    double precision, intent(in) :: dCf, & ! Allocation that becomes foliage (gC/m2)
+                                    dCc, & ! Total cost of foliage allocation (gC/m2)
+                                  r_opp, & ! daily opportunity cost rate (day-1)
+                           leaf_age_ref    ! reference leaf lifespan (days)      
+
     ! Local variables
-    ! Scalar loop variables and shedding temporaries
-    integer, parameter :: k_oldest = 6 ! oldest 6-months
-    integer :: k, j, tmp_idx, tmp_age, & 
-                       max_age_months, & 
-                             n_oldest, & ! number of entries currently in the oldest set (0-6)
-                       min_pos_in_set, & ! position within oldest_idx/oldest_age of that minimum
-                       min_age_in_set    ! current minimum age_days across oldest_age(1:n_oldest)
-    integer, dimension(k_oldest) :: oldest_idx, & ! slot indices of the n_oldest oldest living cohorts
-                                    oldest_age    ! their corresponding age_days values (kept in sync)
-    double precision :: effective_ncce, & ! 
-                              litter_k, & !
-                              resorb_k, & ! 
-                                  dt_1
-    ! Membership mask for Pass 2b: in_oldest_set(k) = .true. iff slot k
+    integer          :: k, fallback_slot, fallback_age
+    double precision :: delta_Cc
+
+    ! Guard: no carbon to add, i.e. make no changes
+    if (dCf <= vsmall) return
+
+    ! --- Sanity check for newest_cohort_slot ---
+    if (newest_cohort_slot < 1 .or. newest_cohort_slot > max_leaf_cohorts) then
+        newest_cohort_slot = 0
+    end if
+    if (newest_cohort_slot > 0) then
+        if (.not. leaf_cohorts(newest_cohort_slot)%is_alive) then
+            newest_cohort_slot = 0
+        end if
+    end if
+
+    ! Fallback: find youngest living cohort by minimum age_days
+    if (newest_cohort_slot == 0) then
+        fallback_slot = 0
+        fallback_age  = huge(0)
+        do k = 1, max_leaf_cohorts
+            if (leaf_cohorts(k)%is_alive) then
+                if (leaf_cohorts(k)%age_days < fallback_age) then
+                    fallback_age  = leaf_cohorts(k)%age_days
+                    fallback_slot = k
+                end if
+            end if
+        end do
+        newest_cohort_slot = fallback_slot
+    end if
+
+    ! Guard: no living cohorts (e.g. immediately post-fire)
+    if (newest_cohort_slot == 0) return
+
+    ! Apply carbon addition with full economic field updates 
+    k        = newest_cohort_slot
+    delta_Cc = dCc
+    leaf_cohorts(k)%Cf           = leaf_cohorts(k)%Cf + dCf
+    leaf_cohorts(k)%Cc           = leaf_cohorts(k)%Cc + delta_Cc
+    leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
+    leaf_cohorts(k)%cum_profit   = leaf_cohorts(k)%cum_profit - delta_Cc
+
+  end subroutine add_foliage_to_cohort
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_and_shed_cohorts(time, ncce_gCgCday, leaf_age_ref, &
+                                     k_N_decline, f_resorb, lca, &
+                                     env_litter_flux_gCm2day, &
+                                     cohort_litter_flux, resorb_flux, &
+                                     env_litter_out)
+
+    ! Advance cohort ages, update relative N content, apply environmental leaf
+    ! loss to oldest cohorts, evaluate the economic shedding criterion
+    ! and maximum-age hard constraint, and return aggregate litter and
+    ! resorption fluxes.
+    !
+    ! Shedding order: oldest cohorts are assessed for loss first, for both
+    ! environmental loss (Pass 2b) and economic shedding (Pass 2c).
+    !
+    ! Pass structure:
+    !   Pass 1  — forward scan: age update, and update oldest cohort.
+    !   Pass 2a — insertion sort of oldest_idx by descending age_days.
+    !   Pass 2b — environmental loss: remove env_litter_gCm2 from oldest
+    !             cohorts first. Partial removal supported; cohorts not killed
+    !             unless Cf is fully exhausted. 
+    !   Pass 2c — economic shedding: remaining living cohorts.
+    !
+    ! Environmental loss field update rationale (Pass 2b):
+    !   Cf           : reduced by delta_k (direct carbon removal).
+    !   Pi_threshold : recomputed from UNCHANGED Cc. Cc records the total
+    !                  construction investment committed since birth; environmental
+    !                  loss does not reverse this investment. With unchanged Cc
+    !                  and smaller Cf, Pi_threshold represents a higher effective
+    !                  return requirement per unit remaining carbon — the correct
+    !                  economic interpretation.
+    !   Cc           : UNCHANGED. Construction cost already spent; not reversed
+    !                  by environmental loss.
+    !   cum_profit   : UNCHANGED. Historical earnings record; not retroactively
+    !                  altered by the loss event.
+    !   NUE_rel, age_days, age_months : UNCHANGED (properties of leaf tissue).
+    !
+    ! Economic criterion (Kikuzawa 1991):
+    !   Shed cohort k if: ncce_k < Pi_threshold(k)
+    !   where ncce_k is the cohort-specific NCCE derived from distributed
+    !   canopy GPP and cohort maintenance respiration (see Steps 2c/2d).
+    !
+    ! Maximum-age criterion:
+    !   Shed cohort k if: age_months >= max_age_months
+    !   where max_age_months = ceiling(leaf_age_ref / 30)
+    !
+    ! Carbon conservation:
+    !   Economic shed carbon: f_resorb -> labile, (1-f_resorb) -> litter.
+    !   Environmental loss carbon: all to litter (resorption disabled; see
+    !   commented resorb_env_k lines in Pass 2b for future reactivation).
+    !   Returned fluxes are per-day rates [gC m-2 d-1].
+    !
+    ! Cohort-specific NCCE derivation (Steps 2c/2d):
+    !   GPP_k  = gpp_gCm2day * Cf(k) * NUE_rel(k) / (canopy_NUE_rel * foliar_pool)
+    !   Rm_k   = Cf(k) * Rm_per_gCleaf
+    !   NCCE_k = (GPP_k - Rm_k) / Cf(k)     (gC gC-1 d-1)
+    !
+
+    implicit none
+
+    ! Arguments
+    double precision, intent(in)  :: time, & ! time step (days)
+                             ncce_gCgCday, & ! Current net canopy carbon export (gC/gCleaf/day)
+                             leaf_age_ref, & ! Reference maximum leaf age (days)
+                              k_N_decline, & ! NUE decline coefficient (month)
+                                 f_resorb, & ! Fraction of foliar loss reabsorbed to labile
+                                      lca, & ! leaf carbon per unit area (gC/m2)
+                  env_litter_flux_gCm2day, & ! Current litter fall estimate (gC/m2/day)
+                              gpp_gCm2day, & ! canopy GPP (gC/m2/day)
+                         foliar_pool_gCm2    ! total foliar pool (gC m-2)
+    double precision, intent(out) :: cohort_litter_flux, & ! total cohort litter (env + economic) (gC/m2/day)
+                                            resorb_flux, & ! labile resorption from economic shedding (gC/m2/day)
+                                         env_litter_out    ! environmental component of litter (gC/m2/day)
+
+    ! Shedding temporaries (economic)
+    integer          :: k, max_age_months, j, i
+    double precision :: litter_k, resorb_k, dt_1
+
+    ! Cohort-specific NCCE temporaries (Steps 2c)
+    double precision :: gpp_k, & ! cohort GPP [gC m-2 d-1]
+                         Rm_k, & ! cohort Rm [gC m-2 d-1]
+                       ncce_k, & ! cohort NCCE [gC gC-1 d-1]
+                     gpp_norm, & ! GPP distribution denominator = canopy_NUE_rel * foliar_pool
+                    Rm_per_gC    ! Rm_heskel per unit gCleaf [gC gCleaf d-1], precomputed once
+
+    ! Environmental loss temporaries (Pass 2b)
+    double precision :: env_litter_gCm2    ! total env loss this step [gC m-2]
+    double precision :: remaining_env_loss ! running counter during Pass 2b
+    double precision :: delta_k            ! carbon drawn from cohort k [gC m-2]
+    double precision :: env_litter_flux    ! accumulated env litter [gC m-2 d-1]
+    ! Resorption from environmental loss — DISABLED, retained for future use.
+    ! Uncomment resorb_env_k lines in Pass 2b to reactivate.
+    double precision :: resorb_env_k       ! env resorption per cohort [gC m-2]
+    double precision :: litter_env_k       ! env litter per cohort [gC m-2]
+
+    ! Oldest-k_oldest identification (Pass 1, reused in Pass 2)
+    integer, parameter :: k_oldest = 12
+    integer :: oldest_idx(k_oldest), oldest_age(k_oldest)
+    integer :: n_oldest, min_pos_in_set, min_age_in_set
+    integer :: tmp_idx, tmp_age
+
+    ! Membership mask for Pass 2c/2d: in_oldest_set(k) = .true. iff slot k
     ! is in oldest_idx(1:n_oldest) after the insertion sort.
     logical :: in_oldest_set(max_leaf_cohorts)
 
-    ! Reset / initialise local variables
+    ! Initialise outputs and temporaries
     cohort_litter_flux = 0d0
     resorb_flux        = 0d0
-    dt_1               = 1d0 / max(dt, vsmall)
+    env_litter_out     = 0d0
+    env_litter_flux    = 0d0
+    resorb_env_k       = 0d0
+    litter_env_k       = 0d0
+    gpp_k              = 0d0
+    Rm_k               = 0d0
+    ncce_k             = 0d0
+    dt_1               = 1d0 / max(time, vsmall)
 
-    ! Maximum age in months derived from the reference lifespan parameter
-    max_age_months = max(1, ceiling(T_leaf_ref / 30d0))
+    ! Estimate the maximum leaf age
+    max_age_months = max(1, ceiling(leaf_age_ref / 30d0))
 
-    ! Initialise oldest cohort information
-    n_oldest       = 0 ; oldest_idx     = 0 ; oldest_age     = 0
-    min_age_in_set = 0 ; min_pos_in_set = 1
+    ! Convert environmental litter rate to step-integrated mass (gC m-2)
+    env_litter_gCm2     = env_litter_flux_gCm2day * time
+    remaining_env_loss  = env_litter_gCm2
 
-    ! Loop through the living cohorts
+    ! -------------------------------------------------------------------------
+    ! Precompute Rm per unit LAI [gC m-2leaf d-1] once — same for all cohorts
+    ! (temperature and Rm_leaf_const do not vary across cohorts).
+    ! Rm_per_gC = Rm_heskel_polynomial(Rm_leaf_const, leafT) * umol_to_gC * seconds_per_day
+    ! Each cohort's Rm = (Cf(k) / lca) * Rm_per_gC.
+    ! -------------------------------------------------------------------------
+    Rm_per_gC = Rm_heskel_polynomial(Rm_leaf_const, leafT) * umol_to_gC * seconds_per_day * lca
+
+    ! -------------------------------------------------------------------------
+    ! Precompute GPP distribution denominator:
+    !   gpp_norm = canopy_NUE_rel * foliar_pool_gCm2
+    ! Each cohort's share: GPP_k = gpp_gCm2day * Cf(k) * NUE_rel(k) / gpp_norm
+    ! Guard: if gpp_norm <= vsmall no meaningful GPP to distribute.
+    ! -------------------------------------------------------------------------
+    gpp_norm = canopy_NUE_rel * max(foliar_pool_gCm2, vsmall)
+
+    ! Initialise oldest-set tracking
+    n_oldest       = 0
+    min_age_in_set = 0
+    min_pos_in_set = 1
+    oldest_idx     = 0
+    oldest_age     = 0
+
+    ! =========================================================================
+    ! PASS 1 — Profit update + oldest-k_oldest identification
+    !
+    ! Incremental minimum tracking:
+    !   Phase A (n_oldest < k_oldest): accept every living cohort.
+    !     New entry is compared against current min; update only if smaller.
+    !   Phase B (n_oldest == k_oldest): evict the youngest entry in the set
+    !     only when the current cohort is strictly older.
+    !     Rescan with minloc over k_oldest elements after each eviction.
+    ! =========================================================================
+
     do k = 1, max_leaf_cohorts
         if (.not. leaf_cohorts(k)%is_alive) cycle
 
-        ! --- Age update ---
-        leaf_cohorts(k)%age_days   = leaf_cohorts(k)%age_days + nint(dt)
-        leaf_cohorts(k)%age_months = leaf_cohorts(k)%age_days / 30
-
-        ! --- Age-dependent relative N content ---
-        ! Exponential decay: N_rel = exp(-k_N_decline * age_months)
-        ! N_rel declines from 1 at birth towards 0 for very old cohorts,
-        ! reducing their effective NCCE return proportionally.
-        ! ΔN_rel(t) = N_rel(t+1) − N_rel(t) = N_rel(t) · [exp(−k) − 1] ! Actual decline in the specified month
-        leaf_cohorts(k)%N_rel = exp(-k_N_decline * dble(leaf_cohorts(k)%age_months))
-        leaf_cohorts(k)%N_rel = max(0d0, min(1d0, leaf_cohorts(k)%N_rel))
-
         ! --- Cumulative NCCE accumulation ---
         leaf_cohorts(k)%cum_profit = leaf_cohorts(k)%cum_profit &
-                                   + ncce_gCgCday * leaf_cohorts(k)%N_rel &
-                                   * leaf_cohorts(k)%Cf * dt
+                                   + ncce_gCgCday * leaf_cohorts(k)%NUE_rel &
+                                   * leaf_cohorts(k)%Cf * time
 
         ! --- Oldest-set update ---
-        if (n_oldest < K_OLDEST) then
+        if (n_oldest < k_oldest) then
             ! Phase A: set not full — insert unconditionally
             n_oldest = n_oldest + 1
             oldest_idx(n_oldest) = k
@@ -5119,24 +5191,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             if (leaf_cohorts(k)%age_days > min_age_in_set) then
                 oldest_idx(min_pos_in_set) = k
                 oldest_age(min_pos_in_set) = leaf_cohorts(k)%age_days
-                ! Rescan for new minimum — O(K_OLDEST) = O(6), constant cost
-                min_pos_in_set = minloc(oldest_age(1:K_OLDEST), 1)
+                ! Rescan for new minimum 
+                min_pos_in_set = minloc(oldest_age(1:k_oldest), 1)
                 min_age_in_set = oldest_age(min_pos_in_set)
             end if
         end if
 
-    end do ! Pass 1: age update + oldest-set
+    end do ! Pass 1
 
     ! =========================================================================
-    ! PASS 2 — Shedding in oldest-first order
+    ! PASS 2 — Environmental loss then economic shedding, oldest-first
     !
-    ! Step 2a: sort oldest_idx by descending age_days (insertion sort, O(k^2)).
-    ! Step 2b: shed from oldest_idx(1:n_oldest) first (oldest to youngest).
-    ! Step 2c: shed remaining living cohorts not in the oldest set.
+    ! Step 2a: insertion sort of oldest_idx by descending age_days.
+    ! Step 2b: environmental loss — remove env_litter_gCm2 from oldest cohorts.
+    ! Step 2c: economic shedding — remaining living cohorts.
     ! =========================================================================
 
     ! --- Step 2a: insertion sort of oldest_idx by descending age_days ---
-    ! Stable; at most 15 comparisons for K_OLDEST=6; no allocation.
+    ! Stable; at most 15 comparisons for k_oldest=12; no allocation.
     ! After sort: oldest_idx(1) = oldest cohort, oldest_idx(n_oldest) = youngest
     ! within the top-K set.
     do j = 2, n_oldest
@@ -5152,68 +5224,161 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         oldest_idx(i+1) = tmp_idx
     end do
 
-    ! --- Step 2b: assess oldest K_OLDEST cohorts first ---
-    do j = 1, n_oldest
-        k = oldest_idx(j)
-        if (.not. leaf_cohorts(k)%is_alive) cycle
+    ! --- Step 2b: environmental leaf loss — oldest cohorts first ---
+    !
+    ! Remove a total of env_litter_gCm2 [gC m-2] from the canopy, drawing
+    ! from cohorts in oldest-first order.  Partial removal is supported:
+    ! a cohort is only killed (is_alive = .false.) if its entire Cf is taken.
+    !
+    ! Field update for each partial removal of delta_k from cohort k:
+    !   Cf           : Cf -= delta_k
+    !   Pi_threshold : recomputed from UNCHANGED Cc (Cc * r_opp / leaf_age_ref).
+    !                  Unchanged Cc + smaller Cf → higher effective requirement
+    !                  per remaining carbon unit — correct economic interpretation.
+    !   Cc           : UNCHANGED — construction cost already spent.
+    !   cum_profit   : UNCHANGED — historical earnings not retroactively altered.
+    !   NUE_rel, age_days, age_months : UNCHANGED — tissue properties, not mass.
+    !
+    ! Resorption from environmental loss is DISABLED at this time.
+    ! The resorb_env_k and litter_env_k lines are retained as comments
+    ! for future reactivation.  While disabled, all delta_k goes to litter.
 
-        ! Determine the effective net canopy export for the current cohort
-        ! this will likely be removed for a similar approach
-        effective_ncce = ncce_gCgCday * leaf_cohorts(k)%N_rel
+    if (remaining_env_loss > vsmall) then
 
-        ! If the cohort is older than max allowed or the NCCE has fallen below
-        ! critical threshold then it will be shed. This condition will likely be changed
-        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
-            effective_ncce < leaf_cohorts(k)%Pi_threshold) then
+        ! Sub-loop 1: draw from oldest set (already sorted oldest-to-youngest)
+        do j = 1, n_oldest
+            if (remaining_env_loss <= vsmall) exit
+            k = oldest_idx(j)
 
-            resorb_k = f_resorb * leaf_cohorts(k)%Cf
-            litter_k = (1d0 - f_resorb) * leaf_cohorts(k)%Cf
-            cohort_litter_flux = cohort_litter_flux + litter_k * dt_1
-            resorb_flux        = resorb_flux        + resorb_k * dt_1
+            ! Take as much as available, up to remaining loss
+            delta_k = min(leaf_cohorts(k)%Cf, remaining_env_loss)
 
-            leaf_cohorts(k)%is_alive = .false.
-            leaf_cohorts(k)%Cf       = 0d0
-            n_live_cohorts = max(0, n_live_cohorts - 1)
-            oldest_idx(j)  = 0   ! mark slot as vacated for mask construction
+            ! --- Environmental loss carbon partitioning ---
+            ! RESORPTION DISABLED: all delta_k goes to litter.
+            ! To reactivate resorption from environmental loss, uncomment the
+            ! following two lines and replace delta_k with litter_env_k below.
+            ! resorb_env_k   = f_resorb * delta_k                 ! RESORPTION DISABLED
+            ! litter_env_k   = (1d0 - f_resorb) * delta_k         ! RESORPTION DISABLED
+            ! resorb_flux    = resorb_flux + resorb_env_k * dt_1  ! RESORPTION DISABLED
+            env_litter_flux = env_litter_flux + delta_k * dt_1
 
+            ! --- Update cohort fields ---
+            leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf - delta_k
+            ! Recompute Pi_threshold from UNCHANGED Cc:
+            ! smaller Cf with same Cc raises effective return requirement.
+            leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
+
+            ! Decrement running counter
+            remaining_env_loss = remaining_env_loss - delta_k
+
+            ! Kill cohort if fully exhausted
+            if (leaf_cohorts(k)%Cf <= vsmall) then
+                leaf_cohorts(k)%Cf       = 0d0
+                leaf_cohorts(k)%is_alive = .false.
+                n_live_cohorts = max(0, n_live_cohorts - 1)
+                oldest_idx(j)  = 0   ! mark as vacated for mask construction
+            end if
+
+        end do ! Sub-loop 1: oldest-set environmental loss
+
+        ! Sub-loop 2: draw from remaining living cohorts if oldest set
+        ! insufficient to cover the full environmental loss.
+        ! Visits slots in forward (slot) order — all remaining cohorts are
+        ! younger than the oldest set, so age-priority is approximately
+        ! maintained (oldest within the remaining set are drawn first only
+        ! if slot order happens to align with age; a full sort of all remaining
+        ! cohorts is not performed here for computational efficiency).
+        if (remaining_env_loss > vsmall) then
+            do k = 1, max_leaf_cohorts
+                if (remaining_env_loss <= vsmall) exit
+                if (.not. leaf_cohorts(k)%is_alive) cycle
+
+                ! Determine the amount of foliar to attempt to remove from the current cohort
+                delta_k = min(leaf_cohorts(k)%Cf, remaining_env_loss)
+
+                ! RESORPTION DISABLED (see Sub-loop 1 comments above)
+                ! resorb_env_k   = f_resorb * delta_k                 ! RESORPTION DISABLED
+                ! litter_env_k   = (1d0 - f_resorb) * delta_k         ! RESORPTION DISABLED
+                ! resorb_flux    = resorb_flux + resorb_env_k * dt_1  ! RESORPTION DISABLED
+                env_litter_flux = env_litter_flux + delta_k * dt_1
+                ! Update cohort
+                leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf - delta_k
+                leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
+                remaining_env_loss = remaining_env_loss - delta_k
+                ! Kill cohort if that is the last of the foliar carbon
+                if (leaf_cohorts(k)%Cf <= vsmall) then
+                    leaf_cohorts(k)%Cf       = 0d0
+                    leaf_cohorts(k)%is_alive = .false.
+                    n_live_cohorts = max(0, n_live_cohorts - 1)
+                end if
+
+            end do ! Sub-loop 2: remaining cohort environmental loss
         end if
 
-    end do ! Step 2b: oldest set shedding
+    end if ! remaining_env_loss > vsmall
 
-    ! --- Step 2c: build membership mask then assess remaining cohorts ---
-    ! Build in_oldest_set in O(K_OLDEST) time; lookup is O(1) per cohort slot.
-    in_oldest_set = .false.
-    do j = 1, n_oldest
-        if (oldest_idx(j) >= 1 .and. oldest_idx(j) <= max_leaf_cohorts) then
-            in_oldest_set(oldest_idx(j)) = .true.
-        end if
-    end do
+    ! Accumulate environmental litter into total cohort litter output
+    cohort_litter_flux = cohort_litter_flux + env_litter_flux
+    env_litter_out     = env_litter_flux
 
-! This section assesses all cohorts not already assessed in the oldest loop.
-! This could be used only if we have not achieved the desired leaf loss from the oldest leaves already.
-! Will have to think about whether this is inconsistent with the objective set out....
-
+    ! --- Step 2c: assess remaining living cohorts for economic shedding ---
     do k = 1, max_leaf_cohorts
         if (.not. leaf_cohorts(k)%is_alive) cycle
-        if (in_oldest_set(k)) cycle   ! already assessed in step 2b
 
-        effective_ncce = ncce_gCgCday * leaf_cohorts(k)%N_rel
+        ! --- Cohort-specific NCCE ---
+        ! GPP_k : cohort share of canopy GPP weighted by Cf * NUE_rel.
+        ! Rm_k  : cohort maintenance respiration via Heskel polynomial .
+        ! NCCE_k = (GPP_k - Rm_k) / Cf(k)  [gC gC-1 d-1]
+        !
+        ! Guard A: Cf(k) <= vsmall — cohort nearly exhausted by env loss;
+        !          force shedding by setting ncce_k to large negative value.
+        ! Guard B: gpp_norm <= vsmall — no canopy NUE or no foliar pool;
+        !          GPP_k = 0, NCCE_k driven entirely by -Rm_k / Cf(k).
+        if (leaf_cohorts(k)%Cf > vsmall) then
+            if (gpp_norm > vsmall) then
+                gpp_k = gpp_gCm2day * leaf_cohorts(k)%Cf * leaf_cohorts(k)%NUE_rel / gpp_norm
+            else
+                gpp_k = 0d0
+            end if
+            Rm_k   = leaf_cohorts(k)%Cf * Rm_per_gC
+            ncce_k = (gpp_k - Rm_k) / leaf_cohorts(k)%Cf
+        else
+            ncce_k = -huge(0d0)
+        end if
 
+        !
+        ! Having now estimates the cohort level relative contribution to the NCCE 
+        ! we can now safely age the leaves in preparation for the next time step.
+        ! 
+
+        ! --- Age update ---
+        leaf_cohorts(k)%age_days   = leaf_cohorts(k)%age_days + nint(time)
+        leaf_cohorts(k)%age_months = leaf_cohorts(k)%age_days / 30
+        ! --- Age-dependent relative N content ---
+        ! Exponential decay: NUE_rel = exp(-k_N_decline * age_months)
+        ! NUE_rel declines from 1 at birth towards 0 for very old cohorts,
+        ! reducing their effective NCCE return proportionally.
+        ! ΔN_rel(t) = NUE_rel(t+1) − N_rel(t) = N_rel(t) · [exp(−k) − 1]
+        leaf_cohorts(k)%NUE_rel = exp(-k_N_decline * dble(leaf_cohorts(k)%age_months))
+        leaf_cohorts(k)%NUE_rel = max(0d0, min(1d0, leaf_cohorts(k)%NUE_rel))
+
+        ! If the cohort is too old, or not meeting its NCCE requirements AND has made a profit kill
         if (leaf_cohorts(k)%age_months >= max_age_months .or. &
-            effective_ncce < leaf_cohorts(k)%Pi_threshold) then
-
-            resorb_k = f_resorb * leaf_cohorts(k)%Cf
-            litter_k = (1d0 - f_resorb) * leaf_cohorts(k)%Cf
-            cohort_litter_flux = cohort_litter_flux + litter_k * dt_1
-            resorb_flux        = resorb_flux        + resorb_k * dt_1
-
+            (ncce_k < leaf_cohorts(k)%Pi_threshold .and. leaf_cohort(k)%cum_profit > 0d0) ) then
+            ! Estimate reabsorption and litter loss
+            cohort_litter_flux = cohort_litter_flux + leaf_cohorts(k)%Cf * dt_1
+            !resorb_k = f_resorb * leaf_cohorts(k)%Cf
+            !litter_k = (1d0 - f_resorb) * leaf_cohorts(k)%Cf
+            !cohort_litter_flux = cohort_litter_flux + litter_k * dt_1
+            !resorb_flux        = resorb_flux        + resorb_k * dt_1
+            ! Update and kill
             leaf_cohorts(k)%is_alive = .false.
             leaf_cohorts(k)%Cf       = 0d0
             n_live_cohorts = max(0, n_live_cohorts - 1)
 
         end if
 
-    end do ! Step 2c: remaining cohort shedding
+    end do ! Step 2c: remaining cohort economic shedding
 
   end subroutine update_and_shed_cohorts
   !
@@ -5221,36 +5386,35 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   subroutine rescale_cohort_cf(target_Cf)
 
-    ! Reconcile the sum of living cohort Cf values with the authoritative
-    ! aggregate foliar pool target_Cf = POOLS(n+1,2).
+    ! Correct floating-point drift between the sum of living cohort Cf values
+    ! and the authoritative aggregate foliar pool target_Cf = POOLS(n+1,2).
     !
-    ! The treatment of the difference (target_Cf - sum_cf) depends on its sign:
+    ! This subroutine has a single responsibility: mass-balance correction.
+    ! Deliberate carbon flows to specific cohorts (new foliar allocation,
+    ! cohort creation) are handled by create_cohort and add_foliage_to_cohort.
+    ! rescale_cohort_cf handles only:
     !
-    !   GAIN  (target_Cf > sum_cf):
-    !     The difference represents new foliar carbon allocated by DALEC
-    !     between monthly cohort creation events.  This carbon is added
-    !     entirely to the MOST RECENTLY CREATED cohort (newest_cohort_slot),
-    !     because between births all new leaf area belongs to the current
-    !     growing cohort rather than being distributed among older cohorts
-    !     that are no longer actively growing.
+    !   (a) Floating-point drift: the residual discrepancy after all explicit
+    !       carbon flows have been applied. This arises from accumulated
+    !       rounding over the sum of up to max_leaf_cohorts cohort Cf values.
+    !       The discrepancy is a few ULPs — proportional scaling distributes
+    !       it without meaningfully corrupting any cohort's economic fields.
     !
-    !     If newest_cohort_slot is 0 or refers to a dead cohort (defensive
-    !     fallback), the youngest living cohort (minimum age_days) is used.
+    !   (b) Disturbance losses (fire, deforestation): POOLS(n+1,2) is reduced
+    !       by disturbance fluxes before this call, so target_Cf < sum_cf.
+    !       Proportional scaling distributes the loss uniformly across all
+    !       cohorts, which is physically appropriate for non-age-selective
+    !       disturbance events.
     !
-    !   LOSS  (target_Cf < sum_cf):
-    !     The difference represents carbon removed from the canopy by
-    !     processes such as fire, disturbance, or model numerical adjustment.
-    !     These losses are distributed proportionally across all living
-    !     cohorts — the same as the original implementation.  Proportional
-    !     loss is physically correct for disturbance events that thin the
-    !     canopy uniformly without age-selectivity.
+    ! A symmetric proportional scale factor (scale = target_Cf / sum_cf) is
+    ! applied in both cases:
+    !   scale > 1 : net gain  (drift correction only — tiny)
+    !   scale < 1 : net loss  (disturbance or drift correction)
+    !   scale = 1 : no action (abs(delta_Cf) <= vsmall, return early)
     !
-    !   NO CHANGE  (target_Cf == sum_cf to machine precision):
-    !     No action required; subroutine returns immediately.
-    !
-    ! Carbon conservation:
-    !     After the call, sum(leaf_cohorts%Cf * is_alive) == target_Cf
-    !     to machine precision.
+    ! Only Cf is scaled. Cc, Pi_threshold, and cum_profit are NOT updated here
+    ! because the residual delta is either rounding-level noise (drift) or a
+    ! disturbance loss for which proportional Cf scaling alone is appropriate.
     !
     ! Arguments:
     !   target_Cf : authoritative foliar pool [gC m-2] = POOLS(n+1,2)
@@ -5259,12 +5423,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     double precision, intent(in) :: target_Cf
 
-    integer          :: k, fallback_slot, fallback_age
-    double precision :: sum_cf, scale, delta_Cf
+    integer          :: k
+    double precision :: sum_cf, scale
 
     ! --- Handle zero or negligible foliar pool ---
     if (target_Cf <= vsmall) then
-        ! No foliar carbon: kill all cohorts cleanly
         do k = 1, max_leaf_cohorts
             leaf_cohorts(k)%Cf       = 0d0
             leaf_cohorts(k)%is_alive = .false.
@@ -5281,76 +5444,75 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end do
 
     ! Guard: no living cohorts but target_Cf > 0
-    ! This should not occur in normal operation but is handled defensively.
     if (sum_cf <= vsmall) return
 
-    delta_Cf = target_Cf - sum_cf
-
     ! --- No meaningful difference: return early ---
-    if (abs(delta_Cf) <= vsmall) return
+    if (abs(target_Cf - sum_cf) <= vsmall) return
 
-    if (delta_Cf > 0d0) then
-
-        ! =====================================================================
-        ! GAIN — add all new carbon to the most recently created cohort.
-        !
-        ! Validate newest_cohort_slot: it must refer to a living cohort.
-        ! If it does not (e.g. the newest cohort was shed this step or no
-        ! cohort has yet been created), fall back to the youngest living
-        ! cohort identified by the smallest age_days in a single O(n) scan.
-        ! =====================================================================
-
-        if (newest_cohort_slot < 1 .or. newest_cohort_slot > max_leaf_cohorts) then
-            newest_cohort_slot = 0   ! force fallback
-        end if
-
-        if (newest_cohort_slot > 0) then
-            if (.not. leaf_cohorts(newest_cohort_slot)%is_alive) then
-                newest_cohort_slot = 0   ! force fallback: newest was shed
-            end if
-        end if
-
-        if (newest_cohort_slot == 0) then
-            ! Fallback: find youngest living cohort by minimum age_days
-            fallback_slot = 0
-            fallback_age  = huge(0)
-            do k = 1, max_leaf_cohorts
-                if (leaf_cohorts(k)%is_alive) then
-                    if (leaf_cohorts(k)%age_days < fallback_age) then
-                        fallback_age  = leaf_cohorts(k)%age_days
-                        fallback_slot = k
-                    end if
-                end if
-            end do
-            newest_cohort_slot = fallback_slot
-        end if
-
-        ! Add the gain to the newest cohort
-        if (newest_cohort_slot > 0) then
-            leaf_cohorts(newest_cohort_slot)%Cf = &
-                leaf_cohorts(newest_cohort_slot)%Cf + delta_Cf
-        end if
-
-    else
-
-        ! =====================================================================
-        ! LOSS — distribute proportionally across all living cohorts.
-        !
-        ! Proportional scaling preserves the relative carbon fractions of
-        ! cohorts of different ages, which is appropriate for non-selective
-        ! disturbance processes (fire, deforestation, large-scale mortality).
-        ! scale = target_Cf / sum_cf, always in (0, 1) for a loss.
-        ! =====================================================================
-
-        scale = target_Cf / sum_cf
-        do k = 1, max_leaf_cohorts
-            if (leaf_cohorts(k)%is_alive) &
-                leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf * scale
-        end do
-
-    end if
+    ! --- Apply proportional scaling across all living cohorts ---
+    scale = target_Cf / sum_cf
+    do k = 1, max_leaf_cohorts
+        if (leaf_cohorts(k)%is_alive) leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf * scale
+    end do
 
   end subroutine rescale_cohort_cf
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine compute_canopy_NUE_rel
+
+    ! Compute the Cf-weighted mean relative foliar N across all living cohorts
+    ! and store the result in the module-level variable canopy_NUE_rel.
+    !
+    ! canopy_NUE_rel is the canopy-aggregate nitrogen scalar applied to Vcmax_ref
+    ! inside acm_gpp_stage_1.  It reflects the progressive nitrogen dilution of
+    ! older leaf cohorts (NUE_rel(k) = exp(-k_N_decline * age_months(k))) weighted
+    ! by each cohort's carbon mass:
+    !
+    !   canopy_NUE_rel = SUM_k [ NUE_rel(k) * Cf(k) ] / SUM_k [ Cf(k) ]
+    !
+    ! Cf-weighting is correct because Vcmax scales with nitrogen per unit leaf
+    ! carbon, and older cohorts contribute to total leaf carbon in proportion
+    ! to their Cf.  A large old cohort with low NUE_rel depresses canopy Vcmax
+    ! more than a small old cohort of equal age.
+    !
+    ! This subroutine must be called AFTER update_and_shed_cohorts has updated
+    ! all cohort ages and NUE_rel values for the current time step, and BEFORE
+    ! calculate_stomatal_conductance which calls acm_gpp_stage_1.
+    !
+    ! Numerical guards:
+    !   - sum_Cf <= vsmall: default to 1.0 (no canopy; GPP is zero regardless).
+    !   - Result clamped to [0, 1]: prevents floating-point drift outside
+    !     the physically meaningful range.
+
+    implicit none
+
+    integer          :: k
+    double precision :: sum_Cf, sum_NrCf
+
+    ! Reset counters
+    sum_Cf   = 0d0
+    sum_NrCf = 0d0
+
+    ! Loop through all cohorts to estimate the canopy level relative NUE 
+    do k = 1, max_leaf_cohorts
+        if (.not. leaf_cohorts(k)%is_alive) cycle
+        sum_Cf   = sum_Cf   + leaf_cohorts(k)%Cf
+        sum_NrCf = sum_NrCf + leaf_cohorts(k)%NUE_rel * leaf_cohorts(k)%Cf
+    end do
+
+    if (sum_Cf > vsmall) then
+        canopy_NUE_rel = sum_NrCf / sum_Cf
+    else
+        ! No living cohorts: default to nitrogen-replete.
+        ! GPP will be zero anyway because lai = 0 → leaf_canopy_light_scaling = 0.
+        canopy_NUE_rel = 1d0
+    end if
+
+    ! Clamp to [0, 1]
+    canopy_NUE_rel = max(0d0, min(1d0, canopy_NUE_rel))
+
+  end subroutine compute_canopy_NUE_rel
   !
   !------------------------------------------------------------------
   !

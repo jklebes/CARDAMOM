@@ -126,14 +126,14 @@ module MODEL_PARAMETERS
     PI%parmin(14) = -0.1d0
     PI%parmax(14) = -0.00005d0
        
-    ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
-    ! POSSIBLY THIS PARAMETER IS NOT NEED AND CODE JUST BE CODED AS A VERY SMALL POSITIVE NUMBER?
+    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
     PI%parmin(15) = 0.005d0
     PI%parmax(15) = 0.2d0
-    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
-    
-    PI%parmin(16) = 0.005d0
-    PI%parmax(16) = 0.2d0
+
+    ! Potential loss rate for foliage to litter (fraction/day)
+    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
+    PI%parmin(16) = 0.0003424658 ! 8 years
+    PI%parmax(16) = 0.0333333333 ! 30 days
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -209,46 +209,27 @@ module MODEL_PARAMETERS
     PI%parmin(43) = -4.4d0
     PI%parmax(43) = -0.6d0
 
-    ! Potential loss rate for foliage to litter (fraction/day)
-    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
-    PI%parmin(44) = 0.0003424658 ! 8 years
-    PI%parmax(44) = 0.0333333333 ! 30 days
-
-    ! Minimum foliar loss proposal (gC/m2/day)
-    ! for dNCCE calculation
-    PI%parmin(45) = 0.001d0   
-    PI%parmax(45) = 1d0    
-
     ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
     ! A credible iWUE range spans atleast 0.00001 -> 0.01
-    PI%parmin(46) = 1d-6
-    PI%parmax(46) = 1d-1
+    PI%parmin(44) = 1d-6
+    PI%parmax(44) = 1d-1
 
-    ! Leaf carbon construction cost coefficient (LCC) [gC cost / gC leaf].
-    ! Represents the carbon cost of building a unit of leaf carbon including
-    ! biosynthesis respiration. Poorter et al. (1994) report 1.2-2.0 for broadleaves.
-    ! EDC: lcc >= 1.0 (construction must cost at least as much as the leaf itself).
-    ! TLS: THIS PROBABLY DOES NOT NEED TO EXIST, GIVEN HARDED ASSUMPTION ABOUT GROWTH RESPIRATION IN MODEL
-    PI%parmin(47) = 1.20d0
-    PI%parmax(47) = 2.00d0
-
-    ! Daily opportunity cost rate of leaf carbon (r_opp) [d-1].
+    ! Daily opportunity cost rate of leaf carbon (r_opp) (day-1).
     ! The minimum daily return (as a fraction of construction cost) that a cohort
     ! must earn to justify continued retention. Analogous to a discount rate in
     ! net present value analysis. Calibrated from NPP/biomass ratios in the literature.
-    ! EDC: r_opp * T_leaf_ref < 1 (cannot require returning more than construction cost).
-    PI%parmin(48) = 0.0005d0
-    PI%parmax(48) = 0.0100d0
+    ! EDC: r_opp * leaf_age_ref < 1 (cannot require returning more than construction cost).
+    PI%parmin(45) = 0.0001d0
+    PI%parmax(45) = 0.0100d0
 
-    ! Reference leaf lifespan for economic threshold amortisation [days].
+    ! Reference leaf lifespan for economic threshold amortisation (days).
     ! The construction cost debt is amortised over this period to set Pi_threshold.
-    ! Pi_threshold = LCC * r_opp / T_leaf_ref [gC gC-1 d-1].
+    ! Pi_threshold = Cc * r_opp / leaf_age_ref [gC gC-1 d-1].
     ! Also controls N_years_init for Von Mises initialisation:
-    !   N_years_init = ceil(T_leaf_ref / 365).
-    ! Deciduous: 60-180 days; Long-lived evergreen: up to 730 days (2 years).
-    ! EDC: pars(48) * pars(49) < 1.0 (threshold cannot exceed unity).
-    PI%parmin(49) =  60d0
-    PI%parmax(49) = 730d0
+    !   N_years_init = ceiling(leaf_age_ref / 365).
+    ! Deciduous: 60-180 days; Long-lived evergreen: > 365 days
+    PI%parmin(46) = 60d0
+    PI%parmax(46) = floor(365.25d0*8d0)
 
     ! Leaf N decline rate with cohort age (k_N_decline) [month-1].
     ! Relative N content: N_rel = exp(-k_N_decline * age_months).
@@ -256,16 +237,15 @@ module MODEL_PARAMETERS
     ! Calibrated from Wright et al. (2004) leaf economics spectrum data.
     ! Fast decline (0.10): leaves lose 10% relative N per month.
     ! Slow decline (0.01): leaves retain N well (e.g. sclerophylls).
-    PI%parmin(50) = 0.01d0
-    PI%parmax(50) = 0.15d0
+    PI%parmin(47) = 0.01d0
+    PI%parmax(47) = 0.15d0
 
     ! Fraction of shed cohort carbon resorbed to labile pool (f_resorb) [0-1].
     ! The remaining fraction (1 - f_resorb) goes directly to litter.
     ! Aerts (1996) reports global mean resorption proficiency of ~50% for N,
     ! with C resorption typically 20-50%.
-    ! EDC: pars(51) < 1.0 (cannot resorb 100% of leaf carbon).
-    PI%parmin(51) = 0.10d0
-    PI%parmax(51) = 0.60d0
+    PI%parmin(48) = 0.10d0
+    PI%parmax(48) = 0.60d0
 
     ! Peak leaf-out day of year for Von Mises age-structure initialisation (mu_leaf_doy).
     ! The DOY at which canopy leaf production is highest in a typical year.
@@ -273,16 +253,16 @@ module MODEL_PARAMETERS
     ! monthly cohort age classes. Does not affect within-simulation dynamics.
     ! Temperate deciduous: 90-150 (spring flush); Mediterranean: 50-120;
     ! Tropical: 1-365 (near-uniform, but sigma will be large).
-    PI%parmin(52) =   1d0
-    PI%parmax(52) = 365d0
+    PI%parmin(49) =   1d0
+    PI%parmax(49) = 365d0
 
     ! Seasonal spread for Von Mises age initialisation (sigma_leaf_doy) [days].
     ! Controls the width of the seasonal leaf-production pulse used when
     ! distributing the initial foliar pool across monthly cohort age classes.
     ! Small sigma (~10 d): narrow flush (deciduous). Large sigma (~90 d):
     ! broad or year-round leaf production (evergreen / tropical).
-    PI%parmin(53) = 10d0
-    PI%parmax(53) = 90d0
+    PI%parmin(50) = 10d0
+    PI%parmax(50) = 90d0
 
     !
     ! INITIAL VALUES DECLARED HERE
