@@ -4757,8 +4757,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Local variables
     integer :: N_years, y, m, k, age_d, age_mo, &
-               birth_doy_m, days_elapsed,       &
-               youngest_slot, youngest_age          ! for newest_cohort_slot identification
+               birth_doy_m, days_elapsed
+               
     double precision :: w_y, &
                         kappa, theta, mu_rad, nd, &
                         vm_sum_yr, cohort_mass, scale, sum_cf
@@ -4849,6 +4849,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
             leaf_cohorts(k)%is_alive    = .true.
             n_live_cohorts = n_live_cohorts + 1
+            ! Track the youngest allocated
+            newest_cohort_slot = k            
 
         end do ! month loop
 
@@ -4856,20 +4858,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Rescale cohort Cf so their sum equals foliage exactly (carbon conservation)
     call rescale_cohort_cf(foliage)
-
-    ! Identify newest_cohort_slot, this should actually just be the first or last cohort assigned above,
-    ! to be checked.
-    youngest_slot = 0
-    youngest_age  = huge(0)
-    do k = 1, max_leaf_cohorts
-        if (leaf_cohorts(k)%is_alive) then
-            if (leaf_cohorts(k)%age_days < youngest_age) then
-                youngest_age  = leaf_cohorts(k)%age_days
-                youngest_slot = k
-            end if
-        end if
-    end do
-    newest_cohort_slot = youngest_slot
 
     ! Initialise days_since_last_cohort from the age of the youngest cohort.
     if (newest_cohort_slot > 0) then
