@@ -2193,11 +2193,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                         Vc_dT    ! Multi-use variable
 
     ! estimate long wave radiation from atmosphere (W.m-2)
-    lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
+    lwrad = emiss_boltz * (maxt+freeze-20d0)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_soil = emiss_boltz * (soil_temperature+freeze) ** 4
+    longwave_release_soil = emiss_boltz * (soil_temperature+freeze)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze) ** 4
+    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze)**4d0
     ! Canopy transmittance for thermal radiation
     dT = 1d0-exp(-lai/Vc*mu_obar) ; Vc_dT = Vc*dT
 
@@ -2210,9 +2210,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Diffuse longwave absorbed by the soil
     soil_lwrad_Wm2 = (lwrad*(1d0-Vc_dT)) + (Vc_dT*longwave_release_canopy) - longwave_release_soil
     ! Determine the radiative heat conductance term of the canopy (m/s)
-    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3) / (air_density_kg * cpair))*Vc_dT
+    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3d0) / (air_density_kg * cpair))*Vc_dT 
     ! Determine the radiative heat conductance term of the soil (m/s)
-    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3) / (air_density_kg * cpair)) 
+    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3d0) / (air_density_kg * cpair)) 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -2316,9 +2316,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     swrad_direct(1) = (1d0 - sw_par_fraction) * swrad * (1d0-diffuse_fraction) ! NIR
     swrad_direct(2) = sw_par_fraction * swrad * (1d0-diffuse_fraction)         ! PAR
 
-    ! Estimate soil absorption fraction
-    soil_absorption = 1d0 - soil_albedo
-
     ! Assign cosine_solar_zenith_angle to a local variable for easier readability
     mu = cosine_solar_zenith_angle
 
@@ -2345,7 +2342,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! or written word for greek notation
     dd = canopy_scattering * mu_obar_K * beta0
     ff = canopy_scattering * mu_obar_K * (1-beta0)
-    sigma = cc**2 + bb**2 + mu_obar_K**2
+    sigma = (cc*cc) + (bb*bb) + (mu_obar_K*mu_obar_K)
     u1 = bb - (cc/soil_reflectance) ; u2 = bb - (cc*soil_reflectance) ; u3 = ff + (cc*soil_reflectance)
     S1 = exp(-hh*lai) ; S1_1 = 1d0/S1 ; S2 = exp(-K*lai)
     mu_obar_hh = mu_obar*hh
@@ -2389,6 +2386,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !soil_albedo = (soil_surface_reflectance * Vg) + ((1d0-Vg) * soil_reflectance)
         soil_albedo = soil_reflectance
     endif
+    ! Estimate soil absorption fraction
+    soil_absorption = 1d0 - soil_albedo
 
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &

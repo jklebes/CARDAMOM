@@ -1936,29 +1936,30 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision ::    dT, & ! Canopy transmittance for long wave radiation
                         lwrad, & ! downward long wave radiation from sky (W.m-2)
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
-      longwave_release_canopy    ! assuming isothermal condition (W.m-2)
+      longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
+                        Vc_dT    ! Multi-use variable
 
     ! estimate long wave radiation from atmosphere (W.m-2)
-    lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
+    lwrad = emiss_boltz * (maxt+freeze-20d0)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_soil = emiss_boltz * (soil_temperature+freeze) ** 4
+    longwave_release_soil = emiss_boltz * (soil_temperature+freeze)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze) ** 4
+    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze)**4d0
     ! Canopy transmittance for thermal radiation
-    dT = 1d0-exp(-lai/Vc*mu_obar)
+    dT = 1d0-exp(-lai/Vc*mu_obar) ; Vc_dT = Vc*dT
 
     !!!!!!!!!!
     ! Isothermal net long wave canopy and soil balance (W.m-2)
     !!!!!!!!!!
 
     ! Diffuse longwave absorbed by the canopy
-    canopy_lwrad_Wm2 = (lwrad*Vc*dT) - (Vc*dT*2d0*longwave_release_canopy) + (Vc*dT*longwave_release_soil)
+    canopy_lwrad_Wm2 = (lwrad*Vc_dT) - (Vc_dT*2d0*longwave_release_canopy) + (Vc_dT*longwave_release_soil)
     ! Diffuse longwave absorbed by the soil
-    soil_lwrad_Wm2 = (lwrad*(1d0-(Vc*dT))) + (Vc*dT*longwave_release_canopy) - longwave_release_soil
+    soil_lwrad_Wm2 = (lwrad*(1d0-Vc_dT)) + (Vc_dT*longwave_release_canopy) - longwave_release_soil
     ! Determine the radiative heat conductance term of the canopy (m/s)
-    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3) / (air_density_kg * cpair))*dT*Vc
+    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3d0) / (air_density_kg * cpair))*Vc_dT 
     ! Determine the radiative heat conductance term of the soil (m/s)
-    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3) / (air_density_kg * cpair)) 
+    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3d0) / (air_density_kg * cpair)) 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -2043,9 +2044,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
-                      S1, p1, p2, p3, p4, D1, D2, &
-                      h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, &
-                      Iup, Idown, soil_albedo, &
+                      S1, S1_1, p1, p2, p3, p4, D1, D1_1, D2, D2_1, &
+                      h1, h1_sigma, h2, h3, h4, h4_sigma, h5, h6, h7, h8, h9, h10, &
+                      mu_obar_hh, mu_obar_K, &
+                      Iup, Idown, soil_albedo, soil_absorption, & 
                       canopy_absorption_fraction_diffuse, &
                       canopy_absorption_fraction_direct, &
                       soil_absorption_fraction_diffuse, &
@@ -2073,49 +2075,53 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Extinction coefficient for direct radiation, related to Gu and the cosine zenith angle
     K = Gu / mu
+    ! Combination of the inverse spectral characteristics and light extinction coefficient
+    mu_obar_K = mu_obar * K
     ! Single leaf scattering albedo within the canopy, varied by mu, leaf distribution and wavelength
     as_mu = ((canopy_scattering * 0.5d0) * (Gu / (Gu+(mu*O2)))) &
           * (1d0 - (mu*(O1/(Gu+(mu*O2)))*log((Gu+(mu*O2)+(mu*O1))/(mu*O1)) ) )
 
     ! Upscatting coefficient for direct radiation, varied by mu and wavelength
-    beta0 = ((1d0+(mu_obar*K)) / (canopy_scattering*mu_obar*K)) * as_mu
+    beta0 = ((1d0+mu_obar_K) / (canopy_scattering*mu_obar_K)) * as_mu
 
     ! Various terms, yet to have their specific functions determined
     ! Note that notations from Sellers (1985) have been given double letters if only single character was used,
     ! or written word for greek notation
-    dd = canopy_scattering * mu_obar * K * beta0
-    ff = canopy_scattering * mu_obar * K * (1-beta0)
-    sigma = cc**2 + bb**2 + (mu_obar*K)**2
+    dd = canopy_scattering * mu_obar_K * beta0
+    ff = canopy_scattering * mu_obar_K * (1-beta0)
+    sigma = (cc*cc) + (bb*bb) + (mu_obar_K*mu_obar_K)
     u1 = bb - (cc/soil_reflectance) ; u2 = bb - (cc*soil_reflectance) ; u3 = ff + (cc*soil_reflectance)
-    S1 = exp(-hh*lai) ; S2 = exp(-K*lai)
+    S1 = exp(-hh*lai) ; S1_1 = 1d0/S1 ; S2 = exp(-K*lai)
+    mu_obar_hh = mu_obar*hh
 
     ! Related to diffuse radiation
-    p1 = bb + (mu_obar*hh) ; p2 = bb - (mu_obar*hh)
+    p1 = bb + mu_obar_hh ; p2 = bb - mu_obar_hh
     ! Related to direct radiation
-    p3 = bb + (mu_obar*K) ; p4 = bb - (mu_obar*K)
+    p3 = bb + mu_obar_K ; p4 = bb - mu_obar_K
     !
-    D1 = (p1 * (u1 - (mu_obar*hh)) * (1d0/S1)) - (p2*(u2+(mu_obar*hh))*S1)
-    D2 = ((u2+(mu_obar*hh))*(1d0/S1)) - ((u2-(mu_obar*hh))*S1)
+    D1 = (p1 * (u1 - mu_obar_hh) * S1_1) - (p2*(u2+mu_obar_hh)*S1) ; D1_1 = 1d0/D1
+    D2 = ((u2+mu_obar_hh)*S1_1) - ((u2-mu_obar_hh)*S1) ; D2_1 = 1d0/D2
 
     !
     ! Direct radiation specific components
     !
 
-    h1 = (-dd*p4) - (cc*ff)
-    h2 =  (1d0/D1) * ( ((dd-((h1/sigma)*p3))*((u1-(mu_obar*hh))*(1d0/S1))) &
-                     - (p2*(dd-cc-((h1/sigma)*(u1+(mu_obar*K))))*S2) )
-    h3 = (-1d0/D1) * ( ((dd-((h1/sigma)*p3))*(u1+(mu_obar*hh))*S1) &
-                     - (p1*(dd-cc-((h1/sigma)*(u1+(mu_obar*K))))*S2) )
+    h1 = (-dd*p4) - (cc*ff) ; h1_sigma = h1 / sigma
+    h2 =  D1_1 * ( ((dd-(h1_sigma*p3))*((u1-mu_obar_hh)*S1_1)) &
+                     - (p2*(dd-cc-(h1_sigma*(u1+mu_obar_K)))*S2) )
+    h3 = -D1_1 * ( ((dd-(h1_sigma*p3))*(u1+mu_obar_hh)*S1) &
+                     - (p1*(dd-cc-(h1_sigma*(u1+mu_obar_K)))*S2) )
     h4 = (-dd*p3) - (cc*ff) ! NOTE: "-" at the beginning is a correction identified in Sellers et al., (1996)
-    h5 = (-1d0/D2) * ( ((h4/sigma)*(u2+(mu_obar*hh))*(1d0/S1)) &
-                     + (u3-((h4/sigma)*(u2-(mu_obar*K))*S2)) )
-    h6 = (1d0/D2) * ( ((h4/sigma)*(u2-(mu_obar*hh))*S1) &
-                     + (u3-((h4/sigma)*(u2-(mu_obar*K))*S2)) )
+    h4_sigma = h4 / sigma
+    h5 = -D2_1 * ( (h4_sigma*(u2+mu_obar_hh)*S1_1) &
+                     + (u3-(h4_sigma*(u2-mu_obar_K)*S2)) )
+    h6 =  D2_1 * ( (h4_sigma*(u2-mu_obar_hh)*S1) &
+                     + (u3-(h4_sigma*(u2-mu_obar_K)*S2)) )
 
     ! Fraction of direct radiation which leaves the canopy top as diffuse
-    Iup = ((h1*exp(-K*lai))/sigma) + (h2*exp(-hh*lai)) + (h3*exp(hh*lai))
+    Iup = ((h1*S2)/sigma) + (h2*S1) + (h3*S1_1)
     ! Fraction of direct radiation which leaves the canopy base as diffuse
-    Idown = ((h4*exp(-K*lai))/sigma) + (h5*exp(-hh*lai)) + (h6*exp(hh*lai))
+    Idown = ((h4*S2)/sigma) + (h5*S1) + (h6*S1_1)
 
     ! Update soil reflectance based on snow cover
     if (snow_storage > 0d0) then
@@ -2127,32 +2133,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !soil_albedo = (soil_surface_reflectance * Vg) + ((1d0-Vg) * soil_reflectance)
         soil_albedo = soil_reflectance
     endif
+    ! Estimate soil absorption fraction
+    soil_absorption = 1d0 - soil_albedo
 
     ! Fraction of direct radiation absorbed by the canopy
-    canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*(1d0-soil_albedo)) &
-                                             - (exp(-K*lai/Vc)*(1d0-soil_albedo)))
+    canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
+                                             - (exp(-K*lai/Vc)*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
-    soil_absorption_fraction_direct = ((1d0-Vc)*(1d0-soil_albedo)) &
-                                    + (Vc*((Idown*(1d0-soil_albedo)) + (exp(-K*lai/Vc)*(1d0-soil_albedo))))
+    soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
+                                    + (Vc*((Idown*soil_absorption) + (exp(-K*lai/Vc)*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
     !
 
-    h7  = (cc/D1) * (u1-(mu_obar*hh)) * (1d0/S1)
-    h8  = (-cc/D1) * (u1+(mu_obar*hh)) * S1
-    h9  = (1d0/D2) * (u2+(mu_obar*hh)) * (1d0/S1)
-    h10 = (-1d0/D2) * (u2-(mu_obar*hh)) * S1
+    h7  = (cc/D1)  * (u1-mu_obar_hh) * S1_1
+    h8  = (-cc/D1) * (u1+mu_obar_hh) * S1
+    h9  =  D2_1 * (u2+mu_obar_hh) * S1_1
+    h10 = -D2_1 * (u2-mu_obar_hh) * S1
 
     ! Fraction of diffuse radiation which leaves the canopy top as diffuse
-    Iup = (h7*exp(-hh*lai)) + (h8*exp(hh*lai))
+    Iup = (h7*S1) + (h8*S1_1)
     ! Fraction of diffuse radiation which leaves the canopy base as diffuse
-    Idown = (h9*exp(-hh*lai)) + (h10*exp(hh*lai))
+    Idown = (h9*S1) + (h10*S1_1)
 
     ! Fraction of diffuse radiation absorbed by the canopy
-    canopy_absorption_fraction_diffuse = Vc * (1d0 - Iup - (Idown*(1d0-soil_albedo)))
+    canopy_absorption_fraction_diffuse = Vc * (1d0 - Iup - (Idown*soil_absorption))
     ! Fraction of diffuse radiation absorbed by the soil
-    soil_absorption_fraction_diffuse = ((1d0-Vc)*(1d0-soil_albedo)) + (Vc*((Idown*(1d0-soil_albedo))))
+    soil_absorption_fraction_diffuse = ((1d0-Vc)*soil_absorption) + (Vc*((Idown*soil_absorption)))
 
     !
     ! Combine direct and diffuse, convert into actual units of energy (MJ/m2/d)

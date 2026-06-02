@@ -223,10 +223,6 @@ module MODEL_PARAMETERS
     PI%parmax(45) = 0.0100d0
 
     ! Reference leaf lifespan for economic threshold amortisation (days).
-    ! The construction cost debt is amortised over this period to set Pi_threshold.
-    ! Pi_threshold = Cc * r_opp / leaf_age_ref [gC gC-1 d-1].
-    ! Also controls N_years_init for Von Mises initialisation:
-    !   N_years_init = ceiling(leaf_age_ref / 365).
     ! Deciduous: 60-180 days; Long-lived evergreen: > 365 days
     PI%parmin(46) = 60d0
     PI%parmax(46) = floor(365.25d0*8d0)
@@ -260,7 +256,7 @@ module MODEL_PARAMETERS
     ! Controls the width of the seasonal leaf-production pulse used when
     ! distributing the initial foliar pool across monthly cohort age classes.
     ! Small sigma (~10 d): narrow flush (deciduous). Large sigma (~90 d):
-    ! broad or year-round leaf production (evergreen / tropical).
+    ! broad or year-round leaf production (grasses / tropical).
     PI%parmin(50) = 10d0
     PI%parmax(50) = 90d0
 
