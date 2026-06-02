@@ -4783,7 +4783,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     days_since_last_cohort = 0d0 ! overwritten at end of subroutine; safe default
 
     ! Number of past growing seasons to span
-    N_years = max(1, ceiling(leaf_age_ref / 365d0))
+    N_years = min(max_leaf_cohorts/12,max(1, ceiling(leaf_age_ref / 365d0)))
 
     ! Von Mises concentration parameter (kappa) for 365-day year (nd)
     ! sigma_to_kappa: kappa = 0.5 / sin(pi * sigma / N_days)^2
@@ -4820,10 +4820,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             if (cohort_mass <= vsmall) cycle
 
             ! Find a free slot
-            k = k + 1
-            if (k > max_leaf_cohorts) stop   ! array full: stop adding cohorts
-                                             ! strictly speaking we should do something else here as this is an error.
-                                             ! As the number of years been distributed across should be less than the maximum number of cohorts.
+            ! NOTE: that the number of years to search is bounded to prevent k extending beyond the available limit
+            k = k + 1 
 
             ! Compute age: days from birth (monthly mid-DOY, y years ago) to start_doy
             ! year y=N_years is the most recent (0 full years ago for y=N_years)
@@ -4902,7 +4900,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Local variables
     integer          :: k, slot, youngest(6), ny, i
-    double precision :: sum_young, delta_Cf, delta_Cc
+    double precision :: sum_young, delta_Cf
 
     if (dCf <= vsmall) return
 
@@ -4958,7 +4956,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Local variables
     integer          :: k, fallback_slot, fallback_age
-    double precision :: delta_Cc
 
     ! Guard: no carbon to add, i.e. make no changes
     if (dCf <= vsmall) return
@@ -4993,11 +4990,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Apply carbon addition with full economic field updates 
     k        = newest_cohort_slot
-    delta_Cc = dCc
     leaf_cohorts(k)%Cf           = leaf_cohorts(k)%Cf + dCf
-    leaf_cohorts(k)%Cc           = leaf_cohorts(k)%Cc + delta_Cc
+    leaf_cohorts(k)%Cc           = leaf_cohorts(k)%Cc + dCc
     leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
-    leaf_cohorts(k)%cum_profit   = leaf_cohorts(k)%cum_profit - delta_Cc
+    leaf_cohorts(k)%cum_profit   = leaf_cohorts(k)%cum_profit - dCc
 
   end subroutine add_foliage_to_cohort
   !
@@ -5504,7 +5500,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         if (.not. cohorts_in(k)%is_alive) cycle
         sum_Cf   = sum_Cf   + cohorts_in(k)%Cf
         sum_NrCf = sum_NrCf + cohorts_in(k)%NUE_rel * cohorts_in(k)%Cf
-        sum_AgCf = sum_AgCf + cohorts_in(k)%age_days * cohorts_in(k)%Cf
+        sum_AgCf = sum_AgCf + dble(cohorts_in(k)%age_days) * cohorts_in(k)%Cf
     end do
 
     if (sum_Cf > vsmall) then
