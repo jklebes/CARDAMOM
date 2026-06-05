@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P2.R1
+! This file contains the source code of DALEC.A1.C2.D2.F2.H2.P2.R1.007
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -319,12 +319,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.7) model.
+    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.A1.C2.D2.F2.H2.P2.R1.007) model.
     ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
     ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (4 layers).
+    ! evaporation and soil water balance (3 layers).
 
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
@@ -410,13 +410,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1 = labile (p18)
-    ! 2 = foliar (p19)
-    ! 3 = root   (p20)
-    ! 4 = wood   (p21)
-    ! 5 = litter (p22)
-    ! 6 = som    (p23)
-    ! 7 = 0-10 cm soil water content (mm) (p24)
+    ! 1 = labile      (gC/m2) (initial value: p18)
+    ! 2 = foliar      (gC/m2) (initial value: p19)
+    ! 3 = root        (gC/m2) (initial value: p20)
+    ! 4 = wood        (gC/m2) (initial value: p21)
+    ! 5 = litter      (gC/m2) (initial value: p22)
+    ! 6 = som         (gC/m2) (initial value: p23)
+    ! 7 = 0-30 cm soil water content (mm) (initial value: p24)
+    ! 8 = wood litter (gC/m2) (initial value: p34)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)
@@ -540,7 +541,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     POOLS(1,4) = pars(21) ! wood
     POOLS(1,5) = pars(22) ! litter
     POOLS(1,6) = pars(23) ! som
-    !POOLS(1,7) = assigned later ! soil water (0-10cm)
+    !POOLS(1,7) = assigned later ! soil water (0-30 cm)
     POOLS(1,8) = pars(34) ! wood litter
 
     ! Some time consuming variables we only want to set once

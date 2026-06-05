@@ -24,7 +24,7 @@
 !
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A1.C1.D2.F2.H2.P1 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C1.D2.F2.H2.P1.R1.005 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).

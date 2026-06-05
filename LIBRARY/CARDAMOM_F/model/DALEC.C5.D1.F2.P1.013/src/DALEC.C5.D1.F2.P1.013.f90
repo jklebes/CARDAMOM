@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.C5.D1.F2.P1
+! This file contains the source code of DALEC.C5.D1.F2.P1.013
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -102,7 +102,7 @@ public :: CARBON_MODEL     &
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical (DALEC_CDEA) model. The subroutine calls the
+    ! Evergreen Analytical (DALEC.C5.D1.F2.P1.013) model. The subroutine calls the
     ! Aggregated Canopy Model to simulate GPP and partitions between various
     ! ecosystem carbon pools. These pools are subject to turnovers /
     ! decompostion resulting in ecosystem phenology and fluxes of CO2
@@ -176,10 +176,10 @@ public :: CARBON_MODEL     &
     ! 9th burned fraction
 
     ! POOLS are:
-    ! 1 = labile
-    ! 2 = foliar
-    ! 3 = root+wood
-    ! 4 = litter + som
+    ! 1 = labile       (gC/m2) (initial value: p14)
+    ! 2 = foliar       (gC/m2) (initial value: p15)
+    ! 3 = root + wood  (gC/m2) (initial value: p16)
+    ! 4 = litter + som (gC/m2) (initial value: p17)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)

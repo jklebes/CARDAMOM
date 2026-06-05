@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A3.C3.H2.M1 model.
+! Module contains uniform prior parameter information for the DALEC.A3.C3.H2.M1.015 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -125,7 +125,7 @@ module MODEL_PARAMETERS
     ! Intercept value for canopy N (gN/m2) dilution model
     PI%parmin(15) = 1.5d0
     PI%parmax(15) = 7.0d0 ! 5.5d0
-    ! Coefficient relating canopy nitrogen dilution with crop development / canopy size.
+    ! Coefficient relating canopy nitrogen dilution with crop development / growth.
     PI%parmin(16) = -0.04d0
     PI%parmax(16) = -0.005d0
 

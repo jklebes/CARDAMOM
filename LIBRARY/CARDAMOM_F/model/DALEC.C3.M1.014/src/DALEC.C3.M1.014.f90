@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.C3.M1
+! This file contains the source code of DALEC.C3.M1.014
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -297,7 +297,7 @@ module CARBON_MODEL_MOD
                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     !
-    ! The Data Assimilation Linked Ecosystem Carbon - CROP - BUCKET (DALEC_CROP) model.
+    ! The Data Assimilation Linked Ecosystem Carbon - CROP - BUCKET (DALEC.C3.M1.014) model.
     ! modified from Sus et al., (2010)
     !
     ! The Aggregated Canopy Model for Gross Primary Productivity (Williams et al., 1997)
@@ -354,15 +354,15 @@ module CARBON_MODEL_MOD
     ! 6th DOY
 
     ! POOLS are:
-    ! 1 = labile
-    ! 2 = foliar
-    ! 3 = root
-    ! 4 = wood
-    ! 5 = litter
-    ! 6 = som
-    ! 7 = autotrophic
-    ! 8 = storage organ C
-    ! 9 = dead still standing foliage
+    ! 1 = labile                      (gC/m2) (initial value: p18)
+    ! 2 = foliar                      (gC/m2) (initial value: p19)
+    ! 3 = root                        (gC/m2) (initial value: p20)
+    ! 4 = stem                        (gC/m2) (initial value: p21)
+    ! 5 = litter                      (gC/m2) (initial value: p22)
+    ! 6 = som                         (gC/m2) (initial value: p23)
+    ! 7 = autotrophic                 (gC/m2) (initial value: p24)
+    ! 8 = storage organ C             (gC/m2) (initial value: p25)
+    ! 9 = dead still standing foliage (gC/m2) (initial value: 0)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)

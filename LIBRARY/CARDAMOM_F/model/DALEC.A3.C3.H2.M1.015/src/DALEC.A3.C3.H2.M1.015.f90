@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A3.C3.H2.M1
+! This file contains the source code of DALEC.A3.C3.H2.M1.015
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -655,23 +655,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     integer :: nxp,n
 
     ! met drivers are:
-    ! 1st run day
-    ! 2nd min daily temp (oC)
-    ! 3rd max daily temp (oC)
-    ! 4th Radiation (MJ.m-2.day-1)
-    ! 5th CO2 (ppm)
-    ! 6th DOY
+    ! 1st  run day
+    ! 2nd  min daily temp (oC)
+    ! 3rd  max daily temp (oC)
+    ! 4th  Radiation (MJ.m-2.day-1)
+    ! 5th  CO2 (ppm)
+    ! 6th  DOY
+    ! 7th  precipitation (kgH2O.m-2.s-1)
+    ! 8th  NOT IN USE
+    ! 9th  NOT IN USE
+    ! 10th NOT IN USE
+    ! 11th NOT IN USE
+    ! 12th NOT IN USE
+    ! 13th NOT IN USE
+    ! 14th avg daily temperature (oC)
+    ! 15th avg daily wind speed (m.s-1)
+    ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1  = labile
-    ! 2  = foliar
-    ! 3  = root
-    ! 4  = wood
-    ! 5  = litter
-    ! 6  = som
-    ! 7  = autotrophic
-    ! 9  = storage organ C
-    ! 10 = dead still standing foliage
+    ! 1  = labile (gC/m2) (initial value: p18)
+    ! 2  = foliar (gC/m2) (initial value: p19)
+    ! 3  = root (gC/m2) (initial value: p20)
+    ! 4  = stem (gC/m2) (initial value: p21)
+    ! 5  = litter (gC/m2) (initial value: p22)
+    ! 6  = som (gC/m2) (initial value: p23)
+    ! 7  = autotrophic (gC/m2) (initial value: p24)
+    ! 8  = surface soil water 0-30 cm (mm) (initial value: p38)
+    ! 9  = storage organ C (gC/m2) (initial value: p25)
+    ! 10 = dead still standing foliage (gC/m2)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)
@@ -1194,7 +1205,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       FLUXES(n,23) = resp_auto
       ! Respiration from labile to foliage translocation (gC.m-2.d-1)
       FLUXES(n,24) = resp_cost_labile_to_npp
-      ! Respiration from npp to labile translocation (gC.m-2.d-1)
+      ! Respiration from NPP to labile translocation (gC.m-2.d-1)
       FLUXES(n,25) = resp_cost_npp_to_labile
       ! Respiration from foliage remobilisation (gC.m-2.d-1)
       FLUXES(n,26) = resp_cost_foliage_to_labile
@@ -1251,7 +1262,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       POOLS(n+1,2) = stock_foliage
       ! root pool
       POOLS(n+1,3) = stock_roots
-      ! wood pool
+      ! stem pool
       POOLS(n+1,4) = stock_stem
       ! litter pool
       POOLS(n+1,5) = stock_litter

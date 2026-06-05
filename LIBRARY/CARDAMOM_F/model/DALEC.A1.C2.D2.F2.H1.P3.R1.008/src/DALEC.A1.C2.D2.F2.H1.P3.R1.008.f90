@@ -316,12 +316,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.5) model.
+    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.A1.C2.D2.F2.H1.P3.R1.008) model.
     ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
     ! between various ecosystem carbon pools. These pools are subject
     ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
     ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (4 layers).
+    ! evaporation and soil water balance (3 layers).
 
     ! This version includes the option to simulate fire combustion based
     ! on burned fraction and fixed combusion rates. It also includes the
@@ -401,13 +401,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1 = labile (p18)
-    ! 2 = foliar (p19)
-    ! 3 = root   (p20)
-    ! 4 = wood   (p21)
-    ! 5 = litter (p22)
-    ! 6 = som    (p23)
-    ! 7 = 0-10 cm soil water content (mm) (p24)
+    ! 1 = labile      (gC/m2) (initial value: p18)
+    ! 2 = foliar      (gC/m2) (initial value: p19)
+    ! 3 = root        (gC/m2) (initial value: p20)
+    ! 4 = wood        (gC/m2) (initial value: p21)
+    ! 5 = litter      (gC/m2) (initial value: p22)
+    ! 6 = som         (gC/m2) (initial value: p23)
+    ! 7 = wood litter (gC/m2) (initial value: p24)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)

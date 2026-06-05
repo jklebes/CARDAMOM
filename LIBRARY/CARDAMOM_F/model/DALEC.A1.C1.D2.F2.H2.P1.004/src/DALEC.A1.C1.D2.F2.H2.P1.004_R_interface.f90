@@ -74,6 +74,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   ! local variables
   ! vector of ecosystem pools
   integer :: a, e, i, s, v, steps_per_year!, nos_years
+  double precision :: nodays_1, steps_per_yr_1 ! precomputed reciprocals for averaging
   integer, dimension(nodays) :: pool_hak
   ! array of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
@@ -98,6 +99,9 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   end do
   ! number of time steps per year
   steps_per_year = nodays/nos_years
+  ! precompute reciprocals to replace repeated divisions in averaging loops
+  nodays_1       = 1d0 / dble(nodays)
+  steps_per_yr_1 = 1d0 / dble(steps_per_year)
 
   ! begin iterations
   do i = 1, nos_iter
@@ -202,7 +206,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      ! Loop across each variable
      do v = 1, output_dim
         ! Calculate mean value
-        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) / dble(nodays)
+        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) * nodays_1
      end do
 
      !
@@ -213,7 +217,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
         do v = 1, output_dim
-           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
+           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) * steps_per_yr_1
         end do
         ! Iterate counters
         s = s + steps_per_year ; e = s + steps_per_year - 1

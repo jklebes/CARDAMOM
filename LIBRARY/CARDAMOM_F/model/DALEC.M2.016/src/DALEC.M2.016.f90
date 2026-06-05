@@ -45,7 +45,7 @@ module CARBON_MODEL_MOD
 
   implicit none
 
-  ! grassland model (DALEC.A3.H2.M2.017, aka DALEC.17.) 
+  ! grassland model (DALEC.A3.H1.M2.016)
   ! ----------------------------------------------------------------------------------------------------------------
   ! POOLS:   1.labile 2.foliar 3.root                        ! PARAMETERS:
   !          4.litter 5.som                                  !
@@ -464,7 +464,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
                          ,nopars,nomet,nopools,nofluxes,nodiags) 
 
-    ! The Data Assimilation Linked ECosystem model - DALEC17.
+    ! The Data Assimilation Linked ECosystem model - DALEC.A3.H1.M2.016.
     ! A water enables version of DALEC, specifically designed for understanding managed grasslands.
 
     ! This version include grassland management specific functions and lacks a wood / structural C pool
@@ -526,12 +526,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1 = labile (p16)
-    ! 2 = foliar (p17)
-    ! 3 = root   (p18)
-    ! 4 = litter (p19)
-    ! 5 = som    (p23)
-    ! 6 = 0-30 cm soil water content (mm)
+    ! 1 = labile (gC/m2) (initial value: p16)
+    ! 2 = foliar (gC/m2) (initial value: p17)
+    ! 3 = root   (gC/m2) (initial value: p18)
+    ! 4 = litter (gC/m2) (initial value: p19)
+    ! 5 = som    (gC/m2) (initial value: p23)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)

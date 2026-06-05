@@ -367,7 +367,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
                  ,snowsublimation & ! kgH2O/m2/day
-       ,wf,wl,ff,fl,osf,osl,sf,ml   ! phenological controls
+       ,wf,wl,ff,fl,osf,osl,sf,ml   & ! phenological controls
+       ,sla                          & ! specific leaf area: inverse of LMA (m2/gC); precomputed from 1/pars(17)
+       ,ff_wf,fl_wl                  & ! precomputed phenology amplitude coefficients
+       ,sf_over_wf,sf_over_wl          ! precomputed phenology scaling ratios
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: burnt_area
@@ -529,6 +532,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     ! and average foliar nitrogen gN/m2leaf
     ! Rooting parameters
     root_k = pars(26) ; max_depth = pars(27)
+    ! Specific leaf area: precomputed reciprocal of LMA (pars(17)) to replace per-step division
+    sla = 1d0 / pars(17)
 
     ! assigning initial conditions
     POOLS(1,1) = pars(18) ! labile
@@ -621,6 +626,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     osl = ospolynomial(ml,wl)
     ! scaling to biyearly sine curve
     sf = 116.262685928629551d0 !365.25d0/pi
+    ! precompute constant phenology amplitude coefficients and scaling ratios
+    ff_wf     = (2d0/sqrt(pi)) * (ff/wf) ! leaf fall amplitude coefficient
+    fl_wl     = (2d0/sqrt(pi)) * (fl/wl) ! labile release amplitude coefficient
+    sf_over_wf = sf/wf                   ! leaf fall scaling ratio
+    sf_over_wl = sf/wl                   ! labile release scaling ratio
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -773,7 +783,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
 
     ! load some needed module level values
-    lai = POOLS(1,2)/pars(17)
+    lai = POOLS(1,2)*sla
     mint = met(2,1)  ! minimum temperature (oC)
     maxt = met(3,1)  ! maximum temperature (oC)
     swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
@@ -832,7 +842,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        airt_zero_fraction = airt_zero_fraction_time(n) ! fraction of above / below freezing temperature
 
        ! calculate LAI value
-       lai = POOLS(n,2)/pars(17)
+       lai = POOLS(n,2)*sla
        DIAGS(n,1) = lai
 
        ! extract timing related values
@@ -980,8 +990,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
        ! Labile release and leaffall factors
-       FLUXES(n,9)  = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
-       FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
+       FLUXES(n,9)  = ff_wf*exp(-(sin((doy-pars(15)+osf)/sf)*sf_over_wf)**2d0)
+       FLUXES(n,16) = fl_wl*exp(-(sin((doy-pars(12)+osl)/sf)*sf_over_wl)**2d0)
 
        !
        ! those with time dependancies

@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.C4.D1.F2
+! This file contains the source code of DALEC.C4.D1.F2.012
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -94,7 +94,7 @@ public :: CARBON_MODEL     &
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
-    ! The Data Assimilation Linked Ecosystem Carbon - EVERGREEN.
+    ! The Data Assimilation Linked Ecosystem Carbon - EVERGREEN (DALEC.C4.D1.F2.012).
     ! The subroutine calls the Aggregated Canopy Model to simulate GPP
     ! and partitions between various ecosystem carbon pools.
     ! These pools are subject to turnovers / decompostion resulting
@@ -166,11 +166,9 @@ public :: CARBON_MODEL     &
     ! 9th burned fraction
 
     ! POOLS are:
-    ! 1 = foliar
-    ! 2 = root
-    ! 3 = wood
-    ! 4 = litter
-    ! 5 = som
+    ! 1 = foliar       (gC/m2) (initial value: p9)
+    ! 2 = wood + root  (gC/m2) (initial value: p10)
+    ! 3 = litter + som (gC/m2) (initial value: p11)
 
     ! FLUXES are:
     ! 1  = GPP (gC/m2/day)
