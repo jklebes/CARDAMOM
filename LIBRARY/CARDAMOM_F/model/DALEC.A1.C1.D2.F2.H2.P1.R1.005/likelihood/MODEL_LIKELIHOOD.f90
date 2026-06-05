@@ -558,7 +558,7 @@ module model_likelihood_module
 !    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)+(36)
+    Fout(6) = FT(14)+FT(23)+FT(36)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)

@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A4.C6.D2.F2.H3.P12.033.f90
+! This file contains the source code of DALEC.A4.C6.D2.F2.H3.P12.033
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -33,6 +33,8 @@
 ! Sellers (1985) Canopy reflectance, photosynthesis and transpiration.
 !                International Journal of Remote Sensing, 6(8), 1335-1772, doi: 10.1080/01431168508948283
 ! von Craemmer (2013), Steady State Photosynthesis Modelling, Plant Cell and Environment, 36, 1613-1630
+! Heskel et al., (2016), Convergence in the temperature response of leaf respiration across biomes
+!                and plant functional types, PNAS, doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
 ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
 ! Subsequent modifications by:
 ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
@@ -362,22 +364,29 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
-    ! The Data Assimilation Linked ECosystem model model.
-    ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
-    ! between various ecosystem carbon pools. ACM2 structure modified to include the Farquhar equations
-    ! of photosynthesis adjusted for daily application. The Sellers (1985) RTM included.
-    
-    ! Allocation of photosynthate is to a common labile pool, which then allocates to the various tissues based on 
-    ! potential growth rates scales based on temperature limitations, water limitation (wood only) 
-    ! and maintenance of labile reserves. Autotrophic respiration continues to be a fixed fraction of GPP, 
-    ! but codes to allow for subsequent inclusion of explicit growth and maintence respiration.
+    ! The Data Assimilation Linked ECosystem model DALEC.A4.C6.D2.F2.H3.P12.033.
+    ! GPP is estimated using the Farquhar equations of photosynthesis adjusted for daily application,
+    ! with the Sellers (1985) 2-stream radiative transfer model (RTM) for canopy light absorption.
 
-    ! The C pools are subject to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
-    ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (4 layers).
+    ! Autotrophic respiration is explicitly partitioned: leaf maintenance respiration is calculated
+    ! via the Heskel et al., (2016) polynomial (p43); wood and fine root maintenance respiration is
+    ! a fixed fraction of GPP (p2); growth respiration is a fixed fraction (21.875%) of each
+    ! tissue allocation. When GPP is insufficient to cover maintenance respiration, the deficit is
+    ! drawn from the labile pool (flux 9).
+
+    ! Allocation of net photosynthate flows to a common labile pool, which allocates to foliage (p3),
+    ! fine roots (p4), and wood (p38) subject to temperature limitations (p34-p37) and water
+    ! limitations on both leaf and wood growth (p39-p42), and a labile:biomass threshold (p33).
+    ! Foliar phenology (both growth gating via p16 and litter production via p13-p15, p44-p45)
+    ! is driven by the Net Canopy Carbon Export (NCCE, gC/gCleaf/day) and its lagged gradient,
+    ! without the cohort age-structure of P10 or the calendar-based CDEA of P11.
+
+    ! The C pools are subject to turnovers / decomposition resulting in ecosystem phenology and
+    ! fluxes of CO2. The coupled photosynthesis-transpiration model simulates stomatal conductance,
+    ! soil and intercepted canopy evaporation, and soil water balance (4 layers).
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     ! Version 1.0: 25/12/2023
@@ -473,67 +482,105 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 7 = 0-10 cm soil water content (mm) (p24)
 
     ! FLUXES are:
-    ! 1 = 
-    ! 2 = 
-    ! 3 = 
-    ! 4 = 
-    ! 5 = 
-    ! 6 = 
-    ! 7 = 
-    ! 8 = 
-    ! 9 = 
-    ! 10 = 
-    ! 11 = 
-    ! 12 = 
-    ! 13 = 
-    ! 14 = 
-    ! 15 = 
-    ! 16 = 
-    ! 17 = 
-    ! 18 = 
-    ! 19 = 
-    ! 20 = 
-    ! 21 = 
-    ! 22 = 
-    ! 23 = 
-    ! 24 = 
-    ! 25 = 
-    ! 26 = 
-    ! 27 = 
-    ! 28 = 
-    ! 29 =
-    ! 30 =
-    ! 31 =
-    ! 32 =
-    ! 33 =
-    ! 34 =
-    ! 35 =
-    ! 36 = 
-    ! 37 = 
-    ! 38 = 
-    ! 39 = 
+    ! 1  = GPP - daytime photosynthesis plus dark respiration (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = total autotrophic respiration - leaf maintenance + wood/root maintenance + growth (gC/m2/day)
+    ! 4  = allocation to foliage from labile (gC/m2/day)
+    ! 5  = net GPP available for allocation to labile after maintenance respiration (gC/m2/day)
+    ! 6  = allocation to fine roots from labile (gC/m2/day)
+    ! 7  = allocation to wood from labile (gC/m2/day)
+    ! 8  = growth respiration from all tissue allocations (gC/m2/day)
+    ! 9  = labile used to cover maintenance respiration deficit (gC/m2/day)
+    ! 10 = total leaf litter production (gC/m2/day)
+    ! 11 = wood litter production (gC/m2/day)
+    ! 12 = root litter production (gC/m2/day)
+    ! 13 = heterotrophic respiration from litter (gC/m2/day)
+    ! 14 = heterotrophic respiration from som (gC/m2/day)
+    ! 15 = litter decomposition to som (gC/m2/day)
+    ! 16 = maintenance respiration of wood and fine roots (gC/m2/day)
+    ! 17 = total ecosystem fire emission - sum(18:23) (gC/m2/day)
+    ! 18 = fire emission from labile (gC/m2/day)
+    ! 19 = fire emission from foliage (gC/m2/day)
+    ! 20 = fire emission from roots (gC/m2/day)
+    ! 21 = fire emission from wood (gC/m2/day)
+    ! 22 = fire emission from litter (gC/m2/day)
+    ! 23 = fire emission from som (gC/m2/day)
+    ! 24 = fire mortality transfer labile->litter (gC/m2/day)
+    ! 25 = fire mortality transfer foliage->litter (gC/m2/day)
+    ! 26 = fire mortality transfer roots->litter (gC/m2/day)
+    ! 27 = fire mortality transfer wood->som (gC/m2/day)
+    ! 28 = fire mortality transfer litter->som (gC/m2/day)
+    ! 29 = evapotranspiration (kgH2O/m2/day)
+    ! 30 = total harvest extracted C - sum(31:36) (gC/m2/day)
+    ! 31 = harvest extraction from labile (gC/m2/day)
+    ! 32 = harvest extraction from foliage (gC/m2/day)
+    ! 33 = harvest extraction from fine roots (gC/m2/day)
+    ! 34 = harvest extraction from wood (gC/m2/day)
+    ! 35 = harvest extraction from litter (gC/m2/day)
+    ! 36 = harvest extraction from som (gC/m2/day)
+    ! 37 = harvest litter residue from labile (gC/m2/day)
+    ! 38 = harvest litter residue from foliage (gC/m2/day)
+    ! 39 = harvest litter residue from fine roots (gC/m2/day)
+    ! 40 = harvest litter residue from wood (gC/m2/day)
+    ! 41 = transpiration (kgH2O/m2/day)
+    ! 42 = soil evaporation (kgH2O/m2/day)
+    ! 43 = wet canopy evaporation (kgH2O/m2/day)
+    ! 44 = surface runoff (kgH2O/m2/day)
+    ! 45 = drainage from bottom of soil column (kgH2O/m2/day)
+    ! 46 = drainage from surface to 2nd soil layer (kgH2O/m2/day)
+    ! 47 = infiltration into top soil layer (kgH2O/m2/day)
+    ! 48 = fraction of transpiration from 1st rooting layer (0-1)
+    ! 49 = fraction of transpiration from 2nd rooting layer (0-1)
+    ! 50 = infiltration into middle soil layer (kgH2O/m2/day)
+    ! 51 = infiltration into bottom soil layer (kgH2O/m2/day)
 
     ! PARAMETERS are:
-    ! p(1) 
-    ! p(2) 
-    ! p(3) 
-    ! p(4) 
-    ! p(5) 
-    ! p(6) 
-    ! p(7) 
-    ! p(8) 
-    ! p(9) 
-    ! p(10)
-    ! p(11)
-    ! p(12)
-    ! p(13)
-    ! p(14)
-    ! p(15) 
-    ! p(16) 
-    ! p(17) 
-    ! p(25) 
-    ! p(26) 
-    ! p(27) 
+    ! p(1)  = decomposition efficiency of litter to som (fraction)
+    ! p(2)  = fraction of GPP as maintenance respiration for wood and fine roots (fraction)
+    ! p(3)  = potential rate of labile allocation to foliage (gC/m2/day)
+    ! p(4)  = potential rate of labile allocation to fine roots (gC/m2/day)
+    ! p(5)  = initial NCCE reference value for gradient calculations (gC/gCleaf/day)
+    ! p(6)  = wood turnover rate (fraction/day)
+    ! p(7)  = fine root turnover rate (fraction/day)
+    ! p(8)  = litter turnover rate, temperature adjusted (fraction/day)
+    ! p(9)  = som turnover rate, temperature adjusted (fraction/day)
+    ! p(10) = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(11) = maximum carboxylation rate Vcmax at canopy top (umolC/m2/s)
+    ! p(12) = minimum leaf water potential for photosynthesis (MPa)
+    ! p(13) = NCCE half-saturation value at which canopy growth index is suppressed by 50% (gC/gCleaf/day)
+    ! p(14) = NCCE gradient half-saturation value for canopy growth index suppression (gC/gCleaf/day)
+    ! p(15) = NCCE return threshold required for foliar loss to proceed (gC/gC/day)
+    ! p(16) = NCCE return threshold required for foliar growth to proceed (gC/gC/day)
+    ! p(17) = leaf mass per area LMA (gC/m2)
+    ! p(18) = initial labile C pool (gC/m2)
+    ! p(19) = initial foliar C pool (gC/m2)
+    ! p(20) = initial fine root C pool (gC/m2)
+    ! p(21) = initial wood C pool (gC/m2)
+    ! p(22) = initial litter C pool (gC/m2)
+    ! p(23) = initial som C pool (gC/m2)
+    ! p(24) = initial soil water fraction (m3/m3)
+    ! p(25) = fraction of wood C as coarse roots (fraction)
+    ! p(26) = root biomass for 50% of maximum rooting depth (gBiomass/m2)
+    ! p(27) = maximum rooting depth (m)
+    ! p(28) = fire resilience factor for non-combusted C (fraction)
+    ! p(29) = combustion completeness for foliage (fraction)
+    ! p(30) = combustion completeness for non-photosynthetic tissue (fraction)
+    ! p(31) = combustion completeness for soil (fraction)
+    ! p(32) = combustion completeness for foliage and fine root litter (fraction)
+    ! p(33) = labile-to-biomass ratio at which growth is limited by 50% (fraction)
+    ! p(34) = temperature range above p(36) at which foliage and root growth limited by 50% (oC)
+    ! p(35) = temperature range above p(37) at which wood growth limited by 50% (oC)
+    ! p(36) = temperature below which foliage and root growth is prevented (oC)
+    ! p(37) = temperature below which wood growth is prevented (oC)
+    ! p(38) = potential growth rate of wood (gC/m2/day)
+    ! p(39) = soil water potential at which wood growth is fully suppressed (MPa)
+    ! p(40) = soil water potential at which wood growth suppression begins (MPa)
+    ! p(41) = soil water potential at which leaf growth is fully suppressed (MPa)
+    ! p(42) = soil water potential at which leaf growth suppression begins (MPa)
+    ! p(43) = baseline leaf maintenance respiration coefficient (Heskel polynomial)
+    ! p(44) = potential loss rate for foliage to litter based on NCCE history (fraction/day)
+    ! p(45) = minimum foliar loss flux for dNCCE gradient calculation (gC/m2/day)
+    ! p(46) = intrinsic canopy water use efficiency for stomatal regulation (umolC/mmolH2O/m2leaf/s)
 
 !    ! Debugging print statements
 !    print*,"carbon_model: "

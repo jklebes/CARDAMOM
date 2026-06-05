@@ -107,7 +107,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_alloc_wood_gCm2day
           states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_alloc_wood_gCm2day
       } else {
-          stop("Error, CARDAMOM cannnot determine where C allocation wood has come from")
+          # Check whether this model is a managed grassland version, or other which does not simulate a wood / stem carbon pool.
+          if (grepl(".M2.",PROJECT$model$name)) {
+              # Do nothing
+          } else {
+              # Stop we have an issue
+              stop("Error, CARDAMOM cannnot determine where C allocation wood has come from")
+          }
       }
   }        
   # Update the list variables in states_all which we will be searching

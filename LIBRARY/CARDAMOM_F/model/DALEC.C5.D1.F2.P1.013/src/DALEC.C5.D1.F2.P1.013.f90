@@ -182,63 +182,61 @@ public :: CARBON_MODEL     &
     ! 4 = litter + som
 
     ! FLUXES are:
-    ! 1 = GPP
-    ! 2 = temprate
-    ! 3 = respiration_auto
-    ! 4 = leaf production
-    ! 5 = labile production
-    ! 6 = wood+root production
-    ! 7 =
-    ! 8 = labile production
-    ! 9 = leaffall factor
-    ! 10 = leaf litter production
-    ! 11 = wood+root litter production
-    ! 12 =
-    ! 13 = respiration het litter+som
-    ! 14 =
-    ! 15 =
-    ! 16 = labrelease factor
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = autotrophic respiration (gC/m2/day)
+    ! 4  = GPP allocation to foliage (gC/m2/day)
+    ! 5  = GPP allocation to labile (gC/m2/day)
+    ! 6  = GPP allocation to wood+root (gC/m2/day)
+    ! 7  = NOT IN USE
+    ! 8  = labile->leaf transfer (gC/m2/day)
+    ! 9  = leaf fall factor (fraction/day)
+    ! 10 = leaf litter production (gC/m2/day)
+    ! 11 = wood+root litter production (gC/m2/day)
+    ! 12 = NOT IN USE
+    ! 13 = heterotrophic respiration from litter+som (gC/m2/day)
+    ! 14 = NOT IN USE
+    ! 15 = NOT IN USE
+    ! 16 = labile release factor (fraction/day)
+    ! 17 = total ecosystem fire emission - sum(18:21) (gC/m2/day)
+    ! 18 = fire emission from labile (gC/m2/day)
+    ! 19 = fire emission from foliage (gC/m2/day)
+    ! 20 = fire emission from roots+wood (gC/m2/day)
+    ! 21 = fire emission from litter+som (gC/m2/day)
+    ! 22 = fire mortality transfer labile->litter+som (gC/m2/day)
+    ! 23 = fire mortality transfer foliage->litter+som (gC/m2/day)
+    ! 24 = fire mortality transfer roots+wood->litter+som (gC/m2/day)
+    ! 25 = total harvest extracted C - sum(26:29) (gC/m2/day)
+    ! 26 = harvest extraction from labile (gC/m2/day)
+    ! 27 = harvest extraction from foliage (gC/m2/day)
+    ! 28 = harvest extraction from wood+root (gC/m2/day)
+    ! 29 = harvest extraction from litter+som (gC/m2/day)
+    ! 30 = harvest litter residue from labile (gC/m2/day)
+    ! 31 = harvest litter residue from foliage (gC/m2/day)
+    ! 32 = harvest litter residue from wood+root (gC/m2/day)
 
-    ! JFE added 03/05/2018 - start
-    ! emissions of carbon into the atmosphere due to combustion
-    ! 17 = ecosystem fire emission  (sum of fluxes 18 to 23)
-    ! 18 = fire emission from labile
-    ! 19 = fire emission from foliar
-    ! 20 = fire emission from roots
-    ! 21 = fire emission from wood
-    ! 22 = fire emission from litter
-    ! 23 = fire emission from soil
-
-    ! mortality due to fire
-    ! 24 = transfer from labile into litter
-    ! 25 = transfer from foliar into litter
-    ! 26 = transfer from roots into litter
-    ! 27 = transfer from wood into som
-    ! 28 = transfer from litter into som
-    ! JFE added 03/05/2018 - stop
-
-
-    ! PARAMETERS
-    ! 14 values + 4 initial conditions
-
-    ! p(1) Fraction of GPP respired
-    ! p(2) Fraction of NPP allocated to foliage
-    ! p(3) Leaf lifespan
-    ! p(4) Turnover rate of wood+root
-    ! p(5) Litter+som turnover rate
-    ! p(6) Parameter in exponential term of temperature
-    ! p(7) Canopy efficiency parameter
-    ! p(8) doy of Clab release
-    ! p(9) Fraction allocated to Clab
-    ! p(10) lab release duration period
-    ! p(11) date of leaf fall
-    ! p(12) leaf fall duration period
-    ! p(13) LMA (gC/m2)
-
-    ! p(14) Initial labile
-    ! p(15) Initial foliage
-    ! p(16) Initial wood+roots
-    ! p(17) Initial litter + som
+    ! PARAMETERS are:
+    ! p(1)  = fraction of GPP as autotrophic respiration (fraction)
+    ! p(2)  = fraction of NPP allocated to foliage (fraction)
+    ! p(3)  = leaf lifespan (yr)
+    ! p(4)  = wood+root turnover rate (fraction/day)
+    ! p(5)  = litter+som turnover rate, temperature adjusted (fraction/day)
+    ! p(6)  = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(7)  = canopy efficiency (gC/m2leaf/day)
+    ! p(8)  = date of labile release / bud burst (day of year)
+    ! p(9)  = fraction of NPP allocated to labile pool (fraction)
+    ! p(10) = labile release period duration (days)
+    ! p(11) = date of leaf fall (day of year)
+    ! p(12) = leaf fall period duration (days)
+    ! p(13) = leaf mass per area LMA (gC/m2)
+    ! p(14) = initial labile C pool (gC/m2)
+    ! p(15) = initial foliar C pool (gC/m2)
+    ! p(16) = initial wood+root C pool (gC/m2)
+    ! p(17) = initial litter+som C pool (gC/m2)
+    ! p(18) = fire resilience factor for non-combusted C (fraction)
+    ! p(19) = combustion completeness for foliage (fraction)
+    ! p(20) = combustion completeness for roots+wood (fraction)
+    ! p(21) = combustion completeness for litter+som (fraction)
 
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0

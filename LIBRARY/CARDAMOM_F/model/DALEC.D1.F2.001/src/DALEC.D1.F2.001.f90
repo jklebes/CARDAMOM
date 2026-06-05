@@ -173,55 +173,65 @@ public :: CARBON_MODEL     &
     ! 5 = som
 
     ! FLUXES are:
-    ! 1 = GPP
-    ! 2 = temprate
-    ! 3 = respiration_auto
-    ! 4 = leaf production
-    ! 5 = NOT IN USE
-    ! 6 = root production
-    ! 7 = wood production
-    ! 8 = NOT IN USE
-    ! 9 = NOT IN USE
-    ! 10 = leaf litter production
-    ! 11 = woodlitter production
-    ! 12 = rootlitter production
-    ! 13 = respiration het litter
-    ! 14 = respiration het som
-    ! 15 = litter2som
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = autotrophic respiration (gC/m2/day)
+    ! 4  = GPP allocation to foliage (gC/m2/day)
+    ! 5  = NOT IN USE
+    ! 6  = GPP allocation to fine roots (gC/m2/day)
+    ! 7  = GPP allocation to wood (gC/m2/day)
+    ! 8  = NOT IN USE
+    ! 9  = NOT IN USE
+    ! 10 = leaf litter production (gC/m2/day)
+    ! 11 = wood litter production (gC/m2/day)
+    ! 12 = root litter production (gC/m2/day)
+    ! 13 = heterotrophic respiration from litter (gC/m2/day)
+    ! 14 = heterotrophic respiration from som (gC/m2/day)
+    ! 15 = litter decomposition to som (gC/m2/day)
     ! 16 = NOT IN USE
-    ! 17 = fire emission total
-    ! 18 = NOT IN USE
-    ! 19 = fire emission from foliar
-    ! 20 = fire emission from roots
-    ! 21 = fire emission from wood
-    ! 22 = fire emission from litter
-    ! 23 = fire emission from soil
-    ! 24 = NOT IN USE
-    ! 25 = transfer from foliar to litter
-    ! 26 = transfer from roots to litter
-    ! 27 = transfer from wood to som
-    ! 28 = transfer from litter to som
+    ! 17 = total ecosystem fire emission - sum(18:22) (gC/m2/day)
+    ! 18 = fire emission from foliage (gC/m2/day)
+    ! 19 = fire emission from roots (gC/m2/day)
+    ! 20 = fire emission from wood (gC/m2/day)
+    ! 21 = fire emission from litter (gC/m2/day)
+    ! 22 = fire emission from som (gC/m2/day)
+    ! 23 = fire mortality transfer foliage->litter (gC/m2/day)
+    ! 24 = fire mortality transfer roots->litter (gC/m2/day)
+    ! 25 = fire mortality transfer wood->som (gC/m2/day)
+    ! 26 = fire mortality transfer litter->som (gC/m2/day)
+    ! 27 = total harvest extracted C - sum(28:32) (gC/m2/day)
+    ! 28 = harvest extraction from foliage (gC/m2/day)
+    ! 29 = harvest extraction from fine roots (gC/m2/day)
+    ! 30 = harvest extraction from wood (gC/m2/day)
+    ! 31 = harvest extraction from litter (gC/m2/day)
+    ! 32 = harvest extraction from som (gC/m2/day)
+    ! 33 = harvest litter residue from foliage (gC/m2/day)
+    ! 34 = harvest litter residue from fine roots (gC/m2/day)
+    ! 35 = harvest litter residue from wood (gC/m2/day)
 
-    ! PARAMETERS
-    ! 17 values (including 5 initial conditions)
-
-    ! p(1) Litter to SOM conversion rate (frac / day)
-    ! p(2) Fraction of GPP respired
-    ! p(3) Fraction of NPP allocated to foliage
-    ! p(4) Fraction of NPP allocated to roots
-    ! p(5) leaf lifespan (years)
-    ! p(6) Cwood turnover rate (frac / day)
-    ! p(7) Croot turnover rate (frac / day)
-    ! p(8) CLitter turnover rate (frac / day)
-    ! p(9) Csom turnover rate (frac / day)
-    ! p(10) Parameter in exponential term of temperature
-    ! p(11) Canopy efficiency parameter (gC/m2leaf/day)
-    ! p(12) = LMA (gC/m2leaf)
-    ! p(13) = initial foliar C (gC/m2)
-    ! p(14) = initial root C (gC/m2)
-    ! p(15) = initial wood C (gC/m2)
-    ! p(16) = initial litter C (gC/m2)
-    ! p(17) = initial soil C (gC/m2)
+    ! PARAMETERS are:
+    ! p(1)  = litter decomposition rate, temperature adjusted (fraction/day)
+    ! p(2)  = fraction of GPP as autotrophic respiration (fraction)
+    ! p(3)  = fraction of NPP allocated to foliage (fraction)
+    ! p(4)  = fraction of NPP allocated to fine roots (fraction)
+    ! p(5)  = leaf lifespan (yr)
+    ! p(6)  = wood turnover rate (fraction/day)
+    ! p(7)  = fine root turnover rate (fraction/day)
+    ! p(8)  = litter turnover rate, temperature adjusted (fraction/day)
+    ! p(9)  = som turnover rate, temperature adjusted (fraction/day)
+    ! p(10) = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(11) = canopy efficiency (gC/m2leaf/day)
+    ! p(12) = leaf mass per area LMA (gC/m2leaf)
+    ! p(13) = initial foliar C pool (gC/m2)
+    ! p(14) = initial fine root C pool (gC/m2)
+    ! p(15) = initial wood C pool (gC/m2)
+    ! p(16) = initial litter C pool (gC/m2)
+    ! p(17) = initial som C pool (gC/m2)
+    ! p(18) = fire resilience factor for non-combusted C (fraction)
+    ! p(19) = combustion completeness for foliage (fraction)
+    ! p(20) = combustion completeness for non-photosynthetic tissue (fraction)
+    ! p(21) = combustion completeness for soil (fraction)
+    ! p(22) = combustion completeness for foliage and fine root litter (fraction)
 
     ! Reset all POOLS and FLUXES to prevent precision errors
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0

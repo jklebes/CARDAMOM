@@ -526,12 +526,107 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1 = labile (p17)
-    ! 2 = foliar (p18)
-    ! 3 = root   (p19)
-    ! 4 = litter (p20)
+    ! 1 = labile (p16)
+    ! 2 = foliar (p17)
+    ! 3 = root   (p18)
+    ! 4 = litter (p19)
     ! 5 = som    (p23)
-    ! 6 = 0-30 cm soil water content (fraction of field capacity) (p35)
+    ! 6 = 0-30 cm soil water content (mm)
+
+    ! FLUXES are:
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = autotrophic respiration (gC/m2/day)
+    ! 4  = GPP allocation to foliage (gC/m2/day)
+    ! 5  = GPP allocation to labile (gC/m2/day)
+    ! 6  = GPP allocation to roots (gC/m2/day)
+    ! 7  = labile->leaf transfer (gC/m2/day)
+    ! 8  = leaf fall factor (fraction/day)
+    ! 9  = leaf litter production (gC/m2/day)
+    ! 10 = root litter production (gC/m2/day)
+    ! 11 = heterotrophic respiration from litter (gC/m2/day)
+    ! 12 = heterotrophic respiration from som (gC/m2/day)
+    ! 13 = litter decomposition to som (gC/m2/day)
+    ! 14 = GSI labile release factor (fraction/day)
+    ! 15 = NOT IN USE
+    ! 16 = NOT IN USE
+    ! 17 = NOT IN USE
+    ! 18 = NOT IN USE
+    ! 19 = animal manure deposited to soil from grazing (gC/m2/day)
+    ! 20 = animal respiration from grazing (gC/m2/day)
+    ! 21 = animal methane emissions from grazing (gC/m2/day)
+    ! 22 = total biomass extracted per cutting event (gC/m2/day)
+    ! 23 = total biomass extracted per grazing event (gC/m2/day)
+    ! 24 = NOT IN USE
+    ! 25 = labile extracted from cutting (gC/m2/day)
+    ! 26 = foliage extracted from cutting (gC/m2/day)
+    ! 27 = roots extracted from cutting (gC/m2/day)
+    ! 28 = labile added to litter from cutting (gC/m2/day)
+    ! 29 = foliage added to litter from cutting (gC/m2/day)
+    ! 30 = roots added to litter from cutting (gC/m2/day)
+    ! 31 = labile extracted from grazing (gC/m2/day)
+    ! 32 = foliage extracted from grazing (gC/m2/day)
+    ! 33 = roots extracted from grazing (gC/m2/day)
+    ! 34 = labile added to litter from grazing (gC/m2/day)
+    ! 35 = foliage added to litter from grazing (gC/m2/day)
+    ! 36 = roots added to litter from grazing (gC/m2/day)
+    ! 37 = NOT IN USE
+    ! 38 = NOT IN USE
+    ! 39 = NOT IN USE
+    ! 40 = NOT IN USE
+    ! 41 = NOT IN USE
+    ! 42 = NOT IN USE
+    ! 43 = NOT IN USE
+    ! 44 = NOT IN USE
+    ! 45 = NOT IN USE
+    ! 46 = evapotranspiration (kgH2O/m2/day)
+    ! 47 = transpiration (kgH2O/m2/day)
+    ! 48 = soil evaporation (kgH2O/m2/day)
+    ! 49 = wet canopy evaporation (kgH2O/m2/day)
+    ! 50 = surface runoff (kgH2O/m2/day)
+    ! 51 = drainage from bottom of soil column (kgH2O/m2/day)
+    ! 52 = drainage from surface to 2nd soil layer (kgH2O/m2/day)
+    ! 53 = infiltration into top soil layer (kgH2O/m2/day)
+    ! 54 = fraction of transpiration from 1st rooting layer (0-1)
+    ! 55 = fraction of transpiration from 2nd rooting layer (0-1)
+    ! 56 = infiltration into middle soil layer (kgH2O/m2/day)
+    ! 57 = infiltration into bottom soil layer (kgH2O/m2/day)
+
+    ! PARAMETERS are:
+    ! p(1)  = litter decomposition rate (fraction/day)
+    ! p(2)  = fraction of GPP as autotrophic respiration (fraction)
+    ! p(3)  = canopy GSI phenology gradient threshold
+    ! p(4)  = NPP belowground allocation exponential parameter
+    ! p(5)  = potential leaf turnover rate (fraction/day)
+    ! p(6)  = fine root turnover rate (fraction/day)
+    ! p(7)  = litter turnover rate (fraction/day)
+    ! p(8)  = som turnover rate, temperature adjusted (fraction/day)
+    ! p(9)  = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(10) = max labile turnover rate to foliage (fraction/day)
+    ! p(11) = canopy efficiency (umolC/m2leaf/s)
+    ! p(12) = GSI minimum temperature threshold (K)
+    ! p(13) = GSI maximum temperature threshold (K)
+    ! p(14) = GSI minimum photoperiod threshold (seconds)
+    ! p(15) = leaf mass per area LMA (gC/m2)
+    ! p(16) = initial labile C pool (gC/m2)
+    ! p(17) = initial foliar C pool (gC/m2)
+    ! p(18) = initial root C pool (gC/m2)
+    ! p(19) = initial litter C pool (gC/m2)
+    ! p(20) = GSI maximum photoperiod threshold (seconds)
+    ! p(21) = GSI minimum VPD threshold (Pa)
+    ! p(22) = GSI maximum VPD threshold (Pa)
+    ! p(23) = initial som C pool (gC/m2)
+    ! p(24) = root biomass for 50% of maximum rooting depth (gBiomass/m2)
+    ! p(25) = maximum rooting depth (m)
+    ! p(26) = initial canopy GSI value (0-1)
+    ! p(27) = minimum above-ground biomass for grazing to occur (gC/m2)
+    ! p(28) = minimum above-ground biomass for cutting to occur (gC/m2)
+    ! p(29) = NOT IN USE
+    ! p(30) = GPP return on new foliage investment (gC/gC)
+    ! p(31) = NOT IN USE
+    ! p(32) = post-grazing labile loss fraction (fraction)
+    ! p(33) = post-cutting labile loss fraction (fraction)
+    ! p(34) = minimum biomass removal for a grazing instance to occur (gC/m2/day)
 
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0

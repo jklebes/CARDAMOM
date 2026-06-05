@@ -8,23 +8,23 @@
 !                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
-
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+!
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A1.C1.D2.F2.H2.P5 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C1.D2.F2.H2.P1 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -572,7 +572,7 @@ module model_likelihood_module
 !    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)+FT(36)
+    Fout(6) = FT(14)+FT(23)+(36)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
@@ -808,6 +808,12 @@ module model_likelihood_module
             EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
+
+    ! While it is possible for the CiCa, the ratio of internal to external leaf
+    ! CO2 concentrations it should not on average be greater than 1
+    if ((EDC2 == 1 .or. DIAG == 1) .and. sum(M_DIAGS(:,4))/dble(nodays) > 1d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
+    endif
 
     !
     ! EDCs done, below are additional fault detection conditions
@@ -1194,7 +1200,7 @@ module model_likelihood_module
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
                                              1d0,DATAin%M_DIAGS(1:DATAin%nodays,1))
-    end if ! nLAI > 0
+    end if
 
     !
     ! Do pools (POOLS)
@@ -1302,15 +1308,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
-                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1455,15 +1461,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                                      DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                             DATAin%Cwood_growth_scaling,DATAin%M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
-                                                      DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
+                                             DATAin%Cwood_mortality_scaling,DATAin%M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1486,6 +1492,7 @@ module model_likelihood_module
     integer :: dummy_nodays = 1, dummy_noobs = 1
     integer, dimension(1) :: dummy_pts = 1, dummy_lag = 0
     double precision, dimension(1) :: mod
+    double precision, dimension(DATAin%nodays) :: tmp
     double precision :: dummy_scaling = 1d0
 
     ! Initial soil water condition
@@ -1529,7 +1536,7 @@ module model_likelihood_module
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
 
-    ! Estimate the biological mean transist time for soil C.
+    ! Estimate the biological mean transist time (years) for soil C.
     ! NOTE: this arrangement explicitly neglects the impact of disturbance on
     ! residence time (i.e. no fire and biomass removal). This is because the current observation based estimates
     ! come from soilC / Rhet assumptions.
@@ -1544,6 +1551,20 @@ module model_likelihood_module
                                    DATAin%otherpriors(6),DATAin%otherpriorunc(6),dummy_lag,dummy_scaling,mod))
     end if
 
+    ! Hardcoded prior assumption that when we are photosynthsising (i.e. gs_demand_supply_ratio > 0)
+    ! but not supply limited (i.e. gs_demand_supply_ratio < 1) we expect a mean CiCa of 0.7.
+    ! DIAGS(:,4) = CiCa ; DIAGS(:,7) = gs_demand_supply_ratio
+    if (DATAin%otherpriors(7) > -9998) then
+        !obs = 0.7d0 ; unc = 0.1d0 
+        tmp = 0d0 
+        ! Identify time steps which fit the criteria
+        where (DATAin%M_DIAGS(:,7) > 0d0 .and. DATAin%M_DIAGS(:,7) < 1d0) tmp = 1d0
+        mod = sum(DATAin%M_DIAGS(:,4) * tmp) / sum(tmp)
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(7)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(7),DATAin%otherpriorunc(7),dummy_lag,dummy_scaling,mod))
+    end if
+
+
     return
 
   end subroutine calc_other_likelihoods
@@ -1553,7 +1574,6 @@ module model_likelihood_module
   double precision function likelihood(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
 
     ! Generic function to estimate the likelihood of diagnostic.
-    ! Assumes a symmetric Gausian uncertainty.
 
     ! Arguments
     integer, intent(in) :: nodays, & ! number of time steps
@@ -1597,57 +1617,6 @@ module model_likelihood_module
     end if
 
   end function likelihood  
-  !
-  !------------------------------------------------------------------
-  !
-  double precision function likelihood_asym_pos(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
-
-    ! Generic function to estimate the likelihood of diagnostic.
-    ! This function assumes that we asymetrically apply the Gaussian
-    ! function to not limit positive values.
-
-    ! Arguments
-    integer, intent(in) :: nodays, & ! number of time steps
-                             nobs    ! number of observed estimates
-    integer, dimension(nobs), intent(in) :: obspts ! location of observations in time series
-    integer, dimension(nodays), intent(in) :: lag    ! observation lag period
-    double precision, intent(in) :: scaling ! scaling factor to account for differing number of observations
-    double precision, dimension(nodays), intent(in) :: obs, & ! observation time series
-                                                       unc, & ! observation uncertainty
-                                                       mod    ! model equivalent of the obs
-
-    ! local variables
-    integer :: dn, n, s
-    double precision :: infini
-    
-    ! Set initial value
-    infini = 0d0
-
-    ! Reset the output variable
-    likelihood_asym_pos = 0d0
-
-    ! Begin looping through observations
-    do n = 1, nobs
-       ! Extract the time location of the current observation
-       dn = obspts(n)
-       ! Determine the lag period starting point
-       s = max(1,dn-lag(dn))
-       ! Estimate the mean over the lag period and accumulate the log-likelihood score
-       likelihood_asym_pos = likelihood_asym_pos + &
-                            ( min(0d0,(sum(mod(s:dn)) / dble(lag(dn)+1)) - obs(dn)) / unc(dn) ) ** 2
-    end do
-    ! Apply the appropriate scaling, flip sign and multiply by 0.5.
-    ! The likelihood scores for each observation should be subject to *-0.5
-    ! in the algebraic formulation of the cost function. To avoid repeat calculation
-    ! it is applied here once per data stream
-    likelihood_asym_pos = -0.5d0 * likelihood_asym_pos * scaling ! e.g. 1/dble(DATAin%nCwood_inc)
-
-    ! check that log-likelihood is an actual number
-    if (likelihood_asym_pos /= likelihood_asym_pos) then
-        likelihood_asym_pos = log(infini)
-    end if
-
-  end function likelihood_asym_pos
   !
   !------------------------------------------------------------------
   !

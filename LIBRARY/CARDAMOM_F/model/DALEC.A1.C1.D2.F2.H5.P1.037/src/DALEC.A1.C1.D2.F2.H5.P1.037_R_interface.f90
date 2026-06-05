@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
-! assimilate observations and ecological theory to retrieve parameters for the
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently.
+! used as a fully integrated component of CARDAMOM or independently. 
 ! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk),
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -23,22 +23,22 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.A1.C1.D2.F2.H2.R1.P1 and the R code
+! Subroutine to allow direct interface between DALEC.A1.C1.D2.F2.H5.P1 and the R code
 !
-! Author: T. Luke Smallman (02/05/2024)
+! Author: T. Luke Smallman (23/02/2026)
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine rdalec5(output_dim,MTT_dim,SS_dim &
-                  ,met,pars &
-                  ,out_var1,out_var2,out_var3,out_var4,out_var5 &
-                  ,lat,nopars,nomet &
-                  ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
-                  ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
+subroutine rdalec37(output_dim,MTT_dim,SS_dim &
+                   ,met,pars &
+                   ,out_var1,out_var2,out_var3,out_var4,out_var5 &
+                   ,lat,nopars,nomet &
+                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
+                   ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, &
                               soil_frac_clay, soil_frac_sand, nos_soil_layers
-
+                             
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -85,7 +85,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
 
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
 
   ! update soil parameters
   soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
@@ -172,8 +172,8 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,45)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,46)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,50) = FLUXES(1:nodays,47) &       ! infiltration (kgH2O.m-2.day-1)
-                             + FLUXES(1:nodays,51) &       !
-                             + FLUXES(1:nodays,52)         !
+                             + FLUXES(1:nodays,50) &       ! 
+                             + FLUXES(1:nodays,51)         !
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,48)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,52) = FLUXES(1:nodays,49)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,53) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
@@ -193,12 +193,12 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,63) = DIAGS(1:nodays,9)           ! mean LWP (MPa)
      ! Canopy aerodynamic diagnostics
      out_var1(i,1:nodays,64) = DIAGS(1:nodays,14)          ! Canopy area scaling as a function of light
-     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaking as a function of wind
+     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaling as a function of wind
 
      !
      ! Calculate long-term mean of out_var1
      !
-
+     
      ! Loop across each variable
      do v = 1, output_dim
         ! Calculate mean value
@@ -218,7 +218,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
         ! Iterate counters
         s = s + steps_per_year ; e = s + steps_per_year - 1
      end do
-
+     
      !!!
      ! Estimate residence time information
      !!!
@@ -227,17 +227,17 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
+            pool_hak = 0 
             tmp = ((FLUXES(1:nodays,8)  + FLUXES(1:nodays,18) + FLUXES(1:nodays,24) + &
-                    FLUXES(1:nodays,31) + FLUXES(1:nodays,37) + FLUXES(1:nodays,50)) / POOLS(1:nodays,1))
+                    FLUXES(1:nodays,31) + FLUXES(1:nodays,37) ) / POOLS(1:nodays,1))
      end where
      out_var2(i,1) = sum(tmp) / dble(nodays-sum(pool_hak))
      ! Foliage
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,2) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
-            tmp = ((FLUXES(1:nodays,10) + FLUXES(1:nodays,19) + FLUXES(1:nodays,25) + &
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,10) + FLUXES(1:nodays,19) + FLUXES(1:nodays,25) + & 
                     FLUXES(1:nodays,32) + FLUXES(1:nodays,38) ) / POOLS(1:nodays,2))
      end where
      out_var2(i,2) = sum(tmp) / dble(nodays-sum(pool_hak))
@@ -245,7 +245,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,3) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
+            pool_hak = 0 
             tmp = ((FLUXES(1:nodays,12) + FLUXES(1:nodays,20) + FLUXES(1:nodays,26) + &
                     FLUXES(1:nodays,33) + FLUXES(1:nodays,39) ) / POOLS(1:nodays,3))
      end where
@@ -254,7 +254,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,4) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
+            pool_hak = 0 
             tmp = ((FLUXES(1:nodays,11) + FLUXES(1:nodays,21) + FLUXES(1:nodays,27) + &
                     FLUXES(1:nodays,34) + FLUXES(1:nodays,40) ) / POOLS(1:nodays,4))
      end where
@@ -263,8 +263,8 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,5) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
-            tmp = ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) + &
+            pool_hak = 0 
+            tmp = ((FLUXES(1:nodays,13) + FLUXES(1:nodays,15) + & 
                     FLUXES(1:nodays,22) + FLUXES(1:nodays,28) + &
                     FLUXES(1:nodays,35)) / POOLS(1:nodays,5))
      end where
@@ -273,7 +273,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
      ! Estimate MRT (years)
      pool_hak = 1 ; tmp = 0d0
      where (POOLS(1:nodays,6) > 0d0) ! protection against NaN from division by zero
-            pool_hak = 0
+            pool_hak = 0 
             tmp = ((FLUXES(1:nodays,14) + FLUXES(1:nodays,23) + FLUXES(1:nodays,36)) &
                   / POOLS(1:nodays,6))
      end where
@@ -318,4 +318,4 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
   ! return back to the subroutine then
   return
 
-end subroutine rdalec5
+end subroutine rdalec37

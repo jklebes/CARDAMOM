@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
+! used as a fully integrated component of CARDAMOM or independently.
 ! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -71,21 +71,21 @@ module MODEL_PARAMETERS
     PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
     ! Fraction of GPP to autotrophic pool
-    ! NOTE: this does not include Ra due to C transfers 
+    ! NOTE: this does not include Ra due to C transfers
     ! after initial fixation
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.6d0
 
     ! max development rate (day-1) DS (0->1)
-    PI%parmin(3) = 0.01d0 
+    PI%parmin(3) = 0.01d0
     PI%parmax(3) = 0.05d0
     ! max development rate (day-1) DS (1->2)
-    PI%parmin(4) = 0.01d0 
+    PI%parmin(4) = 0.01d0
     PI%parmax(4) = 0.05d0
- 
+
     ! turnover rate foliage (frac/day)
     PI%parmin(5) = 0.002737851d0 ! 365.25 days
-    PI%parmax(5) = 0.03571429d0  ! 28 days 
+    PI%parmax(5) = 0.03571429d0  ! 28 days
 
     ! TOR stem* - 1% loss per year value (day-1)
     PI%parmin(6) = 0.002737851d0 ! 365.25 days
@@ -95,7 +95,7 @@ module MODEL_PARAMETERS
     PI%parmax(7) = 0.07142857d0  ! 17 days
 
     ! effective vernalisation days when plants are 50 % vernalised
-    PI%parmin(8) = 12d0 
+    PI%parmin(8) = 12d0
     PI%parmax(8) = 32d0
 
     ! Turnover of litter (fraction; temperature adjusted)
@@ -111,11 +111,11 @@ module MODEL_PARAMETERS
     PI%parmax(11) = 40d0
 
     ! sow day
-    PI%parmin(12) = 365.25d0 !100d0 
+    PI%parmin(12) = 365.25d0 !100d0
     PI%parmax(12) = 4d0*365.25d0
 
     ! phenological heat units required for emergence
-    PI%parmin(13) = 100d0 
+    PI%parmin(13) = 100d0
     PI%parmax(13) = 150d0
 
     ! Growing season length, i.e. harvest date is sowing + this value
@@ -125,50 +125,50 @@ module MODEL_PARAMETERS
     ! Intercept value for canopy N (gN/m2) dilution model
     PI%parmin(15) = 1.5d0
     PI%parmax(15) = 7.0d0 ! 5.5d0
-    ! Coefficient relating crop development stage to N dilution
+    ! Coefficient relating canopy nitrogen dilution with crop development / canopy size.
     PI%parmin(16) = -0.04d0
     PI%parmax(16) = -0.005d0
 
     ! LMA
-    PI%parmin(17) = 10d0 
+    PI%parmin(17) = 10d0
     PI%parmax(17) = 100d0
-  
+
     !
     ! NOTE number order not consistent
     !
 
     ! minimum temperature for development (oC)
-    PI%parmin(26) = (-1d0+273.15d0) 
+    PI%parmin(26) = (-1d0+273.15d0)
     PI%parmax(26) = ( 8d0+273.15d0)  ! -1,8
     ! maximum temperature for development (oC)
-    PI%parmin(27) = (18d0+273.15d0) 
+    PI%parmin(27) = (18d0+273.15d0)
     PI%parmax(27) = (36d0+273.15d0)   ! 18,36
     ! optimum temperature for development (oC)
-    PI%parmin(28) = ( 8d0+273.15d0) 
+    PI%parmin(28) = ( 8d0+273.15d0)
     PI%parmax(28) = (28d0+273.15d0)   ! 8,28
-   
+
     ! minimum temperature for vernalisation (oC)
     PI%parmin(29) = (-5.3d0+273.15d0)
     PI%parmax(29) = (-0.3d0+273.15d0)   ! -5,0
     ! maximum temperature for vernalisation (oC)
-    PI%parmin(30) = (12.0d0+273.15d0) 
+    PI%parmin(30) = (12.0d0+273.15d0)
     PI%parmax(30) = (19.0d0+273.15d0)    ! 12,19
     ! optimum temperature for vernalisation (oC)
-    PI%parmin(31) = (2.0d0+273.15d0) 
+    PI%parmin(31) = (2.0d0+273.15d0)
     PI%parmax(31) = (7.0d0+273.15d0)   ! 2,7
-   
+
     ! critical photoperiod for development (hrs)
-    PI%parmin(32) = 6d0 
+    PI%parmin(32) = 6d0
     PI%parmax(32) = 12d0
     ! photoperiod sensitivity
-    PI%parmin(33) = 0.10d0 
+    PI%parmin(33) = 0.10d0
     PI%parmax(33) = 0.35d0
- 
+
     ! turnover rate of labile
     PI%parmin(34) = 1d-5
     PI%parmax(34) = 0.1d0
     ! turnover rate of autotrophic pool
-    PI%parmin(35) = 0.65d0 !    1.5 days 
+    PI%parmin(35) = 0.65d0 !    1.5 days
     PI%parmax(35) = 0.99d0 !  ~ 1.0 day
 
     ! BUCKET - root biomass needed to reach 50 % of max depth
@@ -203,28 +203,28 @@ module MODEL_PARAMETERS
     !
 
     ! C labile (gC.m-2)
-    PI%parmin(18) = 1d0 
+    PI%parmin(18) = 1d0
     PI%parmax(18) = 10d0
     ! C foliar (gC.m-2)
-    PI%parmin(19) = 1d0 
+    PI%parmin(19) = 1d0
     PI%parmax(19) = 5d0
     ! C roots (gC.m-2)
-    PI%parmin(20) = 1d0 
+    PI%parmin(20) = 1d0
     PI%parmax(20) = 5d0
     ! C_wood (gC.m-2)
-    PI%parmin(21) = 1d0 
+    PI%parmin(21) = 1d0
     PI%parmax(21) = 5d0
     ! C litter (gC.m-2)
-    PI%parmin(22) = 1d0 
+    PI%parmin(22) = 1d0
     PI%parmax(22) = 10d0
     ! C_som (gC.m-2)
-    PI%parmin(23) = 100d0 
+    PI%parmin(23) = 100d0
     PI%parmax(23) = 200000d0
     ! C autotrophic pool (gC.m-2)
-    PI%parmin(24) = 0.1d0 
+    PI%parmin(24) = 0.1d0
     PI%parmax(24) = 5d0
     ! C storage organ (gC.m-2)
-    PI%parmin(25) = 0.1d0 
+    PI%parmin(25) = 0.1d0
     PI%parmax(25) = 1d0
 
     ! Initial soil water fraction

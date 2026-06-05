@@ -365,56 +365,82 @@ module CARBON_MODEL_MOD
     ! 9 = dead still standing foliage
 
     ! FLUXES are:
-    ! 1 = GPP
-    ! 2 = temprate
-    ! 3 = respiration_auto
-    ! 4 = leaf production
-    ! 5 = labile production
-    ! 6 = root production
-    ! 7 = wood production
-    ! 8 = labile release
-    ! 9 = alloc to storage
-    ! 10 = leaf litter production
-    ! 11 = woodlitter production
-    ! 12 = rootlitter production
-    ! 13 = respiration het litter
-    ! 14 = respiration het som
-    ! 15 = litter2som (decomposition)
-    ! 16 = alloc to autotrophic pool
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = total autotrophic respiration - maintenance + growth (gC/m2/day)
+    ! 4  = GPP allocation to foliage (gC/m2/day)
+    ! 5  = GPP allocation to labile and tissue remobilisation into labile (gC/m2/day)
+    ! 6  = GPP allocation to roots (gC/m2/day)
+    ! 7  = GPP allocation to stem (gC/m2/day)
+    ! 8  = labile->NPP transfer (gC/m2/day)
+    ! 9  = allocation to storage organ (gC/m2/day)
+    ! 10 = leaf litter production (gC/m2/day)
+    ! 11 = stem litter production (gC/m2/day)
+    ! 12 = root litter production (gC/m2/day)
+    ! 13 = heterotrophic respiration from litter (gC/m2/day)
+    ! 14 = heterotrophic respiration from som (gC/m2/day)
+    ! 15 = litter decomposition to som (gC/m2/day)
+    ! 16 = GPP allocation to autotrophic pool (gC/m2/day)
+    ! 17 = NOT IN USE
+    ! 18 = NOT IN USE
+    ! 19 = NOT IN USE
+    ! 20 = NOT IN USE
+    ! 21 = harvest yield - storage organ C extracted (gC/m2/day)
+    ! 22 = biomass extracted in addition to yield at harvest (gC/m2/day)
+    ! 23 = respiration from autotrophic pool allocation (gC/m2/day)
+    ! 24 = respiration from labile->NPP translocation (gC/m2/day)
+    ! 25 = respiration from NPP->labile translocation (gC/m2/day)
+    ! 26 = respiration from foliage remobilisation to labile (gC/m2/day)
+    ! 27 = respiration from stem remobilisation to labile (gC/m2/day)
+    ! 28 = foliage extracted from harvest (gC/m2/day)
+    ! 29 = stem extracted from harvest (gC/m2/day)
+    ! 30 = dead standing foliage extracted from harvest (gC/m2/day)
+    ! 31 = labile extracted from harvest (gC/m2/day)
+    ! 32 = foliage added to litter from harvest (gC/m2/day)
+    ! 33 = stem added to litter from harvest (gC/m2/day)
+    ! 34 = dead standing foliage added to litter from harvest (gC/m2/day)
+    ! 35 = autotrophic pool added to litter from harvest (gC/m2/day)
+    ! 36 = labile added to litter from harvest (gC/m2/day)
+    ! 37 = roots added to litter from ploughing (gC/m2/day)
 
-    ! PARAMETERS
-    ! 16 values
-
-    ! p(1) decomposition rate (frac/day)
-    ! p(2) Fraction of GPP allocated to autotrophic C pool
-    ! p(3) DR coef for DS (0->1)
-    ! p(4) DR coef for DS (1->2)
-    ! p(5) turnover rate of foliage (frac/day)
-    ! p(6) Turnover rate of wood/stem (frac/day)
-    ! p(7) maximum rate of foliar turnover due to self shading (frac/day)
-    ! p(8) effective vernalisation days when plant is 50 % vernalised
-    ! p(9) mineralisation rate of som (frac/day)
-    ! p(10) mineralisation rate of litter (frac/day)
-    ! p(11) = log10(avgN)
-    ! p(12) = sow day
-    ! p(13) = labile lost to respiration per gC labile top GPP
-    ! p(14) = phenological heat units needed for emergence
-    ! p(15) ! harvest day (doy)
-    ! p(16) ! plough day (doy)
-    ! p(17) ! leaf mass area (gC.m-2)
-    ! p18,p19,p20,p21,p22,p23,p24,p25 = labile, foliar, roots, stem, litter,
-    ! som,
-    ! autotrophic and storage organ pools respectively
-    ! p(26) ! min temperature for development
-    ! p(27) ! max temperature for development
-    ! p(28) ! optimum temperature for development
-    ! p(29) ! min temperature for vernalisation
-    ! p(30) ! max temperature for vernalisation
-    ! p(31) ! optimim temperature for vernalisation
-    ! p(32) ! critical value of photoperiod for development
-    ! p(33) ! photoperiod sensitivity
-    ! p(34) ! turnover rate of labile C (frac/day)
-    ! p(35) ! turnover rate of autotrophic C (frac/day)
+    ! PARAMETERS are:
+    ! p(1)  = litter decomposition rate (fraction/day)
+    ! p(2)  = fraction of GPP allocated to autotrophic C pool (fraction)
+    ! p(3)  = maximum development rate coefficient DS (0->1) (day-1)
+    ! p(4)  = maximum development rate coefficient DS (1->2) (day-1)
+    ! p(5)  = turnover rate of foliage (fraction/day)
+    ! p(6)  = turnover rate of stem (fraction/day)
+    ! p(7)  = maximum foliage turnover rate due to self-shading (fraction/day)
+    ! p(8)  = effective vernalisation days when plant is 50% vernalised (days)
+    ! p(9)  = litter turnover rate, temperature adjusted (fraction/day)
+    ! p(10) = som turnover rate, temperature adjusted (fraction/day)
+    ! p(11) = photosynthetic nitrogen use efficiency (gC/gN/m2/day)
+    ! p(12) = sow day (day of year)
+    ! p(13) = respiratory cost of labile transfer (fraction of labile transferred)
+    ! p(14) = phenological heat units required for emergence
+    ! p(15) = harvest day (day of year)
+    ! p(16) = plough day (day of year)
+    ! p(17) = leaf mass per area LMA (gC/m2)
+    ! p(18) = initial labile C pool (gC/m2)
+    ! p(19) = initial foliar C pool (gC/m2)
+    ! p(20) = initial root C pool (gC/m2)
+    ! p(21) = initial stem C pool (gC/m2)
+    ! p(22) = initial litter C pool (gC/m2)
+    ! p(23) = initial som C pool (gC/m2)
+    ! p(24) = initial autotrophic pool C (gC/m2)
+    ! p(25) = initial storage organ C pool (gC/m2)
+    ! p(26) = minimum temperature for development (K)
+    ! p(27) = maximum temperature for development (K)
+    ! p(28) = optimum temperature for development (K)
+    ! p(29) = minimum temperature for vernalisation (K)
+    ! p(30) = maximum temperature for vernalisation (K)
+    ! p(31) = optimum temperature for vernalisation (K)
+    ! p(32) = critical photoperiod for development (hours)
+    ! p(33) = photoperiod sensitivity
+    ! p(34) = turnover rate of labile C (fraction/day)
+    ! p(35) = turnover rate of autotrophic C (fraction/day)
+    ! p(36) = canopy nitrogen dilution intercept (gN/m2)
+    ! p(37) = canopy nitrogen dilution coefficient
 
     ! Set some initial states for the io variables
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0

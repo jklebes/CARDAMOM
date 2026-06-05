@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! This file contains the source code of DALEC.A1.C7.D2.F2.H2.P1.R4
+! This file contains the source code of DALEC.A1.C8.D2.F2.H2.P1.R4.036
 !
 ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
 ! This version of DALEC is derived from the following primary references:
@@ -311,17 +311,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
                          ,nopars,nomet,nopools,nofluxes,nodiags)
 
-    ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
-    ! Evergreen Analytical - ACMv2 - BUCKET (DALEC.5) model.
-    ! The subroutine calls the Aggregated Canopy Model version 2 to simulate GPP and partitions
-    ! between various ecosystem carbon pools. These pools are subject
-    ! to turnovers / decompostion resulting in ecosystem phenology and fluxes of CO2
-    ! ACMv2 simulates coupled photosynthesis-transpiration (via stomata), soil and intercepted canopy
-    ! evaporation and soil water balance (4 layers).
-
-    ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
-    ! possibility to remove a fraction of biomass to simulate deforestation.
+    ! The Data Assimilation Linked Ecosystem Carbon (DALEC.A1.C8.D2.F2.H2.P1.R4.036) model.
+    ! GPP is estimated using the Aggregated Canopy Model (ACM; Williams et al. 1997) driven by
+    ! canopy efficiency, radiation, temperature and CO2. Maintenance autotrophic respiration is
+    ! a fixed fraction of GPP; remaining NPP is allocated to foliage, labile, fine roots and wood
+    ! using fixed fractions with growth respiration deducted at Rg_fraction = 0.21875.
+    ! Labile C is released to foliage via CDEA sinusoidal phenology (bud-burst and leaf-fall
+    ! controlled by DOY and duration parameters). Dead organic matter cycles through six pools:
+    ! foliar litter, fine root litter, wood litter, fast SOM, slow SOM and a microbial pool.
+    ! Decomposition of litter to fast or slow SOM is partitioned by lignin fractions (p41-p43).
+    ! Microbial dynamics follow Xenakis & Williams (2014). Soil hydrology uses a 3-layer BUCKET
+    ! model with snow accumulation and melt. Fire combustion and deforestation disturbance are
+    ! implemented with pool-specific combustion completeness and five management scenarios (R4).
 
     implicit none
 
@@ -399,74 +400,139 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 16th vapour pressure deficit (Pa)
 
     ! POOLS are:
-    ! 1 = labile (p18)
-    ! 2 = foliar (p19)
-    ! 3 = root   (p20)
-    ! 4 = wood   (p21)
-    ! 5 = litter (p22)
-    ! 6 = som    (p23)
-    ! 7 = 0-10 cm soil water content (mm) (p24)
+    ! 1  = labile (gC/m2) (initial value: p18)
+    ! 2  = foliar (gC/m2) (initial value: p19)
+    ! 3  = fine root (gC/m2) (initial value: p20)
+    ! 4  = wood (gC/m2) (initial value: p21)
+    ! 5  = foliar litter (gC/m2) (initial value: p22)
+    ! 6  = fine root litter (gC/m2) (initial value: p36)
+    ! 7  = wood litter (gC/m2) (initial value: p34)
+    ! 8  = fast SOM (gC/m2) (initial value: p37)
+    ! 9  = slow SOM (gC/m2) (initial value: p23)
+    ! 10 = microbial (gC/m2) (initial value: p38)
+    ! 11 = surface soil water 0-10 cm (mm) (initial value: p24)
 
     ! FLUXES are:
-    ! 1 = GPP
-    ! 2 = temprate
-    ! 3 = respiration_auto
-    ! 4 = leaf production
-    ! 5 = labile production
-    ! 6 = root production
-    ! 7 = wood production
-    ! 8 = labile production
-    ! 9 = leaffall factor
-    ! 10 = leaf litter production
-    ! 11 = woodlitter production
-    ! 12 = rootlitter production
-    ! 13 = respiration het litter
-    ! 14 = respiration het som
-    ! 15 = litter2som
-    ! 16 = labrelease factor
-
-    ! emissions of carbon into the atmosphere due to combustion
-    ! 17 = ecosystem fire emission  (sum of fluxes 18 to 23)
-    ! 18 = fire emission from labile
-    ! 19 = fire emission from foliar
-    ! 20 = fire emission from roots
-    ! 21 = fire emission from wood
-    ! 22 = fire emission from litter
-    ! 23 = fire emission from soil
-
-    ! mortality due to fire
-    ! 24 = transfer from labile into litter
-    ! 25 = transfer from foliar into litter
-    ! 26 = transfer from roots into litter
-    ! 27 = transfer from wood into som
-    ! 28 = transfer from litter into som
-
-    ! Water fluxes
-    ! 29 = Evapotranspiration (kgH2O.m-2.day-1)
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = total autotrophic respiration — maintenance Ra (fraction of GPP) +
+    !       growth respiration from all allocations (gC/m2/day)
+    ! 4  = direct allocation to foliage from GPP, pre-growth-respiration (gC/m2/day)
+    ! 5  = direct allocation to labile from GPP (gC/m2/day)
+    ! 6  = direct allocation to fine roots from GPP, pre-growth-respiration (gC/m2/day)
+    ! 7  = direct allocation to wood from GPP, pre-growth-respiration (gC/m2/day)
+    ! 8  = labile release to foliage, after growth respiration deduction (gC/m2/day)
+    ! 9  = leaf fall factor (unitless, CDEA phenology)
+    ! 10 = total leaf litter production (gC/m2/day)
+    ! 11 = wood turnover to wood litter (gC/m2/day)
+    ! 12 = fine root litter production (gC/m2/day)
+    ! 13 = heterotrophic respiration from foliar litter (gC/m2/day)
+    ! 14 = heterotrophic respiration from slow SOM (gC/m2/day)
+    ! 15 = foliar litter decomposition to SOM (gC/m2/day)
+    ! 16 = labile release factor (unitless, CDEA phenology)
+    ! 17 = total ecosystem fire emission — sum(F18:F23, F32, F63, F64) (gC/m2/day)
+    ! 18 = fire emission from labile (gC/m2/day)
+    ! 19 = fire emission from foliar (gC/m2/day)
+    ! 20 = fire emission from fine roots (gC/m2/day)
+    ! 21 = fire emission from wood (gC/m2/day)
+    ! 22 = fire emission from foliar litter (gC/m2/day)
+    ! 23 = fire emission from slow SOM (gC/m2/day)
+    ! 24 = fire mortality: labile → fast SOM (gC/m2/day)
+    ! 25 = fire mortality: foliar → foliar litter (gC/m2/day)
+    ! 26 = fire mortality: fine roots → fine root litter (gC/m2/day)
+    ! 27 = fire mortality: wood → wood litter (gC/m2/day)
+    ! 28 = fire mortality: foliar litter → SOM (gC/m2/day)
+    ! 29 = evapotranspiration (kgH2O/m2/day)
+    ! 30 = heterotrophic respiration from wood litter (gC/m2/day)
+    ! 31 = wood litter decomposition to SOM (gC/m2/day)
+    ! 32 = fire emission from wood litter (gC/m2/day)
+    ! 33 = fire mortality: wood litter → SOM (gC/m2/day)
+    ! 34 = harvest extraction from labile (gC/m2/day)
+    ! 35 = harvest extraction from foliage (gC/m2/day)
+    ! 36 = harvest extraction from fine roots (gC/m2/day)
+    ! 37 = harvest extraction from wood (gC/m2/day)
+    ! 38 = harvest extraction from foliar litter (gC/m2/day)
+    ! 39 = harvest extraction from wood litter (gC/m2/day)
+    ! 40 = harvest: mechanical soil C loss with coarse root extraction (gC/m2/day)
+    ! 41 = harvest residue: labile → fast SOM (gC/m2/day)
+    ! 42 = harvest residue: foliage → foliar litter (gC/m2/day)
+    ! 43 = harvest residue: fine roots → fine root litter (gC/m2/day)
+    ! 44 = harvest residue: wood → wood litter (gC/m2/day)
+    ! 45 = total harvest C extraction — sum(F34:F44) (gC/m2/day)
+    ! 46 = transpiration (kgH2O/m2/day)
+    ! 47 = soil evaporation (kgH2O/m2/day)
+    ! 48 = wet canopy evaporation (kgH2O/m2/day)
+    ! 49 = surface runoff (kgH2O/m2/day)
+    ! 50 = drainage from bottom of soil column (kgH2O/m2/day)
+    ! 51 = gravitational drainage from surface soil layer to 2nd layer (kgH2O/m2/day)
+    ! 52 = infiltration into top soil layer by rain (kgH2O/m2/day)
+    ! 53 = transpiration fraction extracted from 1st rooting layer (fraction)
+    ! 54 = transpiration fraction extracted from 2nd rooting layer (fraction)
+    ! 55 = growth respiration from labile release to foliage (gC/m2/day)
+    ! 56 = heterotrophic respiration from fine root litter (gC/m2/day)
+    ! 57 = fine root litter decomposition to SOM (gC/m2/day)
+    ! 58 = heterotrophic respiration from fast SOM (gC/m2/day)
+    ! 59 = heterotrophic respiration from microbial pool (gC/m2/day)
+    ! 60 = microbial death flux → slow SOM (gC/m2/day)
+    ! 61 = microbial-mediated transfer: slow SOM → fast SOM (gC/m2/day)
+    ! 62 = fast SOM uptake into microbial pool (gC/m2/day)
+    ! 63 = fire emission from fine root litter (gC/m2/day)
+    ! 64 = fire emission from fast SOM (gC/m2/day)
+    ! 65 = fire mortality: fine root litter → SOM (gC/m2/day)
+    ! 66 = infiltration into middle soil layer by rain (kgH2O/m2/day)
+    ! 67 = infiltration into bottom soil layer by rain (kgH2O/m2/day)
 
     ! PARAMETERS
-    ! 17 values
-
-    ! p(1) Litter to SOM conversion rate  - m_r
-    ! p(2) Fraction of GPP respired - f_a
-    ! p(3) Fraction of NPP allocated to foliage - f_f
-    ! p(4) Fraction of NPP allocated to roots - f_r
-    ! p(5) Leaf lifespan - L_f
-    ! p(6) Turnover rate of wood - t_w
-    ! p(7) Turnover rate of roots - t_r
-    ! p(8) Litter turnover rate - t_l
-    ! p(9) SOM turnover rate  - t_S
-    ! p(10) Parameter in exponential term of temperature - \theta
-    ! p(11) Canopy efficiency parameter - C_eff (part of ACM)
-    ! p(12) = date of Clab release - B_day
-    ! p(13) = Fraction allocated to Clab - f_l
-    ! p(14) = lab release duration period - R_l
-    ! p(15) = date of leaf fall - F_day
-    ! p(16) = leaf fall duration period - R_f
-    ! p(17) = LMA
-    ! p(25) = fraction of Cwood that is assumed coarse root
-    ! p(26) = fine + coarse root biomass (g/m2) needed to reach 50% of max root depth
+    ! p(1)  = decomposition efficiency of litter to SOM (fraction)
+    ! p(2)  = fraction of GPP as maintenance autotrophic respiration (fraction)
+    ! p(3)  = fraction of (GPP-Ra) allocated to foliage (fraction)
+    ! p(4)  = fraction of (GPP-Ra-fol-lab) allocated to fine roots (fraction)
+    ! p(5)  = leaf lifespan (yr)
+    ! p(6)  = wood turnover rate (fraction/day)
+    ! p(7)  = fine root turnover rate (fraction/day)
+    ! p(8)  = foliar litter turnover rate, temperature adjusted (fraction/day)
+    ! p(9)  = fine root litter turnover rate, temperature adjusted (fraction/day)
+    ! p(10) = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(11) = canopy efficiency — ACM parameter (umolC/m2/s)
+    ! p(12) = day of year for peak labile release / bud-burst — CDEA phenology (day)
+    ! p(13) = fraction of (GPP-Ra-fol) allocated to labile (fraction)
+    ! p(14) = labile release duration period (days)
+    ! p(15) = day of year for peak leaf fall — CDEA phenology (day)
+    ! p(16) = leaf fall duration period (days)
+    ! p(17) = LMA (gC/m2)
+    ! p(18) = initial labile C (gC/m2)
+    ! p(19) = initial foliar C (gC/m2)
+    ! p(20) = initial fine root C (gC/m2)
+    ! p(21) = initial wood C (gC/m2)
+    ! p(22) = initial foliar litter C (gC/m2)
+    ! p(23) = initial slow SOM C (gC/m2)
+    ! p(24) = initial soil water fraction (fraction)
+    ! p(25) = fraction of Cwood as coarse root (fraction)
+    ! p(26) = coarse root biomass for 50% of maximum rooting depth (gBiomass/m2)
     ! p(27) = maximum rooting depth (m)
+    ! p(28) = fire resilience factor for live pools (fraction)
+    ! p(29) = combustion completeness for foliage (fraction)
+    ! p(30) = combustion completeness for labile, fine roots and wood (fraction)
+    ! p(31) = combustion completeness for SOM (fraction)
+    ! p(32) = combustion completeness for foliar and fine root litter (fraction)
+    ! p(33) = combustion completeness for wood litter (fraction)
+    ! p(34) = initial wood litter C (gC/m2)
+    ! p(35) = wood litter turnover rate, temperature adjusted (fraction/day)
+    ! p(36) = initial fine root litter C (gC/m2)
+    ! p(37) = initial fast SOM C (gC/m2)
+    ! p(38) = initial microbial C (gC/m2)
+    ! p(39) = initial microbial activity (unitless)
+    ! p(40) = inhibition constant for C-dependent microbial activity (gC/m2)
+    ! p(41) = foliar lignin fraction controlling litter decomposition partitioning to slow SOM (fraction)
+    ! p(42) = fine root lignin fraction controlling litter decomposition partitioning to slow SOM (fraction)
+    ! p(43) = wood lignin fraction controlling litter decomposition partitioning to slow SOM (fraction)
+    ! p(44) = microbial substrate uptake efficiency from fast SOM (fraction)
+    ! p(45) = maximum microbial death rate (fraction/day)
+    ! p(46) = inhibition constant for microbial death (unitless)
+    ! p(47) = microbial maintenance respiration coefficient (fraction/day)
+    ! p(48) = microbial decomposition efficiency — fraction of slow SOM turnover to fast SOM (fraction)
+    ! p(49) = turnover constant for slow SOM via microbial activity (day-1)
+    ! p(50) = 2nd order rate constant for microbial uptake from fast SOM (day-1)
 
     ! Set some initial states
     infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0

@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
+! used as a fully integrated component of CARDAMOM or independently.
 ! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H2.P1 model.
+! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H1.P1 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).

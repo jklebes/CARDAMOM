@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
+! used as a fully integrated component of CARDAMOM or independently.
 ! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 !
@@ -219,7 +219,7 @@ module model_likelihood_module
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
                      ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
                      ,DATAin%nofluxes,DATAin%nodiags)
 
     ! assess post running EDCs
@@ -227,7 +227,7 @@ module model_likelihood_module
                     ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                     ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                     ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                    ,DATAin%meantemp,EDC2)      
+                    ,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
     tot_exp = sum(1d0-EDCD%PASSFAIL(1:EDCD%nedc))
@@ -276,16 +276,16 @@ module model_likelihood_module
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
                      ,DATAin%nofluxes,DATAin%nodiags)
     print*,"sanity_check: carbon_model run 2"
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,local_fluxes,local_pools,local_diags & 
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
-                     ,DATAin%nofluxes,DATAin%nodiags)                     
+                     ,local_fluxes,local_pools,local_diags &
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
+                     ,DATAin%nofluxes,DATAin%nodiags)
     ! Compare outputs
     flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
     pool_error = sum(abs(DATAin%M_POOLS - local_pools))
@@ -415,7 +415,7 @@ module model_likelihood_module
     ! Initial leaf area index should not be larger than ~10 m2/m2
     if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(19)/pars(17)) > 10d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(5) = 0
-    endif    
+    endif
 
     !! GPP allocation to foliage and labile cannot be 5 orders of magnitude
     !! difference from GPP allocation to roots
@@ -463,7 +463,7 @@ module model_likelihood_module
                           ,nofluxes       & ! number of fluxes from model
                           ,nopools        & ! number of pools in model
                           ,nodays         & ! number of days in simulation
-                          ,nodiags        & ! number of diagnostic variables                          
+                          ,nodiags        & ! number of diagnostic variables
                           ,steps_per_year
 
     double precision, intent(in) :: deltat(nodays)              & ! decimal day model interval
@@ -472,7 +472,7 @@ module model_likelihood_module
                                    ,met(nomet,nodays)           & ! array of met drivers
                                    ,M_POOLS((nodays+1),nopools) & ! time varying states of pools in current model simulation
                                    ,M_FLUXES(nodays,nofluxes)   & ! time varying fluxes from current model simulation model
-                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model                                   
+                                   ,M_DIAGS(nodays,nodiags)     & ! time varying diagnostics from current model simulation model
                                    ,meantemp                      ! site mean temperature (oC)
 
     double precision, intent(out) :: EDC2 ! the response flag for the dynamical set of EDCs
@@ -530,7 +530,7 @@ module model_likelihood_module
     fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
     FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
     FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
-    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
                     *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
                     *deltat((steps_per_year+1):(steps_per_year*2)))
 
@@ -572,17 +572,17 @@ module model_likelihood_module
 !    Fout_yr2(5) = FT_yr2(13)+FT_yr2(15)+FT_yr2(22)+FT_yr2(28)+FT_yr2(35)
     ! som
     Fin(6)  = FT(11)+FT(15)+FT(27)+FT(28)
-    Fout(6) = FT(14)+FT(23)+(36)
+    Fout(6) = FT(14)+FT(23)+FT(36)
     Fin_yr1(6)  = FT_yr1(11)+FT_yr1(15)+FT_yr1(27)+FT_yr1(28)
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
     ! Surface water pool (0-30cm)
     ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
-    Fin(7)  = FT(47) 
-    Fout(7) = FT(42)+FT(41)+FT(46) 
-    Fin_yr1(7)  = FT_yr1(47) 
-    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46) 
+    Fin(7)  = FT(47)
+    Fout(7) = FT(42)+FT(41)+FT(46)
+    Fin_yr1(7)  = FT_yr1(47)
+    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46)
 !    Fin_yr2(7)  = FT_yr2(47)
 !    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
 
@@ -596,19 +596,19 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
 !    end if
 
-    ! Determine the mean and standard deviation of January LAIs 
-    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    ! Determine the mean and standard deviation of January LAIs
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset
     jan_first_lai = M_DIAGS(1,1) ! First January LAI
     ! Initially sum each January from each year
     do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
+       nn = 1 + (steps_per_year * (y - 1))
        jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
     end do
     ! Calculate the mean
     jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
     ! Calculate the standard deviation now
     do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
+       nn = 1 + (steps_per_year * (y - 1))
        jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
     end do
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
@@ -617,19 +617,19 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
 
-    ! Determine the mean and standard deviation of January wSWPs 
-    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+    ! Determine the mean and standard deviation of January wSWPs
+    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset
     jan_first_lai = M_DIAGS(1,10) ! First January wSWP
     ! Initially sum each January from each year
     do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
+       nn = 1 + (steps_per_year * (y - 1))
        jan_mean_lai = jan_mean_lai + M_DIAGS(nn,10)
     end do
     ! Calculate the mean
     jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
     ! Calculate the standard deviation now
     do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
+       nn = 1 + (steps_per_year * (y - 1))
        jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,10))**2d0
     end do
     jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
@@ -681,11 +681,11 @@ module model_likelihood_module
 !       end if
 !    end do
 
-     ! What are in effect the potential growth rates are modulated by the current 
-     ! fixed temperature sub-model used in the model. This means that the parameterised 
-     ! potential rates might never be achievable even if plausible. Thus the maximum 
-     ! parameter bound for the potential growth rates need to be increased. These EDCs 
-     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+     ! What are in effect the potential growth rates are modulated by the current
+     ! fixed temperature sub-model used in the model. This means that the parameterised
+     ! potential rates might never be achievable even if plausible. Thus the maximum
+     ! parameter bound for the potential growth rates need to be increased. These EDCs
+     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue
      ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
      if ((EDC2 == 1 .or. DIAG == 1)) then
          ! Foliage
@@ -731,7 +731,7 @@ module model_likelihood_module
 !        if (abs(log(Fin(n)/Fout(n))) > EQF2) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
-!        ! Restrict exponential behaviour at initialisation         
+!        ! Restrict exponential behaviour at initialisation
 !        if (abs(abs(log(Fin_yr1(n)/Fout_yr1(n))) - abs(log(Fin_yr2(n)/Fout_yr2(n)))) > C_etol) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
 !        end if
@@ -782,11 +782,11 @@ module model_likelihood_module
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
-    ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
+    ! Ensure that the mean transit time of foliage and the LCA are consistent with the
     ! leaf economic spectrum (LES).
-    ! LL (months) ~ LMA (gm2) R2 = 0.42 from 
+    ! LL (months) ~ LMA (gm2) R2 = 0.42 from
     ! Wright et al., (2004), doi: https://doi.org/10.1038/nature02403
-    ! Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496 
+    ! Onoda et al., (2017), doi: https://doi.org/10.1111/nph.14496
     if (EDC2 == 1 .or. DIAG == 1) then
         ! Assume that the MTT(nat,fire) foliage should be within the uncertainty bounds of the LES
         ! Mean equation LL(months) = 0.0031 * LMA**1.71, coefficient 95CI = 1.62,1.82
@@ -802,11 +802,11 @@ module model_likelihood_module
         if (tmp < tmp1) then
             ! The current leaf lifespan is shorter than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(45) = 0
-        endif        
+        endif
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(46) = 0
-        endif        
+        endif
     endif ! EDC2 == 1 .or. DIAG == 1
 
     !
@@ -1032,8 +1032,8 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
                      ,DATAin%nofluxes,DATAin%nodiags)
 
     ! if first set of EDCs have been passed, move on to the second
@@ -1044,7 +1044,7 @@ module model_likelihood_module
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                         ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                        ,DATAin%meantemp,EDC2)      
+                        ,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1103,8 +1103,8 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS & 
-                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools & 
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
+                     ,DATAin%nopars,DATAin%nomet,DATAin%nopools &
                      ,DATAin%nofluxes,DATAin%nodiags)
 
     ! if first set of EDCs have been passed, move on to the second
@@ -1115,7 +1115,7 @@ module model_likelihood_module
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                         ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                        ,DATAin%meantemp,EDC2)      
+                        ,DATAin%meantemp,EDC2)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1169,7 +1169,7 @@ module model_likelihood_module
   !
   subroutine calc_obs_likelihoods(ML_obs_out)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: sw_par_fraction, top_soil_depth 
+    use carbon_model_mod, only: sw_par_fraction, top_soil_depth
 
     ! Subroutine to control the calculation of the observation related
     ! log-likelihoods and accounting for the various scalings
@@ -1181,7 +1181,7 @@ module model_likelihood_module
 
     !
     ! Do diagnostics (DIAGS)
-    ! 
+    !
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
@@ -1222,7 +1222,7 @@ module model_likelihood_module
     if (DATAin%nClit_stock > 0) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) &
                  * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
                                              DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
@@ -1266,7 +1266,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              1d0,DATAin%M_FLUXES(1:DATAin%nodays,30))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
+    ! Calculate log-likelihood for net biome productivity
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
             + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
@@ -1283,7 +1283,7 @@ module model_likelihood_module
             + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
-                                             1d0,mod)    
+                                             1d0,mod)
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
@@ -1321,7 +1321,7 @@ module model_likelihood_module
   !
   subroutine calc_scaled_obs_likelihoods(ML_obs_out)
     use cardamom_structures, only: DATAin
-    use carbon_model_mod, only: sw_par_fraction, top_soil_depth  
+    use carbon_model_mod, only: sw_par_fraction, top_soil_depth
 
     ! Subroutine to control the calculation of the observation related
     ! log-likelihoods and accounting for the various scalings
@@ -1333,7 +1333,7 @@ module model_likelihood_module
 
     !
     ! Do diagnostics (DIAGS)
-    ! 
+    !
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
@@ -1374,7 +1374,7 @@ module model_likelihood_module
     if (DATAin%nClit_stock > 0) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) &
                  * DATAin%M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
                                              DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
@@ -1419,7 +1419,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,30))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
+    ! Calculate log-likelihood for net biome productivity
     if (DATAin%nnbe > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
             + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
@@ -1436,7 +1436,7 @@ module model_likelihood_module
             + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
             - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
-                                             DATAin%NEE_scaling,mod)    
+                                             DATAin%NEE_scaling,mod)
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
@@ -1477,7 +1477,7 @@ module model_likelihood_module
     use carbon_model_mod, only: top_soil_depth
 
     ! Subroutine to control the calculation of the 'other priors'
-    ! log-likelihoods. These are typically derived variables / 
+    ! log-likelihoods. These are typically derived variables /
     ! emergent functions averaged over the life of the anaylsis
 
     ! Arguements
@@ -1523,7 +1523,7 @@ module model_likelihood_module
     if (DATAin%otherpriors(5) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
+        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) &
             * ( (sum(DATAin%M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)+DATAin%M_FLUXES(1:DATAin%nodays,25)))) / dble(DATAin%nodays))
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
@@ -1535,11 +1535,11 @@ module model_likelihood_module
     ! come from soilC / Rhet assumptions.
     if (DATAin%otherpriors(6) > -9998) then
         ! Mean SOM pool
-        mod = sum(DATAin%M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays) 
+        mod = sum(DATAin%M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays)
         ! Divided by the mean Rhet_som
-        mod = mod / (sum(DATAin%M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays)) 
+        mod = mod / (sum(DATAin%M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays))
         ! Scaling from number of days to years (1/365.25 = 0.002737851)
-        mod = mod * 0.002737851d0 
+        mod = mod * 0.002737851d0
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(6)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(6),DATAin%otherpriorunc(6),dummy_lag,dummy_scaling,mod))
     end if
@@ -1568,7 +1568,7 @@ module model_likelihood_module
     ! local variables
     integer :: dn, n, s
     double precision :: infini
-    
+
     ! Set initial value
     infini = 0d0
 
@@ -1596,7 +1596,7 @@ module model_likelihood_module
        likelihood = log(infini)
     end if
 
-  end function likelihood  
+  end function likelihood
   !
   !------------------------------------------------------------------
   !
@@ -1619,7 +1619,7 @@ module model_likelihood_module
     ! local variables
     integer :: dn, n, s
     double precision :: infini
-    
+
     ! Set initial value
     infini = 0d0
 
