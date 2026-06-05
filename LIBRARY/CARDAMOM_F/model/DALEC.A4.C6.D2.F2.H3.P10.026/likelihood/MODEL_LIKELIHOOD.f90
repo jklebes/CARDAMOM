@@ -445,6 +445,12 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(12) = 0
     endif
 
+    ! The relative NUE should be significantly declined by the time we reach the expected end of of life,
+    ! we enforce an minimum 20 % reduction
+    if ((EDC1 == 1 .or. DIAG == 1) .and. exp(-pars(47) * (pars(46)/30d0)) > 0.80d0) then
+        EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
+    endif
+
     ! could always add more / remove some
 
   end subroutine assess_EDC1
@@ -604,26 +610,32 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
 !    endif
 
-     ! What are in effect the potential growth rates are modulated by the current 
-     ! fixed temperature sub-model used in the model. This means that the parameterised 
-     ! potential rates might never be achievable even if plausible. Thus the maximum 
-     ! parameter bound for the potential growth rates need to be increased. These EDCs 
-     ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
-     ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
-     if ((EDC2 == 1 .or. DIAG == 1)) then
-         ! Foliage
-         if (maxval(M_FLUXES(:,4)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
-         end if
-         ! Fine roots
-         if (maxval(M_FLUXES(:,6)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
-         end if
-         ! Wood
-         if (maxval(M_FLUXES(:,7)) > 10d0) then
-             EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
-         end if
-     end if
+    ! The ratio of autotrophic respiration to gross primary production (Ra:GPP)
+    ! should not be > 0.8
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(3)/FT(1)) > 0.8d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+    endif
+
+    ! What are in effect the potential growth rates are modulated by the current 
+    ! fixed temperature sub-model used in the model. This means that the parameterised 
+    ! potential rates might never be achievable even if plausible. Thus the maximum 
+    ! parameter bound for the potential growth rates need to be increased. These EDCs 
+    ! prevent an emergent growth rate that is unrealistic. Here we assume that tissue 
+    ! growth for foliage, wood and roots cannot be greater than 10 gC/m2/day
+    if ((EDC2 == 1 .or. DIAG == 1)) then
+        ! Foliage
+        if (maxval(M_FLUXES(:,4)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(17) = 0
+        end if
+        ! Fine roots
+        if (maxval(M_FLUXES(:,6)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
+        end if
+        ! Wood
+        if (maxval(M_FLUXES(:,7)) > 10d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        end if
+    end if
 
     ! Average growth rates for foliage and fine roots cannot be 5 orders of magnitude different
     if ((EDC2 == 1 .or. DIAG == 1) .and. FT(4) > (5d0*FT(6))) then
@@ -844,7 +856,7 @@ module model_likelihood_module
         ! 0.08333333 converts months to years for the LES equation.
         tmp = sum(M_POOLS(:,2)) / dble(nodays)
         tmp1 = sum(M_FLUXES(:,10)+M_FLUXES(:,19)+M_FLUXES(:,25)) / dble(nodays)
-        tmp = (tmp / tmp1) * 0.002737851d0
+        tmp = (tmp / tmp1) * 0.002737851d0 ! DALEC leaf life span
         ! determine the lower and upper bound of the LES .
         ! not for the upper bound, do not allow a value less than 1 years
         tmp1 = 0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.62d0)
@@ -857,6 +869,14 @@ module model_likelihood_module
             ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
         endif        
+        ! The reference leaf life span cannot be less than the actual,
+        ! neither can it be longer by more than a year
+        ! Note convertion of DALEC LL (years -> days)
+        tmp = (tmp*365.25d0) - pars(46)
+        if ( tmp > 365.25d0 .or. tmp < -182.5d0) then
+            ! The current leaf life span is longer than expected
+            EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
+        endif                
     endif ! EDC2 == 1 .or. DIAG == 1
 
     !

@@ -117,13 +117,13 @@ module MODEL_PARAMETERS
 
     ! Parameters linking the NCCE to the CMI
     ! via a Michaelis-Menten function. 
-    ! This is the NCCE at which the CMI is suppressed by 0.5
+    ! This is the NCCE at which the CMI is at 50 %
     PI%parmin(13) = -0.5d0
-    PI%parmax(13) = -0.0005d0
+    PI%parmax(13) = -0.00005d0
     ! Parameters linking the NCCE gradient to the CMI
     ! via a Michaelis-Menten function. This is the NCCE gradient 
     ! 50 % value
-    PI%parmin(14) = -0.1d0
+    PI%parmin(14) = -0.5d0
     PI%parmax(14) = -0.00005d0
        
     ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
@@ -132,8 +132,13 @@ module MODEL_PARAMETERS
 
     ! Potential loss rate for foliage to litter (fraction/day)
     ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
-    PI%parmin(16) = 0.0003424658 ! 8 years
-    PI%parmax(16) = 0.0333333333 ! 30 days
+    !PI%parmin(16) = 0.0003424658 ! 8 years
+    !PI%parmax(16) = 0.0333333333 ! 30 days
+    ! Modified on the assumption that p13,p14 provide sensitivity to this.
+    ! what we are really trying to estimate is the maximum potential rate of loss
+    ! which could arguably be fixed and very fast.
+    PI%parmin(16) = 0.01666667d0 ! 60 days
+    PI%parmax(16) = 0.03333333d0 ! 30 days
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -231,9 +236,9 @@ module MODEL_PARAMETERS
     ! Relative N content: N_rel = exp(-k_N_decline * age_months).
     ! Represents progressive N resorption and dilution of photosynthetic enzymes.
     ! Calibrated from Wright et al. (2004) leaf economics spectrum data.
-    ! Fast decline (0.10): leaves lose 10% relative N per month.
-    ! Slow decline (0.01): leaves retain N well (e.g. sclerophylls).
-    PI%parmin(47) = 0.01d0
+    ! Fast decline (0.15)
+    ! Slow decline (0.0001)
+    PI%parmin(47) = 0.0001d0
     PI%parmax(47) = 0.15d0
 
     ! Fraction of shed cohort carbon resorbed to labile pool (f_resorb) [0-1].

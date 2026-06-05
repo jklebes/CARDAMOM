@@ -598,6 +598,12 @@ module model_likelihood_module
 !        EDC2 = 0d0 ; EDCD%PASSFAIL(15) = 0
 !    endif
 
+    ! The ratio of autotrophic respiration to gross primary production (Ra:GPP)
+    ! should not be > 0.8
+    if ((EDC2 == 1 .or. DIAG == 1) .and. (FT(3)/FT(1)) > 0.8d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(16) = 0
+    endif
+    
      ! What are in effect the potential growth rates are modulated by the current 
      ! fixed temperature sub-model used in the model. This means that the parameterised 
      ! potential rates might never be achievable even if plausible. Thus the maximum 

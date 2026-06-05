@@ -313,7 +313,7 @@ cardamom_model_details <-function(modelname,specific_pft,ctessel_pft) {
     nopools=array(8,dim=c(length(ctessel_pft)))
     nopars=array(50,dim=c(length(ctessel_pft)))
     nofluxes=array(53,dim=c(length(ctessel_pft)))
-    nodiags=array(32,dim=c(length(ctessel_pft)))
+    nodiags=array(34,dim=c(length(ctessel_pft)))
     cardamom_model_details=list(name="DALEC.A4.C6.D2.F2.H3.P10.026",shortname="DALEC.26.",nopools=nopools,nofluxes=nofluxes,nomet=16,nopars=nopars,nodiags=nodiags)
   } else if (modelname == "DALEC.A1.C2.D2.F2.H2.P3.R1.009" | modelname == "DALEC.9.") {
     # information contains is

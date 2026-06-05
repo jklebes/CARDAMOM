@@ -1484,7 +1484,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
                       "labile_to_wood_gCm2day","foliar_growth_limitation_gradient","foliage_leafP_limitation","foliage_leafV_limitation",
                       "gpp_grow_gCgC","runoff_kgH2Om2day","underflow_kgH2Om2day","ncce_gCgC_gradient","foliar_loss_limitation",
-                      "nos_foliage_cohorts","canopy_relative_NUE","canopy_age_days")
+                      "nos_foliage_cohorts","canopy_relative_NUE","canopy_age_days","canopy_profit_gCm2","nos_profitable_cohorts")
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

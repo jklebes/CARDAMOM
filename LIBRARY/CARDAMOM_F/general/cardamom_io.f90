@@ -251,7 +251,7 @@ module cardamom_io
         DATAin%nopools = 8
         DATAin%nopars = 50
         DATAin%nofluxes = 53
-        DATAin%nodiags = 32 ! Initial value, will need updating
+        DATAin%nodiags = 34 ! Initial value, will need updating
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_1005
         DATAin%nopools = 8

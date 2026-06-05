@@ -1457,7 +1457,7 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
 # NOT IN USE
 
   } else if (model_name == "DALEC.A4.C6.D2.F2.H3.P10.026") {
-      output_dim = 85 ; MTT_dim = 6 ; SS_dim = 6
+      output_dim = 87 ; MTT_dim = 6 ; SS_dim = 6
       dyn.load(paste(PROJECT$exepath,"/dalec.so", sep=""))
       tmp=.Fortran( "rdalec26",output_dim=as.integer(output_dim)
                               ,MTT_dim=as.integer(MTT_dim),SS_dim = as.integer(SS_dim)
@@ -1750,6 +1750,12 @@ simulate_all<- function (site,PROJECT,model_name,met,pars,lat,pft,parameter_type
                       canopy_age_days = output[,,85],
                       mean_canopy_age_days = output_mean[,85],
                       mean_annual_canopy_age_days = output_annual[,,85],   
+                      canopy_profit_gCm2 = output[,,86],
+                      mean_canopy_profit_gCm2 = output_mean[,86],
+                      mean_annual_canopy_profit_gCm2 = output_annual[,,86],   
+                      nos_profitable_cohorts = output[,,87],
+                      mean_nos_profitable_cohorts = output_mean[,87],
+                      mean_annual_nos_profitable_cohorts = output_annual[,,87],   
                       ## Aggregated variables
                       # Mean Transit times
                       MTT_labile_years = MTT_years[,1],

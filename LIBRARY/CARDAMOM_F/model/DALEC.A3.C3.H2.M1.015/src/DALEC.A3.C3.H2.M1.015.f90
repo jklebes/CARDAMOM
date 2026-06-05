@@ -581,8 +581,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
 
   double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0,& ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
-                                               lv_res = 0.1d0,      & ! residue fraction of leaves left post harvest
-                                               st_res = 0.1d0,      & ! residue fraction of stem left post harvest 
+                                               lv_res = 0.5d0,      & ! residue fraction of leaves left post harvest (default = 0.1)
+                                               st_res = 0.5d0,      & ! residue fraction of stem left post harvest (default = 0.1)
                                                 LAICR = 4d0,        & ! LAI above which self shading turnover occurs
                                           rel_gso_max = 0.35d0,     & ! allocation to storage organ relative to GPP
                                resp_cost_labile_trans = 0.21875d0     ! labile lost to respiration per gC labile to GPP
@@ -2018,10 +2018,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     canopy_lwrad_Wm2 = (lwrad*Vc_dT) - (Vc_dT*2d0*longwave_release_canopy) + (Vc_dT*longwave_release_soil)
     ! Diffuse longwave absorbed by the soil
     soil_lwrad_Wm2 = (lwrad*(1d0-Vc_dT)) + (Vc_dT*longwave_release_canopy) - longwave_release_soil
-    ! Determine the radiative heat conductance term of the canopy (m/s)
-    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3d0) / (air_density_kg * cpair))*Vc_dT 
-    ! Determine the radiative heat conductance term of the soil (m/s)
-    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3d0) / (air_density_kg * cpair)) 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -4000,7 +3996,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine management_dates (stock_seed_labile,days_in_step)
+  subroutine management_dates(stock_seed_labile,days_in_step)
 
     ! This routine should be called at the end of each day of a crops  !
     ! simulation.  It checks whether we should plough/sow/harvest, and !
