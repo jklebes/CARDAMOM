@@ -572,7 +572,7 @@ module model_likelihood_module
         EDC2 = 0 ; EDCD%PASSFAIL(21) = 0
     endif
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 

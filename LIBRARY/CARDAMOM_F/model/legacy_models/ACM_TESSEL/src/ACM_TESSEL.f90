@@ -45,7 +45,7 @@ contains
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,pft      & ! plant functional type
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes

@@ -103,7 +103,7 @@ public :: CARBON_MODEL     &
     ! using data assimilation. Global Change Biology 11, 89-105.
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
@@ -111,7 +111,7 @@ public :: CARBON_MODEL     &
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -244,7 +244,7 @@ public :: CARBON_MODEL     &
     POOLS(1,3) = pars(11) ! lit + som
  
     ! Convert foliage age from years -> frac/day
-    fol_turn = (pars(3) * 365.25d0) ** (-1d0)
+    fol_turn = 1d0 / (pars(3) * 365.25d0)
 
     ! JFE added 4 May 2018 - define fire constants
     ! Update fire parameters derived from
@@ -255,14 +255,14 @@ public :: CARBON_MODEL     &
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     !! Parameter values for deforestation variables
     !! Scenario 1

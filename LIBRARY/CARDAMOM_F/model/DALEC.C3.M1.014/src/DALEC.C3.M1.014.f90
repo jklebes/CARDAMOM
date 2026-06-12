@@ -220,6 +220,10 @@ module CARBON_MODEL_MOD
                                    tmin_v, & ! min temperature for vernalisation
                                    tmax_v, & ! max temperature for vernalisation
                                    topt_v, & ! optimim temperature for vernalisation
+                                  doptmin, & ! difference between optimum and minimum cardinal temperatures
+                                  dmaxmin, & ! difference between maximum and minimum cardinal temperatures
+                                doptmin_v, & ! difference between optimum and minimum vernalisation temperatures
+                                dmaxmin_v, & ! difference between maximum and minimum vernalisation temperatures
                                       VDh, & ! effective vernalisation days when plants are 50 % vernalised
                                        VD, & ! count of vernalisation days
                                  RDRSHMAX, & ! maximum rate of self shading turnover (frac/day)
@@ -311,7 +315,7 @@ module CARBON_MODEL_MOD
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars     & ! number of paremeters in vector
+                          ,nopars     & ! number of parameters in vector
                           ,nomet      & ! number of meteorological fields
                           ,nofluxes   & ! number of model fluxes
                           ,nopools    & ! number of model pools
@@ -416,10 +420,11 @@ module CARBON_MODEL_MOD
     ! p(10) = som turnover rate, temperature adjusted (fraction/day)
     ! p(11) = photosynthetic nitrogen use efficiency (gC/gN/m2/day)
     ! p(12) = sow day (day of year)
-    ! p(13) = respiratory cost of labile transfer (fraction of labile transferred)
-    ! p(14) = phenological heat units required for emergence
-    ! p(15) = harvest day (day of year)
-    ! p(16) = plough day (day of year)
+    ! p(13) = phenological heat units required for emergence
+    ! p(14) = harvest day offset from sow day (days)
+    ! p(15) = not used in this model configuration
+    ! p(16) = not used in this model configuration
+    ! Note: respiratory cost of labile transfer is a hardcoded constant (0.21875)
     ! p(17) = leaf mass per area LMA (gC/m2)
     ! p(18) = initial labile C pool (gC/m2)
     ! p(19) = initial foliar C pool (gC/m2)
@@ -474,6 +479,10 @@ module CARBON_MODEL_MOD
     tmin_v                            = pars(29)-273.15d0 ! min temperature for vernalisation
     tmax_v                            = pars(30)-273.15d0 ! max temperature for vernalisation
     topt_v                            = pars(31)-273.15d0 ! optimim temperature for vernalisation
+    doptmin   = topt   - tmin     ! difference between optimum and minimum cardinal temperatures
+    dmaxmin   = tmax   - tmin     ! difference between maximum and minimum cardinal temperatures
+    doptmin_v = topt_v - tmin_v   ! difference between optimum and minimum vernalisation temperatures
+    dmaxmin_v = tmax_v - tmin_v   ! difference between maximum and minimum vernalisation temperatures
     PHCR                              = pars(32) ! critical value of photoperiod for development
     PHSC                              = pars(33) ! photoperiod sensitivity
     turnover_rate_labile              = pars(34) ! turnover rate labile C (day)
@@ -561,7 +570,8 @@ module CARBON_MODEL_MOD
       leafT = (maxt*0.75d0) + (mint*0.25d0)     ! initial canopy temperature (oC)
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
-      doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
+      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+      doy = ceiling(met(6,n)-(days_per_step*0.5d0))   ! Day of year
       meant = met(14,n)   ! mean air temperature (oC)
 
       ! Calculate current days leaf area index
@@ -573,7 +583,6 @@ module CARBON_MODEL_MOD
       ! calculate daylength in hours and seconds
       call calculate_daylength
       ! extract timing related values
-      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
 
       ! Note that soil mass balance will be calculated after phenology
       ! adjustments
@@ -639,13 +648,13 @@ module CARBON_MODEL_MOD
       ! determine development stage (DS)
       ! Note that DS must be updated here and not after management_dates. Otherwise, 
       ! there will be problems using DS_time for calculating yield:GPP calculations in MODEL_LIKELIHOOD.f90
-      call development_stage(deltat(n)) ; DIAGS(n,3) = DS 
+      call development_stage(days_per_step) ; DIAGS(n,3) = DS 
       ! determine the carbon partitioning based on development stage
       call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops
       call calc_pools_crops(DS_LRRT,LRRT)
       ! conduct management updates at the end of the day
-      call management_dates(stock_seed_labile,deltat(n))
+      call management_dates(stock_seed_labile,days_per_step)
 
       ! temprate (i.e. temperature modified rate of metabolic activity)
       FLUXES(n,2) = resp_rate
@@ -1214,19 +1223,11 @@ module CARBON_MODEL_MOD
     double precision :: days_in_step
 
     ! local variables..
-    double precision ::  doptmin, & ! Difference between optimum and minimum temperature
-                         dmaxmin, & ! Difference between maximum and minimum temperature
-                          dttmin, & ! Difference between daiy average and minimum temperatures
-                       doptmin_v, & ! Difference between optimum and minimum vernalization temperatures
-                       dmaxmin_v, & ! Difference between maximum and minimum vernalization temperatures
-                       dttmin_v     ! Difference between daily average and minimum vernalization temperatures
+    double precision ::  dttmin,  & ! Difference between daily average and minimum temperatures
+                         dttmin_v   ! Difference between daily average and minimum vernalization temperatures
 
-    doptmin   = topt   - tmin   ! difference between optimal and minimum cardinal temperatures
-    dmaxmin   = tmax   - tmin   ! difference between maximum and minimum cardinal temperatures
-    dttmin    = meant - tmin    ! difference between daily average and minimum cardinal temperatures
-    doptmin_v = topt_v - tmin_v ! same as above,
-    dmaxmin_v = tmax_v - tmin_v !       but for vernalization
-    dttmin_v  = meant - tmin_v  ! cardinal temperatures
+    dttmin   = meant - tmin    ! difference between daily average and minimum cardinal temperatures
+    dttmin_v = meant - tmin_v  ! difference between daily average and minimum vernalization temperatures
 
     ! Calculation of developmental function values: vernalization (fV),
     ! temperature (fT) and
@@ -1570,7 +1571,7 @@ module CARBON_MODEL_MOD
   !
   double precision function linear_model_gradient(x,y,interval)
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 
@@ -1582,11 +1583,20 @@ module CARBON_MODEL_MOD
 
     ! declare local variables
     double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
+    integer :: j
 
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
+    ! single-pass accumulation loop replacing four separate sum() reductions
+!    ! calculate the sum of x
+!    sum_x = sum(x)
+!    ! calculate the sum of y
+!    sum_y = sum(y)
+    sum_x = 0d0 ; sum_y = 0d0 ; sumsq_x = 0d0 ; sum_product_xy = 0d0
+    do j = 1, interval
+       sum_x          = sum_x          + x(j)
+       sum_y          = sum_y          + y(j)
+       sumsq_x        = sumsq_x        + x(j)*x(j)
+       sum_product_xy = sum_product_xy + x(j)*y(j)
+    end do
     ! calculate the sum of squares of x
     !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
@@ -1594,9 +1604,11 @@ module CARBON_MODEL_MOD
     ! calculate the gradient
     !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
     !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+!    ! Linear regression done as single line to reduce assignment requirements
+!    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+!                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sumsq_x)        - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
 !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &

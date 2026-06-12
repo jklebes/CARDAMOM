@@ -19,7 +19,7 @@ subroutine rdaleccdeafr(output_dim,aNPP_dim,met,pars,out_var,lat,nopars,nomet &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,pft            & ! plant functional type
                         ,output_dim     & !
 			,aNPP_dim       & ! NPP allocation fraction variable dimension

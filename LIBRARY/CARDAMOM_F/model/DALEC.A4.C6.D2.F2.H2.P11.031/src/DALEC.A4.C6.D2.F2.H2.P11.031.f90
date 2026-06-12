@@ -104,7 +104,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
+                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -381,7 +381,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -623,7 +623,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         end do
 
         ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = daylength_seconds ** (-1d0)
+        daylength_seconds_1 = 1d0 / daylength_seconds
         ! fraction of temperture period above freezing
         airt_zero_fraction_time = 0d0
         where (met(2,:) > 0d0) airt_zero_fraction_time = 1d0 
@@ -681,14 +681,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     !! Parameter values for deforestation variables
     !! Scenario 1
@@ -898,8 +898,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
-       seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+       seconds_per_step = seconds_per_day * days_per_step
 
        !!!!!!!!!!
        ! Adjust snow balance balance based on temperture
@@ -921,7 +921,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (mint < 0d0 .and. maxt > 0d0) then
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
-           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
@@ -929,7 +929,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            snow_melt = 0d0
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
-           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
@@ -1053,9 +1053,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Accumulate this time steps labile C (gC.m-2.day-1)
        FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)
-       available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))
+       available_labile = POOLS(n,1) + (FLUXES(n,5) * days_per_step)
        ! Do plant phenology
-       call plant_allocation(nopools,deltat(n), &
+       call plant_allocation(nopools,days_per_step, &
                              pars(3),pars(4),pars(13),pars(38),     & ! potential growth rates 
                              pars(34),pars(35),pars(36),pars(37),   & ! temperature limitations
                              pars(39),pars(40),pars(41),pars(42),   & ! water limitations
@@ -1072,11 +1072,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! total leaf litter production 
-       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
+       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**days_per_step)/days_per_step
        ! total wood litter production
-       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**days_per_step)/days_per_step
        ! total root litter production
-       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**days_per_step)/days_per_step
 
        !
        ! Dead organic matter decomposition and mineralisation (gC/m2/day)
@@ -1086,28 +1086,28 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Ask Bloom for reference. Shared as a diagnostic test
        tmp = 1d0!0.25d0 + 0.75d0 * soil_waterfrac(1)
        ! respiration heterotrophic litter
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*tmp)**deltat(n))/deltat(n)
+       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8)*tmp)**days_per_step)/days_per_step
        ! respiration heterotrophic som
-       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*tmp)**deltat(n))/deltat(n)
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9)*tmp)**days_per_step)/days_per_step
        ! litter to som
-       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(1)*tmp)**deltat(n))/deltat(n)
+       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(1)*tmp)**days_per_step)/days_per_step
 
        !
        ! update pools for next timestep
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)-FLUXES(n,8))*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)-FLUXES(n,8))*days_per_step
        ! foliar pool
-       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,8)-FLUXES(n,10))*deltat(n)
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,8)-FLUXES(n,10))*days_per_step
        ! wood pool
-       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*days_per_step
        ! root pool
-       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*deltat(n)
+       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*days_per_step
        ! litter pool
-       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*days_per_step
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*days_per_step
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1211,17 +1211,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! For dead organic matter pools, in most cases these will be zeros.
                ! But these variables allow for subseqent management where surface litter
                ! pools are removed or mechanical extraction from soil occurs.
-               FLUXES(n,31) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
-               FLUXES(n,32) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
-               FLUXES(n,33) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
-               FLUXES(n,34) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
+               FLUXES(n,31) = (labile_loss-labile_residue) / days_per_step  ! Labile extraction
+               FLUXES(n,32) = (foliar_loss-foliar_residue) / days_per_step  ! foliage extraction
+               FLUXES(n,33) = (roots_loss-roots_residue) / days_per_step    ! fine roots extraction
+               FLUXES(n,34) = (wood_loss-wood_residue) / days_per_step      ! wood extraction
                FLUXES(n,35) = 0d0 ! litter extraction
-               FLUXES(n,36) = soil_loss_with_roots / deltat(n)          ! som extraction
+               FLUXES(n,36) = soil_loss_with_roots / days_per_step          ! som extraction
                ! Convert harvest related residue generations to daily rate for output
-               FLUXES(n,37) = labile_residue / deltat(n) ! labile residues
-               FLUXES(n,38) = foliar_residue / deltat(n) ! foliage residues
-               FLUXES(n,39) = roots_residue / deltat(n)  ! fine roots residues
-               FLUXES(n,40) = wood_residue / deltat(n)   ! wood residues
+               FLUXES(n,37) = labile_residue / days_per_step ! labile residues
+               FLUXES(n,38) = foliar_residue / days_per_step ! foliage residues
+               FLUXES(n,39) = roots_residue / days_per_step  ! fine roots residues
+               FLUXES(n,40) = wood_residue / days_per_step   ! wood residues
 
                ! Total C extraction, including any potential litter and som.
                FLUXES(n,30) = sum(FLUXES(n,31:36))
@@ -1237,7 +1237,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !       if (met(8,n) > 0d0) then
 !           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
 !           if (allocated(extracted_C)) then
-!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
+!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / days_per_step
 !           endif
 !           POOLS(n+1,1) = tmp &
 !                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
@@ -1268,28 +1268,28 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            if (burnt_area > 0d0) then
 
                ! first calculate combustion / emissions fluxes in g C m-2 d-1
-               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
-               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
-               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
-               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
-               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
-               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
+               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/days_per_step ! labile
+               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/days_per_step ! foliar
+               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/days_per_step ! roots
+               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/days_per_step ! wood
+               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/days_per_step ! litter
+               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/days_per_step ! som
 
                ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
-               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
-               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
-               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
-               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
+               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/days_per_step ! labile into litter
+               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/days_per_step ! foliar into litter
+               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/days_per_step ! roots into litter
+               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/days_per_step ! wood into som
+               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/days_per_step ! litter into som
 
                ! update pools - first remove burned vegetation
-               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
-               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
-               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
-               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * days_per_step ! labile
+               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * days_per_step ! foliar
+               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * days_per_step ! roots
+               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * days_per_step ! wood
                ! update pools - add litter transfer
-               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
+               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * days_per_step
+               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * days_per_step
 
                ! calculate ecosystem emissions (gC/m2/day)
                FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
@@ -1399,8 +1399,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-                leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+                leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1438,7 +1438,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. 
-    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
     ! and 
     ! von Craemmer (2013), Steady State Photosynthesis Modelling, Plant Cell and Environment, 36, 1613-1630
 
@@ -1448,7 +1448,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! diffusion is 1.646259 (Jones appendix 2).i.e. gcH2O*1.646259 = gcCO2
     !
     ! Combining in series the stomatal and boundary layer conductances (molCO2.m-2.s-1)
-    gc = ( (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1 ) ** (-1d0)
+    gc = 1d0 / ( 1d0/(gs*gs_H2Ommol_CO2mol) + rb_mol_1 )
 
     ! Create common variables for both calculations
     gc_co2 = gc * co2
@@ -2179,7 +2179,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
@@ -2275,12 +2275,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate soil absorption fraction
     soil_absorption = 1d0 - soil_albedo
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
-                                             - (exp(-K*lai/Vc)*soil_absorption))
+                                             - (S3*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
-                                    + (Vc*((Idown*soil_absorption) + (exp(-K*lai/Vc)*soil_absorption)))
+                                    + (Vc*((Idown*soil_absorption) + (S3*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
@@ -2360,11 +2361,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = ((2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling)**(-1d0) + &
-                              (stomatal_conductance_in / convert_ms1_mmol_1) ** (-1d0))
+    total_water_resistance = (1d0 / (2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling) + &
+                              convert_ms1_mmol_1 / stomatal_conductance_in)
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of 
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2413,7 +2414,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of 
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2480,11 +2481,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = soil_conductance**(-1d0) + gws ** (-1d0)
+    total_water_resistance = 1d0 / soil_conductance + 1d0 / gws
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note: unlike for the canopy, we neglect the *0.93 converting between conductance for heat and water, 
     !       i.e. we assume that they are equal.
-    total_thermal_resistance = (soil_radiative_thermal_conductance + soil_conductance)**(-1d0)
+    total_thermal_resistance = 1d0 / (soil_radiative_thermal_conductance + soil_conductance)
     ! Calculate multi-use product of 
     isothermal_net = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
 
@@ -2633,11 +2634,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -2756,7 +2757,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        end if ! root present in current layer?
     end do ! nos_root_layers
     ! Turn the output resistance into conductance
-    Rcond_layer = Rcond_layer**(-1d0)
+    Rcond_layer = 1d0 / Rcond_layer
 
     ! if freezing then assume soil surface is frozen, therefore no water flux
     if (meant < 1d0) then
@@ -2769,7 +2770,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate effective resistance
     ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
     ! through the model structure/
-    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
+    Reff = min(1d6, 1d0 / sum(conductance_mmolH2OMPam2s))
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
@@ -2833,7 +2834,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! drainage calculation. Assume minimum capacity due to wood.
     max_storage = max(min_storage,CanStorFrac*lai)
     ! caclulate inverse for efficient calculations below
-    max_storage_1 = max_storage**(-1d0)
+    max_storage_1 = 1d0 / max_storage
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (1d0 - through_fall)
     ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
@@ -3810,9 +3811,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! approximation of integral for soil resistance (s/m) and conversion to
     ! conductance (m/s)
-    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
-                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
-                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+!    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
+!                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+!                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+    soil_conductance = 1d0 / ( canopy_height/(canopy_decay*Kh_canht) &
+                             * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+                                exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) )
 
     return
 

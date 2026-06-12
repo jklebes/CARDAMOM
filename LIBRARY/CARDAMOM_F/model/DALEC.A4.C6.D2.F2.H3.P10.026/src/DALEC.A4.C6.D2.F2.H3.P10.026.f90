@@ -108,7 +108,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
+                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -343,6 +343,7 @@ module CARBON_MODEL_MOD
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (umolC/m2/s)
     light_limited_photosynthesis, & ! light limited photosynthesis (umolC/m2/s)
                 dark_respiration, & ! leaf dark respiration (umolC/m2/s)
+                   cold_shutdown, & ! Cold response shutdown of leaf metabolitc activity (0-1)
                               ci, & ! Internal CO2 concentration (ppm)
                         rb_mol_1, & ! Canopy boundary layer resistance (s/m2/molCO2)
                      o2_half_sat, & ! O2 at which photorespiration is 50 % of maximum
@@ -411,7 +412,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! evaporation and soil water balance (4 layers).
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     ! Version 1.0: 25/12/2023
@@ -423,7 +424,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -477,7 +478,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                        ,Cstem,Crootcr,stem_residue   &
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots         &
-                       ,avg_foliage_turnover
+                       ,avg_foliage_turnover         &
+                       ,ncce_crit_foliar             
     integer, dimension(nodays) :: pool_hak
     integer :: n, harvest_management
 
@@ -691,7 +693,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
         ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = daylength_seconds ** (-1d0)
+        daylength_seconds_1 = 1d0 / daylength_seconds
 
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
@@ -721,11 +723,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         call initialise_ncce(mean_days_per_step,ncce_lag_step,ncce_lag_days)
 
         ! Initialise the leaf cohort age structure
-        ! pars(45) = r_opp, pars(46) = leaf_age_ref_days,
-        ! pars(47) = k_N_decline, pars(49) = mean_leaf_doy, pars(50) = sigma_leaf_doy
+        ! pars(15) = r_opp, pars(45) = leaf_age_ref_days,
+        ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
-                                pars(45),pars(46), &
-                                pars(47),pars(49),pars(50))
+                                pars(15),pars(45), &
+                                pars(46),pars(48),pars(49))
 
     else ! deltat_1 allocated?
 
@@ -749,8 +751,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! Re-initialise leaf cohort age structure
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
-                                pars(45),pars(46), &
-                                pars(47),pars(49),pars(50))
+                                pars(15),pars(45), &
+                                pars(46),pars(48),pars(49))
 
     endif ! deltat_1 allocated
 
@@ -759,14 +761,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     !! Parameter values for deforestation variables
     !! Scenario 1
@@ -1115,17 +1117,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Combine the fixed fraction assumption for maintenance of
            ! fine root and wood with the maintenance respiration associated with leaves
            FLUXES(n,3) = FLUXES(n,3) + FLUXES(n,16)
+           ! Estimate cold shutdown effect
+           cold_shutdown = ((leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef))           
        else
            ! assume zero fluxes
            FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0 ; FLUXES(n,16) = 0d0
            ! Autotrophic respiration will continue to be assumed
            ! to include the explicitly calculated leaf maintenance respiration
-           FLUXES(n,3) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)
+           cold_shutdown = (leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef)
+           FLUXES(n,3) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT,cold_shutdown)
            ! Determine the daily photosynthetic C return and convert to a per gC leaf basis
            ! i.e. GPP(dayl)-leaf Rm(24hrs)s
            ! NOTE it is assumed that the DIAGS is reset to zero
            if (POOLS(n,2) > 0d0) DIAGS(n,22) = (FLUXES(n,1) - FLUXES(n,3)) / POOLS(n,2)
        endif
+
 
        ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
        ! Positive LWPs can be estimated given very small gs and cold temperatures.
@@ -1157,13 +1163,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Accumulate this time steps labile C (gC.m-2.day-1)
        available_labile = POOLS(n,1) + ((FLUXES(n,5)-FLUXES(n,9)) * days_per_step)
+       ! Determine the current daily minimum C return for a leaf cohort
+       ncce_crit_foliar = pars(15) / pars(45)
        ! Do plant allocation
        call plant_allocation(nopools,days_per_step, &
                              pars(17),                              & ! LCA
                              pars(3),pars(4),pars(38),              & ! potential growth rates
                              pars(34),pars(35),pars(36),pars(37),   & ! temperature limitations
                              pars(39),pars(40),pars(41),pars(42),   & ! water limitations
-                             pars(33),pars(15),                     & ! labile:biomass limitations
+                             pars(33),ncce_crit_foliar,             & ! labile:biomass limitations
                              available_labile,sum(POOLS(n,2:4)),    & ! C pools
                              POOLS(n,2),                            & !
                              FLUXES(n,4),FLUXES(n,6),FLUXES(n,7),   & ! tissue specific allocated C
@@ -1177,6 +1185,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Do plant natural turnovers
        call plant_natural_turnover(nodays, n, days_per_step,              & ! time related
+                                   available_labile,                      & ! 
                                    sum(POOLS(n,2:4)), POOLS(n,2),         & ! C pools
                                    POOLS(n,4), POOLS(n,3),                & !
                                    pars(17), DIAGS(:,22),                 & ! LCA / foliar net carbon export
@@ -1195,10 +1204,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! The objective is to avoid large losses directly after large inputs
        ! and large growths directly after large losses
        ! NOTE: this intentionally excluded losses driven by disturbance
-       FLUXES(n,4)  = max(0d0,FLUXES(n,4)  - last_leaf_loss) ! Growth
-       FLUXES(n,10) = max(0d0,FLUXES(n,10) - last_leaf_grow) ! Loss
+       !FLUXES(n,4)  = max(0d0,FLUXES(n,4)  - last_leaf_loss) ! Growth
+       !FLUXES(n,10) = max(0d0,FLUXES(n,10) - last_leaf_grow) ! Loss
        ! Store canopy growth and loss information for the next time step
-       last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4)
+       !last_leaf_loss = FLUXES(n,10) ; last_leaf_grow = FLUXES(n,4)
 
        !
        ! Add new / update foliage cohorts
@@ -1209,14 +1218,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Birth new cohort
            call create_cohort(FLUXES(n,4)*one_Rg_fraction*days_per_step, & ! Allocation that makes it to leaves
                               FLUXES(n,4)*days_per_step, &                 ! Total allocation costs
-                              pars(45), pars(46))
+                              pars(15), pars(45))
            days_since_last_cohort = 0d0
        else
            ! Inter-birth step: add allocation to current cohort
            if (FLUXES(n,4) > vsmall) then
                call add_foliage_to_cohort(FLUXES(n,4)*one_Rg_fraction*days_per_step, & ! Allocation that makes it to leaves
                                           FLUXES(n,4)*days_per_step, &                 ! Total allocation costs
-                                          pars(45), pars(46))
+                                          pars(15), pars(45))
            end if
        end if
 
@@ -1225,12 +1234,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        call update_and_shed_cohorts(days_per_step, FLUXES(n,1), POOLS(n,2), &
-                                    pars(46), pars(47), pars(48), pars(17), &
-                                    pars(45), FLUXES(n,10), cohort_litter_flux, &
+                                    pars(45), pars(46), pars(47), pars(17), &
+                                    pars(15), FLUXES(n,10), cohort_litter_flux, &
                                     resorb_flux, env_litter_out)
 
        ! cohort_litter_flux contains both environmental and economic litter.
-       ! Replaces FLUXES(n,10) directly — environmental loss has been explicitly
+       ! Replaces FLUXES(n,10) directly â€” environmental loss has been explicitly
        ! applied to specific cohorts inside update_and_shed_cohorts.
        FLUXES(n,10) = cohort_litter_flux
        ! Store diagnostic: resorption from economic shed cohorts [gC m-2 d-1]
@@ -1279,8 +1288,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! The standard labile balance uses POOLS(n,1) as base; resorb_flux augments
        ! the result additively via the pre-set POOLS(n+1,1). We therefore add the
        ! standard fluxes ON TOP of the resorption-augmented base.
-       POOLS(n+1,1) = POOLS(n+1,1) + (FLUXES(n,5)+FLUXES(n,52)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)- &
-                                      FLUXES(n,9)-FLUXES(n,8))*days_per_step
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)+FLUXES(n,52)-FLUXES(n,4)-FLUXES(n,6)-FLUXES(n,7)- &
+                                    FLUXES(n,9)-FLUXES(n,8))*days_per_step
+
        POOLS(n+1,1) = max(0d0,POOLS(n+1,1))
        ! foliar pool
        POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10))*days_per_step
@@ -1491,7 +1501,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Declare local variables
     double precision :: b, c, Jmax, PAR_m2, airt_adj, JVratio, RLVratio, &
-                        leafT_freeze, dT_Vc_minT
+                        leafT_freeze, dT_Vc_minT, cold_shutdown
 
     ! Calculate multiple use variables
     leafT_freeze = leafT + freeze
@@ -1501,6 +1511,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Metabolic limited photosynthesis - leaf to canopy scale
     !
 
+    ! Cold shutdown developed from Eddy covariance analysis at Boreal Forest sites by Tim Green
+    cold_shutdown = dT_Vc_minT / (dT_Vc_minT + Vc_coef)
     ! Exploration of the scaling challenges between day time mean and
     ! instantaneous Vc suggest that this arrangement provides high quality
     ! fit (R2 > 0.97), estimated as leafT = meant+maxt. Used in calculation of
@@ -1510,7 +1522,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine Vcmax at current temperature (umolC/m2/s). Included is a scaling
     ! factor from 'top leaf' to the effective canopy.
     ! Cold shutdown developed from Eddy covariance analysis at Boreal forest sites by Tim Green
-    airt_adj = (dT_Vc_minT / (dT_Vc_minT + Vc_coef)) &
+    airt_adj = cold_shutdown &
              * modified_arrhenious(298.15d0,Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT_freeze)
     ! canopy_NUE_rel scales Vcmax_ref by the Cf-weighted mean relative foliar N.
     ! As leaves age, NUE_rel declines exponentially (exp(-k_N_decline * age_months)),
@@ -1526,7 +1538,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate leaf maintenance respiration (umolC/m2leaf/s) following Heskel et al., (2016).
     ! There could / should be an assumption of leaf->canopy scaling, this should be a function of the leaf area and
     ! mean light vertical profile. Possible based on cosine solar zenith angle for the longest day?
-    dark_respiration = (lai * Rm_heskel_polynomial(Rm_leaf_const,leafT))
+    dark_respiration = (lai * Rm_heskel_polynomial(Rm_leaf_const,leafT,cold_shutdown))
     !dark_respiration = (leaf_canopy_light_scaling * Rm_heskel_polynomial(Rm_leaf_const,leafT))
 
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
@@ -1587,8 +1599,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-                leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+                leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1626,7 +1638,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited.
-    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
     ! and
     ! von Craemmer (2013), Steady State Photosynthesis Modelling, Plant Cell and Environment, 36, 1613-1630
 
@@ -1636,7 +1648,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! diffusion is 1.646259 (Jones appendix 2).i.e. gcH2O*1.646259 = gcCO2
     !
     ! Combining in series the stomatal and boundary layer conductances (molCO2.m-2.s-1)
-    gc = ( (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1 ) ** (-1d0)
+    gc = 1d0 / ( 1d0/(gs*gs_H2Ommol_CO2mol) + rb_mol_1 )
 
     ! Create common variables for both calculations
     gc_co2 = gc * co2
@@ -2447,7 +2459,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
@@ -2543,12 +2555,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate soil absorption fraction
     soil_absorption = 1d0 - soil_albedo
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
-                                             - (exp(-K*lai/Vc)*soil_absorption))
+                                             - (S3*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
-                                    + (Vc*((Idown*soil_absorption) + (exp(-K*lai/Vc)*soil_absorption)))
+                                    + (Vc*((Idown*soil_absorption) + (S3*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
@@ -2628,11 +2641,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = ((2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling)**(-1d0) + &
-                              (stomatal_conductance_in / convert_ms1_mmol_1) ** (-1d0))
+    total_water_resistance = (1d0 / (2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling) + &
+                              convert_ms1_mmol_1 / stomatal_conductance_in)
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2678,7 +2691,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2743,11 +2756,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = soil_conductance**(-1d0) + gws ** (-1d0)
+    total_water_resistance = 1d0 / soil_conductance + 1d0 / gws
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note: unlike for the canopy, we neglect the *0.93 converting between conductance for heat and water,
     !       i.e. we assume that they are equal.
-    total_thermal_resistance = (soil_radiative_thermal_conductance + soil_conductance)**(-1d0)
+    total_thermal_resistance = 1d0 / (soil_radiative_thermal_conductance + soil_conductance)
     ! Calculate multi-use product of
     isothermal_net = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
 
@@ -2894,11 +2907,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -3020,7 +3033,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        end if ! root present in current layer?
     end do ! nos_root_layers
     ! Turn the output resistance into conductance
-    Rcond_layer = Rcond_layer**(-1d0)
+    Rcond_layer = 1d0 / Rcond_layer
 
     ! if freezing then assume soil surface is frozen, therefore no water flux
     if (meant < 1d0) then
@@ -3033,7 +3046,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate effective resistance
     ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
     ! through the model structure/
-    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
+    Reff = min(1d6, 1d0 / sum(conductance_mmolH2OMPam2s))
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
@@ -3097,7 +3110,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! drainage calculation. Assume minimum capacity due to wood.
     max_storage = max(min_storage,CanStorFrac*lai)
     ! caclulate inverse for efficient calculations below
-    max_storage_1 = max_storage**(-1d0)
+    max_storage_1 = 1d0 / max_storage
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (1d0 - through_fall)
     ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
@@ -4073,9 +4086,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! approximation of integral for soil resistance (s/m) and conversion to
     ! conductance (m/s)
-    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
-                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
-                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+!    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
+!                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+!                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+    soil_conductance = 1d0 / ( canopy_height/(canopy_decay*Kh_canht) &
+                             * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+                                exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) )
 
     return
 
@@ -4407,6 +4423,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine plant_natural_turnover(nodays,step,time,                       & ! time related
+                                    available_labile,                       & ! Available labile
                                     biomass, foliage, wood, root,           & ! C pools
                                     lca, ncce_gCgCday,                      & ! LCA / net canopy carbon export per gC leaf
                                     pot_foliar_fall_fraction,               & ! reference foliar fall rate for current NCCE and gradient
@@ -4423,6 +4440,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Arguments
        integer, intent(in) :: nodays, step
        double precision, intent(in) :: time, & ! number of days in current time step
+                           available_labile, & ! Available labile C in current time step
                                     biomass, & ! total live biomass in current time step (gC/m2)
                                     foliage, & ! foliage pool (gC/m2)
                                        wood, & ! wood pool (gC/m2)
@@ -4444,7 +4462,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Local variables
        logical :: ncce_positive
        integer :: i, interval
-       double precision :: tmp1,tmp2
+       double precision :: tmp1,tmp2,C_starvation_loss
 
        ! Reset
        foliage_litter = 0d0 ; root_litter = 0d0 ; wood_litter = 0d0
@@ -4455,6 +4473,18 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Quantify the impact of reducing LAI on GPP, less Rd(24)
        if (foliage > 0d0) then
+
+           ! If available labile is negative / zero we need to force a minmum amount of foliar loss
+           if (available_labile <= 0d0) then
+               ! Start by estimating the Rm per m2
+               C_starvation_loss = Rm_heskel_polynomial(Rm_leaf_const, leafT, cold_shutdown) * umol_to_gC * seconds_per_day
+               ! Convert to the Rm per gC
+               C_starvation_loss = C_starvation_loss / lca
+               ! Determine number of gC foliage to balance the labile shortfall
+               C_starvation_loss = (abs(available_labile) / C_starvation_loss) * days_per_step_1
+           else 
+               C_starvation_loss = 0d0
+           end if
 
            ! Estimate canopy mortality, a function of the net canopy carbon export (NCCE) and
            ! the gradient (trend over time) of the NCCE. These are:
@@ -4501,12 +4531,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            !! Determine most limiting factor on current and historical NCCE impacts
 
            ! Combine assuming maximum of the two factors
-           cmi = max(tmp1,tmp2)
+           cmi = (tmp1+tmp2)*0.5d0
 
            ! Calculate loss fraction
            foliage_litter = pot_foliar_fall_fraction * cmi
            ! Convert to gC/m2/day
            foliage_litter = foliage * (1d0-(1d0-foliage_litter)**time)/time
+           ! Check against the carbon starvation target
+           foliage_litter = max(C_starvation_loss,foliage_litter)
 
        end if ! foliage > 0
 
@@ -4589,7 +4621,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   double precision function linear_model_gradient(x,y,interval)
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 
@@ -4600,12 +4632,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(interval) :: x,y
 
     ! declare local variables
-    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+!    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+    double precision :: sum_x, sum_y, sumsq_x, sum_product_xy
+    integer :: j
 
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
+    ! single-pass accumulation loop replacing four separate sum() reductions
+!    ! calculate the sum of x
+!    sum_x = sum(x)
+!    ! calculate the sum of y
+!    sum_y = sum(y)
+    sum_x = 0d0 ; sum_y = 0d0 ; sumsq_x = 0d0 ; sum_product_xy = 0d0
+    do j = 1, interval
+       sum_x          = sum_x          + x(j)
+       sum_y          = sum_y          + y(j)
+       sumsq_x        = sumsq_x        + x(j)*x(j)
+       sum_product_xy = sum_product_xy + x(j)*y(j)
+    end do
     ! calculate the sum of squares of x
     !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
@@ -4614,9 +4656,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
     !&
     !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+!    ! Linear regression done as single line to reduce assignment requirements
+!    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+!                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sumsq_x)        - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
 !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
@@ -4712,7 +4756,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
-  double precision function Rm_heskel_polynomial(Rm_0C,air_temperature)
+  double precision function Rm_heskel_polynomial(Rm_0C,air_temperature,cold_shutdown)
 
     ! Calculate instantaneous temperature adjustment used in estimation of the
     ! maintenance respiration (umolC.m-2leaf.s-1) calculated based on modified
@@ -4721,7 +4765,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! arguments
     double precision, intent(in) :: air_temperature, & ! input temperature of metabolising tissue (oC)
-                                    Rm_0C              ! input maintenance respiration at 0C
+                                              Rm_0C, & ! input log(maintenance respiration at 0C)
+                                      cold_shutdown    ! Cold shutdown correction on maintenance respiration
 
     ! local variables
     double precision, parameter :: b = 0.1012d0, & ! log-linear response function of Rm
@@ -4729,7 +4774,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Calculate instantaneous temperature response per m2 of leaf area (umolC/m2leaf/s)
     ! NOTE: conversion from ln(R) -> R via exp(), conversion from umolC -> gC by *umol_to_gC, converseion from s to day
-    Rm_heskel_polynomial = exp(Rm_0C + b*air_temperature + c*air_temperature*air_temperature) !* umol_to_gC * seconds_per_day
+    Rm_heskel_polynomial = cold_shutdown * exp(Rm_0C + b*air_temperature + c*air_temperature*air_temperature) !* umol_to_gC * seconds_per_day
 
     ! explicit return command
     return
@@ -4873,7 +4918,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             !              + (start_doy - birth_doy_m) within-year offset
             days_elapsed = (N_years - y) * 365 + (start_doy - birth_doy_m)
             ! If the cohort's birth DOY is later in the year than start_doy,
-            ! it belongs to the previous year — add another year's worth of days.
+            ! it belongs to the previous year â€” add another year's worth of days.
             ! TLS: this will need to be checked
             if (days_elapsed < 0) days_elapsed = days_elapsed + 365
             age_d  = max(0, days_elapsed) ! assign precise age in days
@@ -5045,12 +5090,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! environmental loss (Pass 2b) and economic shedding (Pass 2c).
     !
     ! Pass structure:
-    !   Pass 1  — forward scan: age update, and update oldest cohort.
-    !   Pass 2a — insertion sort of oldest_idx by descending age_days.
-    !   Pass 2b — environmental loss: remove env_litter_gCm2 from oldest
+    !   Pass 1  â€” forward scan: age update, and update oldest cohort.
+    !   Pass 2a â€” insertion sort of oldest_idx by descending age_days.
+    !   Pass 2b â€” environmental loss: remove env_litter_gCm2 from oldest
     !             cohorts first. Partial removal supported; cohorts not killed
     !             unless Cf is fully exhausted.
-    !   Pass 2c — economic shedding: remaining living cohorts.
+    !   Pass 2c â€” economic shedding: remaining living cohorts.
     !
     ! Environmental loss field update rationale (Pass 2b):
     !   Cf           : reduced by delta_k (direct carbon removal).
@@ -5058,7 +5103,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !                  construction investment committed since birth; environmental
     !                  loss does not reverse this investment. With unchanged Cc
     !                  and smaller Cf, Pi_threshold represents a higher effective
-    !                  return requirement per unit remaining carbon — the correct
+    !                  return requirement per unit remaining carbon â€” the correct
     !                  economic interpretation.
     !   Cc           : UNCHANGED. Construction cost already spent; not reversed
     !                  by environmental loss.
@@ -5119,7 +5164,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                      remaining_env_loss, & ! running counter during Pass 2b
                                 delta_k, & ! carbon drawn from cohort k [gC m-2]
                         env_litter_flux    ! accumulated env litter [gC m-2 d-1]
-    ! Resorption from environmental loss — DISABLED, retained for future use.
+    ! Resorption from environmental loss DISABLED, retained for future use.
     ! Uncomment resorb_env_k lines in Pass 2b to reactivate.
     double precision :: resorb_env_k, & ! env resorption per cohort [gC m-2]
                         litter_env_k    ! env litter per cohort [gC m-2]
@@ -5164,11 +5209,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     remaining_env_loss  = env_litter_gCm2
 
     ! -------------------------------------------------------------------------
-    ! Precompute Rm per unit LAI [gC m-2leaf d-1] once — same for all cohorts
+    ! Precompute Rm per unit LAI [gC m-2leaf d-1] once â€” same for all cohorts
     ! (temperature and Rm_leaf_const do not vary across cohorts).
     ! Rm_per_m2 = Rm_heskel_polynomial(Rm_leaf_const, leafT) * umol_to_gC * seconds_per_day
     ! -------------------------------------------------------------------------
-    Rm_per_m2 = (Rm_heskel_polynomial(Rm_leaf_const, leafT) * umol_to_gC * seconds_per_day)
+    Rm_per_m2 = (Rm_heskel_polynomial(Rm_leaf_const, leafT, cold_shutdown) * umol_to_gC * seconds_per_day)
 
     ! -------------------------------------------------------------------------
     ! Precompute GPP distribution denominator:
@@ -5187,7 +5232,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     processed      = .false.
 
     ! =========================================================================
-    ! PASS 1 — Profit update + oldest-k_oldest identification
+    ! PASS 1 â€” Profit update + oldest-k_oldest identification
     !
     ! Incremental minimum tracking:
     !   Phase A (n_oldest < k_oldest): accept every living cohort.
@@ -5205,7 +5250,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! --- Oldest-set update ---
         if (n_oldest < k_oldest) then
-            ! Phase A: set not full — insert unconditionally
+            ! Phase A: set not full â€” insert unconditionally
             n_oldest = n_oldest + 1
             oldest_idx(n_oldest) = k
             oldest_age(n_oldest) = leaf_cohorts(k)%age_days
@@ -5220,7 +5265,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 end if
             end if
         else
-            ! Phase B: set full — evict youngest if current cohort is older
+            ! Phase B: set full â€” evict youngest if current cohort is older
             if (leaf_cohorts(k)%age_days > min_age_in_set) then
                 oldest_idx(min_pos_in_set) = k
                 oldest_age(min_pos_in_set) = leaf_cohorts(k)%age_days
@@ -5235,9 +5280,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Rm_k  : cohort maintenance respiration via Heskel polynomial .
         ! NCCE_k = (GPP_k - Rm_k)  [gC m-2 d-1]
         !
-        ! Guard A: Cf(k) <= vsmall — cohort nearly exhausted by env loss;
+        ! Guard A: Cf(k) <= vsmall â€” cohort nearly exhausted by env loss;
         !          force shedding by setting ncce_k to large negative value.
-        ! Guard B: gpp_norm <= vsmall — no canopy NUE or no foliar pool;
+        ! Guard B: gpp_norm <= vsmall â€” no canopy NUE or no foliar pool;
         !          GPP_k = 0, NCCE_k driven entirely by -Rm_k / Cf(k).
         if (leaf_cohorts(k)%Cf > vsmall) then
           ! Determine approximate cohort share of total GPP
@@ -5266,7 +5311,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Exponential decay: NUE_rel = exp(-k_N_decline * age_months)
         ! NUE_rel declines from 1 at birth towards 0 for very old cohorts,
         ! reducing their effective NCCE return proportionally.
-        ! ΔN_rel(t) = NUE_rel(t+1) − N_rel(t) = N_rel(t) · [exp(−k) − 1]
+        ! Î”N_rel(t) = NUE_rel(t+1) âˆ’ N_rel(t) = N_rel(t) Â· [exp(âˆ’k) âˆ’ 1]
         leaf_cohorts(k)%NUE_rel = exp(-k_N_decline * dble(leaf_cohorts(k)%age_months))
         leaf_cohorts(k)%NUE_rel = max(0d0, min(1d0, leaf_cohorts(k)%NUE_rel))
         ! --- Cumulative NCCE accumulation ---
@@ -5277,11 +5322,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end do ! k = 1, max_leaf_cohorts
 
     ! =========================================================================
-    ! PASS 2 — Environmental loss then economic shedding, oldest-first
+    ! PASS 2 â€” Environmental loss then economic shedding, oldest-first
     !
     ! Step 2a: insertion sort of oldest_idx by descending age_days.
-    ! Step 2b: environmental loss — remove env_litter_gCm2 from oldest cohorts.
-    ! Step 2c: economic shedding — remaining living cohorts.
+    ! Step 2b: environmental loss â€” remove env_litter_gCm2 from oldest cohorts.
+    ! Step 2c: economic shedding â€” remaining living cohorts.
     ! =========================================================================
 
     ! --- Step 2a: insertion sort of oldest_idx by descending age_days ---
@@ -5305,7 +5350,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         oldest_idx(i+1) = tmp_idx
     end do ! j = 2, n_oldest
 
-    ! --- Step 2b: environmental leaf loss — oldest cohorts first ---
+    ! --- Step 2b: environmental leaf loss â€” oldest cohorts first ---
     !
     ! Remove a total of env_litter_gCm2 [gC m-2] from the canopy, drawing
     ! from cohorts in oldest-first order.  Partial removal is supported:
@@ -5314,11 +5359,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Field update for each partial removal of delta_k from cohort k:
     !   Cf           : Cf -= delta_k
     !   Pi_threshold : recomputed from UNCHANGED Cc (Cc * r_opp / leaf_age_ref).
-    !                  Unchanged Cc + smaller Cf → higher effective requirement
-    !                  per remaining carbon unit — correct economic interpretation.
-    !   Cc           : UNCHANGED — construction cost already spent.
-    !   cum_profit   : UNCHANGED — historical earnings not retroactively altered.
-    !   NUE_rel, age_days, age_months : UNCHANGED — tissue properties, not mass.
+    !                  Unchanged Cc + smaller Cf â†’ higher effective requirement
+    !                  per remaining carbon unit â€” correct economic interpretation.
+    !   Cc           : UNCHANGED â€” construction cost already spent.
+    !   cum_profit   : UNCHANGED â€” historical earnings not retroactively altered.
+    !   NUE_rel, age_days, age_months : UNCHANGED â€” tissue properties, not mass.
     !
     ! Resorption from environmental loss is DISABLED at this time.
     ! The resorb_env_k and litter_env_k lines are retained as comments
@@ -5340,10 +5385,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! --- Environmental loss carbon partitioning ---
             ! RESORPTION DISABLED: all delta_k goes to litter.
             ! To reactivate resorption from environmental loss, uncomment the
-            ! following two lines and replace delta_k with litter_env_k below.
-            ! resorb_env_k   = f_resorb * delta_k                 ! RESORPTION DISABLED
-            ! litter_env_k   = (1d0 - f_resorb) * delta_k         ! RESORPTION DISABLED
-            ! resorb_flux    = resorb_flux + resorb_env_k * dt_1  ! RESORPTION DISABLED
+            ! following four lines and comment out the fifth.
+            !resorb_env_k   = f_resorb * delta_k                     ! RESORPTION DISABLED
+            !litter_env_k   = (1d0 - f_resorb) * delta_k             ! RESORPTION DISABLED
+            !resorb_flux    = resorb_flux + resorb_env_k * dt_1      ! RESORPTION DISABLED
+            !env_litter_flux = env_litter_flux + litter_env_k * dt_1 ! RESORPTION DISABLED
             env_litter_flux = env_litter_flux + delta_k * dt_1
 
             ! --- Update cohort fields ---
@@ -5395,10 +5441,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                 delta_k = min(leaf_cohorts(k)%Cf, remaining_env_loss)
 
                 ! RESORPTION DISABLED (see Sub-loop 1 comments above)
-                ! resorb_env_k   = f_resorb * delta_k                 ! RESORPTION DISABLED
-                ! litter_env_k   = (1d0 - f_resorb) * delta_k         ! RESORPTION DISABLED
-                ! resorb_flux    = resorb_flux + resorb_env_k * dt_1  ! RESORPTION DISABLED
-                env_litter_flux    = env_litter_flux + delta_k * dt_1
+                !resorb_env_k   = f_resorb * delta_k                     ! RESORPTION DISABLED
+                !litter_env_k   = (1d0 - f_resorb) * delta_k             ! RESORPTION DISABLED
+                !resorb_flux    = resorb_flux + resorb_env_k * dt_1      ! RESORPTION DISABLED
+                !env_litter_flux = env_litter_flux + litter_env_k * dt_1 ! RESORPTION DISABLED
+                env_litter_flux = env_litter_flux + delta_k * dt_1
                 leaf_cohorts(k)%Cf = leaf_cohorts(k)%Cf - delta_k
                 leaf_cohorts(k)%Pi_threshold = leaf_cohorts(k)%Cc * r_opp / max(leaf_age_ref, 1d0)
                 remaining_env_loss = remaining_env_loss - delta_k
@@ -5467,7 +5514,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !   (a) Floating-point drift: the residual discrepancy after all explicit
     !       carbon flows have been applied. This arises from accumulated
     !       rounding over the sum of up to max_leaf_cohorts cohort Cf values.
-    !       The discrepancy is a few ULPs — proportional scaling distributes
+    !       The discrepancy is a few ULPs â€” proportional scaling distributes
     !       it without meaningfully corrupting any cohort's economic fields.
     !
     !   (b) Disturbance losses (fire, deforestation): POOLS(n+1,2) is reduced
@@ -5478,7 +5525,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! A symmetric proportional scale factor (scale = target_Cf / sum_cf) is
     ! applied in both cases:
-    !   scale > 1 : net gain  (drift correction only — tiny)
+    !   scale > 1 : net gain  (drift correction only â€” tiny)
     !   scale < 1 : net loss  (disturbance or drift correction)
     !   scale = 1 : no action (abs(delta_Cf) <= vsmall, return early)
     !
@@ -5586,7 +5633,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         canopy_profit_gCm2 = sum_PrCf / sum_Cf
     else
         ! No living cohorts: default to nitrogen-replete.
-        ! GPP will be zero anyway because lai = 0 → leaf_canopy_light_scaling = 0.
+        ! GPP will be zero anyway because lai = 0 â†’ leaf_canopy_light_scaling = 0.
         canopy_NUE_rel = 1d0 ; canopy_age_days = 0d0 ; canopy_profit_gCm2 = 0d0
     end if
 

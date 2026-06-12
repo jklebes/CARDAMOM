@@ -46,8 +46,8 @@ module model_likelihood_module
 
   ! declare needed types
   type EDCDIAGNOSTICS
-    integer :: nedc = 100    ! number of edcs being assessed
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks, dim should equal nedc
+    integer :: nedc = 150    ! number of edcs being assessed
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks, dim should equal nedc
     integer :: EDC
     integer :: DIAG
   end type
@@ -653,7 +653,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return
@@ -1173,10 +1173,12 @@ module model_likelihood_module
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
         ! not after the management activities had reset DS to -1. If so this code will not work.
+        if (allocated(tmp1)) deallocate(tmp1)
         allocate(tmp1(DATAin%nodays)) ; tmp1 = 0d0 ; where(DATAin%M_DIAGS(1:DATAin%nodays,13) >= 0d0) tmp1 = 1d0
         mod = sum(DATAin%M_FLUXES(:,21)*tmp1) / sum(DATAin%M_FLUXES(:,1)*tmp1)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(8)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(8),DATAin%otherpriorunc(8),dummy_lag,dummy_scaling,mod))
+        deallocate(tmp1)
     end if
 
     return

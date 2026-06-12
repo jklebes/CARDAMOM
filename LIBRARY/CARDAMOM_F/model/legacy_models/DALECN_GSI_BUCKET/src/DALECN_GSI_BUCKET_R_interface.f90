@@ -50,7 +50,7 @@ subroutine rdalecngsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat &
   ! declare input variables
   integer, intent(in) :: pathlength
   character(pathlength), intent(in) :: exepath
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,pft            & ! plant functional type

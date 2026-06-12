@@ -57,7 +57,7 @@ subroutine rdalec26(output_dim,aNPP_dim,MTT_dim,SS_dim,met,pars &
   ! declare input variables
   integer, intent(in) :: pathlength
   character(pathlength), intent(in) :: exepath
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension
                         ,MTT_dim        &

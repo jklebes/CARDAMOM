@@ -53,7 +53,7 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -98,7 +98,7 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
@@ -189,6 +189,7 @@ subroutine rdalec1005(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

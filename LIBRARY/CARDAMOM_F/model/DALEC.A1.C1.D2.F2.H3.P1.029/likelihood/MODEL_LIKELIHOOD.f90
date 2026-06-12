@@ -49,7 +49,7 @@ module model_likelihood_module
   type EDCDIAGNOSTICS
     integer :: EDC
     integer :: DIAG
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks
     integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
@@ -574,7 +574,7 @@ module model_likelihood_module
     torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
+    EDCD%nedc = 150
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -757,17 +757,17 @@ module model_likelihood_module
 !       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
-       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
-                       *deltat((steps_per_year+1):(steps_per_year*2)))
+       !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
+                       !*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
     ! Specific calculation of transpiration extraction from the soil surface layer
     fl = 41 ! transpiration multiplied by ...
     fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
     FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
     FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
-    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
-                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
-                    *deltat((steps_per_year+1):(steps_per_year*2)))
+    !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                    !*M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+                    !*deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -1013,7 +1013,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return

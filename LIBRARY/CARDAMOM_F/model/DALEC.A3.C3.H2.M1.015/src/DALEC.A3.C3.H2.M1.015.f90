@@ -248,7 +248,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 10d0,         & ! Root resistivity (MPa s g mmol−1 H2O), default 25, crops 10
+                        root_resist = 10d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O), default 25, crops 10
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -523,7 +523,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    tmin_v, & ! min temperature for vernalisation
                                    tmax_v, & ! max temperature for vernalisation
                                    topt_v, & ! optimim temperature for vernalisation
+                                  doptmin, & ! difference between optimum and minimum cardinal temperatures
+                                  dmaxmin, & ! difference between maximum and minimum cardinal temperatures
+                                doptmin_v, & ! difference between optimum and minimum vernalisation temperatures
+                                dmaxmin_v, & ! difference between maximum and minimum vernalisation temperatures
                                       VDh, & ! effective vernalisation days when plants are 50 % vernalised
+                                     VDh5, & ! VDh raised to the 5th power, precomputed
                                        VD, & ! count of vernalisation days
                                  RDRSHMAX, & ! maximum rate of self shading turnover (frac/day)
                                      PHCR, & ! critical value of photoperiod for development
@@ -617,7 +622,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars     & ! number of paremeters in vector
+                          ,nopars     & ! number of parameters in vector
                           ,nomet      & ! number of meteorological fields
                           ,nofluxes   & ! number of model fluxes
                           ,nopools    & ! number of model pools
@@ -807,6 +812,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     turnover_rate_stem                = pars(6)  ! turnover rate of stem (day)
     RDRSHMAX                          = pars(7)  ! maximum rate of foliar turnover due to self shading (day)
     VDh                               = pars(8)  ! effective vernalisation days when plants are 50 % vernalised
+    VDh5                              = VDh**5   ! precomputed 5th power of VDh
     mineralisation_rate_litter        = pars(9)  ! mineralisation rate litter (day)
     mineralisation_rate_soilOrgMatter = pars(10) ! mineralisation rate som (day)
     sow_day                           = nint(mod(pars(12),365.25d0)) ! sow day (doy)
@@ -820,6 +826,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     tmin_v                            = pars(29)-273.15d0 ! min temperature for vernalisation
     tmax_v                            = pars(30)-273.15d0 ! max temperature for vernalisation
     topt_v                            = pars(31)-273.15d0 ! optimim temperature for vernalisation
+    doptmin   = topt   - tmin     ! difference between optimum and minimum cardinal temperatures
+    dmaxmin   = tmax   - tmin     ! difference between maximum and minimum cardinal temperatures
+    doptmin_v = topt_v - tmin_v   ! difference between optimum and minimum vernalisation temperatures
+    dmaxmin_v = tmax_v - tmin_v   ! difference between maximum and minimum vernalisation temperatures
     PHCR                              = pars(32) ! critical value of photoperiod for development
     PHSC                              = pars(33) ! photoperiod sensitivity
     turnover_rate_labile              = pars(34) ! turnover rate labile C (day)
@@ -963,7 +973,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       leafT = (maxt*0.75d0) + (mint*0.25d0)     ! initial canopy temperature (oC)
       swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
       co2 = met(5,n)   ! CO2 (ppm)
-      doy = ceiling(met(6,n)-(deltat(n)*0.5d0))   ! Day of year
+      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+      doy = ceiling(met(6,n)-(days_per_step*0.5d0))   ! Day of year
       rainfall = max(0d0,met(7,n)) ! rainfall (kgH2O/m2/s)
       meant = met(14,n)   ! mean air temperature (oC)
       if (mint > 0d0) then
@@ -987,8 +998,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! extract timing related values
       dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
       dayl_seconds_1 = dayl_seconds**(-1d0)
-      seconds_per_step = seconds_per_day * deltat(n)
-      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+      seconds_per_step = seconds_per_day * days_per_step
 
       ! DS < 0.15 corresponds to the growth stage at beginning of the UK recommended period of
       ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
@@ -1034,7 +1044,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       if (mint < 0d0 .and. maxt > 0d0) then
           ! Also melt some of the snow based on airt_zero_fraction
           ! default assumption is that snow is melting at 10 % per day hour above freezing
-          snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
+          snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * days_per_step)
           snow_storage = snow_storage - snow_melt
           ! adjust to rate for later addition to rainfall
           snow_melt = snow_melt / seconds_per_step
@@ -1042,7 +1052,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           snow_melt = 0d0
       else if (mint > 0d0 .and. snow_storage > 0d0) then
           ! otherwise we assume snow is melting at 10 % per day above hour
-          snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
+          snow_melt = min(snow_storage, snow_storage * 0.1d0 * days_per_step)
           snow_storage = snow_storage - snow_melt
           ! adjust to rate for later addition to rainfall
           snow_melt = snow_melt / seconds_per_step
@@ -1157,13 +1167,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
       ! determine development stage (DS)
       ! Note that DS must be updated here and not after management_dates. Otherwise,
       ! there will be problems using DS_time for calculating yield:GPP calculations in MODEL_LIKELIHOOD.f90
-      call development_stage(deltat(n)) ; DIAGS(n,13) = DS
+      call development_stage(days_per_step) ; DIAGS(n,13) = DS
       ! determine the carbon partitioning based on development stage
       call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops
       call calc_pools_crops(DS_LRRT,LRRT)
       ! conduct management updates at the end of the day
-      call management_dates(stock_seed_labile,deltat(n))
+      call management_dates(stock_seed_labile,days_per_step)
 
       ! temprate (i.e. temperature modified rate of metabolic activity)
       FLUXES(n,2) = resp_rate
@@ -1444,8 +1454,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-                leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+                leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1480,7 +1490,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. For details
-    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
 
     ! Daily canopy conductance dertmined through combination of aerodynamic and
     ! stomatal conductances. Both conductances are scaled to canopy aggregate.
@@ -1490,7 +1500,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! Combining in series the stomatal and boundary layer conductances
     ! to make canopy resistence (s/m2/molCO2)
-    rc = (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1
+    rc = 1d0 / (gs*gs_H2Ommol_CO2mol) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
@@ -2107,7 +2117,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: delta_iso
 
     ! Calculate the declination
-    declination = calculate_declination(doy)
+!    declination = calculate_declination(doy)
     ! Calculate cosine zenith angle
     call calculate_cosine_solar_zenith_angle
     ! Estimate shortwave radiation balance
@@ -2146,7 +2156,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
@@ -2242,12 +2252,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate soil absorption fraction
     soil_absorption = 1d0 - soil_albedo
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
-                                             - (exp(-K*lai/Vc)*soil_absorption))
+                                             - (S3*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
-                                    + (Vc*((Idown*soil_absorption) + (exp(-K*lai/Vc)*soil_absorption)))
+                                    + (Vc*((Idown*soil_absorption) + (S3*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
@@ -2425,11 +2436,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -3595,9 +3606,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! approximation of integral for soil resistance (s/m) and conversion to
     ! conductance (m/s)
-    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
-                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
-                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+!    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
+!                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+!                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+    soil_conductance = 1d0 / ( canopy_height/(canopy_decay*Kh_canht) &
+                             * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+                                exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) )
 
     return
 
@@ -3985,19 +3999,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision :: days_in_step
 
     ! local variables..
-    double precision ::  doptmin, & ! Difference between optimum and minimum temperature
-                         dmaxmin, & ! Difference between maximum and minimum temperature
-                          dttmin, & ! Difference between daiy average and minimum temperatures
-                       doptmin_v, & ! Difference between optimum and minimum vernalization temperatures
-                       dmaxmin_v, & ! Difference between maximum and minimum vernalization temperatures
-                       dttmin_v     ! Difference between daily average and minimum vernalization temperatures
+    double precision ::  dttmin,  & ! Difference between daily average and minimum temperatures
+                         dttmin_v   ! Difference between daily average and minimum vernalization temperatures
 
-    doptmin   = topt   - tmin   ! difference between optimal and minimum cardinal temperatures
-    dmaxmin   = tmax   - tmin   ! difference between maximum and minimum cardinal temperatures
-    dttmin    = meant - tmin    ! difference between daily average and minimum cardinal temperatures
-    doptmin_v = topt_v - tmin_v ! same as above,
-    dmaxmin_v = tmax_v - tmin_v !       but for vernalization
-    dttmin_v  = meant - tmin_v  ! cardinal temperatures
+    dttmin   = meant - tmin    ! difference between daily average and minimum cardinal temperatures
+    dttmin_v = meant - tmin_v  ! difference between daily average and minimum vernalization temperatures
 
     ! Calculation of developmental function values: vernalization (fV),
     ! temperature (fT) and
@@ -4363,7 +4369,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   double precision function linear_model_gradient(x,y,interval)
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 
@@ -4375,11 +4381,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! declare local variables
     double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
+    integer :: j
 
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
+    ! single-pass accumulation loop replacing four separate sum() reductions
+!    ! calculate the sum of x
+!    sum_x = sum(x)
+!    ! calculate the sum of y
+!    sum_y = sum(y)
+    sum_x = 0d0 ; sum_y = 0d0 ; sumsq_x = 0d0 ; sum_product_xy = 0d0
+    do j = 1, interval
+       sum_x          = sum_x          + x(j)
+       sum_y          = sum_y          + y(j)
+       sumsq_x        = sumsq_x        + x(j)*x(j)
+       sum_product_xy = sum_product_xy + x(j)*y(j)
+    end do
     ! calculate the sum of squares of x
     !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
@@ -4387,9 +4402,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate the gradient
     !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
     !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+!    ! Linear regression done as single line to reduce assignment requirements
+!    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+!                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sumsq_x)        - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
 !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
@@ -4440,7 +4457,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   ,days_in_step
 
     ! local variables..
-    double precision :: a , dnr , fvn , nmr
+    double precision :: a , dnr , fvn , nmr , VD5
 
     a   = log( 2.d0 ) / ( log( ( dmaxmin_v ) / doptmin_v ) )
     nmr = 2.d0 * ( ( dttmin_v ) ** a ) * ( doptmin_v ** a ) - ( ( dttmin_v ) ** (2.d0 * a ) )
@@ -4448,9 +4465,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     fvn = nmr / dnr
 
     VD = VD + (fvn*days_in_step)
+    VD5 = VD ** 5
 
     ! final output value..
-    vernalization = max( 0d0 , min( 1d0 , ( VD ** 5 ) / ( ( VDh ** 5 ) + (VD ** 5 ) ) ) )
+    vernalization = max( 0d0 , min( 1d0 , VD5 / ( VDh5 + VD5 ) ) )
 
   end function vernalization
   !

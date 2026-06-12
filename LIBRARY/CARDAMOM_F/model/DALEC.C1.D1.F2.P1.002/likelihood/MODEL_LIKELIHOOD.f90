@@ -48,7 +48,7 @@ module model_likelihood_module
   type EDCDIAGNOSTICS
     integer :: EDC
     integer :: DIAG
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks
     integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
@@ -374,7 +374,7 @@ module model_likelihood_module
     torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
+    EDCD%nedc = 150
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -566,26 +566,28 @@ module model_likelihood_module
 !       EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
 !   end if
 
-    ! Determine the mean and standard deviation of January LAIs 
-    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
-    jan_first_lai = M_DIAGS(1,1) ! First January LAI
-    ! Initially sum each January from each year
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
-    end do
-    ! Calculate the mean
-    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
-    ! Calculate the standard deviation now
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
-    end do
-    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
-    end if
+    if (DATAin%nos_years > 1) then
+        ! Determine the mean and standard deviation of January LAIs 
+        jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+        jan_first_lai = M_DIAGS(1,1) ! First January LAI
+        ! Initially sum each January from each year
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
+        end do
+        ! Calculate the mean
+        jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+        ! Calculate the standard deviation now
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
+        end do
+        jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+        if ((EDC2 == 1 .or. DIAG == 1) .and. &
+            abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(9) = 0
+        end if
+    end if ! nos_years > 1
 
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
@@ -817,7 +819,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return

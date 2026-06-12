@@ -104,14 +104,14 @@ public :: CARBON_MODEL     &
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA; C1; DALEC2) model.
-    ! The CARDBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
-    ! to simulate GPP. GPP is then partitied to autotrophic respiration and
+    ! The CARBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
+    ! to simulate GPP. GPP is then partitioned to autotrophic respiration and
     ! the live pools (foliage, labile, wood, fine roots).
     ! These live pools are subject to turnover to dead organic matter pools which are subsequently
     ! decomposed resulting in heterotrophic respiration
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
@@ -119,7 +119,7 @@ public :: CARBON_MODEL     &
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -310,14 +310,14 @@ public :: CARBON_MODEL     &
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     ! JFE added 4 May 2018 - define fire constants
     ! Update fire parameters derived from

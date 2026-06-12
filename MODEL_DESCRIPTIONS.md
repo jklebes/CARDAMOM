@@ -46,7 +46,7 @@ M = Managed Grassland / arable crops (Table 10)
 | 27 | DALEC_1005                     | DALEC_1005          | JPL-CARDAMOM DALEC 1005                             | Famiglietti et al., 2021     | Published   |
 | 28 | DALEC_1005a                    | DALEC_1005a         | As DALEC 1005 but with code error corrections       | Famiglietti et al., 2021     | Published   |
 | !29 | DALEC.A1.C1.D2.F2.H3.P1.029    | NA                  | As DALEC.4. with parameterisable minLWP             | D. T. Milodowski             | Published   |
-| !30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
+| 30 | DALEC.A3.C1.D2.F2.H2.P1.030    | NA                  | As DALEC.4. plus Sellers (1985) RTM                 | T. L. Smallman               | Unpublished |
 | 31 | DALEC.A4.C6.D2.F2.H2.P11.031   | NA                  | As DALEC.20. plus Sellers (1985) RTM, phenology changes | T. L. Smallman           | Unpublished |
 | 32 | DALEC.A1.C1.D2.F2.H6.P1.R5.032 | NA                  | As DALEC.24. but with 2 soil layers and soil dependent Rh | Orci-Fernandez         | Unpublished |
 | 33 | DALEC.A4.C6.D2.F2.H3.P12.033   | NA                  | As DALEC.31. with CGI / CMI style canopy phenology  | T. L. Smallman               | Unpublished |

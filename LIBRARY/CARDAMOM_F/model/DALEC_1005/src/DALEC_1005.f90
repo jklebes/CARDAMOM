@@ -94,8 +94,8 @@ contains
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA_BUCKET; 1005; DALEC2) model.
-    ! The CARDBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
-    ! to simulate GPP. GPP is then partitied to autotrophic respiration and
+    ! The CARBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
+    ! to simulate GPP. GPP is then partitioned to autotrophic respiration and
     ! the live pools (foliage, labile, wood, fine roots).
     ! These live pools are subject to turnover to dead organic matter pools which are subsequently
     ! decomposed resulting in heterotrophic respiration
@@ -107,7 +107,7 @@ contains
     !      CARDAMOM-FluxVal Version 1.0: a FLUXNET-based Validation System for CARDAMOM Carbon and Water Flux Estimates)
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
     !
     ! Modifications:
@@ -120,7 +120,7 @@ contains
     ! Declare input dimensions
     integer, intent(in) :: start    & ! Start time step of the current call
                           ,finish   & ! End time stem of the current call
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -142,7 +142,7 @@ contains
     double precision :: gpppars(12)   & ! ACM inputs (LAI+met)
                        ,constants(10) & ! parameters for ACM
              ,wf,wl,ff,fl,osf,osl,sf  & ! phenological controls
-             ,pi,doy,mean_precip,mean_airt
+             ,pi,doy,mean_precip,mean_airt,mean_precip_inv
 
     ! C pool specific combustion completeness and resilience factors
     double precision :: cf(6), rfac(6), burnt_area
@@ -352,14 +352,14 @@ contains
 
         ! now load the hardcoded forest management parameters into their scenario locations
 
-        ! Deforestation process functions in a sequenctial way.
+        ! Deforestation process functions in a sequential way.
         ! Thus, the pool_loss is first determined as a function of met(8,n) and
         ! for fine and coarse roots whether this felling is associated with a mechanical
         ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
         ! fine and coarse roots may subsequently undergo mortality from which they do not recover
         ! but allows for management activities such as grazing, mowing and coppice.
         ! The pool_loss is then partitioned between the material which is left within the system
-        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+        ! as a residue and thus directly placed within one of the dead organic matter pools.
 
         !! Parameter values for deforestation variables
         !! Scenario 1
@@ -493,6 +493,12 @@ contains
     ! Calculate site mean values
     mean_precip = sum(met(7,:)*86400d0) / dble(nodays)
     mean_airt = sum((met(3,:)+met(2,:))*0.5d0) / dble(nodays)
+    ! Guard: inverse mean precipitation set to zero if no precipitation present (prevents divide-by-zero at arid sites)
+    if (mean_precip > 0d0) then
+        mean_precip_inv = 1d0 / mean_precip
+    else
+        mean_precip_inv = 0d0
+    end if
 
     !
     ! Begin looping through each time step
@@ -521,7 +527,7 @@ contains
       ! See Bloom et al., (2020) doi: https://doi.org/10.5194/bg-17-6393-2020
       ! NOTE: this code contains and error in the following line but is maintained for consistency with the JPL model.
       ! A corrected version exists under DALEC_1005a
-      FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)-mean_airt))*(((met(7,n)*86400d0)/mean_precip-1d0)*pars(33)+1d0)
+      FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)-mean_airt))*(((met(7,n)*86400d0*mean_precip_inv)-1d0)*pars(33)+1d0)
       ! Autotrophic respiration (gC.m-2.day-1)
       FLUXES(n,3) = pars(2)*FLUXES(n,1)
       ! Leaf production rate (gC.m-2.day-1)

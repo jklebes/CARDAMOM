@@ -1,4 +1,4 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+﻿!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -98,7 +98,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
   ! precompute reciprocals to replace repeated divisions in averaging loops
   nodays_1       = 1d0 / dble(nodays)
   steps_per_yr_1 = 1d0 / dble(steps_per_year)
@@ -216,6 +216,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) * steps_per_yr_1
         end do

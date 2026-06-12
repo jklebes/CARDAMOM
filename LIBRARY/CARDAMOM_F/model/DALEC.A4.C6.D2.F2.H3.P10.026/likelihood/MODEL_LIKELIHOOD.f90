@@ -48,7 +48,7 @@ module model_likelihood_module
   type EDCDIAGNOSTICS
     integer :: EDC
     integer :: DIAG
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks
     integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
@@ -366,7 +366,7 @@ module model_likelihood_module
     DIAG = EDCD%DIAG
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
+    EDCD%nedc = 150
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -425,7 +425,7 @@ module model_likelihood_module
 
     ! The daily repayment ratio cannot be greater than the total construction cost
     ! i.e. p45 * p46 must be less than 1
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(45)*pars(46)) >= 1d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)*pars(45)) >= 1d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     endif    
 
@@ -447,7 +447,7 @@ module model_likelihood_module
 
     ! The relative NUE should be significantly declined by the time we reach the expected end of of life,
     ! we enforce an minimum 20 % reduction
-    if ((EDC1 == 1 .or. DIAG == 1) .and. exp(-pars(47) * (pars(46)/30d0)) > 0.80d0) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. exp(-pars(46) * (pars(45)/30d0)) > 0.80d0) then
         EDC1 = 0d0 ; EDCD%PASSFAIL(13) = 0
     endif
 
@@ -533,17 +533,17 @@ module model_likelihood_module
 !       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
-       FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
-                       *deltat((steps_per_year+1):(steps_per_year*2)))
+       !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
+                       !*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
     ! Specific calculation of transpiration extraction from the soil surface layer
     fl = 41 ! transpiration multiplied by ...
     fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
     FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
     FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
-    FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
-                    *M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
-                    *deltat((steps_per_year+1):(steps_per_year*2)))
+    !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) & 
+                    !*M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+                    !*deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -654,47 +654,51 @@ module model_likelihood_module
         EDC2 = 0d0 ; EDCD%PASSFAIL(22) = 0
     endif
 
-    ! Determine the mean and standard deviation of January LAIs 
-    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
-    jan_first_lai = M_DIAGS(1,1) ! First January LAI
-    ! Initially sum each January from each year
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
-    end do
-    ! Calculate the mean
-    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
-    ! Calculate the standard deviation now
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
-    end do
-    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
-    end if
+    if (DATAin%nos_years > 1) then
+        ! Determine the mean and standard deviation of January LAIs 
+        jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+        jan_first_lai = M_DIAGS(1,1) ! First January LAI
+        ! Initially sum each January from each year
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_mean_lai = jan_mean_lai + M_DIAGS(nn,1)
+        end do
+        ! Calculate the mean
+        jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+        ! Calculate the standard deviation now
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,1))**2d0
+        end do
+        jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+        if ((EDC2 == 1 .or. DIAG == 1) .and. &
+            abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(23) = 0
+        end if
+    end if ! nos_years > 1
 
-    ! Determine the mean and standard deviation of January wSWPs 
-    jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
-    jan_first_lai = M_DIAGS(1,10) ! First January wSWP
-    ! Initially sum each January from each year
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_mean_lai = jan_mean_lai + M_DIAGS(nn,10)
-    end do
-    ! Calculate the mean
-    jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
-    ! Calculate the standard deviation now
-    do y = 1, DATAin%nos_years
-       nn = 1 + (steps_per_year * (y - 1)) 
-       jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,10))**2d0
-    end do
-    jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
-    if ((EDC2 == 1 .or. DIAG == 1) .and. &
-        abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
-    end if
+    if (DATAin%nos_years > 1) then
+        ! Determine the mean and standard deviation of January wSWPs 
+        jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset 
+        jan_first_lai = M_DIAGS(1,10) ! First January wSWP
+        ! Initially sum each January from each year
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_mean_lai = jan_mean_lai + M_DIAGS(nn,10)
+        end do
+        ! Calculate the mean
+        jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+        ! Calculate the standard deviation now
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1)) 
+           jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,10))**2d0
+        end do
+        jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+        if ((EDC2 == 1 .or. DIAG == 1) .and. &
+            abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(24) = 0
+        end if
+    end if ! nos_years > 1
 
     ! The mean annual carbon stock change for soils is unlikely to be >500 gC/m2/yr
     ! an informed guess.
@@ -808,41 +812,35 @@ module model_likelihood_module
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
     ! Estimate the labile ratio, also used below
-    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Assume max value can't be twice the observed values
-        if (maxval(lab_ratio) > 0.25d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
-        endif
-    endif ! EDC2 == 1 .or. DIAG == 1
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Assume the mean value can't be greater than largest observed value
-        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
-        endif        
-    endif ! EDC2 == 1 .or. DIAG == 1
+!    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        ! Assume max value can't be twice the observed values
+!        if (maxval(lab_ratio) > 0.25d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
+!        endif
+!    endif ! EDC2 == 1 .or. DIAG == 1
 !    if (EDC2 == 1 .or. DIAG == 1) then
 !        ! Assume the mean value can't be greater than largest observed value
-!        if (sum(lab_ratio)/dble(nodays) < 0.01d0) then
+!        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
+!        endif        
+!    endif ! EDC2 == 1 .or. DIAG == 1
+!    if (EDC2 == 1 .or. DIAG == 1) then
+!        ! Mean transit time for labile from natural processes, 
+!        ! i.e. not including any disturbance should be greater than 1 day
+!        pool_hak = 1d0 ; tmp_vec = 0d0 ; tmp = 0d0
+!        where (M_POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
+!               pool_hak = 0d0 
+!               ! Vector of fractional losses
+!               tmp_vec = ((M_FLUXES(1:nodays,4)  + M_FLUXES(1:nodays,6) + &
+!                           M_FLUXES(1:nodays,7)  + M_FLUXES(1:nodays,9)) / M_POOLS(1:nodays,1))                    
+!        end where
+!        ! Mean fractional removals, invert to the day residence time
+!        tmp = (sum(tmp_vec) / (dble(nodays)-sum(pool_hak)))**(-1d0)
+!        if (tmp < 1d0) then
 !            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
 !        endif        
 !    endif ! EDC2 == 1 .or. DIAG == 1    
-    if (EDC2 == 1 .or. DIAG == 1) then
-        ! Mean transit time for labile from natural processes, 
-        ! i.e. not including any disturbance should be greater than 1 day
-        pool_hak = 1d0 ; tmp_vec = 0d0 ; tmp = 0d0
-        where (M_POOLS(1:nodays,1) > 0d0) ! protection against NaN from division by zero
-               pool_hak = 0d0 
-               ! Vector of fractional losses
-               tmp_vec = ((M_FLUXES(1:nodays,4)  + M_FLUXES(1:nodays,6) + &
-                           M_FLUXES(1:nodays,7)  + M_FLUXES(1:nodays,9)) / M_POOLS(1:nodays,1))                    
-        end where
-        ! Mean fractional removals, invert to the day residence time
-        tmp = (sum(tmp_vec) / (dble(nodays)-sum(pool_hak)))**(-1d0)
-        if (tmp < 1d0) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(44) = 0
-        endif        
-    endif ! EDC2 == 1 .or. DIAG == 1    
 
     ! Ensure that the mean transit time of foliage and the LCA are consistent with the 
     ! leaf economic spectrum (LES).
@@ -872,7 +870,7 @@ module model_likelihood_module
         ! The reference leaf life span cannot be less than the actual,
         ! neither can it be longer by more than a year
         ! Note convertion of DALEC LL (years -> days)
-        tmp = (tmp*365.25d0) - pars(46)
+        tmp = (tmp*365.25d0) - pars(45)
         if ( tmp > 365.25d0 .or. tmp < -182.5d0) then
             ! The current leaf life span is longer than expected
             EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
@@ -957,7 +955,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return

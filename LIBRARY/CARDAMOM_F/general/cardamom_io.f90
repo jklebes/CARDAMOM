@@ -249,7 +249,7 @@ module cardamom_io
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC.A4.C6.D2.F2.H3.P10.026
         DATAin%nopools = 8
-        DATAin%nopars = 50
+        DATAin%nopars = 49
         DATAin%nofluxes = 53
         DATAin%nodiags = 34 ! Initial value, will need updating
     else if (DATAin%ID == 27) then

@@ -126,19 +126,19 @@ module MODEL_PARAMETERS
     PI%parmin(14) = -0.5d0
     PI%parmax(14) = -0.00005d0
        
-    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
-    PI%parmin(15) = 0.005d0
-    PI%parmax(15) = 0.2d0
+    ! Daily opportunity cost rate of leaf carbon (r_opp) (day-1).
+    ! The minimum daily return (as a fraction of construction cost) that a cohort
+    ! must earn to justify continued retention. Analogous to a discount rate in
+    ! net present value analysis. Calibrated from NPP/biomass ratios in the literature.
+    ! EDC: r_opp * leaf_age_ref < 1 (cannot require returning more than construction cost).
+    PI%parmin(15) = 0.0001d0
+    PI%parmax(15) = 0.0100d0
 
-    ! Potential loss rate for foliage to litter (fraction/day)
-    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
-    !PI%parmin(16) = 0.0003424658 ! 8 years
-    !PI%parmax(16) = 0.0333333333 ! 30 days
     ! Modified on the assumption that p13,p14 provide sensitivity to this.
     ! what we are really trying to estimate is the maximum potential rate of loss
     ! which could arguably be fixed and very fast.
-    PI%parmin(16) = 0.01666667d0 ! 60 days
-    PI%parmax(16) = 0.03333333d0 ! 30 days
+    PI%parmin(16) = 0.03333333d0 ! 30 days
+    PI%parmax(16) = 0.06666666d0 ! 15 days
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -219,18 +219,10 @@ module MODEL_PARAMETERS
     PI%parmin(44) = 1d-6
     PI%parmax(44) = 1d-1
 
-    ! Daily opportunity cost rate of leaf carbon (r_opp) (day-1).
-    ! The minimum daily return (as a fraction of construction cost) that a cohort
-    ! must earn to justify continued retention. Analogous to a discount rate in
-    ! net present value analysis. Calibrated from NPP/biomass ratios in the literature.
-    ! EDC: r_opp * leaf_age_ref < 1 (cannot require returning more than construction cost).
-    PI%parmin(45) = 0.0001d0
-    PI%parmax(45) = 0.0100d0
-
     ! Reference leaf lifespan for economic threshold amortisation (days).
     ! Deciduous: 60-180 days; Long-lived evergreen: > 365 days
-    PI%parmin(46) = 60d0
-    PI%parmax(46) = floor(365.25d0*8d0)
+    PI%parmin(45) = 60d0
+    PI%parmax(45) = floor(365.25d0*8d0)
 
     ! Leaf N decline rate with cohort age (k_N_decline) [month-1].
     ! Relative N content: N_rel = exp(-k_N_decline * age_months).
@@ -238,15 +230,15 @@ module MODEL_PARAMETERS
     ! Calibrated from Wright et al. (2004) leaf economics spectrum data.
     ! Fast decline (0.15)
     ! Slow decline (0.0001)
-    PI%parmin(47) = 0.0001d0
-    PI%parmax(47) = 0.15d0
+    PI%parmin(46) = 0.0001d0
+    PI%parmax(46) = 0.15d0
 
     ! Fraction of shed cohort carbon resorbed to labile pool (f_resorb) [0-1].
     ! The remaining fraction (1 - f_resorb) goes directly to litter.
     ! Aerts (1996) reports global mean resorption proficiency of ~50% for N,
     ! with C resorption typically 20-50%.
-    PI%parmin(48) = 0.10d0
-    PI%parmax(48) = 0.60d0
+    PI%parmin(47) = 0.10d0
+    PI%parmax(47) = 0.60d0
 
     ! Peak leaf-out day of year for Von Mises age-structure initialisation (mu_leaf_doy).
     ! The DOY at which canopy leaf production is highest in a typical year.
@@ -254,16 +246,16 @@ module MODEL_PARAMETERS
     ! monthly cohort age classes. Does not affect within-simulation dynamics.
     ! Temperate deciduous: 90-150 (spring flush); Mediterranean: 50-120;
     ! Tropical: 1-365 (near-uniform, but sigma will be large).
-    PI%parmin(49) =   1d0
-    PI%parmax(49) = 365d0
+    PI%parmin(48) =   1d0
+    PI%parmax(48) = 365d0
 
     ! Seasonal spread for Von Mises age initialisation (sigma_leaf_doy) [days].
     ! Controls the width of the seasonal leaf-production pulse used when
     ! distributing the initial foliar pool across monthly cohort age classes.
     ! Small sigma (~10 d): narrow flush (deciduous). Large sigma (~90 d):
     ! broad or year-round leaf production (grasses / tropical).
-    PI%parmin(50) = 10d0
-    PI%parmax(50) = 90d0
+    PI%parmin(49) = 10d0
+    PI%parmax(49) = 90d0
 
     !
     ! INITIAL VALUES DECLARED HERE

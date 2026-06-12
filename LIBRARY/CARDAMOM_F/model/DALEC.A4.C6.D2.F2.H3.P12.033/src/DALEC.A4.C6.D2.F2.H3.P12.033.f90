@@ -106,7 +106,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
+                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -317,6 +317,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                     co2_half_sat, & ! CO2 at which photosynthesis is 50 % of maximum (ppm)
                   co2_comp_point    ! CO2 at which photosynthesis > 0 (ppm)
 
+  double precision :: cold_shutdown  ! Cold shutdown scalar (0-1) applied to Vcmax and Rm at low temperature
+
   ! Module level variables for step specific met drivers
   double precision :: mint, & ! minimum temperature (oC)
                       maxt, & ! maximum temperature (oC)
@@ -397,7 +399,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -655,7 +657,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
         ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = daylength_seconds ** (-1d0)
+        daylength_seconds_1 = 1d0 / daylength_seconds
 
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
@@ -711,14 +713,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
+    ! Deforestation process functions in a sequential way.
     ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     !! Parameter values for deforestation variables
     !! Scenario 1
@@ -1064,7 +1066,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0 ; FLUXES(n,16) = 0d0
            ! Autotrophic respiration will continue to be assumed 
            ! to include the explicitly calculated leaf maintenance respiration
-           FLUXES(n,3) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)
+           cold_shutdown = (leafT - Vc_minT) / ((leafT - Vc_minT) + Vc_coef)
+           FLUXES(n,3) = seconds_per_day * umol_to_gC * lai * Rm_heskel_polynomial(Rm_leaf_const,leafT,cold_shutdown)
            ! Determine the daily photosynthetic C return and convert to a per gC leaf basis
            ! i.e. GPP(dayl)-leaf Rm(24hrs)s
            ! NOTE it is assumed that the DIAGS is reset to zero
@@ -1411,7 +1414,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine Vcmax at current temperature (umolC/m2/s). Included is a scaling
     ! factor from 'top leaf' to the effective canopy.
     ! Cold shutdown developed from Eddy covariance analysis at Boreal forest sites by Tim Green
-    airt_adj = (dT_Vc_minT / (dT_Vc_minT + Vc_coef)) &
+    cold_shutdown = dT_Vc_minT / (dT_Vc_minT + Vc_coef)
+    airt_adj = cold_shutdown &
              * modified_arrhenious(298.15d0,Ha_Vcmax,Hd_Vcmax_Jmax,dS_Vcmax,leafT_freeze)
     metabolic_limited_photosynthesis = Vcmax_ref * leaf_canopy_light_scaling &
                                      * airt_adj
@@ -1422,8 +1426,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate leaf maintenance respiration (umolC/m2leaf/s) following Heskel et al., (2016).
     ! There could / should be an assumption of leaf->canopy scaling, this should be a function of the leaf area and
     ! mean light vertical profile. Possible based on cosine solar zenith angle for the longest day?
-    dark_respiration = (lai * Rm_heskel_polynomial(Rm_leaf_const,leafT)) 
-    !dark_respiration = (leaf_canopy_light_scaling * Rm_heskel_polynomial(Rm_leaf_const,leafT)) 
+    dark_respiration = (lai * Rm_heskel_polynomial(Rm_leaf_const,leafT,cold_shutdown))
+    !dark_respiration = (leaf_canopy_light_scaling * Rm_heskel_polynomial(Rm_leaf_const,leafT,cold_shutdown))
  
     ! Ratio of RL25:Vcmax25 (Kumarathunge et al., 2019, doi: https://doi.org/10.1111/nph.15668, Table 1)
     ! TO BE REPLACED WITH EQUATIONS FROM TABLE 2?
@@ -1481,8 +1485,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-                leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+                leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1520,7 +1524,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. 
-    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! For details see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
     ! and 
     ! von Craemmer (2013), Steady State Photosynthesis Modelling, Plant Cell and Environment, 36, 1613-1630
 
@@ -1530,7 +1534,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! diffusion is 1.646259 (Jones appendix 2).i.e. gcH2O*1.646259 = gcCO2
     !
     ! Combining in series the stomatal and boundary layer conductances (molCO2.m-2.s-1)
-    gc = ( (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1 ) ** (-1d0)
+    gc = 1d0 / ( 1d0/(gs*gs_H2Ommol_CO2mol) + rb_mol_1 )
 
     ! Create common variables for both calculations
     gc_co2 = gc * co2
@@ -2340,7 +2344,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
@@ -2436,12 +2440,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate soil absorption fraction
     soil_absorption = 1d0 - soil_albedo
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
-                                             - (exp(-K*lai/Vc)*soil_absorption))
+                                             - (S3*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
-                                    + (Vc*((Idown*soil_absorption) + (exp(-K*lai/Vc)*soil_absorption)))
+                                    + (Vc*((Idown*soil_absorption) + (S3*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
@@ -2521,11 +2526,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = ((2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling)**(-1d0) + &
-                              (stomatal_conductance_in / convert_ms1_mmol_1) ** (-1d0))
+    total_water_resistance = (1d0 / (2d0 * aerodynamic_conductance * leaf_canopy_wind_scaling) + &
+                              convert_ms1_mmol_1 / stomatal_conductance_in)
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (2d0 * aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of 
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2574,7 +2579,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note the *0.93 converts the aerodynamic condictance from water vapour to heat
-    total_thermal_resistance = (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))**(-1d0)
+    total_thermal_resistance = 1d0 / (canopy_radiative_thermal_conductance + (aerodynamic_conductance * 0.93d0))
     ! Calculate multi-use product of 
     isothermal_net = ((canopy_swrad_MJday * 1d6 * dayl_seconds_1) + canopy_lwrad_Wm2)
 
@@ -2641,11 +2646,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Determine the combined (aerodynamic + stomatal) resistance to water tranfer at canopy scale
     ! Note; 1) Change units of stomatal conductance (mmolH2O.m-2.s-1 -> m.s-1), assumed for sea surface 
     ! pressure only. 2) Scale aerodynamic conductance to canopy scale
-    total_water_resistance = soil_conductance**(-1d0) + gws ** (-1d0)
+    total_water_resistance = 1d0 / soil_conductance + 1d0 / gws
     ! Determine the combined (radiative + sensible) resistance to heat transfer at canopy scale
     ! Note: unlike for the canopy, we neglect the *0.93 converting between conductance for heat and water, 
     !       i.e. we assume that they are equal.
-    total_thermal_resistance = (soil_radiative_thermal_conductance + soil_conductance)**(-1d0)
+    total_thermal_resistance = 1d0 / (soil_radiative_thermal_conductance + soil_conductance)
     ! Calculate multi-use product of 
     isothermal_net = soil_lwrad_Wm2 + (soil_swrad_MJday * 1d6 * dayl_seconds_1)
 
@@ -2794,11 +2799,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -2920,7 +2925,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        end if ! root present in current layer?
     end do ! nos_root_layers
     ! Turn the output resistance into conductance
-    Rcond_layer = Rcond_layer**(-1d0)
+    Rcond_layer = 1d0 / Rcond_layer
 
     ! if freezing then assume soil surface is frozen, therefore no water flux
     if (meant < 1d0) then
@@ -2933,7 +2938,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate effective resistance
     ! NOTE: minimum condition used to guard against zero conductance and propagation of Inf / NaN
     ! through the model structure/
-    Reff = min(1d6,sum(conductance_mmolH2OMPam2s)**(-1d0))
+    Reff = min(1d6, 1d0 / sum(conductance_mmolH2OMPam2s))
     if (total_water_flux <= vsmall) then
         ! Set values for no water flow situation
         uptake_fraction = (layer_thickness(1:nos_root_layers) / sum(layer_thickness(1:nos_root_layers)))
@@ -2997,7 +3002,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! drainage calculation. Assume minimum capacity due to wood.
     max_storage = max(min_storage,CanStorFrac*lai)
     ! caclulate inverse for efficient calculations below
-    max_storage_1 = max_storage**(-1d0)
+    max_storage_1 = 1d0 / max_storage
     ! potential intercepted rainfall (kgH2O.m-2.s-1)
     intercepted_rainfall = rainfall * (1d0 - through_fall)
     ! calculate drainage coefficients (Rutter et al 1975); Corsican Pine
@@ -3974,9 +3979,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! approximation of integral for soil resistance (s/m) and conversion to
     ! conductance (m/s)
-    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
-                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
-                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+!    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
+!                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+!                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+    soil_conductance = 1d0 / ( canopy_height/(canopy_decay*Kh_canht) &
+                             * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+                                exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) )
 
     return
 
@@ -4406,7 +4414,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            !! Determine most limiting factor on current and historical NCCE impacts
 
            ! Combine assuming maximum of the two factors
-           cmi = max(tmp1,tmp2)
+           cmi = (tmp1+tmp2)*0.5d0
 
            ! Calculate loss fraction
            env_foliage_litter = pot_foliar_fall_fraction * cmi
@@ -4729,7 +4737,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   double precision function linear_model_gradient(x,y,interval)
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 
@@ -4740,12 +4748,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(interval) :: x,y
 
     ! declare local variables
-    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+!    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+    double precision :: sum_x, sum_y, sumsq_x, sum_product_xy
+    integer :: j
 
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
+    ! single-pass accumulation loop replacing four separate sum() reductions
+!    ! calculate the sum of x
+!    sum_x = sum(x)
+!    ! calculate the sum of y
+!    sum_y = sum(y)
+    sum_x = 0d0 ; sum_y = 0d0 ; sumsq_x = 0d0 ; sum_product_xy = 0d0
+    do j = 1, interval
+       sum_x          = sum_x          + x(j)
+       sum_y          = sum_y          + y(j)
+       sumsq_x        = sumsq_x        + x(j)*x(j)
+       sum_product_xy = sum_product_xy + x(j)*y(j)
+    end do
     ! calculate the sum of squares of x
     !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
@@ -4754,9 +4772,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
     !&
     !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+!    ! Linear regression done as single line to reduce assignment requirements
+!    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+!                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sumsq_x)        - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
 !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
@@ -4852,7 +4872,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !----------------------------------------------------------------------
   !
-  double precision function Rm_heskel_polynomial(Rm_0C,air_temperature)
+  double precision function Rm_heskel_polynomial(Rm_0C,air_temperature,cold_shutdown)
 
     ! Calculate instantaneous temperature adjustment used in estimation of the
     ! maintenance respiration (umolC.m-2leaf.s-1) calculated based on modified
@@ -4861,7 +4881,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! arguments
     double precision, intent(in) :: air_temperature, & ! input temperature of metabolising tissue (oC)
-                                    Rm_0C              ! input maintenance respiration at 0C
+                                              Rm_0C, & ! input log(maintenance respiration at 0C)
+                                      cold_shutdown    ! Cold shutdown correction on maintenance respiration
 
     ! local variables
     double precision, parameter :: b = 0.1012d0, & ! log-linear response function of Rm
@@ -4869,7 +4890,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Calculate instantaneous temperature response per m2 of leaf area (umolC/m2leaf/s)
     ! NOTE: conversion from ln(R) -> R via exp(), conversion from umolC -> gC by *umol_to_gC, converseion from s to day
-    Rm_heskel_polynomial = exp(Rm_0C + b*air_temperature + c*air_temperature*air_temperature) !* umol_to_gC * seconds_per_day
+    Rm_heskel_polynomial = cold_shutdown * exp(Rm_0C + b*air_temperature + c*air_temperature*air_temperature) !* umol_to_gC * seconds_per_day
 
     ! explicit return command
     return

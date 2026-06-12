@@ -201,7 +201,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 5d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 10d0,         & ! Root resistivity (MPa s g mmol−1 H2O), default 25, crops 10
+                        root_resist = 10d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O), default 25, crops 10
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -474,7 +474,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
@@ -641,10 +641,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soil_conductance = 0d0
 
     ! post-removal residues and root death | 0:none 1:all
-    foliage_frac_res  = 0.05d0  ! fraction of removed foliage that goes to litter
-    labile_frac_res   = 0.05d0  ! fraction of removed labile that goes to litter
+    foliage_frac_res  = 0.05d0  !Â fraction of removed foliage that goes to litter
+    labile_frac_res   = 0.05d0  !Â fraction of removed labile that goes to litter
     roots_frac_res    = 1d0     ! fraction of roots that die which go to litter 
-    roots_frac_death  = 0.01d0  ! fraction of roots that die in response to management
+    roots_frac_death  = 0.01d0  !Â fraction of roots that die in response to management
     
     ! How many steps in 2 weeks
     two_week_lag = ceiling(14d0/deltat(1))
@@ -828,8 +828,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
-       seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+       seconds_per_step = seconds_per_day * days_per_step
 
        !!!!!!!!!!
        ! Adjust snow balance balance based on temperture
@@ -851,7 +851,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (mint < 0d0 .and. maxt > 0d0) then
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
-           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
@@ -859,7 +859,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            snow_melt = 0d0
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
-           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
@@ -975,9 +975,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,5) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,6)-FLUXES(n,4)
 
        ! Accumulate this time steps labile C (gC.m-2.day-1)
-       available_labile = POOLS(n,1) + (FLUXES(n,5) * deltat(n))                          
+       available_labile = POOLS(n,1) + (FLUXES(n,5) * days_per_step)                          
        ! Do plant allocation to leaves
-       call plant_canopy_phenology(nodays, gsi_lag_steps, n, deltat(n),              & ! Timing
+       call plant_canopy_phenology(nodays, gsi_lag_steps, n, days_per_step,              & ! Timing
                                    met(10,n),met(11,n),met(12,n),                    & ! GSI forcings
                                    pars(12), pars(13), pars(14), pars(20),           & ! GSI parameters 
                                    pars(21), pars(22), pars(3),                      & !
@@ -992,29 +992,29 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! FLUXES WITH TIME DEPENDENCIES
 
        ! root litter production = P_root * (1-(1-rootTOR)**deltat)/deltat  
-       FLUXES(n,10) = POOLS(n,3)*(1d0-(1d0-pars(6))**deltat(n))*deltat_1(n)
+       FLUXES(n,10) = POOLS(n,3)*(1d0-(1d0-pars(6))**days_per_step)*deltat_1(n)
 
        ! FLUXES WITH TEMP AND TIME DEPENDENCIES
 
        ! resp het litter = P_litter * (1-(1-GPP_respired*litterTOR)**deltat)/deltat  
-       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-FLUXES(n,2)*pars(7))**deltat(n))*deltat_1(n)
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-FLUXES(n,2)*pars(7))**days_per_step)*deltat_1(n)
        ! resp het som = P_som * (1-(1-GPP_respired*somTOR)**deltat)/deltat
-       FLUXES(n,12) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))*deltat_1(n)
+       FLUXES(n,12) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**days_per_step)*deltat_1(n)
        ! litter to som = P_litter * (1-(1-dec_rate*temprate)**deltat)/deltat
-       FLUXES(n,13) = POOLS(n,4)*(1d0-(1d0-FLUXES(n,2)*pars(1))**deltat(n))*deltat_1(n)
+       FLUXES(n,13) = POOLS(n,4)*(1d0-(1d0-FLUXES(n,2)*pars(1))**days_per_step)*deltat_1(n)
 
        ! update pools for next timestep
 
-       ! labile pool = labile_pool[†-1] + (lab_prod - lab_cons)*deltat
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,7))*deltat(n)
-       ! foliar pool = foliar_pool[†-1] + (leaf_prod + lab_prod2 - leaf_litter_prod)*deltat
-       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,7)-FLUXES(n,9))*deltat(n)
-       ! root pool = root_pool[†-1] + (root_prod - root_litter_prod)*deltat
-       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,10))*deltat(n)
-       ! litter pool = litter_pool[†-1] + (leaf_litter_prod + root_litter_prod - resp_het_litter - litter2som)*deltat
-       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,9)+FLUXES(n,10)-FLUXES(n,11)-FLUXES(n,13))*deltat(n)
-       ! som pool = som_pool[†-1] + (litter2som - resp_het_som)
-       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,13)-FLUXES(n,12))*deltat(n)
+       ! labile pool = labile_pool[â€ -1] + (lab_prod - lab_cons)*deltat
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,7))*days_per_step
+       ! foliar pool = foliar_pool[â€ -1] + (leaf_prod + lab_prod2 - leaf_litter_prod)*deltat
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)+FLUXES(n,7)-FLUXES(n,9))*days_per_step
+       ! root pool = root_pool[â€ -1] + (root_prod - root_litter_prod)*deltat
+       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,10))*days_per_step
+       ! litter pool = litter_pool[â€ -1] + (leaf_litter_prod + root_litter_prod - resp_het_litter - litter2som)*deltat
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,9)+FLUXES(n,10)-FLUXES(n,11)-FLUXES(n,13))*days_per_step
+       ! som pool = som_pool[â€ -1] + (litter2som - resp_het_som)
+       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,13)-FLUXES(n,12))*days_per_step
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1071,7 +1071,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                   POOLS(n+1,4),POOLS(n+1,5),met(6,n), &
                                   FLUXES(:,22),FLUXES(n,25),FLUXES(n,26),FLUXES(n,27), &
                                   FLUXES(n,28),FLUXES(n,29),FLUXES(n,30), &
-                                  n,nodays,deltat(n), & 
+                                  n,nodays,days_per_step, & 
                                   pars(28),pars(33))
 
            else 
@@ -1088,7 +1088,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                       FLUXES(n,19),FLUXES(n,20),FLUXES(n,21), &
                                       FLUXES(:,22),FLUXES(:,23),FLUXES(n,31),FLUXES(n,32), &
                                       FLUXES(n,33),FLUXES(n,34),FLUXES(n,35),FLUXES(n,36), &
-                                      n,nodays,deltat(n), & 
+                                      n,nodays,days_per_step, & 
                                       pars(15),pars(27),pars(32),pars(34))
                end if ! minimum growth bounds for grazing
 
@@ -1152,8 +1152,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-              leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+              leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1188,7 +1188,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. For details
-    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
 
     ! Daily canopy conductance dertmined through combination of aerodynamic and
     ! stomatal conductances. Both conductances are scaled to canopy aggregate.
@@ -1198,7 +1198,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! Combining in series the stomatal and boundary layer conductances
     ! to make canopy resistence (s/m2/molCO2)
-    rc = (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1
+    rc = 1d0 / (gs*gs_H2Ommol_CO2mol) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
@@ -1870,7 +1870,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
@@ -1959,12 +1959,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         soil_albedo = soil_reflectance
     endif
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
     canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*(1d0-soil_albedo)) &
-                                             - (exp(-K*lai/Vc)*(1d0-soil_albedo)))
+                                             - (S3*(1d0-soil_albedo)))
     ! Fraction of direct radiation absorbed by the soil
     soil_absorption_fraction_direct = ((1d0-Vc)*(1d0-soil_albedo)) &
-                                    + (Vc*((Idown*(1d0-soil_albedo)) + (exp(-K*lai/Vc)*(1d0-soil_albedo))))
+                                    + (Vc*((Idown*(1d0-soil_albedo)) + (S3*(1d0-soil_albedo))))
 
     !
     ! Diffuse radiation specific components
@@ -2173,11 +2174,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -3538,9 +3539,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   
     !! Determine whether grazing has occured and the resulting impacts on the C-cycle
     !! Livestock units (LU) per hectare following the assumptions that:
-    !! (1) one cattle is 1 LU and one sheep is 0.11 LU, (2) 1 LU weighs 650 kg, 
-    !! (3) an animal demands ≈ 2.5 % (p31) of its weight in the form grass dry matter (DM) when grazing, 
-    !! and (4) 47.5 % of DM consists of C (Vertès et al., 2018). 
+    !! (1) one cattle is 1â€‰LU and one sheep is 0.11â€‰LU, (2) 1â€‰LU weighs 650â€‰kg, 
+    !! (3) an animal demands â‰ˆ 2.5â€‰% (p31) of its weight in the form grass dry matter (DM) when grazing, 
+    !! and (4) 47.5â€‰% of DM consists of C (VertÃ¨s et al., 2018). 
     !! This default assumption equates to 1 LSU / ha / day requiring ~0.77 gC/m2/day.
     
     implicit none
@@ -3591,7 +3592,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 1) An LAI reduction is specified
     ! 2) Labile+leaf C > grazing threshold 
     ! 3) No cutting in the last 2 weeks
-    if ((labile*labile_ratio)+foliage >= grazing_threshold .and. & 
+!    if ((labile*labile_ratio)+foliage >= grazing_threshold .and. &
+!        sum(harvest(max(1,timestep-two_week_lag):timestep)) == 0d0) then
+    if ((labile*labile_ratio)+foliage >= grazing_threshold .and. foliage > 0d0 .and. &
         sum(harvest(max(1,timestep-two_week_lag):timestep)) == 0d0) then
 
         !   
@@ -4036,7 +4039,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   double precision function linear_model_gradient(x,y,interval)
 
-    ! Function to calculate the gradient of a linear model for a given depentent
+    ! Function to calculate the gradient of a linear model for a given dependent
     ! variable (y) based on predictive variable (x). The typical use of this
     ! function will in fact be to assume that x is time.
 
@@ -4047,12 +4050,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(interval) :: x,y
 
     ! declare local variables
-    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+!    double precision :: sum_x, sum_y!, sumsq_x,sum_product_xy
+    double precision :: sum_x, sum_y, sumsq_x, sum_product_xy
+    integer :: j
 
-    ! calculate the sum of x
-    sum_x = sum(x)
-    ! calculate the sum of y
-    sum_y = sum(y)
+    ! single-pass accumulation loop replacing four separate sum() reductions
+!    ! calculate the sum of x
+!    sum_x = sum(x)
+!    ! calculate the sum of y
+!    sum_y = sum(y)
+    sum_x = 0d0 ; sum_y = 0d0 ; sumsq_x = 0d0 ; sum_product_xy = 0d0
+    do j = 1, interval
+       sum_x          = sum_x          + x(j)
+       sum_y          = sum_y          + y(j)
+       sumsq_x        = sumsq_x        + x(j)*x(j)
+       sum_product_xy = sum_product_xy + x(j)*y(j)
+    end do
     ! calculate the sum of squares of x
     !sumsq_x = sum(x*x)
     ! calculate the sum of the product of xy
@@ -4061,9 +4074,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) )
     !&
     !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
-    ! Linear regression done as single line to reduce assignment requirements
-    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
-                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+!    ! Linear regression done as single line to reduce assignment requirements
+!    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+!                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+    linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sumsq_x)        - (sum_x*sum_x) )
 
     ! for future reference here is how to calculate the intercept
 !    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
