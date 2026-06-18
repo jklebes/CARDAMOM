@@ -126,12 +126,10 @@ module MODEL_PARAMETERS
     PI%parmin(14) = -0.5d0
     PI%parmax(14) = -0.00005d0
        
-    ! Daily opportunity cost rate of leaf carbon (r_opp) (day-1).
-    ! The minimum daily return (as a fraction of construction cost) that a cohort
-    ! must earn to justify continued retention. Analogous to a discount rate in
-    ! net present value analysis. Calibrated from NPP/biomass ratios in the literature.
+    ! The minimum life time return (as a fraction of construction cost) that a cohort
+    ! must earn to justify continued retention. 
     PI%parmin(15) = 0.1d0
-    PI%parmax(15) = 1d0
+    PI%parmax(15) = 3d0
 
     ! Modified on the assumption that p13,p14 provide sensitivity to this.
     ! what we are really trying to estimate is the maximum potential rate of loss

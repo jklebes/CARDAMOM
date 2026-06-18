@@ -68,7 +68,7 @@ vpd_to_rh<-function(vpd_in,air_temperature) {
    # RH is the ratio of vapour presure in the air and vapour pressure at saturation.
    # Below pressure is estimated from the saturation vapour pressure and vapour pressure deficit.
    # Units (Pa)
-   rh = (vpsat - vpd_pa) / vpsat
+   rh = (vpsat - vpd_in) / vpsat
    rh[rh > 1] <- 1
    rh[rh < 0] <- 0
    # clean up

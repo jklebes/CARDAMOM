@@ -82,6 +82,7 @@ contains
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
                           ,write_covariance_info,restart_flag,write_mcmc_output
     use cardamom_structures, only: DATAin
+    use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_negative_inf, ieee_support_inf
 
     implicit none
 
@@ -159,8 +160,9 @@ contains
                                             ,PARS          & ! parameter values for current proposal
                                             ,BESTPARS        ! best set of parameters so far
 
-    double precision, dimension(PI%npars,MCO%nADAPT) :: PARSALL ! All accepted normalised parameters since previous step adaption
-    double precision :: infini &
+    double precision, allocatable, dimension(:,:) :: PARSALL ! All accepted normalised parameters since previous step adaption
+    double precision :: neg_inf & ! portable -infinity sentinel (see initial values)
+                       ,u_draw  & ! holds the current uniform draw for the M-H accept test
                        ,burn_in_period & ! for how many proposals will we adapt the covariance matrix as a minimum
                        ,crit1  & ! random numbers log(0->1) used to accept / reject
                        ,AM_likelihood &
@@ -173,6 +175,17 @@ contains
 
     ! initial values
     uniform = 1
+    ! Construct a portable negative infinity used to force rejection of out-of-bounds
+    ! proposals and to flag EDC failure of the initial parameter set. Built via
+    ! ieee_arithmetic so that no log(0d0) is ever evaluated, avoiding spurious FPE
+    ! traps under -ffpe-trap (GNU) / -fpe0 (Intel). The bit value is identical to the
+    ! -infinity that log(0d0) previously produced, so all comparisons are unchanged.
+    ! Falls back to -huge() on the (non-x86) case where IEEE infinity is unsupported.
+    if (ieee_support_inf(1d0)) then
+        neg_inf = ieee_value(1d0, ieee_negative_inf)
+    else
+        neg_inf = -huge(1d0)
+    end if
     P = -1d0 ; Pprior = -1d0
     N%ACC = 0d0 ; N%ITER = 0d0 !TLS:2025 ; N%ACC_first = 0d0 
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
@@ -190,6 +203,10 @@ contains
     ! calculate initial vector of uniform random values
     unif_length = MCO%nADAPT * 5
     allocate(uniform_random_vector(unif_length))
+    ! Allocate the accepted-parameter history on the heap rather than as a large
+    ! automatic (stack) array. Avoids stack-overflow risk for large nADAPT and is
+    ! safer if the MCMC layer is ever run under OpenMP with small per-thread stacks.
+    allocate(PARSALL(PI%npars,MCO%nADAPT))
     call random_uniform(uniform_random_vector,unif_length)
 
     ! add something here to delete previous files if wanted later
@@ -234,8 +251,7 @@ contains
     Pmax = P0 + P0prior
 
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
-    infini = 0d0
-    if (P0 == log(infini)) then
+    if (P0 == neg_inf) then
         write(*,*) "WARNING! P0 = ",P0," - AP-MCMC will get stuck, if so please check initial conditions"
         stop
     endif
@@ -252,7 +268,16 @@ contains
            ! calculate the model likelihood
            call model_likelihood_option(PARS, P, Pprior)
            ! accept or reject, draw uniform distribution (0,1)
-           crit1 = log(uniform_random_vector(uniform))
+           ! NOTE: random_uniform can return exactly 0d0, so guard the log to
+           ! avoid evaluating log(0d0) (which traps under -ffpe-trap / -fpe0).
+           ! u_draw == 0d0 yields neg_inf, bit-identical to the -infinity that
+           ! log(0d0) previously produced, so the accept test is unchanged.
+           u_draw = uniform_random_vector(uniform)
+           if (u_draw > 0d0) then
+               crit1 = log(u_draw)
+           else
+               crit1 = neg_inf
+           end if
            uniform = uniform + 1
            ! if we are near to the end re-generate some more values
            if (uniform >= unif_length) then
@@ -269,7 +294,7 @@ contains
 
            ! proposal out of parameter bounds, set likelihoods to ensure
            ! rejection
-           AM_likelihood = log(infini) ; P = AM_likelihood ; Pprior = P
+           AM_likelihood = neg_inf ; P = AM_likelihood ; Pprior = P
            crit1 = 0d0
 
        end if ! in bound
@@ -390,7 +415,7 @@ contains
     ! set flag MCMC completed
     MCOUT%complete = 1
     ! tidy up
-    deallocate(uniform_random_vector)
+    deallocate(uniform_random_vector,PARSALL)
 
     ! completed AP-MCMC loop
     write(*,*)"AP-MCMC loop completed"

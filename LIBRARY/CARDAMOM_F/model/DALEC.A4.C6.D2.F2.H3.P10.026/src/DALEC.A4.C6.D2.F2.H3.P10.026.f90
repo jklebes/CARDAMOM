@@ -1173,7 +1173,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                  ncce_lag_step,    & ! ncce lag period
                                  DIAGS(:,22),DIAGS(n,27)) 
 
-
        ! Do plant allocation
        call plant_allocation(nopools,days_per_step, &
                              pars(17),                              & ! LCA
@@ -5565,6 +5564,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !            (leaf_cohorts(k)%ncce_average < leaf_cohorts(k)%ncce_threshold .and. &
 !             leaf_cohorts(k)%cum_profit > leaf_cohorts(k)%profit_target) ) then
         if (leaf_cohorts(k)%age_months >= max_age_months .or. &
+            (leaf_cohorts(k)%ncce_average < 0d0 .and. &
+             leaf_cohorts(k)%cum_profit > 0d0) .or. &
             (ncce_k < 0d0 .and. &
              leaf_cohorts(k)%cum_profit > leaf_cohorts(k)%profit_target) ) then
             ! Estimate reabsorption and litter loss

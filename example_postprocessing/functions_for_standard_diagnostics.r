@@ -11557,6 +11557,9 @@ summary_plots<-function() {
     ### 
     ## Seasonal cycles across each year, colour gradient for over time.
 
+    ### 
+    ## Seasonal cycles across each year, colour gradient for over time.
+
     legend_todo = TRUE
     # Create figure 
     png(file = paste(output_dir,"/",gsub("%","_",PROJECT$name),"_daily_min_temperature_seasonal_cycles.png",sep=""), width = 4000, height = 2200, res = 300)
@@ -11583,63 +11586,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_min_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
-    }
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_min_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_daily_min_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Daily min temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_daily_min_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -11669,63 +11682,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_max_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_max_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_daily_max_temperature_C), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Daily max temperature (C)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_daily_max_temperature_C[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -11755,63 +11778,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_sw_radiation_MJm2day), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("SW radiation (MJ/m2/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
     
@@ -11841,63 +11874,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
-    }    
+        if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Precipitation (mm/d)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,y]*86400, col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -11927,63 +11970,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_biomass_removal_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_biomass_removal_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_biomass_removal_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("LUC (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_biomass_removal_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
     
@@ -12013,63 +12066,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_burned_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_burned_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_burned_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_burned_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_burned_fraction), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Burned area (0-1)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_burned_fraction[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -12099,63 +12162,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_mean_vpd_Pa), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_mean_vpd_Pa), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_mean_vpd_Pa), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("VPD (Pa)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_mean_vpd_Pa[,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
     
@@ -12185,63 +12258,73 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
-    # Add legend for the overall scheme
-    if (legend_todo) {
-        legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
-               lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
-        legend_todo = FALSE
-    }
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
+        # Add legend for the overall scheme
+        if (legend_todo) {
+            legend("topleft", legend = c(PROJECT$start_year,PROJECT$end_year), col = c(colour_choices_years[2],colour_choices_years[nos_years+1]), 
+                   lty = c(1,1), pch=rep(NA,2), horiz = FALSE, bty = "n", cex=1.8, lwd=3, ncol = 2)
+            legend_todo = FALSE
+        }
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
-    }    
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }    
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_gpp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("GPP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_gpp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -12271,57 +12354,67 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_reco_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_reco_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
-    }        
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }        
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_reco_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Reco (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_reco_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -12351,57 +12444,67 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
-    }            
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }            
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_rhet_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Rhet (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_rhet_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 
@@ -12433,68 +12536,78 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Source / sink boundary
+        abline(0,0,col="grey", lwd=1)    
     }
-    # Source / sink boundary
-    abline(0,0,col="grey", lwd=1)    
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Source / sink boundary
+        abline(0,0,col="grey", lwd=1)    
     }
-    # Source / sink boundary
-    abline(0,0,col="grey", lwd=1)    
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Source / sink boundary
+        abline(0,0,col="grey", lwd=1)    
     }
-    # Source / sink boundary
-    abline(0,0,col="grey", lwd=1)    
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
-    }      
-    # Source / sink boundary
-    abline(0,0,col="grey", lwd=1)         
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }      
+        # Source / sink boundary
+        abline(0,0,col="grey", lwd=1)         
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_nbp_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("NBP (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_nbp_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
+        # Source / sink boundary
+        abline(0,0,col="grey", lwd=1)    
     }
-    # Source / sink boundary
-    abline(0,0,col="grey", lwd=1)    
     dev.off()
 
     legend_todo = TRUE
@@ -12523,57 +12636,67 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_fire_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_boreal_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Boreal (LAT > 60)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_boreal_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_boreal_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Boreal (LAT > 60)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_boreal_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "North temperate (30 > LAT < 60)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_fire_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_tropics_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_tropics_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_tropics_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "Tropics (-30 > LAT < 30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_tropics_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
-    }               
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South temperate (-60 > LAT < -30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }               
+    }
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_fire_PgCday[2,,]), na.rm=TRUE)
-    # Create initial plot
-    plot(grid_output$agg_seasonal_south_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
-         cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
-         main = "South (LAT < -30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
-    # Loop through remaining years
-    for (y in seq(2, nos_years)) {
-         lines(grid_output$agg_seasonal_south_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+    if (any(is.infinite(yrange))) { 
+        # Create initial plot
+        plot(grid_output$agg_seasonal_south_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
+             cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
+             main = "South (LAT < -30)", ylab = expression(paste("Fire (PgC/day)",sep="")), xlab="Step of year")
+        # Loop through remaining years
+        for (y in seq(2, nos_years)) {
+             lines(grid_output$agg_seasonal_south_fire_PgCday[2,,y], col = colour_choices_years[y+1], lwd=2) 
+        }
     }
     dev.off()
 

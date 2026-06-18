@@ -86,7 +86,7 @@ psrf<- function (X) {
       N = dim(X)[1] ; D = dim(X)[2] ; M = dim(X)[3]
 
       # must have more than 1 time step for variance to be assessed
-      if (N < 1) {stop('Too few samples')}
+      if (N < 2) {stop('Too few samples')}
 
       # Calculate means W of the variances
       W = array(0, dim = c(1,D))

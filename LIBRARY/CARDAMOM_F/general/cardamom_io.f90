@@ -296,8 +296,12 @@ module cardamom_io
         DATAin%nodiags = 30       
     else if (DATAin%ID == 34) then
         ! ID = 34 -
+        print*,"Model ID 34 not currently in use"
+        stop 
     else if (DATAin%ID == 35) then
         ! ID = 35
+        print*,"Model ID 35 not currently in use"
+        stop
     else if (DATAin%ID == 36) then
         ! ID = 36 - DALEC.A1.C7.D2.F2.H2.P1.R4.036
         DATAin%nopools = 11
@@ -312,8 +316,12 @@ module cardamom_io
         DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 38) then
         ! ID = 38 -
+        print*,"Model ID 38 not currently in use"
+        stop
     else if (DATAin%ID == 39) then
         ! ID = 39 -
+        print*,"Model ID 39 not currently in use"
+        stop
     else
         write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
         stop
@@ -468,12 +476,8 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy,subsample
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,day &
-              ,start      &
-              ,finish     &
-              ,totcol     & ! total number of columns (met + obs)
-              ,totread      ! total number of records already read
-    double precision :: mz, subsample_fraction = 0.20 ! startd at 0.25
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,day
+    double precision :: subsample_fraction = 0.20 ! startd at 0.25
     double precision, dimension(:), allocatable :: statdat & ! static data input
                                                   ,mettemp & ! met data input
                                                   ,obstemp   ! obs data input
@@ -652,26 +656,17 @@ module cardamom_io
     DATAin%nharvest = 0
     DATAin%nsoilwater = 0
 
-    ! work out some key variables
-    ! DATAin%noobs corresponds to observations and uncertainties
-    totcol = DATAin%nomet*DATAin%noobs
-    totread = 500+1
-
     ! start looping through days and allocate the correct met drivers / obs into
-    ! the correct arrays
+    ! the correct arrays.
+    ! NOTE: the file is opened with access="stream" and no read uses a pos=
+    ! specifier, so every read advances sequentially from the current position.
+    ! Reading each whole array in one statement therefore consumes the met
+    ! (DATAin%nomet) then obs (DATAin%noobs) records for the day in order -
+    ! byte-identical to the former per-element loops, in two reads per day
+    ! instead of nomet+noobs.
     do day = 1, DATAin%nodays
-       start = ((day-1)*(totcol))+totread
-       finish = start+DATAin%nomet-1
-       b = 1
-       do i = start,finish
-          read(ifile_unit) mettemp(b) ; b=b+1
-       end do ! met bit
-       start = ((day-1)*(totcol))+totread+finish+1
-       finish = start+DATAin%noobs-1
-       b = 1
-       do i = start,finish
-          read(ifile_unit) obstemp(b) ; b=b+1
-       end do ! obs bit
+       read(ifile_unit) mettemp ! reads DATAin%nomet values
+       read(ifile_unit) obstemp ! reads DATAin%noobs values
 
        ! assign the extracted met / obs to their type and keep count of how many
        ! of these are actually contain data
@@ -880,7 +875,7 @@ module cardamom_io
     a = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1 ; f = 1 ; g = 1
     h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1 ; m = 1 ; n = 1
     o = 1 ; p = 1 ; q = 1 ; r = 1 ; s = 1 ; t = 1 ; u = 1
-    v = 1 ; w = 1 ; x = 1 ; y = 1 ; z = 1
+    v = 1
 
     ! Read through each timestep to extract any available assimilatable observations
     do day = 1, DATAin%nodays
@@ -959,7 +954,7 @@ module cardamom_io
     ! mean atmospheric CO2 (ppm)
     DATAin%meanco2 = sum(DATAin%met(5,:)) / dble(DATAin%nodays)
     ! mean precipitation (mm/yr)
-    DATAin%meanprecip = sum(DATAin%met(7,:)*84600d0*365.25d0) / dble(DATAin%nodays)
+    DATAin%meanprecip = sum(DATAin%met(7,:)*86400d0*365.25d0) / dble(DATAin%nodays)
 
     ! print the mean temperature and radiation variables
     write(*,*) "Mean Rad (MJ/m2/day) = ", DATAin%meanrad
