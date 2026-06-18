@@ -423,12 +423,6 @@ module model_likelihood_module
         EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     endif    
 
-    ! The daily repayment ratio cannot be greater than the total construction cost
-    ! i.e. p45 * p46 must be less than 1
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(15)*pars(45)) >= 1d0) then
-        EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
-    endif    
-
     ! IMPLICIT Combustion completeness for foliage should be greater than soil
     ! IMPLICIT Combustion completeness for fol+root litter should be greater than soil
 
@@ -803,7 +797,7 @@ module model_likelihood_module
 
     end if ! EDC2 == 1 .or. DIAG == 1
 
-    ! Finally we would not expect that the mean labile stock is greater than
+    ! We would not expect that the mean labile stock is greater than
     ! 8 % of the total ecosystem carbon stock, as we need structure to store
     ! labile.
     ! Gough et al (2009) Agricultural and Forest Meteorology. Avg 11, 12.5, 3 %
@@ -811,20 +805,22 @@ module model_likelihood_module
     ! branches accumulate labile C prior to bud burst from other areas.
     ! Wurth et al (2005) Oecologia, Clab 8 % of living biomass (DM) in tropical forest
     ! Richardson et al (2013), New Phytologist, Clab 2.24 +/- 0.44 % in temperate (max = 4.2 %)
-    ! Estimate the labile ratio, also used below
-!    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
-!    if (EDC2 == 1 .or. DIAG == 1) then
-!        ! Assume max value can't be twice the observed values
-!        if (maxval(lab_ratio) > 0.25d0) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
-!        endif
-!    endif ! EDC2 == 1 .or. DIAG == 1
-!    if (EDC2 == 1 .or. DIAG == 1) then
-!        ! Assume the mean value can't be greater than largest observed value
-!        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
-!        endif        
-!    endif ! EDC2 == 1 .or. DIAG == 1
+    ! NOTE: also that defoliation experiments suggest that whole canopy replacement levels of 
+    ! labile is available, so this is also a consideration in the restriction as labile monitoring is still rare.
+    ! Estimate the labile ratio, also used below.
+    lab_ratio = M_POOLS(:,1) / (M_POOLS(:,1) + M_POOLS(:,2) + M_POOLS(:,3) + M_POOLS(:,4))
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume max value can't be twice the observed values
+        if (maxval(lab_ratio) > 0.25d0 .and. maxval(M_POOLS(:,1)) > (maxval(M_POOLS(:,2))*3d0)) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(42) = 0
+        endif
+    endif ! EDC2 == 1 .or. DIAG == 1
+    if (EDC2 == 1 .or. DIAG == 1) then
+        ! Assume the mean value can't be greater than largest observed value
+        if (sum(lab_ratio)/dble(nodays) > 0.125d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(43) = 0
+        endif        
+    endif ! EDC2 == 1 .or. DIAG == 1
 !    if (EDC2 == 1 .or. DIAG == 1) then
 !        ! Mean transit time for labile from natural processes, 
 !        ! i.e. not including any disturbance should be greater than 1 day

@@ -39,6 +39,11 @@ calc_useful<-function() {
 
     # Load the CARDAMOM standard land mask, we will use this for national boundaries in plotting
     landmask <<- vect(paste(cardamom_dir,"R_functions/global_map/national_boundaries/ne_10m_admin_0_countries.shx",sep=""))
+    # If we have an epsg then we want to know if it differs from the one desired by the analysis
+    if (crs(landmask, describe = TRUE)$code != crs(cardamom_ext, describe = TRUE)$code) {
+        # If it does not match we need to reproject it
+        landmask = project(landmask, paste("epsg:",crs(cardamom_ext, describe = TRUE)$code)) ; gc()
+    }    
     # subset by continent (could also do by country)
     #landmask = subset(landmask, subset=landmask$CONTINENT == "South America") # Change continent to target area or comment out if spanning zones
     #landmask = subset(landmask, subset=landmask$CONTINENT == "Africa") # Change continent to target area or comment out if spanning zones

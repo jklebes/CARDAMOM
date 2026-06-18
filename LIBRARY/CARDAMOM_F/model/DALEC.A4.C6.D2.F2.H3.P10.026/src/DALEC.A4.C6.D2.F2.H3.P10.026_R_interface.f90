@@ -220,6 +220,8 @@ subroutine rdalec26(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,85) = DIAGS(1:nodays,32)          ! Canopy level age (days)
      out_var1(i,1:nodays,86) = DIAGS(1:nodays,33)          ! Canopy level cohort profit (gC/m2)
      out_var1(i,1:nodays,87) = DIAGS(1:nodays,34)          ! Number of cohorts in profit
+     out_var1(i,1:nodays,88) = FLUXES(1:nodays,53)         ! Environmentally driven foliar litter flux (gC/m2/day)
+     out_var1(i,1:nodays,89) = DIAGS(1:nodays,35)          ! Canopy level cohort mean annual NCCE (gC/m2/day)
 
      !
      ! Calculate long-term mean of out_var1

@@ -130,9 +130,8 @@ module MODEL_PARAMETERS
     ! The minimum daily return (as a fraction of construction cost) that a cohort
     ! must earn to justify continued retention. Analogous to a discount rate in
     ! net present value analysis. Calibrated from NPP/biomass ratios in the literature.
-    ! EDC: r_opp * leaf_age_ref < 1 (cannot require returning more than construction cost).
-    PI%parmin(15) = 0.0001d0
-    PI%parmax(15) = 0.0100d0
+    PI%parmin(15) = 0.1d0
+    PI%parmax(15) = 1d0
 
     ! Modified on the assumption that p13,p14 provide sensitivity to this.
     ! what we are really trying to estimate is the maximum potential rate of loss
