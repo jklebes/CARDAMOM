@@ -196,6 +196,7 @@ module model_likelihood_module
         pool_error /= pool_error .or. flux_error /= flux_error .or. &
         diags_error /= diags_error) then
         print*,"Error: multiple runs of the same parameter set indicates an error"
+        print*,"thread_id", thread_id
         print*,"Cumulative POOL error = ",pool_error
         print*,"Cumulative FLUX error = ",flux_error
         print*,"Cumulative DIAGS error = ",diags_error

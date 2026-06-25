@@ -382,10 +382,23 @@ module CARBON_MODEL_MOD
         ! initialise some time invarient parameters
         call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
         call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+        !call update_soil_initial_conditions(pars(24), mV)
         ! save the initial conditions for later
         mV%field_capacity_initial = mV%field_capacity
         mV%porosity_initial = mV%porosity
   end subroutine
+
+
+  subroutine destroy_mv(mV)
+    !! deallocate arrays in mV
+    type(model_working_variables):: mV
+    integer:: n
+        ! allocate variables dimension which are fixed per site only the once
+        deallocate(mV%deltat_1, &
+                     mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
+                     mV%rainfall_time, mV%airt_zero_fraction_time)
+    end subroutine
+
 
   !
   !--------------------------------------------------------------------
@@ -611,6 +624,25 @@ module CARBON_MODEL_MOD
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
+       ! Some time consuming variables we only want to set once TODO move to initialize
+    if (.not.allocated(mV%deltat_1)) then
+        call update_soil_initial_conditions(pars(24), mV)
+    else  ! deltat_1 allocated?
+
+        !
+        ! Load initial soil water conditions from memory
+        !
+
+        mV%total_water_flux = 0d0; mV%water_flux_mmolH2Om2s = 0d0
+        mV%field_capacity = mV%field_capacity_initial
+        mV%porosity = mV%porosity_initial
+
+        ! input initial soil water fraction then
+        ! update SWP and soil conductivity accordingly
+        call update_soil_initial_conditions(pars(24), mV)
+
+    endif  ! deltat_1 allocated
+
 
     ! Defining phenological variables
     ! release period coefficient, based on duration of labile turnover or leaf
@@ -816,6 +848,7 @@ module CARBON_MODEL_MOD
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(mV)
+    mV%dayl_seconds = mV%daylength_seconds(1) ; mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29), mV) ! assume no evap or rainfall
 
@@ -2927,6 +2960,7 @@ module CARBON_MODEL_MOD
 !    end if ! abs(balance) > 1d-10
 
     ! explicit return needed to ensure that function runs all needed code
+
     return
 
   end subroutine calculate_update_soil_water
