@@ -4,6 +4,8 @@
 # and wrapping them into more standard-shaped R functions
 
 library(here)
+library(inline)
+#library(Rcpp)
 
 # If run from within CARDAMOM/, here() is CARDAMOM/ , detected based on .git directory
 # DLL: if missing run the "cmake ..", "make" of cardamom to generate the shared library
@@ -13,6 +15,21 @@ dyn.load(cardamom_dll)
 # TODO this filename actually has no effect, there's a hardcoded one in fortran initialize_model
 # because of difficulty passing strings R to C to fortran
 filename <- file.path(here(),"test/data/UK_baseline_sites_AliceHolt.bin")
+
+
+call_initialize_model <- cfunction(c(bin="SEXP", nbins="SEXP"), '
+  C_initialize_model("/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin");
+  return nbins;
+
+', includes = '#include "/home/jklebes/CARDAMOM/LIBRARY/CARDAMOM_F/general/Rscripts/libCARDAMOM.h" ',
+libargs = c("-L/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM"),
+verbose=TRUE )
+
+print(call_initialize_model(3,9))
+
+#sourceCpp(file.path(here(),"LIBRARY/CARDAMOM_F/general/Rscripts/R_string_fcts.cpp"))
+#x <- runif(10)
+#print(meanC(x))
 
 initialize_model <- function(filename){
     out_ <- .C("C_initialize_model", filename)
@@ -47,6 +64,7 @@ model_parmax <- get_model_parmax()
 
 get_initial <- function(){
     initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
+
 }
 
 ## Likelihood functions

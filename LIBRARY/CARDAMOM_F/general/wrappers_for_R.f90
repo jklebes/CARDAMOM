@@ -40,26 +40,6 @@ contains
       parmax = PI%parmax
    end subroutine get_parmax
 
-!subroutine get_initial_pars(npars, parini) bind(c, name="C_getmodelparini")
-!    use iso_c_binding
-!    use cardamom_structures, only: DATAin
-!    implicit none
-!    integer(c_int), intent(in):: npars
-!    real(c_double), dimension(npars), intent(out)  :: parini
-!    parini =  DATAin%parini
-!    end subroutine
-
-   subroutine initialize_example_FI_Hyy() bind(c, name="C_TMP_initialize")
-      ! trigger read_binary_data(hard coded filename) for testing,
-      ! later do this better
-      use iso_c_binding
-      use cardamom_io, only: initialize
-      implicit none(type, external)
-      character(kind=c_char, len=350)  :: filename
-      filename = "/home/jklebes/cardamom_profiling/FI-Hyy_example/DATA/FI-Hyy_example_FI-Hyy.bin"
-      call initialize(filename)
-   end subroutine initialize_example_FI_Hyy
-
    subroutine initialize_cardamom(nchains) bind(c, name="C_initialize_model")
       use iso_c_binding
       use cardamom_io, only: initialize

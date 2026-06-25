@@ -56,7 +56,7 @@ plikelihood <- function(paramArr) {
     if (! is.matrix(paramArr)){
         paramArr = t(as.matrix(paramArr))
     }
-    parallel::parApply(cl= cl, X=paramArr, MARGIN = 1, FUN = cardamom_edc_modellikelihood)
+    parallel::parApply(cl= cl, X=paramArr, MARGIN = 1, FUN = cardamom_modellikelihood)
 }
 
 
@@ -69,11 +69,19 @@ bayesianSetup <- createBayesianSetup(likelihood = plikelihood,
                                      )
 iter = 10000
 
-settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
-#test
-plikelihood(initialMatrix)
-plikelihood(bayesianSetup$prior$sampler(nchains))
 
+settings = list(iterations = iter, nrChains=1, message = TRUE)
+parallel::clusterExport(cl, "bayesianSetup")
+parallel::clusterExport(cl, "settings")
+# This will be useful for when you want to pass chainId X to function:
+out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
+  bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
+out <- createMcmcSamplerList(out)
+
+# make sure all chains got to EDC_loglikelihood 0 !
+
+settings = list(iterations = iter, nrChains=1 , message = TRUE , 
+                startValue = t ( sapply(c(1:nchains), function(x) (out[[x]]$current)) ))
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
 plot(out_parallel$chain[,'LL'])

@@ -1,5 +1,7 @@
 ## Alternative cardamom main loop as R script !
 #
+# for `here()` to find CARDAMOM/ as project root, must be run from somewhere within CARDAMOM/
+#
 # jklebes 2025
 #
 # The function model_loglikelihood, containing
@@ -66,7 +68,7 @@ parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
 parallel::clusterExport(cl, "cardamom_edc_modellikelihood")
 parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model") )
 parallel::clusterExport(cl, "get_initial")
-parallel::clusterEvalQ(cl,  intial <- get_initial())
+parallel::clusterEvalQ(cl,  initial <- get_initial())
 iter = 10000
 
 settings = list(iterations = iter, nrChains=1, message = TRUE)
