@@ -1,4 +1,4 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+﻿!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -57,23 +57,24 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
                         ,nodays         & ! number of time steps in simulation
                         ,nos_years        ! number of years in simulation
 
-  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
-                  ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
-                  ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
-                       ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays) ! time step in decimal days
+  double precision, intent(in), dimension(nomet,nodays) :: met ! met drivers, note reverse of needed
+  double precision, intent(in), dimension(nos_soil_layers) :: soil_frac_clay_in, & ! clay in soil (%)
+                                                              soil_frac_sand_in    ! sand in soil (%)
+  double precision, intent(in), dimension(nopars,nos_iter) :: pars ! number of parameters
+  double precision, intent(in) :: lat ! site latitude (degrees)
 
   ! output declaration
-  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
-  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
-  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1    ! Variables at model time step
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2              ! Mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3               ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4           ! Long term mean of out_var1
   double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
   ! vector of ecosystem pools
   integer :: a, e, i, s, v, steps_per_year!, nos_years
+  double precision :: nodays_1, steps_per_yr_1 ! precomputed reciprocals for averaging
   integer, dimension(nodays) :: pool_hak
   ! array of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
@@ -85,7 +86,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
 
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
 
   ! update soil parameters
   soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
@@ -97,7 +98,10 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
+  ! precompute reciprocals to replace repeated divisions in averaging loops
+  nodays_1       = 1d0 / dble(nodays)
+  steps_per_yr_1 = 1d0 / dble(steps_per_year)
 
   ! begin iterations
   do i = 1, nos_iter
@@ -171,7 +175,9 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,47) = FLUXES(1:nodays,44)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,45)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,46)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,50) = FLUXES(1:nodays,47)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,47) &       ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,50) &       ! 
+                             + FLUXES(1:nodays,51)         !
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,48)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,52) = FLUXES(1:nodays,49)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,53) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
@@ -191,7 +197,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,63) = DIAGS(1:nodays,9)           ! mean LWP (MPa)
      ! Canopy aerodynamic diagnostics
      out_var1(i,1:nodays,64) = DIAGS(1:nodays,14)          ! Canopy area scaling as a function of light
-     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaking as a function of wind
+     out_var1(i,1:nodays,65) = DIAGS(1:nodays,15)          ! Canopy area scaling as a function of wind
 
      !
      ! Calculate long-term mean of out_var1
@@ -200,7 +206,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      ! Loop across each variable
      do v = 1, output_dim
         ! Calculate mean value
-        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) / dble(nodays)
+        out_var4(i,v) = sum(out_var1(i,1:nodays,v)) * nodays_1
      end do
 
      !
@@ -210,8 +216,9 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
-           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
+           out_var5(i,a,v) = sum(out_var1(i,s:e,v)) * steps_per_yr_1
         end do
         ! Iterate counters
         s = s + steps_per_year ; e = s + steps_per_year - 1

@@ -157,7 +157,7 @@ corine2006_to_ctessel<- function(input_pft) {
 corine2006_to_ctessel<-cmpfun(corine2006_to_ctessel)
 
 #lat = sites_cardamom_lat ; long = sites_cardamom_long ; resolution = cardamom_resolution ; grid_type = cardamom_grid_type ; sitename = sites_cardamom
-how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitename) {
+how_many_points<- function(path_to_landsea,lat,long,resolution,grid_type,sitename) {
 
     # Spatial grid
     output = generate_grid(cardamom_grid_type,lat,long,resolution)
@@ -354,6 +354,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
 
         # Set the threshold below which we assume that the pixel will be excluded
         cover_threshold = 0.5
+        #cover_threshold = 0.1
 
     } else {
 
@@ -398,7 +399,11 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
         } # Aggrgeate to resolution
 
         # Set the threshold below which we assume that the pixel will be excluded
-        cover_threshold = 0.0004 # currently, equal to 1 ha, should this be more like 5 % (0.05, 125 ha)?
+        #cover_threshold = 0.01 # currently, equal to 1 ha, assuming a 1 km grid
+        #cover_threshold = 0.04 # currently, equal to 4 ha, assuming a 1 km grid
+        #cover_threshold = 0.20 # currently, equal to ~the largest third of Improved grassland areas, assuming a 1 km grid.
+        #                       # biased, yes, but to compromise on the number of pixels being simulated.
+        cover_threshold = 0.30 # Compromise to get a geographical spread but fewer pixels
 
     } # default landsea mask
 
@@ -425,6 +430,7 @@ how_many_points<- function (path_to_landsea,lat,long,resolution,grid_type,sitena
          # convert incoming pft to common values (in this case CTESSEL)
          if (use_lcm == "ECMWF") {
              new_pft = lcm[output_i[pft],output_j[pft]]
+             if (is.na(new_pft)) {new_pft = 0} # if NA values, set to zero
          } else {
              # All other cases assume we should have 0-1
              new_pft = lcm[output_i[pft],output_j[pft]]

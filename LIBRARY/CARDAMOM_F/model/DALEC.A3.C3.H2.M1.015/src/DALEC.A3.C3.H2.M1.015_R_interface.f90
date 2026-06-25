@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.A3.C3.H2.M1 and the R code
+! Subroutine to allow direct interface between DALEC.A3.C3.H2.M1.015 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 !
@@ -72,7 +72,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! declare input variables
   integer, intent(in) :: pathlength
   !character(pathlength), intent(in) :: exepath
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -89,7 +89,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
                   ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
                   ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
                        ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+                       ,lat                             ! site latitude (degrees)
 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
@@ -139,7 +139,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! Determine which crop development file are we looking for
   if (pathlength == 1) then
@@ -161,7 +161,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   ! begin iterations
   do i = 1, nos_iter
      ! call the model
-     call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
+     call carbon_model(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
                       ,FLUXES,POOLS,DIAGS,nopars,nomet,nopools,nofluxes &
                       ,nodiags,stock_seed_labile,DS_shoot,DS_root,fol_frac &
                       ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
@@ -229,7 +229,9 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,46) = FLUXES(1:nodays,41)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,47) = FLUXES(1:nodays,42)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,43)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,49) = FLUXES(1:nodays,44)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,49) = FLUXES(1:nodays,44) &       ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,47) &       ! 
+                             + FLUXES(1:nodays,48)         !               
      out_var1(i,1:nodays,50) = FLUXES(1:nodays,45)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,46)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,52) = POOLS(1:nodays,8)           ! surface water (kgH2O.m-2.30cmdepth)
@@ -246,6 +248,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      ! misc
      out_var1(i,1:nodays,61) = DIAGS(1:nodays,8)           ! rooting depth (m)
      out_var1(i,1:nodays,62) = DIAGS(1:nodays,13)          ! Development stage (0-2)
+     out_var1(i,1:nodays,63) = DIAGS(1:nodays,16)          ! Canopy average foliar nitrogen (gN/m2leaf)
 
      !
      ! Calculate long-term mean of out_var1
@@ -258,7 +261,7 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      end do
      ! Special case for water utilisation (gs_demand_supply_ratio) which should be calculated for the growing season only
      tmp = 0d0 ; where(DIAGS(1:nodays,13) > 0d0) tmp = 1d0
-     out_var4(i,56) = sum(out_var1(i,1:nodays,56)*tmp) / (dble(nodays)-sum(tmp))
+     out_var4(i,56) = sum(out_var1(i,1:nodays,56)*tmp) / max(1d0,sum(tmp))
      
      !
      ! Calculate the mean annual of out_var1
@@ -267,11 +270,12 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do
         ! Special case for water utilisation (gs_demand_supply_ratio) which should be calculated for the growing season only
-        out_var5(i,a,56) = sum(out_var1(i,s:e,56)*tmp(s:e)) / (dble(nodays)-sum(tmp(s:e)))
+        out_var5(i,a,56) = sum(out_var1(i,s:e,56)*tmp(s:e)) / max(1d0,sum(tmp(s:e)))
         ! Iterate counters
         s = s + steps_per_year ; e = s + steps_per_year - 1
      end do

@@ -177,10 +177,13 @@ load_met_fields_for_extraction<-function(latlon_in,met_source,modelname,startyea
         tmp1[tmp1 < 0] = NA
         
         # Match resolutions
-        if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) {
+        if (res(tmp1)[1] < res(cardamom_ext)[1] | res(tmp1)[2] < res(cardamom_ext)[2]) {
             # Resample to correct grid
             tmp1 = resample(tmp1, cardamom_ext, method="average") ; gc() 
-        } # Aggrgeate to resolution
+        } else if (res(tmp1)[1] != res(cardamom_ext)[1] | res(tmp1)[2] != res(cardamom_ext)[2]) { 
+            # Resample to correct grid
+            tmp1 = resample(tmp1, cardamom_ext, method="near") ; gc() 
+        } # Aggrgeate to resolution        
 
         # Filter through the reduced dataset for the specific locations
         # NOTE: cell number (or pixel number in the grid), this variable is not flipped to human viewing

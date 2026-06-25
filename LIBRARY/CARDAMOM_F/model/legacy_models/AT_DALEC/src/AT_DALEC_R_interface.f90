@@ -26,7 +26,7 @@ subroutine ratdalec(output_dim,aNPP_dim,met,pars,out_var,out_var2,lat,nopars,nom
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars       & ! number of paremeters in vector
+  integer, intent(in) :: nopars       & ! number of parameters in vector
                         ,output_dim   & !
                         ,aNPP_dim     & ! NPP allocation fraction variable dimension
                         ,dim1         & ! dimension 1 of response surface

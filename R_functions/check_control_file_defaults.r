@@ -49,14 +49,17 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_forestry") == FALSE)              {path_to_forestry <<- " "}
   if (exists("path_to_burnt_area") == FALSE)            {path_to_burnt_area <<- " "}
   if (exists("path_to_co2") == FALSE)                   {path_to_co2 <<- "./R_functions/"}
+  if (exists("path_to_lai_change") == FALSE)            {path_to_lai_change <<- " "}
   # Assimilated data paths 
   if (exists("path_to_lai") == FALSE)                   {path_to_lai <<- " "}
   if (exists("path_to_fapar") == FALSE)                 {path_to_fapar <<- " "}
   if (exists("path_to_crop_management") == FALSE)       {path_to_crop_management <<- " "}
+  if (exists("path_to_RhetQ10") == FALSE)               {path_to_RhetQ10 <<- " "}  
+  if (exists("path_to_MTTsom") == FALSE)                {path_to_MTTsom <<- " "}  
   if (exists("path_to_Csom") == FALSE)                  {path_to_Csom <<- " "}
-  if (exists("path_to_Cwood_inc") == FALSE)             {path_to_Cwood_inc <<- " "}
+  if (exists("path_to_Cwood_change") == FALSE)          {path_to_Cwood_change <<- " "}
   if (exists("path_to_Cwood_growth") == FALSE)          {path_to_Cwood_growth <<- " "}
-  if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- "v"}
+  if (exists("path_to_Cwood_mortality") == FALSE)       {path_to_Cwood_mortality <<- " "}
   if (exists("path_to_Cwood") == FALSE)                 {path_to_Cwood <<- " "}
   if (exists("path_to_Cwood_initial") == FALSE)         {path_to_Cwood_initial <<- " "}
   if (exists("path_to_Cwood_potential") == FALSE)       {path_to_Cwood_potential <<- " "}
@@ -66,15 +69,19 @@ check_control_file_defaults<-function(paths) {
   if (exists("path_to_et") == FALSE)                    {path_to_et <<- " "}
   if (exists("path_to_fire") == FALSE)                  {path_to_fire <<- " "}
   if (exists("path_to_lca") == FALSE)                   {path_to_lca <<- " "}
+  if (exists("path_to_MaxRootDepth") == FALSE)          {path_to_MaxRootDepth <<- " "}  
   # Forcings data options
   if (exists("met_source") == FALSE)                    {met_source <<- " "}
   if (exists("burnt_area_source") == FALSE)             {burnt_area_source <<- " "}
   if (exists("deforestation_source") == FALSE)          {deforestation_source <<- " "}
   if (exists("sand_clay_source") == FALSE)              {sand_clay_source <<- " "}
+  if (exists("lai_change_source") == FALSE)             {lai_change_source <<- " "}
   # Assimilated data options 
   if (exists("lai_source") == FALSE)                    {lai_source <<- " "}
   if (exists("fapar_source") == FALSE)                  {fapar_source <<- " "}
-  if (exists("Csom_source") == FALSE)                   {Csom_source <<- " "}
+  if (exists("RhetQ10_source") == FALSE)                {RhetQ10_source <<- " "}
+  if (exists("MTTsom_source") == FALSE)                 {MTTsom_source <<- " "}  
+  if (exists("Csom_source") == FALSE)                   {Csom_source <<- " "} 
   if (exists("soilwater_source") == FALSE)              {soilwater_source <<- " "}
   if (exists("et_source") == FALSE)                     {et_source <<- " "}
   if (exists("Cwood_inc_source") == FALSE)              {Cwood_inc_source <<- " "}
@@ -103,6 +110,7 @@ check_control_file_defaults<-function(paths) {
   if (exists("lca_source") == FALSE)                    {lca_source <<- " "}
   if (exists("frac_Cwood_coarse_root_source") == FALSE) {frac_Cwood_coarse_root_source <<- " "}
   if (exists("minLWP_source") == FALSE)                 {minLWP_source <<- " "}
+  if (exists("MaxRootDepth_source") == FALSE)           {MaxRootDepth_source <<- " "}
   if (exists("Cwood_potential_source") == FALSE)        {Cwood_potential_source <<- " "}
   if (exists("crop_management_source") == FALSE)        {crop_management_source <<- " "}
   if (exists("snow_source") == FALSE)                   {snow_source <<- " "}
@@ -147,12 +155,15 @@ check_control_file_defaults<-function(paths) {
   if (burnt_area_source != "site_specific" & burnt_area_source != " " & path_to_burnt_area == " ")     {stop(paste("specified 'burnt_area_source' and 'path_to_burnt_area' incompatible"))}
   if (deforestation_source != "site_specific" & deforestation_source != " " & path_to_forestry == " ") {stop(paste("specified 'deforestation_source' and 'path_to_forestry' incompatible"))}
   if (sand_clay_source != "site_specific" & sand_clay_source != " " & path_to_sand_clay == " ")        {stop(paste("specified 'sand_clay_source' and 'path_to_sand_clay' incompatible"))}
+  if (lai_change_source != "site_specific" & lai_change_source != " " & path_to_lai_change == " ")     {stop(paste("specified 'lai_change_source' and 'path_to_lai_change' incompatible"))}
   # Assimilated datasets, note these only consider those attached to gridded datasets
   if (lai_source != "site_specific" & lai_source != " " & path_to_lai == " ")                                    {stop(paste("specified 'lai_source' and 'path_to_lai' incompatible"))}
   if (fapar_source != "site_specific" & fapar_source != " " & path_to_fapar == " ")                              {stop(paste("specified 'fapar_source' and 'path_to_fapar' incompatible"))}
   if (crop_management_source != "site_specific" & crop_management_source != " " & path_to_crop_management == " "){stop(paste("specified 'crop_management_source' and 'path_to_crop_management' incompatible"))}
   if (Csom_source != "site_specific" & Csom_source != " " & path_to_Csom == " ")                                 {stop(paste("specified 'Csom_source' and 'path_to_Csom' incompatible"))}
-  if (Cwood_inc_source != "site_specific" & Cwood_inc_source != " " & path_to_Cwood_inc == " ")                  {stop(paste("specified 'Cwood_inc_source' and 'path_to_Cwood_inc' incompatible"))}
+  if (MTTsom_source != "site_specific" & MTTsom_source != " " & path_to_MTTsom == " ")                           {stop(paste("specified 'MTTsom_source' and 'path_to_MTTsom' incompatible"))}  
+  if (RhetQ10_source != "site_specific" & RhetQ10_source != " " & path_to_RhetQ10 == " ")                        {stop(paste("specified 'RhetQ10_source' and 'path_to_RhetQ10' incompatible"))}  
+  if (Cwood_change_source != "site_specific" & Cwood_change_source != " " & path_to_Cwood_change == " ")         {stop(paste("specified 'Cwood_change_source' and 'path_to_Cwood_change' incompatible"))}
   if (Cwood_growth_source != "site_specific" & Cwood_growth_source != " " & path_to_Cwood_growth == " ")         {stop(paste("specified 'Cwood_growth_source' and 'path_to_Cwood_growth' incompatible"))}
   if (Cwood_mortality_source != "site_specific" & Cwood_mortality_source != " " & path_to_Cwood_mortality == " "){stop(paste("specified 'Cwood_mortality_source' and 'path_to_Cwood_mortality' incompatible"))}
   if (Cwood_stock_source != "site_specific" & Cwood_stock_source != " " & path_to_Cwood == " ")                  {stop(paste("specified 'Cwood_stock_source' and 'path_to_Cwood' incompatible"))}
@@ -162,7 +173,8 @@ check_control_file_defaults<-function(paths) {
   if (nbe_source != "site_specific" & nbe_source != " " & path_to_nbe == " ")                                    {stop(paste("specified 'nbe_source' and 'path_to_nbe' incompatible"))}
   if (gpp_source != "site_specific" & gpp_source != " " & path_to_gpp == " ")                                    {stop(paste("specified 'gpp_source' and 'path_to_gpp' incompatible"))}
   if (fire_source != "site_specific" & fire_source != " " & path_to_fire == " ")                                 {stop(paste("specified 'fire_source' and 'path_to_fire' incompatible"))}
-  if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'fire_source' and 'path_to_lca' incompatible"))}
+  if (lca_source != "site_specific" & lca_source != " " & path_to_lca == " ")                                    {stop(paste("specified 'lca_source' and 'path_to_lca' incompatible"))}
+  if (MaxRootDepth_source != "site_specific" & MaxRootDepth_source != " " & path_to_MaxRootDepth == " ")         {stop(paste("specified 'MaxRootDepth_source' and 'path_to_MaxRootDepth' incompatible"))}  
 
   # NOTE: current assimilated variables which have currently only been done on site scale, without gridded datasets
 #  if (exists("Evap_source") == FALSE)                   {Evap_source <<- " "}

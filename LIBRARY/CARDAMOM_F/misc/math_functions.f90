@@ -164,7 +164,7 @@ module math_functions
     double precision, intent(inout) :: cur, mean_par, variance
 
     ! local variables
-    integer :: n, i, j
+    integer :: n
     double precision :: new_mean_par, nnew
 
     nnew = 1d0
@@ -899,7 +899,7 @@ module math_functions
             enddo
             iy = iv(1)
         endif
-        k = nint(idum)/IQ
+        k = nint(idum/dble(IQ))
         idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
         if (idum < 0d0) idum = idum+dble(IM)
         j = 1+iy/NDIV
@@ -910,14 +910,14 @@ module math_functions
         if (idum < 0d0 .or. iy == 0) then
             idum = max(-idum,const)
             do j = (NTAB+8),1,-1
-               k = nint(idum)/IQ
+               k = nint(idum/dble(IQ))
                idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
                if (idum < 0d0) idum = idum+dble(IM)
                if (j < NTAB) iv(j) = nint(idum)
             enddo
             iy = iv(1)
         endif
-        k = nint(idum)/IQ
+        k = nint(idum/dble(IQ))
         idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
         if (idum < 0d0) idum = idum + dble(IM)
         j = 1+iy/NDIV

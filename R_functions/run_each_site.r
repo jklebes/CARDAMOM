@@ -43,7 +43,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
   # Set dummy output variable, the value may be changes by the code below
   dummy = 0
 
-  if (file.exists(outfile_parameters) == FALSE | repair == 1) {
+  if (repair == 1 | (file.exists(outfile_stock_fluxes) == FALSE & file.exists(outfile_parameters) == FALSE)) {
 
       # Determine which parameter chains we will be using
       output = determine_parameter_chains_to_run(PROJECT,n)
@@ -61,14 +61,28 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
 #drivers$met[,5] = drivers$met[1,5]
-## HACK to create S2 simulations for GCP / Trendy v13
+# HACK to create S2 simulations for GCP / Trendy v14
 #drivers$met[,8] = 0
+# Irrigation of crops experiment, a minimum of at least 10 mm/day
+#drivers$met[,7] = pmax(drivers$met[,7],100/86400)
+#drivers$met[,7] = drivers$met[,7]*0.1
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
       if (use_parallel == FALSE) {print("running model ensemble")}
       states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
                                 drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                 PROJECT$exepath,soil_info)
+## EDC hack to reduce the possible range of soil C changes
+#filter = which(abs((states_all$som_gCm2[,dim(states_all$som_gCm2)[2]] - states_all$som_gCm2[,1]) / PROJECT$nos_years) < 250)
+#if (length(filter) > 0) {
+#parameters = array(parameters, dim=c((PROJECT$model$nopars[n]+1),prod(dim(parameters)[2:3])))[,filter]
+#parameters = array(parameters, dim=c(dim(parameters)[1],dim(parameters)[2],2))
+#states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
+#                          drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+#                          PROJECT$exepath,soil_info)
+#} else {
+#return(-9999)
+#}
       if (use_parallel == FALSE) {print("model ensemble ran, on to post-processing")}
 
       # Avoid running with ACM basically where not all fluxes exist
@@ -84,7 +98,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,n)
           # Determine how many ensemble members are within the observational uncertainties
           # of the calibration datasets
-          states_all = assess_ensemble_fit_to_calibration_data(states_all,drivers,PROJECT)
+          states_all = assess_ensemble_fit_to_calibration_data(states_all,parameters,drivers,PROJECT)
 
       } # DALEC model or not?
 
@@ -124,13 +138,16 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           # store the parameters and driver information
           save(kept_chains,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
-#          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
-#               file=outfile_parameters, compress="gzip", compression_level = 6)
           # Return
           dummy = 0 ; return(dummy)
+
       } else {
+
           # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-          num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          # The current quantiles allow for calculation of the 95 % CI (0.975-0.025) and the standard deviation equivalent (0.839-0.1607)
+          # The other quantiles provide a equal description of the distribution.
+          #num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          num_quantiles = c(0.025,0.1607143,0.2964286,0.4321429,0.5,0.5678571,0.7035714,0.8392857,0.975)
           na_flag = TRUE
 
           # Run post-processing for gridded analysis

@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A1.C2.D2.F2.H2.P2.R1 model.
+! Module contains uniform prior parameter information for the DALEC.A1.C2.D2.F2.H2.P2.R1.007 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -66,16 +66,13 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
-!    ! Decomposition litter -> som (day-1)
-!    PI%parmin(1) = 0.00001d0
-!    PI%parmax(1) = 0.01d0
     ! Decomposition efficiency of litter/CWD to som (fraction)
     PI%parmin(1) = 0.25d0
     PI%parmax(1) = 0.75d0
 
     ! Fraction of GPP respired as Rm(fol,root,wood)
     PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.8d0
+    PI%parmax(2) = 0.7d0
 
     ! Fraction of (1-fgpp) to foliage
     PI%parmin(3) = 0.1d0
@@ -94,9 +91,11 @@ module MODEL_PARAMETERS
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
@@ -105,10 +104,8 @@ module MODEL_PARAMETERS
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
     PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
-!    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
@@ -118,13 +115,8 @@ module MODEL_PARAMETERS
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
     ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
-    PI%parmin(11) = 12d0 !3.4d0 !5d0
-    PI%parmax(11) = 30d0 !42d0 !50d0
-    ! log10 avg foliar N (gN.m-2)
-    ! Kattge et al., (2011) (Quantiles 25% / 75%)
-    ! and Thomas et al., (2019) (Aconite canopy paper)
-!    PI%parmin(11) = 0.07918125d0!0d0 !-0.2218487d0 !TLS: restricted to 1.2 gN/m2leaf
-!    PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
@@ -164,36 +156,32 @@ module MODEL_PARAMETERS
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
-!    ! Optimum Nitrogen use efficiency (gC/gN/m2/day)
-!    PI%parmin(28) =  1.6d0
-!    PI%parmax(28) = 40.0d0
-
-    ! Turnover rate for CWD
-    PI%parmin(29) = 1.368925d-05 ! 200.00 years at 0oC
-    PI%parmax(29) = 0.001d0      !   2.74 years at 0oC
-
-    ! Half saturation coefficient for self-thinning supression on wood turnover
-    PI%parmin(30) = 1d0
-    PI%parmax(30) = 7500d0
-
     ! Resilience factor for burned but not combusted C stocks
-    PI%parmin(31) = 0.1d0
-    PI%parmax(31) = 0.9d0
+    PI%parmin(28) = 0.01d0
+    PI%parmax(28) = 0.99d0
     ! Combustion completeness factor for foliage
+    PI%parmin(29) = 0.01d0
+    PI%parmax(29) = 0.99d0
+    ! Combustion completeness factor for fine root and wood
+    PI%parmin(30) = 0.01d0
+    PI%parmax(30) = 0.99d0
+    ! Combustion completeness factor for soil
+    PI%parmin(31) = 0.01d0
+    PI%parmax(31) = 0.1d0
+    ! Combustion completeness factor for foliage + fine root litter
     PI%parmin(32) = 0.01d0
     PI%parmax(32) = 0.99d0
-    ! Combustion completeness factor for fine root and wood
+    ! Combustion completeness factor for wood litter
     PI%parmin(33) = 0.01d0
     PI%parmax(33) = 0.99d0
-    ! Combustion completeness factor for soil
-    PI%parmin(34) = 0.001d0
-    PI%parmax(34) = 0.1d0
-    ! Combustion completeness factor for foliage + fine root litter
-    PI%parmin(35) = 0.01d0
-    PI%parmax(35) = 0.99d0
-    ! Combustion completeness factor for wood litter
-    PI%parmin(36) = 0.01d0
-    PI%parmax(36) = 0.99d0
+
+    ! Turnover rate for wood litter
+    PI%parmin(35) = 1.368925d-05 ! 200.00 years at 0oC
+    PI%parmax(35) = 0.001d0      !   2.74 years at 0oC
+
+    ! Half saturation coefficient for self-thinning supression on wood turnover
+    PI%parmin(36) = 1d0
+    PI%parmax(36) = 7500d0
 
     !
     ! INITIAL VALUES DECLARED HERE
@@ -228,11 +216,10 @@ module MODEL_PARAMETERS
     PI%parmax(24) = 1.00d0
 
     ! C CWD
-    PI%parmin(28) = 1d0
-    PI%parmax(28) = 10000d0
+    PI%parmin(34) = 1d0
+    PI%parmax(34) = 10000d0
 
   end subroutine pars_info
-
   !
   !------------------------------------------------------------------
   !

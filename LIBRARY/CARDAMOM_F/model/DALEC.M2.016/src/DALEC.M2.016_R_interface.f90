@@ -1,4 +1,4 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+﻿!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.A3.C3.H2.M1 and the R code
+! Subroutine to allow direct interface between DALEC.A3.H1.M2.016 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 ! Modified by: T. Luke Smallman 
@@ -33,13 +33,13 @@
 
 subroutine rdalec16(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
-                   ,out_var1,out_var2,out_var3 &
-                   ,out_var4,out_var5          &
+                   ,out_var1,out_var2,out_var3,out_var4,out_var5 &
                    ,lat,nopars,nomet &
-                   ,nofluxes,nopools,nodays    &
-                   ,nos_years,deltat,nos_iter)
+                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
+                   ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL,cica_time
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, &
+                              soil_frac_clay, soil_frac_sand, nos_soil_layers
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -54,36 +54,43 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
-                        ,nos_years      & ! number of years
-                        ,nodays           ! number of days in simulation
+                        ,nodiags        & ! number of model diagnositics
+                        ,nodays         & ! number of time steps in simulation
+                        ,nos_years        ! number of years in simulation
 
-  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
-                             ,pars(nopars,nos_iter)   & ! number of parameters
-                             ,lat                       ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays) ! time step in decimal days
+  double precision, intent(in), dimension(nomet,nodays) :: met ! met drivers, note reverse of needed
+  double precision, intent(in), dimension(nos_soil_layers) :: soil_frac_clay_in, & ! clay in soil (%)
+                                                              soil_frac_sand_in    ! sand in soil (%)
+  double precision, intent(in), dimension(nopars,nos_iter) :: pars ! number of parameters
+  double precision, intent(in) :: lat ! site latitude (degrees)
 
   ! output declaration
-  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
-  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
-  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1    ! Variables at model time step
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2              ! Mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3               ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4           ! Long term mean of out_var1
   double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
   ! vector of ecosystem pools
   integer :: a, e, i, s, v, steps_per_year!, nos_years
   integer, dimension(nodays) :: pool_hak
+  ! array of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
-  ! vector of ecosystem fluxes
+  ! array of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: tmp &
-                                        ,lai & ! leaf area index
-                                        ,GPP & ! Gross primary productivity
-                                        ,NEE   ! net ecosystem exchange of CO2
+  ! array of ecosystem diagnositcs
+  double precision, dimension(nodays,nodiags) :: DIAGS
+  double precision, dimension(nodays) :: tmp, tmp1
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
+  POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
+
+  ! update soil parameters
+  soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
+  soil_frac_sand(1:nos_soil_layers) = soil_frac_sand_in(1:nos_soil_layers)
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -91,15 +98,15 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
-                      ,lat,lai,NEE,FLUXES,POOLS &
-                      ,nopars,nomet,nopools,nofluxes,GPP)
+                      ,lat,FLUXES,POOLS,DIAGS &
+                      ,nopars,nomet,nopools,nofluxes,nodiags)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
@@ -116,7 +123,7 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,2)  = FLUXES(1:nodays,3)       ! Rauto (gC/m2/day)
      out_var1(i,1:nodays,3)  = FLUXES(1:nodays,11)      ! Rhet_litter (gC/m2/day)
      out_var1(i,1:nodays,4)  = FLUXES(1:nodays,12)      ! Rhet_som (gC/m2/day)
-     out_var1(i,1:nodays,5)  = FLUXES(1:nodays,24)      ! Total fire (gC/m2/day)
+     out_var1(i,1:nodays,5)  = FLUXES(1:nodays,17)      ! Total fire (gC/m2/day)
      out_var1(i,1:nodays,6)  = FLUXES(1:nodays,22)      ! Total harvested material (gC/m2/day)
      out_var1(i,1:nodays,7)  = FLUXES(1:nodays,23)      ! Total grazing material (gC/m2/day)
      ! C internal fluxes (gC/m2/day)
@@ -128,6 +135,7 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,13) = FLUXES(1:nodays,10)      ! fine root to litter (gC/m2/day)
      out_var1(i,1:nodays,14) = FLUXES(1:nodays,13)      ! litter to som (gC/m2/day)
      ! C disturbance fluxes (gC/m2/day)
+     ! NOTE: fire fluxes 37-45 not in use
      out_var1(i,1:nodays,15) = FLUXES(1:nodays,37)      ! fire emission from labile (gC/m2/day)
      out_var1(i,1:nodays,16) = FLUXES(1:nodays,42)      ! fire induced litter from labile (gC/m2/day)
      out_var1(i,1:nodays,17) = FLUXES(1:nodays,38)      ! fire emission from foliage (gC/m2/day)
@@ -160,14 +168,43 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,42) = POOLS(1:nodays,4)        ! litter (gC/m2)
      out_var1(i,1:nodays,43) = POOLS(1:nodays,5)        ! som (gC/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,44) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,44) = DIAGS(1:nodays,1)        ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,45) = cica_time                ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,45) = DIAGS(1:nodays,4)        ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,46) = DIAGS(1:nodays,7)        ! ratio of evaporative demand over supply
+     out_var1(i,1:nodays,47) = DIAGS(1:nodays,5)        ! Canopy scale stomatal conductance during day light (mmolH2O/m2ground/s)
+     out_var1(i,1:nodays,48) = DIAGS(1:nodays,3)        ! Canopy absorbed PAR (MJ/m2ground/day)
+     out_var1(i,1:nodays,49) = DIAGS(1:nodays,6)        ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
+     ! Water cycle related
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,46)      ! Evapotranspiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,51) = FLUXES(1:nodays,47)      ! transpiration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,52) = FLUXES(1:nodays,48)      ! soil evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,53) = FLUXES(1:nodays,49)      ! wet canopy evaporation (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,54) = FLUXES(1:nodays,50)      ! runoff (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,55) = FLUXES(1:nodays,51)      ! underflow (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,56) = FLUXES(1:nodays,52)      ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,57) = FLUXES(1:nodays,53) &    ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,56) &    ! 
+                             + FLUXES(1:nodays,57)      !          
+     out_var1(i,1:nodays,58) = FLUXES(1:nodays,54)      ! Etrans extracted from 1st layer (0-1)
+     out_var1(i,1:nodays,59) = FLUXES(1:nodays,55)      ! Etrans extracted from 2nd layer (0-1)
+     out_var1(i,1:nodays,60) = -9999d0                  ! Surface water not output as held at field capacity
+     out_var1(i,1:nodays,61) = DIAGS(1:nodays,10)       ! Weighted Soil Water Potential (MPa)
+     out_var1(i,1:nodays,62) = DIAGS(1:nodays,2)        ! Snow storage (kgH2O/m2)
+     ! misc
+     out_var1(i,1:nodays,63) = DIAGS(1:nodays,8)        ! rooting depth (m)
      ! GSI and components
-     out_var1(i,1:nodays,46) = FLUXES(1:nodays,18)      ! growing season index
-     out_var1(i,1:nodays,47) = FLUXES(1:nodays,15)      ! temperature contribution to GSI
-     out_var1(i,1:nodays,48) = FLUXES(1:nodays,16)      ! photo-period contribution to GSI
-     out_var1(i,1:nodays,49) = FLUXES(1:nodays,17)      ! VPD contribution to GSI
+     out_var1(i,1:nodays,64) = DIAGS(1:nodays,16)       ! growing season index
+     out_var1(i,1:nodays,65) = DIAGS(1:nodays,18)       ! temperature contribution to GSI
+     out_var1(i,1:nodays,66) = DIAGS(1:nodays,19)       ! photo-period contribution to GSI
+     out_var1(i,1:nodays,67) = DIAGS(1:nodays,20)       ! VPD contribution to GSI
+     out_var1(i,1:nodays,68) = DIAGS(1:nodays,17)       ! Canopy GSI gradient (-1->1)     
+     out_var1(i,1:nodays,69) = DIAGS(1:nodays,21)       ! GPP return (gC/gC/m2/day)     
+     ! mean Leaf Water Potential
+     out_var1(i,1:nodays,70) = DIAGS(1:nodays,9)        ! mean LWP (MPa)
+     ! Canopy aerodynamic diagnostics 
+     out_var1(i,1:nodays,71) = DIAGS(1:nodays,14)       ! Canopy area scaling as a function of light
+     out_var1(i,1:nodays,72) = DIAGS(1:nodays,15)       ! Canopy area scaling as a function of wind
 
      !
      ! Calculate long-term mean of out_var1
@@ -186,6 +223,7 @@ subroutine rdalec16(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

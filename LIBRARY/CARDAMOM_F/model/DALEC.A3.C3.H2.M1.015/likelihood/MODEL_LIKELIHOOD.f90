@@ -24,7 +24,7 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A3.C3.H2.M1 as a function of observations and ecological dynamical constraints.
+! of DALEC.A3.C3.H2.M1.015 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -46,8 +46,8 @@ module model_likelihood_module
 
   ! declare needed types
   type EDCDIAGNOSTICS
-    integer :: nedc = 100    ! number of edcs being assessed
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks, dim should equal nedc
+    integer :: nedc = 150    ! number of edcs being assessed
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks, dim should equal nedc
     integer :: EDC
     integer :: DIAG
   end type
@@ -591,9 +591,15 @@ module model_likelihood_module
     !  EDC2 = 0d0 ; EDCD%PASSFAIL(18) = 0
     !endif
 
+    ! The mean annual carbon stock change for soils is unlikely to be >200 gC/m2/yr
+    ! an informed guess.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 200d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(30) = 0
+    end if
+
     ! We should assume all crops get somewhere close to maturity (2.0)
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,13)) < 1.9) then
-        EDC2 = 0d0 ; EDCD%PASSFAIL(19) = 0
+        EDC2 = 0d0 ; EDCD%PASSFAIL(31) = 0
     endif
 
     !
@@ -647,7 +653,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return
@@ -855,10 +861,10 @@ module model_likelihood_module
 
         ! call EDCs which can be evaluated prior to running the model
         call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1)
-
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
         ML_obs_out = log(EDC1)
+
     endif !
 
     ! run the dalec model
@@ -1110,16 +1116,6 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,21))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
-    if (DATAin%nnbe > 0) then
-        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
-            + DATAin%M_FLUXES(1:DATAin%nodays,17) & ! Fire
-            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnbe,DATAin%nbepts,DATAin%NBE,DATAin%NBE_unc,DATAin%NBE_lag, &
-                                             DATAin%NBE_scaling,mod)
-    endif ! nnbe > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
         mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
@@ -1177,10 +1173,12 @@ module model_likelihood_module
         ! Accumulate yield and GPP over the growing period, based on DS >= 0.
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
         ! not after the management activities had reset DS to -1. If so this code will not work.
+        if (allocated(tmp1)) deallocate(tmp1)
         allocate(tmp1(DATAin%nodays)) ; tmp1 = 0d0 ; where(DATAin%M_DIAGS(1:DATAin%nodays,13) >= 0d0) tmp1 = 1d0
         mod = sum(DATAin%M_FLUXES(:,21)*tmp1) / sum(DATAin%M_FLUXES(:,1)*tmp1)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(8)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(8),DATAin%otherpriorunc(8),dummy_lag,dummy_scaling,mod))
+        deallocate(tmp1)
     end if
 
     return

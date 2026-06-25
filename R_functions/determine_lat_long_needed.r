@@ -44,7 +44,11 @@ determine_lat_long_needed<- function(lat,long,resolution,grid_type,remove) {
     obs_lat_grid = lat[,lat_dim:1] 
 
     # remove the values we don't want
-    if (length(remove) > 0) {lat = lat[-remove] ; long = long[-remove]}
+    if (length(remove) > 0) {
+        lat = lat[-remove] ; long = long[-remove]
+    } else {
+        lat = as.vector(lat) ; long = as.vector(long)
+    }
 
     # output the result
     output = list(lat = lat, long = long, cardamom_ext = cardamom_ext,
