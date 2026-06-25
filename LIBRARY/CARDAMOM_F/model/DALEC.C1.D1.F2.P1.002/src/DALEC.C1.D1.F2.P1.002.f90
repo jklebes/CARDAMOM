@@ -48,8 +48,6 @@ public :: CARBON_MODEL     &
          ,soil_frac_clay   &
          ,soil_frac_sand   &
          ,nos_soil_layers  &
-         ,extracted_C      &
-         ,CiCa_time        &
          ,dim_1,dim_2      &
          ,nos_trees        &
          ,nos_inputs       &
@@ -60,79 +58,94 @@ public :: CARBON_MODEL     &
          ,nodepred         &
          ,bestvar
 
-! Biomass removal (e.g. due to forest harvest)
-double precision, allocatable, dimension(:) :: extracted_C, CiCa_time
+  !!!!!!!!!
+  ! Parameters
+  !!!!!!!!!
 
-! Variables needed incase of using random forest functions.
-! None are currently implemented but variables remain for legacy reasons
-integer ::    dim_1, & ! dimension 1 of response surface
-              dim_2, & ! dimension 2 of response surface
-          nos_trees, & ! number of trees in randomForest
-         nos_inputs    ! number of driver inputs
-double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                    rightDaughter, & ! right daughter for forets
-                                                       nodestatus, & ! nodestatus for forests
-                                                       xbestsplit, & ! for forest
-                                                         nodepred, & ! prediction value for each tree
-                                                          bestvar    ! for randomForests
+  ! useful technical parameters
+  double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
+                                ,vlarge = huge(0d0)
 
-! Multiple soil layer variables, these are not used in DALEC2 (C1),
-! but declarations are needed to here ensure compilation compatability with more complex verison of DALEC
-integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
-double precision :: ci
-double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
+  integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
+  double precision, parameter :: pi = 3.1415927d0, &
+                         deg_to_rad = 0.01745329d0   ! pi/180d0
+  ! timing parameters
+  double precision, parameter :: &
+                   seconds_per_hour = 3600d0,       & ! Number of seconds per hour
+                    seconds_per_day = 86400d0,      & ! Number of seconds per day
+                  seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
-contains
-!
-!--------------------------------------------------------------------
-!
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai,NEE,FLUXES,POOLS &
-                         ,nopars,nomet,nopools,nofluxes,GPP)
+  !!!!!!!!!
+  ! Module variables
+  !!!!!!!!!
+
+  ! Variables needed incase of using random forest functions.
+  ! None are currently implemented but variables remain for legacy reasons
+  integer ::    dim_1, & ! dimension 1 of response surface
+                dim_2, & ! dimension 2 of response surface
+            nos_trees, & ! number of trees in randomForest
+           nos_inputs    ! number of driver inputs
+  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                      rightDaughter, & ! right daughter for forets
+                                                         nodestatus, & ! nodestatus for forests
+                                                         xbestsplit, & ! for forest
+                                                           nodepred, & ! prediction value for each tree
+                                                            bestvar    ! for randomForests
+  ! Modile level ACM-GPP-ET variables
+  double precision :: ci
+  double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
+
+  contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
+                         ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA; C1; DALEC2) model.
-    ! The CARDBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
-    ! to simulate GPP. GPP is then partitied to autotrophic respiration and
+    ! The CARBON_MODEL subroutine uses version 1 of the Aggregated Canopy Model (ACM)
+    ! to simulate GPP. GPP is then partitioned to autotrophic respiration and
     ! the live pools (foliage, labile, wood, fine roots).
     ! These live pools are subject to turnover to dead organic matter pools which are subsequently
     ! decomposed resulting in heterotrophic respiration
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
 
-    ! Declare input dimensions
-    integer, intent(in) :: start    & ! Start time step of the current call
-                          ,finish   & ! End time stem of the current call
-                          ,nopars   & ! number of paremeters in vector
+    ! declare input variables
+    integer, intent(in) :: start    &
+                          ,finish   &
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
-                          ,nodays     ! number of days in simulation
-    ! Declare input drivers
-    double precision, intent(in) :: met(nomet,nodays) & ! met drivers
-                                   ,deltat(nodays)    & ! time step in decimal days
-                                   ,pars(nopars)      & ! number of parameters
-                                   ,lat                 ! site latitude (degrees)
-    ! Declare model output variables
-    double precision, dimension(nodays), intent(inout) :: lai & ! leaf area index
-                                                         ,GPP & ! Gross primary productivity
-                                                         ,NEE   ! net ecosystem exchange of CO2
-    double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
+                          ,nodays   & ! number of days in simulation
+                          ,nodiags    ! number of model diagnositic variables
 
+    double precision, intent(in) :: met(nomet,nodays) & ! met drivers
+                         ,deltat(nodays)    & ! time step in decimal days
+                         ,pars(nopars)      & ! number of parameters
+                         ,lat                 ! site latitude (degrees)
+
+    double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
     ! declare local variables
-    double precision :: gpppars(12)   & ! ACM inputs (LAI+met)
+    double precision :: infi          &
+                       ,gpppars(10)   & ! ACM inputs (LAI+met)
                        ,constants(10) & ! parameters for ACM
-             ,wf,wl,ff,fl,osf,osl,sf  & ! phenological controls
-             ,pi,ml,doy,tmp
+                       ,wf,wl,ff,fl   & ! phenological controls
+                       ,osf,osl,sf,ml & 
+                       ,doy,tmp
 
     ! C pool specific combustion completeness and resilience factors
-    double precision :: cf(6), rfac(6), burnt_area
-    integer :: p, f, n, harvest_management
+    double precision :: burnt_area
+    double precision, dimension(6) :: cf,rfac
     ! local deforestation related variables
     double precision, dimension(5) :: post_harvest_burn      & ! how much burning to occur after
                                      ,foliage_frac_res       &
@@ -154,6 +167,8 @@ contains
                        ,coarse_root_residue          &
                        ,soil_loss_with_roots
 
+    integer :: p, f, n, harvest_management                       
+
     ! met drivers are:
     ! 1st run day
     ! 2nd min daily temp (oC)
@@ -174,72 +189,87 @@ contains
     ! 6 = som
 
     ! FLUXES (gC/m2/day) are:
-    ! 1 = GPP
-    ! 2 = temprate
-    ! 3 = respiration_auto
-    ! 4 = leaf production
-    ! 5 = labile production
-    ! 6 = root production
-    ! 7 = wood production
-    ! 8 = labile production
-    ! 9 = leaffall factor
-    ! 10 = leaf litter production
-    ! 11 = woodlitter production
-    ! 12 = rootlitter production
-    ! 13 = respiration het litter
-    ! 14 = respiration het som
-    ! 15 = litter2som
-    ! 16 = labrelease factor
-    ! 17 = ecosystem fire emission  (sum of fluxes 18 to 23)
-    ! 18 = fire emission from labile
-    ! 19 = fire emission from foliar
-    ! 20 = fire emission from roots
-    ! 21 = fire emission from wood
-    ! 22 = fire emission from litter
-    ! 23 = fire emission from soil
-    ! 24 = transfer from labile into litter
-    ! 25 = transfer from foliar into litter
-    ! 26 = transfer from roots into litter
-    ! 27 = transfer from wood into som
-    ! 28 = transfer from litter into som
+    ! 1  = GPP (gC/m2/day)
+    ! 2  = temperature rate modifier (unitless)
+    ! 3  = autotrophic respiration (gC/m2/day)
+    ! 4  = GPP allocation to foliage (gC/m2/day)
+    ! 5  = GPP allocation to labile (gC/m2/day)
+    ! 6  = GPP allocation to fine roots (gC/m2/day)
+    ! 7  = GPP allocation to wood (gC/m2/day)
+    ! 8  = labile->leaf transfer (gC/m2/day)
+    ! 9  = leaf fall factor (fraction/day)
+    ! 10 = leaf litter production (gC/m2/day)
+    ! 11 = wood litter production (gC/m2/day)
+    ! 12 = root litter production (gC/m2/day)
+    ! 13 = heterotrophic respiration from litter (gC/m2/day)
+    ! 14 = heterotrophic respiration from som (gC/m2/day)
+    ! 15 = litter decomposition to som (gC/m2/day)
+    ! 16 = labile release factor (fraction/day)
+    ! 17 = total ecosystem fire emission - sum(18:23) (gC/m2/day)
+    ! 18 = fire emission from labile (gC/m2/day)
+    ! 19 = fire emission from foliage (gC/m2/day)
+    ! 20 = fire emission from roots (gC/m2/day)
+    ! 21 = fire emission from wood (gC/m2/day)
+    ! 22 = fire emission from litter (gC/m2/day)
+    ! 23 = fire emission from som (gC/m2/day)
+    ! 24 = fire mortality transfer labile->litter (gC/m2/day)
+    ! 25 = fire mortality transfer foliage->litter (gC/m2/day)
+    ! 26 = fire mortality transfer roots->litter (gC/m2/day)
+    ! 27 = fire mortality transfer wood->som (gC/m2/day)
+    ! 28 = fire mortality transfer litter->som (gC/m2/day)
+    ! 29 = total harvest extracted C - sum(30:35) (gC/m2/day)
+    ! 30 = harvest extraction from labile (gC/m2/day)
+    ! 31 = harvest extraction from foliage (gC/m2/day)
+    ! 32 = harvest extraction from fine roots (gC/m2/day)
+    ! 33 = harvest extraction from wood (gC/m2/day)
+    ! 34 = harvest extraction from litter (gC/m2/day)
+    ! 35 = harvest extraction from som (gC/m2/day)
+    ! 36 = harvest litter residue from labile (gC/m2/day)
+    ! 37 = harvest litter residue from foliage (gC/m2/day)
+    ! 38 = harvest litter residue from fine roots (gC/m2/day)
+    ! 39 = harvest litter residue from wood (gC/m2/day)
 
-    ! PARAMETERS
-    ! 17 values
-    ! NOTE: C pool initial conditions are part of the parameter vector but are listed elsewhere
+    ! PARAMETERS are:
+    ! p(1)  = litter decomposition rate, temperature adjusted (fraction/day)
+    ! p(2)  = fraction of GPP as autotrophic respiration (fraction)
+    ! p(3)  = fraction of NPP allocated to foliage (fraction)
+    ! p(4)  = fraction of NPP allocated to fine roots (fraction)
+    ! p(5)  = leaf lifespan (yr)
+    ! p(6)  = wood turnover rate (fraction/day)
+    ! p(7)  = fine root turnover rate (fraction/day)
+    ! p(8)  = litter turnover rate, temperature adjusted (fraction/day)
+    ! p(9)  = som turnover rate, temperature adjusted (fraction/day)
+    ! p(10) = temperature sensitivity of heterotrophic respiration (oC-1)
+    ! p(11) = canopy efficiency (gC/m2leaf/day)
+    ! p(12) = date of labile release / bud burst (day of year)
+    ! p(13) = fraction of NPP allocated to labile pool (fraction)
+    ! p(14) = labile release period duration (days)
+    ! p(15) = date of leaf fall (day of year)
+    ! p(16) = leaf fall period duration (days)
+    ! p(17) = leaf mass per area LMA (gC/m2)
+    ! p(18) = initial labile C pool (gC/m2)
+    ! p(19) = initial foliar C pool (gC/m2)
+    ! p(20) = initial fine root C pool (gC/m2)
+    ! p(21) = initial wood C pool (gC/m2)
+    ! p(22) = initial litter C pool (gC/m2)
+    ! p(23) = initial som C pool (gC/m2)
+    ! p(24) = fire resilience factor for non-combusted C (fraction)
+    ! p(25) = combustion completeness for foliage (fraction)
+    ! p(26) = combustion completeness for non-photosynthetic tissue (fraction)
+    ! p(27) = combustion completeness for soil (fraction)
+    ! p(28) = combustion completeness for foliage and fine root litter (fraction)
 
-    ! p(1) Litter to SOM (day-1 at 0oC)
-    ! p(2) Fraction of photosynthate respired as autotrophic
-    ! p(3) Fraction of photosynthate allocated directly to foliage
-    ! p(4) Fraction of photosynthate allocated to fine roots
-    ! p(5) Leaf lifespan (year)
-    ! p(6) Turnover rate of wood (day-1)
-    ! p(7) Turnover rate of roots (day-1)
-    ! p(8) Litter turnover rate (day-1 at 0oC)
-    ! p(9) SOM turnover rate  (day-1 at 0oC)
-    ! p(10) Exponential coefficient on temperature response
-    ! p(11) Photosynthetic canopy efficiency parameter (gC/m2leaf/day at oC)
-    ! p(12) = Julian day of peak labile release to canopy
-    ! p(13) = Fraction of photosynthate allocated to labile
-    ! p(14) = Labile release period (days)
-    ! p(15) = Julian day of peak leaf fall
-    ! p(16) = Leaf fall period (days)
-    ! p(17) = Leaf Carbon per unit area (gC/m2leaf)
+    ! Set some initial states
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
 
-    ! Reset all POOLS and FLUXES to prevent precision errors
-    FLUXES = 0d0 ; POOLS = 0d0
+    ! load acm inputs 
+    gpppars(4) = 1d0 ! foliar N
+    gpppars(7) = lat ! latitude in degrees
+    gpppars(9) = -2d0 ! leafWP-soilWP
+    gpppars(10) = 1d0 ! totaly hydraulic resistance
 
-    ! set constants
-    pi = 3.1415927d0
-
-    ! load some values
-    gpppars(4) = 1d0 ! foliar N (gN/m2leaf)
-    gpppars(7) = lat
-    gpppars(9) = -2d0 ! leafWP-soilWP (MPa)
-    gpppars(10) = 1d0 ! total hydraulic resistance
-    gpppars(11) = pi
-
-    ! Assign acm parameters (see Fox et al., 2009)
-    constants(1) = pars(11) ! Assign canopy efficency parameter
+    ! assign acm parameters (see Fox et al., 2009)
+    constants(1) = pars(11) ! canopy efficiency
     constants(2) = 0.0156935d0
     constants(3) = 4.22273d0
     constants(4) = 208.868d0
@@ -248,17 +278,15 @@ contains
     constants(7) = 7.19298d0
     constants(8) = 0.011136d0
     constants(9) = 2.1001d0
-    constants(10) = 0.789798d0
+    constants(10) = 0.789798d0    
 
-    if (start == 1) then
-       ! Initial carbon pool (gC/m2) conditions
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
-    endif
+    ! Initial carbon pool (gC/m2) conditions
+    POOLS(1,1) = pars(18) ! labile
+    POOLS(1,2) = pars(19) ! foliar
+    POOLS(1,3) = pars(20) ! roots
+    POOLS(1,4) = pars(21) ! wood
+    POOLS(1,5) = pars(22) ! litter
+    POOLS(1,6) = pars(23) ! som
 
     ! Defining phenological variables
     ! The phenology model is based on leaf turnover and growth
@@ -270,7 +298,7 @@ contains
     wl = pars(14)*sqrt(2d0) * 0.5d0
     ! Magnitude coefficient
     ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
-    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
+    fl = 3.45437738965761021d0!(log(1.001d0)-log(0.001d0)) * 0.5d0
     ! Set minium labile life span to one year
     ml = 1.001d0
     ! Offset for labile and leaf turnovers
@@ -278,7 +306,18 @@ contains
     osl = ospolynomial(ml,wl)
 
     ! scaling to biyearly sine curve
-    sf = 365.25d0/pi
+    sf = 116.262685928629551d0 !365.25d0/pi
+
+    ! now load the hardcoded forest management parameters into their scenario locations
+
+    ! Deforestation process functions in a sequential way.
+    ! Thus, the pool_loss is first determined as a function of met(8,n) and
+    ! for fine and coarse roots whether this felling is associated with a mechanical
+    ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
+    ! fine and coarse roots may subsequently undergo mortality from which they do not recover
+    ! but allows for management activities such as grazing, mowing and coppice.
+    ! The pool_loss is then partitioned between the material which is left within the system
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     ! JFE added 4 May 2018 - define fire constants
     ! Update fire parameters derived from
@@ -287,148 +326,136 @@ contains
     ! to provide specific CC for litter and wood litter.
     ! NOTE: changes also result in the addition of further EDCs
 
-    ! if either of our disturbance drivers indicate disturbance will occur then
-    ! set up these components
-    if (maxval(met(8,:)) > 0d0 .or. maxval(met(9,:)) > 0d0) then
+    !! Parameter values for deforestation variables
+    !! Scenario 1
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(1)  = 0d0
+    rootcr_frac_removal(1) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(1) = 1d0
+    roots_frac_res(1)   = 1d0
+    rootcr_frac_res(1)  = 1d0
+    stem_frac_res(1)    = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(1) = 1d0
 
-        ! now load the hardcoded forest management parameters into their scenario locations
+    !! Scenario 2
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(2)  = 0d0
+    rootcr_frac_removal(2) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(2) = 1d0
+    roots_frac_res(2)   = 1d0
+    rootcr_frac_res(2) = 1d0
+    stem_frac_res(2)   = 0.20d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(2) = 0d0
 
-        ! Deforestation process functions in a sequenctial way.
-        ! Thus, the pool_loss is first determined as a function of met(8,n) and
-        ! for fine and coarse roots whether this felling is associated with a mechanical
-        ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
-        ! fine and coarse roots may subsequently undergo mortality from which they do not recover
-        ! but allows for management activities such as grazing, mowing and coppice.
-        ! The pool_loss is then partitioned between the material which is left within the system
-        ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    !! Scenario 3
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(3)  = 0d0
+    rootcr_frac_removal(3) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(3) = 0.5d0
+    roots_frac_res(3)   = 1d0
+    rootcr_frac_res(3) = 1d0
+    stem_frac_res(3)   = 0d0 !
+    ! wood partitioning (fraction)
+    Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(3) = 0d0
 
-        !! Parameter values for deforestation variables
-        !! Scenario 1
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(1)  = 0d0
-        rootcr_frac_removal(1) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(1) = 1d0
-        roots_frac_res(1)   = 1d0
-        rootcr_frac_res(1)  = 1d0
-        stem_frac_res(1)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(1) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(1) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(1) = 1d0
+    !! Scenario 4
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(4)  = 1d0
+    rootcr_frac_removal(4) = 1d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(4) = 0.5d0
+    roots_frac_res(4)   = 1d0
+    rootcr_frac_res(4) = 0d0
+    stem_frac_res(4)   = 0d0
+    ! wood partitioning (fraction)
+    Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(4) = 0d0
 
-        !! Scenario 2
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(2)  = 0d0
-        rootcr_frac_removal(2) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(2) = 1d0
-        roots_frac_res(2)   = 1d0
-        rootcr_frac_res(2)  = 1d0
-        stem_frac_res(2)    = 0.20d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(2) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(2) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(2) = 0d0
+    !## Scenario 5 (grassland grazing / cutting)
+    ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
+    ! removal which is imposed directly on these pools. These fractions vary
+    ! the assumption that the fine and coarse roots are mechanically removed.
+    ! 1 = all removed, 0 = all remains.
+    roots_frac_removal(5)  = 0d0
+    rootcr_frac_removal(5) = 0d0
+    ! harvest residue (fraction); 1 = all remains, 0 = all removed
+    foliage_frac_res(5) = 0.1d0
+    roots_frac_res(5)   = 0d0
+    rootcr_frac_res(5)  = 0d0
+    stem_frac_res(5)    = 0.12d0
+    ! wood partitioning (fraction)
+    Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
+    ! Csom loss due to phyical removal with roots
+    ! Morison et al (2012) Forestry Commission Research Note
+    soil_loss_frac(5) = 0d0 ! actually between 1-3 %
+    ! was the forest burned after deforestation (0-1)
+    ! NOTE: that we refer here to the fraction of the cleared land to be burned
+    post_harvest_burn(5) = 0d0
 
-        !! Scenario 3
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(3)  = 0d0
-        rootcr_frac_removal(3) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(3) = 0.5d0
-        roots_frac_res(3)   = 1d0
-        rootcr_frac_res(3)  = 1d0
-        stem_frac_res(3)    = 0d0 !
-        ! wood partitioning (fraction)
-        Crootcr_part(3) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(3) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(3) = 0d0
+!    ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
+!    cf(1) = 0.1d0 ; cf(2) = 0.9d0
+!    cf(3) = 0.1d0 ; cf(4) = 0.1d0
+!    cf(5) = 0.7d0 ; cf(6) = 0.01d0
+!    ! Resilience factor for non-combusted tissue
+!    rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
 
-        !! Scenario 4
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(4)  = 1d0
-        rootcr_frac_removal(4) = 1d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(4) = 0.5d0
-        roots_frac_res(4)   = 1d0
-        rootcr_frac_res(4)  = 0d0
-        stem_frac_res(4)    = 0d0
-        ! wood partitioning (fraction)
-        Crootcr_part(4) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(4) = 0.02d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(4) = 0d0
+    ! JFE added 4 May 2018 - define fire constants
+    ! Update fire parameters derived from
+    ! Yin et al., (2020), doi: 10.1038/s414647-020-15852-2
+    ! Subsequently expanded by T. L. Smallman & Mat Williams (UoE, 03/09/2021)
+    ! to provide specific CC for litter and wood litter.
+    ! NOTE: changes also result in the addition of further EDCs
 
-        !## Scenario 5 (grassland grazing / cutting)
-        ! Define 'removal' for coarse and fine roots, i.e. fraction of imposed
-        ! removal which is imposed directly on these pools. These fractions vary
-        ! the assumption that the fine and coarse roots are mechanically removed.
-        ! 1 = all removed, 0 = all remains.
-        roots_frac_removal(5)  = 0d0
-        rootcr_frac_removal(5) = 0d0
-        ! harvest residue (fraction); 1 = all remains, 0 = all removed
-        foliage_frac_res(5) = 0.1d0
-        roots_frac_res(5)   = 0d0
-        rootcr_frac_res(5)  = 0d0
-        stem_frac_res(5)    = 0.12d0
-        ! wood partitioning (fraction)
-        Crootcr_part(5) = 0.32d0 ! Coarse roots (Adegbidi et al 2005;
-        ! Csom loss due to phyical removal with roots
-        ! Morison et al (2012) Forestry Commission Research Note
-        soil_loss_frac(5) = 0d0 ! actually between 1-3 %
-        ! was the forest burned after deforestation (0-1)
-        ! NOTE: that we refer here to the fraction of the cleared land to be burned
-        post_harvest_burn(5) = 0d0
-
-        ! Declare combustion efficiency (labile, foliar, roots, wood, litter, soil, woodlitter)
-        cf(1) = 0.1d0 ; cf(2) = 0.9d0
-        cf(3) = 0.1d0 ; cf(4) = 0.1d0
-        cf(5) = 0.7d0 ; cf(6) = 0.01d0
-        ! Resilience factor for non-combusted tissue
-        rfac = 0.5d0 ; rfac(5) = 0.1d0 ; rfac(6) = 0d0
-
-        ! Assign proposed resilience factor
-        rfac(1:4) = pars(24)
-        rfac(5) = 0.1d0 ; rfac(6) = 0d0
-        ! Assign combustion completeness to foliage
-        cf(2) = pars(25) ! foliage
-        ! Assign combustion completeness to non-photosynthetic
-        cf(1) = pars(26) ; cf(3) = pars(26) ; cf(4) = pars(26)
-        cf(6) = pars(27) ! soil
-        ! derived values for litter
-        cf(5) = pars(28)
-
-    end if ! disturbance ?
-
-    if (.not.allocated(CiCa_time)) allocate(CiCa_time(nodays))
+    ! Assign proposed resilience factor
+    rfac(1:4) = pars(24)
+    rfac(5) = 0.1d0 ; rfac(6) = 0d0
+    ! Assign combustion completeness to foliage
+    cf(2) = pars(25) ! foliage
+    ! Assign combustion completeness to non-photosynthetic
+    cf(1) = pars(26) ; cf(3) = pars(26) ; cf(4) = pars(26)
+    cf(6) = pars(27) ! soil
+    ! derived values for litter
+    cf(5) = pars(28)
 
     !
     ! Begin looping through each time step
@@ -437,13 +464,13 @@ contains
     do n = start, finish
 
       ! calculate LAI value
-      lai(n) = POOLS(n,2)/pars(17)
+      DIAGS(n,1) = POOLS(n,2)/pars(17)
 
       ! estimate multiple use variable
       doy = met(6,n)-(deltat(n)*0.5d0) ! doy
 
       ! load next met / lai values for ACM
-      gpppars(1) = lai(n)
+      gpppars(1) = DIAGS(n,1)
       gpppars(2) = met(3,n) ! max temp
       gpppars(3) = met(2,n) ! min temp
       gpppars(5) = met(5,n) ! co2
@@ -451,7 +478,7 @@ contains
       gpppars(8) = met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants) ; CiCa_time(n) = ci / met(5,n)
+      FLUXES(n,1) = acm(gpppars,constants) ; DIAGS(n,2) = ci / met(5,n)
       ! Exponential temperature modified rate of metabolic activity
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! Autotrophic respiration (gC.m-2.day-1)
@@ -466,7 +493,7 @@ contains
       FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
       ! Labile release and leaffall factors
-      FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
+      FLUXES(n,9)  = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
       FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
 
       !
@@ -474,7 +501,7 @@ contains
       !
 
       ! Labile release
-      FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+      FLUXES(n,8)  = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
       ! Leaf litter production
       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
       ! Wood litter production
@@ -492,12 +519,6 @@ contains
       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
       ! litter to som
       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
-
-      ! Calculate the NEE,
-      ! NOTE: NEE does not include Fire but we assume that NBE does
-      NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
-      ! Load GPP to output variable
-      GPP(n) = FLUXES(n,1)
 
       !
       ! Update pools based on natural processes
@@ -609,24 +630,6 @@ contains
 
       endif ! end deforestation info
 
-! TLS: a modified version of the original model which has now been removed 31/03/2022
-!      The replacement provides different scenarios of what is being extracted (e.g. above vs below)
-!      and the re-allocation of C to be either extracted or litter / residues remaining in system
-!       ! Remove biomass if necessary
-!       if (met(8,n) > 0d0) then
-!           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
-!           if (allocated(extracted_C)) then
-!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
-!           endif
-!           POOLS(n+1,1) = tmp &
-!                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
-!!           POOLS(n+1,1) = max(pars(18),tmp &
-!!                        * POOLS(n+1,1)*(1d0-met(8,n))) ! remove labile
-!           POOLS(n+1,2) = POOLS(n+1,2)*(1d0-met(8,n)) ! remove foliar
-!           POOLS(n+1,4) = POOLS(n+1,4)*(1d0-met(8,n)) ! remove wood
-!           ! NOTE: fine root is left in system this is an issue...
-!       end if
-
       !!!!!!!!!!
       ! Impose fire
       !!!!!!!!!!
@@ -691,38 +694,32 @@ contains
     ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
     ! Photosyntheis) emulator which operates at a daily time step. ACM can be
     ! paramaterised to provide reasonable results for most ecosystems.
-    ! See Williams et al., (1997) and Fox et al., (2009) for details
 
     implicit none
 
     ! declare input variables
-    double precision, intent(in) :: drivers(12) & ! acm input requirements
-                                   ,constants(10) ! ACM parameters
+    double precision, intent(in) :: drivers(10) & ! acm input requirements
+                         ,constants(10) ! ACM parameters
 
     ! declare local variables
     double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &
-                       ,trange, sinld, cosld,aob,pi, mult &
+                       ,trange, sinld, cosld,aob, mult &
                        ,mint,maxt,radiation,co2,lai,doy,lat &
                        ,deltaWP,Rtot,NUE,temp_exponent,dayl_coef &
                        ,dayl_const,hydraulic_exponent,hydraulic_temp_coef &
                        ,co2_comp_point,co2_half_sat,lai_coef,lai_const
 
-    ! Initial values
-    gc = 0d0 ; pp = 0d0 ; qq = 0d0 ; ci = 0d0 ; e0 = 0d0 ; dayl = 0d0 ; cps = 0d0 ; dec = 0d0
-
     ! load driver values to correct local vars
-    lai = drivers(1)  ! leaf area (m2/m2)
-    maxt = drivers(2) ! Daily maximum temperature (oC)
-    mint = drivers(3) ! Daily minimum temperature (oC)
-    nit = drivers(4)  ! Load foliar N (gN/m2leaf)
-    co2 = drivers(5)  ! Atmospheric CO2 (ppm)
-    doy = drivers(6)  ! Julian Day of year
-    radiation = drivers(8) ! Short wave radation (MJ/m2/day)
-    lat = drivers(7) ! latitude (degrees)
+    lai = drivers(1)
+    maxt = drivers(2)
+    mint = drivers(3)
+    nit = drivers(4)
+    co2 = drivers(5)
+    doy = drivers(6)
+    radiation = drivers(8)
+    lat = drivers(7)
 
-    ! Load parameters into correct local vars.
-    ! While strictly not needed, it was done to improve readability of the below code
-    pi = drivers(11)
+    ! load parameters into correct local vars
     deltaWP = drivers(9)
     Rtot = drivers(10)
     NUE = constants(1)
@@ -736,13 +733,13 @@ contains
     lai_const = constants(9)
     hydraulic_exponent = constants(10)
 
-    ! Determine temperature range (oC)
+    ! determine temperature range
     trange = 0.5d0*(maxt-mint)
-    ! Daily canopy conductance
+    ! daily canopy conductance
     gc = abs(deltaWP)**(hydraulic_exponent)/((hydraulic_temp_coef*Rtot+trange))
-    ! Maximum rate of temperature and nitrogen (canopy efficiency) limited photosynthesis (gC.m-2.day-1)
+    ! maximum rate of temperature and nitrogen (canopy efficiency) limited photosynthesis (gC.m-2.day-1)
     pn = lai*nit*NUE*exp(temp_exponent*maxt)
-    ! pp and qq represent limitation by diffusion and metabolites respectively
+    ! pp and qq represent limitation by diffusion and metabolites respecitively
     pp = pn/gc ; qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm)
     ci = 0.5d0*(co2+qq-pp+((co2+qq-pp)**2d0-4d0*(co2*qq-pp*co2_comp_point))**0.5d0)
@@ -750,30 +747,29 @@ contains
     e0 = lai_coef*lai**2d0/(lai**2d0+lai_const)
     ! calculate day length (hours)
 !    dec = - asin( sin( 23.45d0 * pi / 180d0 ) * cos( 2d0 * pi * ( doy + 10d0 ) /365d0 ) )
-!    sinld = sin( lat*(pi/180d0) ) * sin( dec )
-!    cosld = cos( lat*(pi/180d0) ) * cos( dec )
+!    sinld = sin( lat*deg_to_rad ) * sin( dec )
+!    cosld = cos( lat*deg_to_rad ) * cos( dec )
 !    aob = max(-1d0,min(1d0,sinld / cosld))
 !    dayl = 12d0 * ( 1d0 + 2d0 * asin( aob ) / pi )
 
 !--------------------------------------------------------------
-    ! Calculate day length (hours)
-    ! This is the old REFLEX project calculation it is less efficient than the commented code above,
-    ! however is currently returned for comparison with JPL DALEC version
-    dec = -23.4d0*cos((360d0*(doy+10d0)/365d0)*pi/180d0)*pi/180d0
-    mult = tan(lat*pi/180.0)*tan(dec)
+    ! calculate day length (hours - not really hours)
+    ! This is the old REFLEX project calculation 
+    dec = -23.4*cos( (360d0*(doy+10d0)/365d0)*deg_to_rad ) * deg_to_rad
+    mult = tan(lat*deg_to_rad) * tan(dec)
     if (mult >= 1d0) then
         dayl = 24d0
-    else if (mult <= -1d0) then
+    else if (mult <= -1.0) then
         dayl = 0d0
     else
         dayl = 24d0*acos(-mult)/pi
     end if
 ! ---------------------------------------------------------------
-    ! Calculate CO2 limited rate of photosynthesis (gC/m2/day)
+    ! calculate CO2 limited rate of photosynthesis
     pd = gc*(co2-ci)
-    ! Calculate combined light and CO2 limited photosynthesis
+    ! calculate combined light and CO2 limited photosynthesis
     cps = e0*radiation*pd/(e0*radiation+pd)
-    ! Correct for day length variation
+    ! correct for day length variation
     acm = cps*(dayl_coef*dayl+dayl_const)
 
     ! don't forget to return
@@ -817,7 +813,7 @@ contains
     return
 
   end function ospolynomial
-!
-!--------------------------------------------------------------------
-!
+  !
+  !--------------------------------------------------------------------
+  !
 end module CARBON_MODEL_MOD

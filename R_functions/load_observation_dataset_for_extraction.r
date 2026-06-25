@@ -148,6 +148,19 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  } else {
                      stop("......no variable or dimension called lat or latitude could be found")
                  } # finding lat
+                 # Now check whether this is a 2D array or not
+                 if (length(dim(lat_in)) == 2 && length(dim(long_in)) == 2) {
+                     # Do nothing, as this should be exactly what we want
+                 } else {
+                     # We will assume that the arrays match the vectorisation order found in R.
+                     # A warning will be issued, placing the onus on the user to make sure this is right
+                     print("......The lat or lon information are provided as a vector and not as a 2D array, as specified in the dataset description documents")
+                     print("......The code will construct the 2D array assuming the vectorisation order used in R and that the vectors represent the x and y coordinates.")
+                     tmp1 = length(long_in) ; tmp2 = length(lat_in)
+                     lat_in = t(array(lat_in, dim=c(tmp2,tmp1)))
+                     long_in = array(long_in, dim=c(tmp1,tmp2))
+                     rm(tmp1,tmp2) 
+                 } 
                  # Extract the current global attributes
                  global_attributes = ncatt_get(data1,0)
                  # Check whether there is any information regarding the EPSG
@@ -186,7 +199,7 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                  }                 
                  # Read lag variable, if present
                  if (length(which(names(data1$var) == lag_var_name_in)) > 0) {
-                     lag_in = ncvar_get(data1, unc_var_name_in) # Variable standard deviation 
+                     lag_in = ncvar_get(data1, lag_var_name_in) # Variable standard deviation 
                      lag_present = TRUE
                      if (twodim) {lag_in = array(lag_in, dim=c(dim(lag_in),1))}
                  } else {
@@ -241,12 +254,18 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                       if (lag_present) { var3 = extend(var3,cardamom_ext) ; var3 = crop(var3,cardamom_ext) }
 
                       # Adjust spatial resolution of the datasets, this occurs in all cases
-                      if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+                      if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                           # Resample to correct grid.
                           # Probably should be done via aggregate function to allow for correct error propogation
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
                           if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
+                      } else {
+                          # If the resolution of the dataset is coarser than the CARDAMOM grid, we should use
+                          # nearest neighbour.
+                          var1 = resample(var1, cardamom_ext, method="near") ; gc() 
+                          if (std_present) { var2 = resample(var2, cardamom_ext, method="near") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="near") ; gc() }
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster
@@ -529,6 +548,12 @@ load_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,grid_ty
                           var1 = resample(var1, cardamom_ext, method="average") ; gc() 
                           if (std_present) { var2 = resample(var2, cardamom_ext, method="average") ; gc() }
                           if (lag_present) { var3 = resample(var3, cardamom_ext, method="average") ; gc() }
+                      } else {
+                          # If the resolution of the dataset is coarser than the CARDAMOM grid, we should use
+                          # nearest neighbour.
+                          var1 = resample(var1, cardamom_ext, method="near") ; gc() 
+                          if (std_present) { var2 = resample(var2, cardamom_ext, method="near") ; gc() }
+                          if (lag_present) { var3 = resample(var3, cardamom_ext, method="near") ; gc() }                          
                       } # Aggrgeate to resolution
 
                       # Combine estimate and uncertainty variables into a stacked raster

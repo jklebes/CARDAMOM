@@ -35,10 +35,10 @@ daily_mean <-function(var, interval, missing_allowed) {
    # i.e. number of days possible
    nos_days=ceiling(length(var)/interval)
    output=array(NaN, dim=c(nos_days))
-   b=0
+   b=1
    for (i in seq(1, nos_days)) {
-        if (length(which(is.na(var[b:(b+interval)]))) < missing_allowed) {
-          output[i] = mean(var[b:(b+interval)], na.rm=T)
+        if (length(which(is.na(var[b:(b+interval-1)]))) < missing_allowed) {
+          output[i] = mean(var[b:(b+interval-1)], na.rm=T)
         } else {
           output[i] = NaN
         }
@@ -59,10 +59,10 @@ daily_sum <-function(var, interval, missing_allowed) {
    # i.e. number of days possible
    nos_days=ceiling(length(var)/interval)
    output=array(NaN, dim=c(nos_days))
-   b=0
+   b=1
    for (i in seq(1, nos_days)) {
-       if (length(which(is.na(var[b:(b+interval)]))) < missing_allowed) {
-           output[i]=sum(var[b:(b+interval)], na.rm=T)
+       if (length(which(is.na(var[b:(b+interval-1)]))) < missing_allowed) {
+           output[i]=sum(var[b:(b+interval-1)], na.rm=T)
        } else {
          output[i]=NaN
        }

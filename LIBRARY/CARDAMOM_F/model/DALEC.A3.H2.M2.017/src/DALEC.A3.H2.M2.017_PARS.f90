@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A3.F2.H2.M2 model.
+! Module contains uniform prior parameter information for the DALEC.A3.H2.M2.017 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -70,39 +70,43 @@ module MODEL_PARAMETERS
 
     ! GPP to resp fraction [~0.54]
     PI%parmin(2) = 0.20d0 
-    PI%parmax(2) = 0.80d0 
+    PI%parmax(2) = 0.70d0 
 
-    ! GSI sens labile turnover [1.0, 1.025]
-    PI%parmin(3) = 0.975d0 !0.85d0 
-    PI%parmax(3) = 1.025d0!1.25d0 
+    ! Canopy GSI phenology gradient threshold
+    PI%parmin(3) = -1d-3
+    PI%parmax(3) =  1d-2
 
     ! NPP belowground allocation exponential parameter [0.01, 1.00]
+    ! i.e. fine roots
     PI%parmin(4) = 0.01d0 
     PI%parmax(4) = 1.0d0 
 
-    ! GSI max leaf turnover [1e-5, 0.2]
-    PI%parmin(5) = 0.001d0 
-    PI%parmax(5) = 0.1d0 
+    ! Potential leaf turnover rate
+    PI%parmin(5) = 0.002737851d0 ! 1 year
+    PI%parmax(5) = 0.016666667d0 ! 60 days
 
-    ! TOR roots [0.0001, 0.01]
-    PI%parmin(6) = 0.001825234d0 !0.001d0 
-    PI%parmax(6) = 0.1d0 
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
+    PI%parmin(6) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmax(6) = 0.01d0        ! 0.27 years
 
     ! TOR litter [0.0001, 0.01]
     PI%parmin(7) = 0.001d0 
     PI%parmax(7) = 0.1d0 
 
-    ! TOR SOM [1e-7, 0.001]
-    PI%parmin(8) = 0.0000001d0 
-    PI%parmax(8) = 0.0001d0 
+    ! Turnover of som to Rhet (fraction; temperature adjusted)
+    PI%parmin(8) = 1.368925d-06   ! 2000 years at 0oC
+    PI%parmax(8) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
-    ! T factor (Q10) [0.018,  0.08]
-    PI%parmin(9) = 0.01d0 
-    PI%parmax(9) = 0.2d0 
+    ! Exponential coefficient for Rhet temperature response
+    ! Temp factor* = Q10 = 1.2-2.2
+    PI%parmin(9) = 0.019d0 
+    PI%parmax(9) = 0.08d0 
 
-    ! GSI max labile turnover [1e-6, 0.2]
-    PI%parmin(10) = 0.001d0 
-    PI%parmax(10) = 0.2d0 
+    ! Potential labile turnover fraction to foliage
+    PI%parmin(10) = 0.002737851d0*2d0 !  6 months
+    PI%parmax(10) = 0.025d0           ! 40 days
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
@@ -114,64 +118,44 @@ module MODEL_PARAMETERS
     PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! GSI min T (K) [225, 330] 
-    PI%parmin(12) = 230d0 
+    PI%parmin(12) = 235d0 
     PI%parmax(12) = 330d0!290d0 
 
     ! GSI max T (K) [225, 330] 
-    PI%parmin(13) = 230d0 
+    PI%parmin(13) = 273.15d0 
     PI%parmax(13) = 330d0!300d0 
 
     ! GSI min photoperiod (sec) [3600, 36000]
-    PI%parmin(14) = 3600d0 
-    PI%parmax(14) = 64800d0 
+    PI%parmin(14) = 3600d0*3d0  !  3 hours
+    PI%parmax(14) = 3600d0*21d0 ! 21 hours
 
-    ! Leaf Mass per Area [20, 60]
+    ! Leaf carbon per Area [20, 60]
     PI%parmin(15) = 20d0 
     PI%parmax(15) = 60d0 
 
-    ! initial labile pool size [1, 1000]
-    PI%parmin(16) = 1d0 
-    PI%parmax(16) = 1000d0 
-
-    ! initial foliar pool size [1, 1000]
-    PI%parmin(17) = 1d0 
-    PI%parmax(17) = 1000d0 
-
-    ! initial root pool size [1, 1000]
-    PI%parmin(18) = 1d0 
-    PI%parmax(18) = 1000d0 
-
-    ! initial litter pool size [1, 10000]
-    PI%parmin(19) = 1d0 
-    PI%parmax(19) = 1000d0 
-
     ! GSI max photoperiod (sec) [3600, 64800]
-    PI%parmin(20) = 3600d0 
-    PI%parmax(20) = 64800d0 
+    PI%parmin(20) = 3600d0*3d0  !  3 hours
+    PI%parmax(20) = 3600d0*21d0 ! 21 hours
 
     ! GSI min VPD (Pa) [1, 5500] 
-    PI%parmin(21) = 1d0 
+    PI%parmin(21) = 10d0 
     PI%parmax(21) = 5500d0 
 
     ! GSI max VPD (Pa) [1, 5500]
-    PI%parmin(22) = 500d0 
+    PI%parmin(22) = 10d0 
     PI%parmax(22) = 5500d0 
 
-    ! initial SOM pool size [5000, 10000] (UK) 19000, 21000
-    PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0 !90000d0
+    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! of max depth
+    PI%parmin(24) = 50d0
+    PI%parmax(24) = 250d0 !500d0
+    ! BUCKET - maximum rooting depth
+    PI%parmin(25) = 0.35d0
+    PI%parmax(25) = 1d0
 
-    ! GSI sens for leaf senescenece [0.96, 1.00]
-    PI%parmin(24) = 0.985d0 ! 0.96d0 
-    PI%parmax(24) = 1.0d0 
-
-    ! GSI growing stage/step [0.50, 1.5]
-    PI%parmin(25) = 0.5d0 
-    PI%parmax(25) = 1.5d0 
-
-    ! Initial GSI [1.0, 2.0]
-    PI%parmin(26) = 1.0d0 
-    PI%parmax(26) = 2.0d0 
+    ! Initial canopy GSI value 
+    PI%parmin(26) = 0d0
+    PI%parmax(26) = 1d0 
 
     ! Minimum amount of DM in (above ground) labile and foliage for grazing to occur. 
     ! This value is also the minimum amount of (above ground) labile and foliage 
@@ -186,17 +170,16 @@ module MODEL_PARAMETERS
     PI%parmax(28) = 3000d0*0.0475d0 
 
     ! leaf:stem allocation [0.05, 0.75]
+    ! NOT CURRENTLY IN USE...
     PI%parmin(29) = 0.25d0 
     PI%parmax(29) = 0.75d0 
 
-    ! critical relative GPP increase for given LAI growth [1e-10, 0.30]
-    !PI%parmin(30) = 0.00001d0 
-    !PI%parmax(30) = 0.1d0 
     ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
-    PI%parmin(30) = 0.0001d0
-    PI%parmax(30) = 1.0d0
+    PI%parmin(30) = 0.001d0
+    PI%parmax(30) = 0.05d0
 
     ! livestock demand in DM (1-3% of animal weight) 
+    ! NOT CURRENTLY IN USE...
     PI%parmin(31) = 0.015d0 
     PI%parmax(31) = 0.035d0 
 
@@ -212,18 +195,33 @@ module MODEL_PARAMETERS
     PI%parmin(34) = 0.1d0!/7d0 
     PI%parmax(34) = 1.0d0!/7d0
 
+    !
+    ! INITIAL VALUES DECLARED HERE
+    !
+
+    ! initial labile pool size, gC/m2 [1, 500]
+    PI%parmin(16) = 1d0 
+    PI%parmax(16) = 500d0 
+
+    ! initial foliar pool size, gC/m2 [1, 500]
+    PI%parmin(17) = 1d0 
+    PI%parmax(17) = 500d0 
+
+    ! initial root pool size, gC/m2 [1, 500]
+    PI%parmin(18) = 1d0 
+    PI%parmax(18) = 500d0 
+
+    ! initial litter pool size, gC/m2 [1, 500]
+    PI%parmin(19) = 1d0 
+    PI%parmax(19) = 500d0 
+
+    ! initial SOM pool size, gC/m2 [5000, 10000] (UK) 19000, 21000
+    PI%parmin(23) = 200d0
+    PI%parmax(23) = 250000d0 !90000d0
+
     ! Initial soil water fraction
-    PI%parmin(35) = 0.01d0
+    PI%parmin(35) = 0.05d0
     PI%parmax(35) = 1.00d0
-
-    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
-    ! of max depth
-    PI%parmin(36) = 50d0
-    PI%parmax(36) = 250d0 !500d0
-
-    ! BUCKET - maximum rooting depth
-    PI%parmin(37) = 0.35d0
-    PI%parmax(37) = 1d0
 
   end subroutine pars_info
   !

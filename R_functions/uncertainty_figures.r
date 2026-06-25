@@ -73,77 +73,84 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[29,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[40,,]) * (var*2) / (as.vector(parameters[39,,]) + (var*2))
+       plot_root_depth = TRUE
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H1.P1.003"){
+       # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+       tmp = t(states_all$wood_gCm2)*as.vector(parameters[24,,])
+       var = t(states_all$roots_gCm2) + tmp
+       # Now estimate the rooting depth based on the equation imbedded in
+       var = as.vector(parameters[26,,]) * (var*2) / (as.vector(parameters[25,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.004"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H3.P1.029"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.020"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A3.C1.D2.F2.H2.P1.030"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.005"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.006"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.007") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.019") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P5.021"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P6.022"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    } # model specific plotting for root depth
@@ -1465,7 +1472,20 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "rmain_from_labile_gCm2day", "foliar_growth_limitation", "ncce_grow_gCgC",
                       "ncce_loss_gCgC","foliage_feedback_turnover_limitation", 
                       "foliage_leafT_turnover_limitation", "foliage_wSWP_turnover_limitation",
-                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days")
+                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days",
+                      "rhet_foliarlitter_gCm2day","rhet_rootlitter_gCm2day","rhet_woodlitter_gCm2day",
+                      "rhet_fastsom_gCm2day","rhet_slowsom_gCm2day","rhet_microbial_gCm2day",
+                      "foliarlitter_to_som_gCm2day","woodlitter_to_som_gCm2day","rootlitter_to_som_gCm2day",
+                      "microbial_to_som_gCm2day","slow_to_fast_som_gCm2day","fast_som_to_microbial_gCm2day",
+                      "FIRElitter_foliarlitter_gCm2day","FIREemiss_rootlitter_gCm2day","FIRElitter_rootlitter_gCm2day",
+                      "FIREemiss_woodlitter_gCm2day","FIRElitter_woodlitter_gCm2day","FIREemiss_fastsom_gCm2day",
+                      "FIREemiss_slowsom_gCm2day","HARVESTextracted_woodlitter_gCm2day",
+                      "foliarlitter_gCm2","rootlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
+                      "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
+                      "labile_to_wood_gCm2day","foliar_growth_limitation_gradient","foliage_leafP_limitation","foliage_leafV_limitation",
+                      "gpp_grow_gCgC","runoff_kgH2Om2day","underflow_kgH2Om2day","ncce_gCgC_gradient","foliar_loss_limitation",
+                      "nos_foliage_cohorts","canopy_relative_NUE","canopy_age_days","canopy_profit_gCm2","nos_profitable_cohorts",
+                      "ncce_avg_cohort_gCm2day")
 
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists

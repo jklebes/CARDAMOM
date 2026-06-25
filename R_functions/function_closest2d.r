@@ -76,7 +76,7 @@ closest2d_1 <- function (id,lat,long,lat_in,long_in) {
    # convert degrees to radians
    deg_to_rad = 0.01745329 #pi/180
    # check lat long system
-   if (length(which(as.vector(long) > 180)) > 1) {stop("Input error closest2d: longitude should be -180 to +180")}
+   if (length(which(as.vector(long) > 180)) > 0) {stop("Input error closest2d: longitude should be -180 to +180")}
 
    ## lat long are in single vectors repeating i.e. lat[1:10]=89.9,89.9,89.9... ; long[1:10]=-180,-160,-140....
    # loop through to find the smallest distance
@@ -110,7 +110,7 @@ closest2d_2 <- function (id,lat,long,lat_in,long_in) {
    # convert degrees to radians
    deg_to_rad = 0.01745329 #pi/180
    # check lat long system
-   if (length(which(as.vector(long) > 180)) > 1) {stop("Input error closest2d: longitude should be -180 to +180")}
+   if (length(which(as.vector(long) > 180)) > 0) {stop("Input error closest2d: longitude should be -180 to +180")}
 
    ## lat and long are in two - dimensional arrays which co-varying
    # loop through to find the smallest distance
@@ -150,7 +150,7 @@ closest2d_3 <- function (id,lat,long,lat_in,long_in) {
    # convert degrees to radians
    deg_to_rad = 0.01745329 #pi/180
    # check lat long system
-   if (length(which(as.vector(long) > 180)) > 1) {stop("Input error closest2d: longitude should be -180 to +180")}
+   if (length(which(as.vector(long) > 180)) > 0) {stop("Input error closest2d: longitude should be -180 to +180")}
 
    ## lat and long are in two 1-dimensional vectors but co-varying as in cartesian co-ordinates
    # loop through to find the smallest distance

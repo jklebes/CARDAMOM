@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A4.C6.D2.F2.H2.P11 model.
+! Module contains uniform prior parameter information for the DALEC.A4.C6.D2.F2.H3.P12.033 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -63,38 +63,38 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
-    ! Decomposition litter -> som (day-1)
-    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
-    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
+    ! Decomposition efficiency of litter/CWD to som (fraction)
+    PI%parmin(1) = 0.25d0
+    PI%parmax(1) = 0.75d0
 
     ! Fraction of GPP respired as autotrophic respiration
     ! for maintenance of wood and fine roots
     PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.6d0
+    PI%parmax(2) = 0.5d0
 
     ! Potential rate of labile to foliage (gC/m2/day)
-    PI%parmin(3) = 0.01d0
-    PI%parmax(3) = 10d0
+    PI%parmin(3) = 1d0
+    PI%parmax(3) = 20d0
 
     ! Potential rate of labile to fine root (gC/m2/day)
-    PI%parmin(4) = 0.01d0
+    PI%parmin(4) = 1d0
     PI%parmax(4) = 20d0
 
-    ! Minimum foliar loss proposal gC/m2/day
-    PI%parmin(5) = 0.01d0   
-    PI%parmax(5) = 4d0     
+    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
+    PI%parmin(5) = -0.10d0
+    PI%parmax(5) =  0.10d0
 
     ! Turnover of wood (fraction / day)
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
     ! Turnover of fine roots (fraction / day)
-    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmin(7) = 0.001368925d0 !  2 years !0.0006844627d0 ! 4 years
+    PI%parmax(7) = 0.017d0       ! 60 days
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
-    PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
+    PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC    
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
@@ -102,7 +102,7 @@ module MODEL_PARAMETERS
 !    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
@@ -111,22 +111,28 @@ module MODEL_PARAMETERS
     PI%parmin(11) = 10d0
     PI%parmax(11) = 100d0
 
-    ! Temperature (oC) at which cold induced loss is at 50 %
-    PI%parmin(12) =-40d0
-    PI%parmax(12) = 20d0
-    ! Temperature at which heat induced loss is at 50 %
-    PI%parmin(13) = 30d0
-    PI%parmax(13) = 50d0
-    ! Gradient for logistic function, i.e. function change per degree 
-    PI%parmin(14) = 0.1d0 
-    PI%parmax(14) = 10d0 
+    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
+    PI%parmin(12) = -8d0
+    PI%parmax(12) = -0.5d0
 
+    ! Parameters linking the NCCE to the CMI
+    ! via a Michaelis-Menten function. 
+    ! This is the NCCE at which the CMI is suppressed by 0.5
+    PI%parmin(13) = -0.5d0
+    PI%parmax(13) = -0.0005d0
+    ! Parameters linking the NCCE gradient to the CMI
+    ! via a Michaelis-Menten function. This is the NCCE gradient 
+    ! 50 % value
+    PI%parmin(14) = -0.1d0
+    PI%parmax(14) = -0.00005d0
+       
     ! Foliar NCCE return for a foliar loss to progress (gC/gC/m2/d)
-    PI%parmin(15) = 0d0
-    PI%parmax(15) = 0.1d0
-    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)
-    PI%parmin(16) = 0d0
-    PI%parmax(16) = 0.1d0
+    ! POSSIBLY THIS PARAMETER IS NOT NEED AND CODE JUST BE CODED AS A VERY SMALL POSITIVE NUMBER?
+    PI%parmin(15) = 0.005d0
+    PI%parmax(15) = 0.2d0
+    ! Foliar NCCE return for a foliar growth to progress (gC/gC/m2/d)   
+    PI%parmin(16) = 0.005d0
+    PI%parmax(16) = 0.2d0
 
     ! LMA (gC.m-2)
     ! Kattge et al. 2011
@@ -164,14 +170,14 @@ module MODEL_PARAMETERS
 
     ! labile:biomass at which growth is limited by 50 %
     PI%parmin(33) = 0.0001d0 ! 0.01 %
-    PI%parmax(33) = 0.02d0   ! 2 %
+    PI%parmax(33) = 0.01d0   ! 1 %
 
     ! Temperature (oC) above p36 at which foliage and fine root growth is limited by 50 %
     PI%parmin(34) = 0.1d0
-    PI%parmax(34) = 10d0
+    PI%parmax(34) = 5d0
     ! Temperature (oC) above p37 at which wood growth is limited by 50 %
     PI%parmin(35) = 0.1d0
-    PI%parmax(35) = 10d0
+    PI%parmax(35) = 5d0
     ! Temperature (oC) at which foliage and fine root growth is prevented
     PI%parmin(36) =-8d0 
     PI%parmax(36) = 8d0
@@ -180,44 +186,42 @@ module MODEL_PARAMETERS
     PI%parmax(37) = 8d0
 
     ! Potential growth rate of wood (gC/m2/day)
-    PI%parmin(38) = 0.01d0
-    PI%parmax(38) = 10d0
+    PI%parmin(38) = 0.1d0
+    PI%parmax(38) = 20d0
 
     ! wSWP water potential (MPa) at which wood growth is fully suppressed
     PI%parmin(39) = -5d0
-    PI%parmax(39) =  0d0
+    PI%parmax(39) = -0.001d0
     ! wSWP water potential (MPa) at which wood growth suppression begins
     PI%parmin(40) = -5d0
-    PI%parmax(40) =  0d0
+    PI%parmax(40) = -0.001d0
 
     ! wSWP water potential (MPa) at which leaf growth is fully suppressed
     PI%parmin(41) = -5d0
-    PI%parmax(41) =  0d0
+    PI%parmax(41) = -0.001d0
     ! wSWP water potential (MPa) at which leaf growth suppression begins
     PI%parmin(42) = -5d0
-    PI%parmax(42) =  0d0
-
-    ! Minimum leaf water potential (MPa), at which photosynthesis is suppressed
-    PI%parmin(43) = -8d0
-    PI%parmax(43) = -0.5d0
+    PI%parmax(42) = -0.001d0
 
     ! Baseline leaf maintenance respiration.
     ! For details see Table S3, Heskel et al., (2016), doi: http://www.pnas.org/cgi/doi/10.1073/pnas.1520282113
-    PI%parmin(44) = -4.4d0
-    PI%parmax(44) = -0.6d0
+    PI%parmin(43) = -4.4d0
+    PI%parmax(43) = -0.6d0
 
-!    ! Potential loss rate for foliage to litter (gC/m2/day)
-!    PI%parmin(45) = 0.01d0
-!    PI%parmax(45) = 20d0
     ! Potential loss rate for foliage to litter (fraction/day)
-    PI%parmin(45) = 0.0003424658 ! 8 years
-    PI%parmax(45) = 0.0333333333 ! 30 days
- 
-    ! Leaf area index (m2/m2) at which leaf fall is suppressed by 50 %
-    ! This is a hack to account for the model representing whole ecosystem,
-    ! within which competing leaf stratagies will be at play.
-    PI%parmin(46) = 0.1d0
-    PI%parmax(46) = 1d0
+    ! based on historical NCCE (gCgCday) and current step NCCE (gCgCday)
+    PI%parmin(44) = 0.0003424658 ! 8 years
+    PI%parmax(44) = 0.0333333333 ! 30 days
+
+    ! Minimum foliar loss proposal (gC/m2/day)
+    ! for dNCCE calculation
+    PI%parmin(45) = 0.001d0   
+    PI%parmax(45) = 1d0    
+
+    ! Intrinsic canopy water use efficiency for stomatal regulation (gC/mmolH2O-1/m2leaf/s-1)
+    ! A credible iWUE range spans atleast 0.00001 -> 0.01
+    PI%parmin(46) = 1d-6
+    PI%parmax(46) = 1d-1
 
     !
     ! INITIAL VALUES DECLARED HERE

@@ -74,234 +74,254 @@ contains
       type(DATA_type), intent(inout):: DATAin
     !! a local DATAin object as argument
 
-      ! don't forget to update values found in the relevant model*_PARS.f90
 
-      ! choose between included model arrangements
-      ! NOTE: negative values are coded elsewhere and reserved for MCMC stress
-      ! testing
-      if (DATAin%ID == 0) then
-         ! ID = 0-ACM/ACM-ET
-         DATAin%nopools = 2
-         DATAin%nopars = 20
-         DATAin%nofluxes = 4
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 1) then
-         ! ID = 1-DALEC.D1.F2.001
-         DATAin%nopools = 5
-         DATAin%nopars = 22
-         DATAin%nofluxes = 35
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 2) then
-         ! ID = 2-DALEC.C1.D1.F2.P1.002
-         DATAin%nopools = 6
-         DATAin%nopars = 28
-         DATAin%nofluxes = 39
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 3) then
-         ! ID = 3-DALEC.A1.C1.D2.F2.H1.P1.003
-         DATAin%nopools = 6
-         DATAin%nopars = 28
-         DATAin%nofluxes = 39
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 4) then
-         ! ID = 4-DALEC.A1.C1.D2.F2.H2.P1.004
-         DATAin%nopools = 7
-         DATAin%nopars = 32
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 24  ! Initial value, will need updating
-      else if (DATAin%ID == 5) then
-         ! ID = 5-DALEC.A1.C1.D2.F2.H2.P1.R1.005
-         DATAin%nopools = 7
-         DATAin%nopars = 32
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 6) then
-         ! ID = 6-DALEC.A1.C2.D2.F2.H2.P1.R1.006
-         DATAin%nopools = 8
-         DATAin%nopars = 35
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 7) then
-         ! ID = 7-DALEC.A1.C2.D2.F2.H2.P2.R1.007
-         DATAin%nopools = 8
-         DATAin%nopars = 36
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 8) then
-         ! ID = 8-DALEC.A1.C2.D2.F2.H1.P3.R1.008
-         DATAin%nopools = 7
-         DATAin%nopars = 43
-         DATAin%nofluxes = 25
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 9) then
-         ! ID = 9-DALEC.A1.C2.D2.F2.H2.P3.R1.009
-         DATAin%nopools = 8
-         DATAin%nopars = 46
-         DATAin%nofluxes = 34
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 10) then
-         ! ID = 10-DALEC.A1.C2.D2.F2.H1.P4.R2.010
-         DATAin%nopools = 7
-         DATAin%nopars = 48
-         DATAin%nofluxes = 25
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 11) then
-         ! ID = 11-DALEC.A1.C2.D2.F2.H2.P4.R2.011
-         DATAin%nopools = 8
-         DATAin%nopars = 49
-         DATAin%nofluxes = 34
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 12) then
-         ! ID = 12-DALEC.C4.D1.F2.012
-         DATAin%nopools = 3
-         DATAin%nopars = 15
-         DATAin%nofluxes = 28
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 13) then
-         ! ID = 13-DALEC.C5.D1.F2.P1.013
-         DATAin%nopools = 4
-         DATAin%nopars = 21
-         DATAin%nofluxes = 32
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 14) then
-         ! ID = 14-DALEC.C3.M1.014
-         DATAin%nopools = 9
-         DATAin%nopars = 37
-         DATAin%nofluxes = 42
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 15) then
-         ! ID = 15-DALEC.A3.C3.H2.M1.015 i.e. the CROP model
-         DATAin%nopools = 10
-         DATAin%nopars = 38
-         DATAin%nofluxes = 46
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 16) then
-         ! ID = 16-DALEC.M2.016
-         DATAin%nopools = 5
-         DATAin%nopars = 34
-         DATAin%nofluxes = 45
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 17) then
-         ! ID = 17-DALEC.A3.H2.M2.017
-         DATAin%nopools = 6
-         DATAin%nopars = 37
-         DATAin%nofluxes = 55
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 18) then
-         ! ID = 18-DALEC.A1.C1.D2.F2.H2.P2.018
-         DATAin%nopools = 7
-         DATAin%nopars = 33
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 19) then
-         ! ID = 19-DALEC.A1.C2.D2.F2.H2.P2.R3.019
-         DATAin%nopools = 8
-         DATAin%nopars = 38
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 20) then
-         ! ID = 20-DALEC.A2.C1.D2.F2.H2.P1.020
-         DATAin%nopools = 7
-         DATAin%nopars = 32
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 21) then
-         ! ID = 21-DALEC.A1.C1.D2.F2.H2.P5.021
-         DATAin%nopools = 7
-         DATAin%nopars = 33
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 22) then
-         ! ID = 22-DALEC.A1.C1.D2.F2.H2.P6.022
-         DATAin%nopools = 7
-         DATAin%nopars = 34
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 23) then
-         ! ID = 23-DALEC.A1.C2.D2.F2.H2.P7.R2.023
-         DATAin%nopools = 8
-         DATAin%nopars = 48
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 24) then
-         ! ID = 24-DALEC.A1.C2.D2.F2.H2.P8.R2.024
-         DATAin%nopools = 8
-         DATAin%nopars = 51
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 25) then
-         ! ID = 25-DALEC.A1.C2.D2.F2.H2.P9.R2.025
-         DATAin%nopools = 8
-         DATAin%nopars = 49
-         DATAin%nofluxes = 54
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 26) then
-         ! ID = 26-DALEC.A1.C2.D2.F2.H2.P10.R2.026
-         DATAin%nopools = 8
-         DATAin%nopars = 48
-         DATAin%nofluxes = 34
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 27) then
-         ! ID = 27-DALEC_1005
-         DATAin%nopools = 8
-         DATAin%nopars = 38
-         DATAin%nofluxes = 43
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 28) then
-         ! ID = 28-DALEC_1005a
-         DATAin%nopools = 8
-         DATAin%nopars = 38
-         DATAin%nofluxes = 43
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 29) then
-         ! ID = 29-DALEC.A1.C1.D2.F2.H3.P1.029
-         DATAin%nopools = 7
-         DATAin%nopars = 33
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 30) then
-         ! ID = 30-DALEC.A3.C1.D2.F2.H2.P1.030
-         DATAin%nopools = 7
-         DATAin%nopars = 38
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 20  ! Initial value, will need updating
-      else if (DATAin%ID == 31) then
-         ! ID = 31-DALEC.A4.C6.D2.F2.H2.P11.031
-         DATAin%nopools = 7
-         DATAin%nopars = 43
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 24
-      else if (DATAin%ID == 32) then
-         ! ID = 32 -
-      else if (DATAin%ID == 33) then
-         ! ID = 33-DALEC.A4.C6.D2.F2.H3.P12.033
-         DATAin%nopools = 7
-         DATAin%nopars = 46
-         DATAin%nofluxes = 49
-         DATAin%nodiags = 30
-      else if (DATAin%ID == 34) then
-         ! ID = 34 -
-      else if (DATAin%ID == 35) then
-         ! ID = 35 -
-      else if (DATAin%ID == 36) then
-         ! ID = 36 -
-      else if (DATAin%ID == 37) then
-         ! ID = 37 -
-      else if (DATAin%ID == 38) then
-         ! ID = 38 -
-      else if (DATAin%ID == 39) then
-         ! ID = 39 -
-      else
-         write (*, *) "Oh dear... model ID not valid = ", DATAin%ID
-         stop
-      end if
+    ! don't forget to update values found in the relevant model *_PARS.f90
+
+    ! choose between included model arrangements
+    ! NOTE: negative values are coded elsewhere and reserved for MCMC stress
+    ! testing
+    if (DATAin%ID == 0) then
+        ! ID = 0 - ACM/ACM-ET
+        DATAin%nopools = 2
+        DATAin%nopars = 20
+        DATAin%nofluxes = 4
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 1) then
+        ! ID = 1 - DALEC.D1.F2.001
+        DATAin%nopools = 5
+        DATAin%nopars = 22
+        DATAin%nofluxes = 35
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 2) then
+        ! ID = 2 - DALEC.C1.D1.F2.P1.002
+        DATAin%nopools = 6
+        DATAin%nopars = 28
+        DATAin%nofluxes = 39
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 3 ) then
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.003
+        DATAin%nopools = 6
+        DATAin%nopars = 31
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 4) then
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.004
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
+    else if (DATAin%ID == 5) then
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.005
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 52
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 6) then
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.006
+        DATAin%nopools = 8
+        DATAin%nopars = 35
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 7) then
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.007
+        DATAin%nopools = 8
+        DATAin%nopars = 36
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 8) then
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.008
+        DATAin%nopools = 7
+        DATAin%nopars = 39
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
+    else if (DATAin%ID == 9) then
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.009
+        DATAin%nopools = 8
+        DATAin%nopars = 40
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
+    else if (DATAin%ID == 10) then
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.010
+        DATAin%nopools = 8
+        DATAin%nopars = 43
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
+    else if (DATAin%ID == 11) then
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.011
+        DATAin%nopools = 8
+        DATAin%nopars = 43
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
+    else if (DATAin%ID == 12) then
+        ! ID = 12 - DALEC.C4.D1.F2.012
+        DATAin%nopools = 3
+        DATAin%nopars = 15
+        DATAin%nofluxes = 28
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 13) then
+        ! ID = 13 - DALEC.C5.D1.F2.P1.013
+        DATAin%nopools = 4
+        DATAin%nopars = 21
+        DATAin%nofluxes = 32
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 14) then
+        ! ID = 14 - DALEC.C3.M1.014
+        DATAin%nopools = 9
+        DATAin%nopars = 37
+        DATAin%nofluxes = 42
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 15) then
+        ! ID = 15 - DALEC.A3.C3.H2.M1.015 i.e. the CROP model
+        DATAin%nopools = 10
+        DATAin%nopars = 38
+        DATAin%nofluxes = 48
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 16) then
+        ! ID = 16 - DALEC.A3.H1.M2.016
+        DATAin%nopools = 5
+        DATAin%nopars = 34 ! to update
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
+    else if (DATAin%ID == 17) then
+        ! ID = 17 - DALEC.A3.H2.M2.017
+        DATAin%nopools = 6
+        DATAin%nopars = 35
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
+    else if (DATAin%ID == 18) then
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.018
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 19) then
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.019
+        DATAin%nopools = 8
+        DATAin%nopars = 38
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 20) then
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.020
+        DATAin%nopools = 7
+        DATAin%nopars = 32
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 21) then
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.021
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
+    else if (DATAin%ID == 22) then
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.022
+        DATAin%nopools = 7
+        DATAin%nopars = 34
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 23) then
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.023
+        DATAin%nopools = 8
+        DATAin%nopars = 48
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
+    else if (DATAin%ID == 24) then
+        ! ID = 24 - DALEC.A1.C1.D2.F2.H4.P1.024
+        DATAin%nopools = 7
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
+    else if (DATAin%ID == 25) then
+        ! ID = 25 - DALEC...025 NOT IN USE
+        DATAin%nopools = 8
+        DATAin%nopars = 48
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
+    else if (DATAin%ID == 26) then
+        ! ID = 26 - DALEC.A4.C6.D2.F2.H3.P10.026
+        DATAin%nopools = 8
+        DATAin%nopars = 49
+        DATAin%nofluxes = 53
+        DATAin%nodiags = 35 ! Initial value, will need updating
+    else if (DATAin%ID == 27) then
+        ! ID = 27 - DALEC_1005
+        DATAin%nopools = 8
+        DATAin%nopars = 38
+        DATAin%nofluxes = 43
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 28) then
+        ! ID = 28 - DALEC_1005a
+        DATAin%nopools = 8
+        DATAin%nopars = 38
+        DATAin%nofluxes = 43
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 29) then
+        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.029
+        DATAin%nopools = 7
+        DATAin%nopars = 33
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
+    else if (DATAin%ID == 30) then
+        ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.030
+        DATAin%nopools = 7
+        DATAin%nopars = 38
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
+    else if (DATAin%ID == 31) then
+        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.031
+        DATAin%nopools = 7
+        DATAin%nopars = 43
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24
+    else if (DATAin%ID == 32) then
+        ! ID = 32 - DALEC.A1.C1.D2.F2.H6.P1.R5.032
+        DATAin%nopools = 7
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
+    else if (DATAin%ID == 33) then
+        ! ID = 33 - DALEC.A4.C6.D2.F2.H3.P12.033
+        DATAin%nopools = 7
+        DATAin%nopars = 46
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 30       
+    else if (DATAin%ID == 34) then
+        ! ID = 34 -
+        print*,"Model ID 34 not currently in use"
+        stop 
+    else if (DATAin%ID == 35) then
+        ! ID = 35
+        print*,"Model ID 35 not currently in use"
+        stop
+    else if (DATAin%ID == 36) then
+        ! ID = 36 - DALEC.A1.C7.D2.F2.H2.P1.R4.036
+        DATAin%nopools = 11
+        DATAin%nopars = 50
+        DATAin%nofluxes = 67
+        DATAin%nodiags = 20      
+    else if (DATAin%ID == 37) then
+        ! ID = 37 - DALEC.A1.C1.D2.F2.H5.P1.037
+        DATAin%nopools = 7
+        DATAin%nopars = 34
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
+    else if (DATAin%ID == 38) then
+        ! ID = 38 -
+        print*,"Model ID 38 not currently in use"
+        stop
+    else if (DATAin%ID == 39) then
+        ! ID = 39 -
+        print*,"Model ID 39 not currently in use"
+        stop
+    else
+        write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
+        stop
+    endif
 
    end subroutine cardamom_model_library
    !
    !------------------------------------------------------------------
    !
    subroutine open_output_files(parname, stepname, covname, covinfoname)
-
       ! Subroutine opens the needed output files and destroys any previously
       ! existing files with the same name, just in case mind!
       ! NOTE: that is unless I have not remove the 'UNKNOWN' status in which case
@@ -497,33 +517,33 @@ contains
                 , DATAin%soilwater(DATAin%nodays), DATAin%soilwater_unc(DATAin%nodays), DATAin%soilwater_lag(DATAin%nodays))
 
     !! Zero all variables
-      ! Drivers
-      DATAin%met = 0d0
-      ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
-      DATAin%GPP = 0d0; DATAin%GPP_unc = 0d0; DATAin%GPP_lag = 0
-      DATAin%NEE = 0d0; DATAin%NEE_unc = 0d0; DATAin%NEE_lag = 0
-      DATAin%LAI = 0d0; DATAin%LAI_unc = 0d0; DATAin%LAI_lag = 0
-      DATAin%Reco = 0d0; DATAin%Reco_unc = 0d0; DATAin%Reco_lag = 0
-      DATAin%Cfol_stock = 0d0; DATAin%Cfol_stock_unc = 0d0; DATAin%Cfol_stock_lag = 0
-      DATAin%Cwood_stock = 0d0; DATAin%Cwood_stock_unc = 0d0; DATAin%Cwood_stock_lag = 0
-      DATAin%Croots_stock = 0d0; DATAin%Croots_stock_unc = 0d0; DATAin%Croots_stock_lag = 0
-      DATAin%Clit_stock = 0d0; DATAin%Clit_stock_unc = 0d0; DATAin%Clit_stock_lag = 0
-      DATAin%Csom_stock = 0d0; DATAin%Csom_stock_unc = 0d0; DATAin%Csom_stock_lag = 0
-      DATAin%Cagb_stock = 0d0; DATAin%Cagb_stock_unc = 0d0; DATAin%Cagb_stock_lag = 0
-      DATAin%Ccoarseroot_stock = 0d0; DATAin%Ccoarseroot_stock_unc = 0d0; DATAin%Ccoarseroot_stock_lag = 0
-      DATAin%Evap = 0d0; DATAin%Evap_unc = 0d0; DATAin%Evap_lag = 0
-      DATAin%SWE = 0d0; DATAin%SWE_unc = 0d0; DATAin%SWE_lag = 0
-      DATAin%NBE = 0d0; DATAin%NBE_unc = 0d0; DATAin%NBE_lag = 0
-      DATAin%Fire = 0d0; DATAin%Fire_unc = 0d0; DATAin%Fire_lag = 0
-      DATAin%fAPAR = 0d0; DATAin%fAPAR_unc = 0d0; DATAin%fAPAR_lag = 0
-      DATAin%Cwood_inc = 0d0; DATAin%Cwood_inc_unc = 0d0; DATAin%Cwood_inc_lag = 0
-      DATAin%Cwood_growth = 0d0; DATAin%Cwood_growth_unc = 0d0; DATAin%Cwood_growth_lag = 0
-      DATAin%Cwood_mortality = 0d0; DATAin%Cwood_mortality_unc = 0d0; DATAin%Cwood_mortality_lag = 0
-      DATAin%harvest = 0d0; DATAin%harvest_unc = 0d0; DATAin%harvest_lag = 0
-      DATAin%foliage_to_litter = 0d0; DATAin%foliage_to_litter_unc = 0d0; DATAin%foliage_to_litter_lag = 0
-      DATAin%soilwater = 0d0; DATAin%soilwater_unc = 0d0; DATAin%soilwater_lag = 0
-      ! Temorary arrays
-      mettemp = 0d0; obstemp = 0d0
+    ! Drivers
+    DATAin%met = 0d0
+    ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
+    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0
+    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0
+    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0
+    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0
+    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0
+    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0
+    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0
+    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0
+    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0
+    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0
+    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0
+    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0
+    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0
+    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0
+    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0
+    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0
+    DATAin%Cwood_inc = 0d0         ; DATAin%Cwood_inc_unc = 0d0         ; DATAin%Cwood_inc_lag = 0
+    DATAin%Cwood_growth = 0d0      ; DATAin%Cwood_growth_unc = 0d0      ; DATAin%Cwood_growth_lag = 0
+    DATAin%Cwood_mortality = 0d0   ; DATAin%Cwood_mortality_unc = 0d0   ; DATAin%Cwood_mortality_lag = 0
+    DATAin%harvest = 0d0           ; DATAin%harvest_unc = 0d0           ; DATAin%harvest_lag = 0
+    DATAin%foliage_to_litter = 0d0 ; DATAin%foliage_to_litter_unc = 0d0 ; DATAin%foliage_to_litter_lag = 0
+    DATAin%soilwater = 0d0         ; DATAin%soilwater_unc = 0d0         ; DATAin%soilwater_lag = 0
+    ! Temorary arrays
+    mettemp = 0d0 ; obstemp = 0d0
 
       ! zero the obs counters
       DATAin%total_obs = 0
@@ -764,7 +784,7 @@ contains
       if (DATAin%nEvap > 0) allocate (DATAin%Evappts(DATAin%nEvap))
       if (DATAin%nSWE > 0) allocate (DATAin%SWEpts(DATAin%nSWE))
       if (DATAin%nNBE > 0) allocate (DATAin%NBEpts(DATAin%nNBE))
-      if (DATAin%nCwood_growth > 0) allocate (DATAin%Cwood_incpts(DATAin%nCwood_inc))
+      if (DATAin%nCwood_growth > 0) allocate(DATAin%Cwood_growthpts(DATAin%nCwood_growth))
       if (DATAin%nCwood_inc > 0) allocate (DATAin%Cwood_incpts(DATAin%nCwood_inc))
       if (DATAin%nCwood_mortality > 0) allocate (DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
       if (DATAin%nfoliage_to_litter > 0) allocate (DATAin%foliage_to_litterpts(DATAin%nfoliage_to_litter))
@@ -778,8 +798,7 @@ contains
       a = 1; b = 1; c = 1; d = 1; e = 1; f = 1; g = 1
       h = 1; i = 1; j = 1; k = 1; l = 1; m = 1; n = 1
       o = 1; p = 1; q = 1; r = 1; s = 1; t = 1; u = 1
-      v = 1; w = 1; x = 1; y = 1; z = 1
-
+      v = 1; w = 1; 
       ! Read through each timestep to extract any available assimilatable observations
       do day = 1, DATAin%nodays
          if (DATAin%GPP(day) > -9998d0) then
@@ -857,7 +876,7 @@ contains
       ! mean atmospheric CO2 (ppm)
       DATAin%meanco2 = sum(DATAin%met(5, :))/dble(DATAin%nodays)
       ! mean precipitation (mm/yr)
-      DATAin%meanprecip = sum(DATAin%met(7, :)*84600d0*365.25d0)/dble(DATAin%nodays)
+      DATAin%meanprecip = sum(DATAin%met(7, :)*86400d0*365.25d0)/dble(DATAin%nodays)
 
       ! print the mean temperature and radiation variables
       write (*, *) "Mean Rad (MJ/m2/day) = ", DATAin%meanrad

@@ -44,37 +44,13 @@ module CARBON_MODEL_MOD
 
   implicit none
 
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code contains a variant of the Data Assimilation Linked ECosystem (DALEC) model.
-  ! This version of DALEC is derived from the following primary references:
-  ! Bloom & Williams (2015), https://doi.org/10.5194/bg-12-1299-2015.
-  ! Smallman & Williams (2019) https://doi.org/10.5194/gmd-12-2227-2019.
-  ! Thomas et al., (2019), https://doi.org/10.1029/2019MS001679
-  ! This code is based on that created by A. A. Bloom (UoE, now at JPL, USA).
-  ! Subsequent modifications by:
-  ! T. L. Smallman (University of Edinburgh, t.l.smallman@ed.ac.uk)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
-
   ! make all private
   private
 
   ! explicit publics
   public :: CARBON_MODEL     &
-           ,layer_thickness  &
-           ,wSWP_time        &
-           ,rSWP_time        &
-           ,cica_time        &
-           ,root_depth_time        &
-           ,gs_demand_supply_ratio &
-           ,gs_total_canopy        &
-           ,gb_total_canopy        &
-           ,canopy_par_MJday_time  &
+           ,top_soil_depth   &
            ,sw_par_fraction  &
-           ,snow_storage_time&
            ,soil_frac_clay   &
            ,soil_frac_sand   &
            ,nos_soil_layers  &
@@ -125,7 +101,7 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                          tortuosity = 2.5d0,        & ! tortuosity
                              gplant = 4d0,          & ! plant hydraulic conductivity (mmol m-1 s-1 MPa-1)
-                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmol−1 H2O)
+                        root_resist = 25d0,         & ! Root resistivity (MPa s g mmolâˆ’1 H2O)
                         root_radius = 0.00029d0,    & ! root radius (m) Bonen et al 2014 = 0.00029
                                                       ! Williams et al 1996 = 0.0001
                       root_radius_1 = root_radius**(-1d0), &
@@ -144,7 +120,7 @@ module CARBON_MODEL_MOD
                       canopy_height = 9d0,              & ! canopy height assumed to be 9 m
                        tower_height = canopy_height + 2d0, & ! tower (observation) height assumed to be 2 m above canopy
                            min_wind = 0.2d0,            & ! minimum wind speed at canopy top
-                          min_layer = 0.03d0,           & ! minimum thickness of the third rooting layer (m)
+                          min_layer = 0.03d0,           & ! minimum thickness of the second rooting layer (m)
                         soil_roughl = 0.00085d0,        & ! soil roughness length (m), Meier et al., (2022), https://doi.org/10.5194/gmd-15-2365-2022
                        min_drythick = soil_roughl*10d0, & ! minimum dry thickness depth (m) 0.01 WRF-SPA 
                      top_soil_depth = 0.30d0,           & ! thickness of the top soil layer (m)
@@ -162,7 +138,6 @@ module CARBON_MODEL_MOD
   double precision, parameter :: &
                        Vc_minT = -6.991d0,     & ! Temperature at which all photosynthetic activity is shutdown
                        Vc_coef = 0.1408d0,     & ! Temperature above Vc_minT that 50% limitation of cold shutdown occurs  
-                   ! Assumption that photosythesis will be limited by Jmax temperature response
                    pn_max_temp = 57.05d0,      & ! Maximum daily max temperature for photosynthesis (oC)
                    pn_min_temp = -1d6,         & ! Minimum daily max temperature for photosynthesis (oC)
                    pn_opt_temp = 30d0,         & ! Optimum daily max temperature for photosynthesis (oC)
@@ -183,14 +158,48 @@ module CARBON_MODEL_MOD
        canopy_iso_to_net_const = 3.753067d-03,  & ! Constant relating canopy isothermal net radiation to net
     canopy_iso_to_net_coef_LAI = 2.455582d+00,  & ! Coefficient relating LAI to the adjustment between isothermal and net LW
                           iWUE = 4.6875d-04       ! Intrinsic water use efficiency (umolC/mmolH2O-1/m2leaf/s-1)
+                                                  ! A credible iWUE range spans atleast 0.00001 -> 0.01
+
+  ! Module level variables for the Sellers (1985) 2-stream radiative transfer scheme approximation
+  integer, parameter :: no_wavelength = 2 ! Number of wavelenths (order NIR, PAR)
+  double precision, parameter :: & !Vc = 0.75d0,  & ! Clumping factor / vegetation cover (1 = uniform, 0 totally clumped, mean = 0.75)
+                                                 ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
+               soil_nir_reflectance = 0.023d0, & ! Soil reflectance to near infrared radiation
+               soil_par_reflectance = 0.033d0, & ! Soil reflectance to photosynthetically active radiation
+             canopy_nir_reflectance = 0.38d0,  & ! Canopy NIR reflectance (Default 0.43, Sitka Spruce 0.16, grass/crop ~ 0.38)
+             canopy_par_reflectance = 0.11d0,  & ! Canopty PAR reflectance (Default 0.16, Sitka Spruce 0.07, grass/crop ~ 0.11)
+           canopy_nir_transmittance = 0.26d0,  & ! Canopy NIR transmittance
+           canopy_par_transmittance = 0.16d0,  & ! Canopty PAR transmittance
+                    newsnow_nir_abs = 0.27d0,  & ! NIR absorption fraction
+                    newsnow_par_abs = 0.05d0,  & ! PAR absorption fraction
+                      !nirrefl_crop = 0.50d0,  & ! NIR reflectance for dead crop (Nagler et al., 2003)
+                      !parrefl_crop = 0.30d0,  & ! PAR reflectance for dead crop (Nagler et al., 2003)
+         leaf_distribution_deviance = 0.01d0     ! Deviation from spherical, min absolute value (0.01) required for numerical security.
+                                                 ! Leaf angle distribution, quantified as the deviation from a spherical distribution.
+                                                 ! The default assumption in many models, including SPA, is that leaves have a spherical distribution (=0).
+                                                 ! However, =-1 would indicate vertical leaves, while =+1 are horizontal leaves.
+                                                 ! See note book or references given above for the complete integral equation
+  double precision ::        leaf_angle, & ! Mean leaf angle deviation from the horizontal (radians)
+                              cos2theta, & ! Analytical correction for leaf angle (radians) on light scattering within the canopy
+                                 Vc, Vg, & ! Define the vegetated and covered soil (i.e. by litter) fractions
+                                mu_obar, & ! The average inverse diffuse optical depth per unit leaf area.
+                                 O1,O2    ! Empirical coefficients related to the leaf angle distribution
+  double precision, dimension(no_wavelength) :: &
+                     canopy_reflectance = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
+                   canopy_transmittance = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
+                       soil_reflectance = (/soil_nir_reflectance,soil_par_reflectance/), & !
+                      canopy_scattering, & ! Canopy scattering of incident light, varied by wavelength
+                                     bb, & ! Downward scatting of diffuse radiation
+                                     cc, & ! Upward scattering as diffuse radiation, a function of canopy_transmittance, canopy_reflectance and leaf angle.
+                                     hh, & ! Extinction coefficient for diffuse radiation
+                                   beta, & ! The upward scattering fraction / coefficient for diffuse radiation.
+                                  beta0    ! The upward scattering fraction / coefficient for direct radiation.
+
+  !!!!!!!!!
+  ! Module variables
+  !!!!!!!!!
 
   double precision :: minlwp = minlwp_default
-
-  ! Photosynthetic Metrics
-  double precision, allocatable, dimension(:) :: gs_demand_supply_ratio, & ! actual:potential stomatal conductance
-                                                        gs_total_canopy, & ! stomatal conductance (mmolH2O/m2ground/s)
-                                                        gb_total_canopy, & ! boundary conductance (mmolH2O/m2ground/s)
-                                                  canopy_par_MJday_time    ! Absorbed PAR by canopy (MJ/m2ground/day)
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -208,14 +217,17 @@ module CARBON_MODEL_MOD
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
-  double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand ! clay and soil fractions of soil
+  double precision, dimension(nos_soil_layers) :: &
+                   soil_frac_clay,soil_frac_sand, & ! clay and soil fractions of soil
+                                     infiltrated    ! surface water infiltrated (kgH2O.m-2.d-1)                                            
   double precision, dimension(nos_root_layers) :: uptake_fraction, & ! fraction of water uptake from each root layer
                                                            demand, & ! maximum potential canopy hydraulic demand
-                                            water_flux_mmolH2Om2s    ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                            water_flux_mmolH2Om2s, & ! potential transpiration flux (mmolH2O.m-2.s-1)
+                                        conductance_mmolH2OMPam2s    ! Effective hydraulic resistance of each layer (mmolH2O.MPa-1.m-2.s-1)                                            
   double precision, dimension(nos_soil_layers+1) :: SWP, & ! soil water potential (MPa)
                                       soil_conductivity, & ! soil conductivity
                                             waterchange, & ! net water change by specific soil layers (m)
-                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)                                            
+                                        water_grav_flow, & ! flow of water under gravity FROM each soil layer (kgH2O/m2/d)
                                          field_capacity, & ! soil field capacity (m3.m-3)
                                  field_capacity_initial, &
                                          soil_waterfrac, & ! soil water content (m3.m-3)
@@ -230,10 +242,10 @@ module CARBON_MODEL_MOD
                                       drythick, & ! estimate of the thickness of the dry layer at soil surface (m)
                                           wSWP, & ! soil water potential weighted by canopy supply (MPa)
                                           rSWP, & ! soil water potential weighted by root presence (MPa)
+                                          Reff, & ! Effective total hydraulic resistance (MPa.m2.s.mmolH2O-1)                                          
                                      max_depth, & ! maximum possible root depth (m)
                                         root_k, & ! biomass to reach half max_depth
-                                        runoff, & ! runoff (kgH2O.m-2.day-1)
-                                   infiltrated, & ! surface water infiltrated (kgH2O.m-2.d-1)                                           
+                                        runoff, & ! surface water runoff (kgH2O.m-2.day-1)
                                      underflow, & ! drainage from the bottom of soil column (kgH2O.m-2.day-1)
                                 previous_depth, & ! depth of bottom of soil profile
                                    canopy_wind, & ! wind speed (m.s-1) at canopy top
@@ -244,13 +256,17 @@ module CARBON_MODEL_MOD
                                         roughl, & ! roughness length (m)
                                   displacement, & ! zero plane displacement (m)
                                          meant, & ! mean air temperature (oC)
+                                         soilT, & ! soil day time temperature
                                          leafT, & ! canopy day time temperature temperature (oC)
                             canopy_swrad_MJday, & ! canopy_absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_par_MJday, & ! canopy_absorbed PAR radiation (MJ.m-2.day-1)
+                                soil_par_MJday, & ! soil absorbed PAR radiation (MJ.m-2.day-1)
                               soil_swrad_MJday, & ! soil absorbed shortwave radiation (MJ.m-2.day-1)
                               canopy_lwrad_Wm2, & ! canopy absorbed longwave radiation (W.m-2)
                                 soil_lwrad_Wm2, & ! soil absorbed longwave radiation (W.m-2)
                                  sky_lwrad_Wm2, & ! sky absorbed longwave radiation (W.m-2)
+          canopy_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)
+            soil_radiative_thermal_conductance, & ! Thermal 'conductance' due to radiance (m.s-1)                                 
                           stomatal_conductance, & ! canopy scale stomatal conductance (mmolH2O.m-2.d-1)
                          potential_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
                            minimum_conductance, & ! potential stomatal conductance (mmolH2O.m-2ground.s-1)
@@ -264,50 +280,16 @@ module CARBON_MODEL_MOD
                                          slope, & ! Rate of change of saturation vapour pressure with temperature (kPa.K-1)
                         water_vapour_diffusion, & ! Water vapour diffusion coefficient in (m2/s)
                            kinematic_viscosity, & ! kinematic viscosity (m2.s-1)
-                                  snow_storage, & ! snow storage (kgH2O/m2)
+                                  snow_storage, & ! snow storage on soil surface (kgH2O/m2)
+                             !soil_snow_storage, & ! snow storage on soil surface (kgH2O/m2)
+                           !canopy_snow_storage, & ! snow storage on soil surface (kgH2O/m2)
                                 canopy_storage, & ! water storage on canopy (kgH2O.m-2)
                           intercepted_rainfall    ! intercepted rainfall rate equivalent (kgH2O.m-2.s-1)
 
-  ! Module level variables for the Sellers (1985) 2-stream radiative transfer scheme approximation
-  integer, parameter :: no_wavelength = 2 ! Number of wavelenths (order NIR, PAR)
-  double precision, parameter :: & !Vc = 0.75d0   & ! Clumping factor / vegetation cover (1 = uniform, 0 totally clumped, mean = 0.75)
-                                                 ! He et al., (2012) http://dx.doi.org/10.1016/j.rse.2011.12.008
-!               soil_nir_reflectance = 0.023d0, & ! Soil reflectance to near infrared radiation
-!               soil_par_reflectance = 0.033d0, & ! Soil reflectance to photosynthetically active radiation
-!             canopy_nir_reflectance = 0.43d0,  & ! Canopy NIR reflectance
-!             canopy_par_reflectance = 0.16d0,  & ! Canopty PAR reflectance
-!           canopy_nir_transmittance = 0.26d0,  & ! Canopy NIR reflectance
-!           canopy_par_transmittance = 0.16d0,  & ! Canopty PAR reflectance
-                    newsnow_nir_abs = 0.27d0,  & ! NIR absorption fraction
-                    newsnow_par_abs = 0.05d0,  & ! PAR absorption fraction
-         leaf_distribution_deviance = 0.01d0     ! Deviation from spherical, min absolute value (0.01) required for numerical security.
-                                                 ! Leaf angle distribution, quantified as the deviation from a spherical distribution.
-                                                 ! The default assumption in many models, including SPA, is that leaves have a spherical distribution (=0).
-                                                 ! However, =-1 would indicate vertical leaves, while =+1 are horizontal leaves.
-                                                 ! See note book or references given above for the complete integral equation
-  double precision ::        leaf_angle, & ! Mean leaf angle deviation from the horizontal (radians)
-                              cos2theta, & ! Analytical correction for leaf angle (radians) on light scattering within the canopy
-                                 Vc, Vg, & ! Define the vegetated and covered soil (i.e. by litter) fractions
-                                mu_obar, & ! The average inverse diffuse optical depth per unit leaf area.
-                                 O1,O2    ! Empirical coefficients related to the leaf angle distribution
-  double precision, dimension(no_wavelength) :: &
-                     canopy_reflectance, & ! = (/canopy_nir_reflectance,canopy_par_reflectance/), & !
-                   canopy_transmittance, & ! = (/canopy_nir_transmittance,canopy_par_transmittance/), & !
-                       soil_reflectance, & ! = (/soil_nir_reflectance,soil_par_reflectance/), & !
-                      canopy_scattering, & ! Canopy scattering of incident light, varied by wavelength
-                                     bb, & ! Downward scatting of diffuse radiation
-                                     cc, & ! Upward scattering as diffuse radiation, a function of canopy_transmittance, canopy_reflectance and leaf angle.
-                                     hh, & ! Extinction coefficient for diffuse radiation
-                                   beta, & ! The upward scattering fraction / coefficient for diffuse radiation.
-                                  beta0    ! The upward scattering fraction / coefficient for direct radiation.
-
-  ! Module level variables for ACM_GPP_ET parameters
+  ! Module level variables for ACM_GPP_ET variables
   double precision ::   delta_gs, & ! day length corrected gs increment mmolH2O/m2/day
                             ceff, & ! Maximum rate of carboxylation (umolC/m2/s), Vcmax_ref = avN*NUE
-!                             avN, & ! average foliar N (gN/m2)
                        iWUE_step, & ! Intrinsic water use efficiency for that day (gC/m2leaf/dayl/mmolH2Ogs)
-!                             NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
-!                                    ! ,unlimited by CO2, light and photoperiod (umolC/gN/m2leaf)
 metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limiterd photosynthesis (gC/m2/day)
     light_limited_photosynthesis, & ! light limited photosynthesis (gC/m2/day)
                               ci, & ! Internal CO2 concentration (ppm)
@@ -332,7 +314,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   leaf_canopy_wind_scaling, & ! approximate scaling factor from leaf to canopy for gb
                        lai    ! leaf area index (m2/m2)
 
-  ! Module level variables for step specific timing and location information
+  ! Module level variables for step specific timing information
   integer :: steps_per_year
   double precision ::       seconds_per_step, & !
                                days_per_step, & !
@@ -355,19 +337,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                           daylength_hours, &
                                         daylength_seconds, &
                                       daylength_seconds_1, &
-                                            rainfall_time, &
-                                                cica_time, & ! Internal vs ambient CO2 concentrations
-                                          root_depth_time, &
-                                        snow_storage_time, &
-                                                rSWP_time, & ! Soil water potential weighted by access water
-                                                wSWP_time    ! Soil water potential weighted by supply of water
-
+                                            rainfall_time
   contains
   !
   !--------------------------------------------------------------------
   !
-  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,lai_out,NEE,FLUXES,POOLS &
-                         ,nopars,nomet,nopools,nofluxes,GPP)
+  subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
+                         ,nopars,nomet,nopools,nofluxes,nodiags)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical - ACMv2 - BUCKET (DALEC_CDEA_ACM2_BUCKET) model.
@@ -378,7 +354,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! evaporation and soil water balance (4 layers).
 
     ! This version includes the option to simulate fire combustion based
-    ! on burned fraction and fixed combusion rates. It also includes the
+    ! on burned fraction and fixed combustion rates. It also includes the
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
@@ -386,24 +362,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! declare input variables
     integer, intent(in) :: start    &
                           ,finish   &
-                          ,nopars   & ! number of paremeters in vector
+                          ,nopars   & ! number of parameters in vector
                           ,nomet    & ! number of meteorological fields
                           ,nofluxes & ! number of model fluxes
                           ,nopools  & ! number of model pools
-                          ,nodays     ! number of days in simulation
+                          ,nodays   & ! number of days in simulation
+                          ,nodiags    ! number of model diagnositic variables
 
     double precision, intent(in) :: met(nomet,nodays) & ! met drivers
-                                   ,deltat(nodays)    & ! time step in decimal days
-                                   ,pars(nopars)      & ! number of parameters
-                                   ,lat                 ! site latitude (degrees)
-
-    double precision, dimension(nodays), intent(inout) :: lai_out & ! leaf area index
-                                                             ,GPP & ! Gross primary productivity
-                                                             ,NEE   ! net ecosystem exchange of CO2
+                         ,deltat(nodays)    & ! time step in decimal days
+                         ,pars(nopars)      & ! number of parameters
+                         ,lat                 ! site latitude (degrees)
 
     double precision, dimension((nodays+1),nopools), intent(inout) :: POOLS ! vector of ecosystem pools
-
     double precision, dimension(nodays,nofluxes), intent(inout) :: FLUXES ! vector of ecosystem fluxes
+    double precision, dimension(nodays,nodiags), intent(inout) :: DIAGS ! vector of ecosystem diagnostics
 
     ! declare local variables
     double precision ::      infi &
@@ -464,7 +437,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 4 = wood   (p21)
     ! 5 = litter (p22)
     ! 6 = som    (p23)
-    ! 7 = 0-30 cm soil water content (fraction of field capacity) (p24)
+    ! 7 = 0-10 cm soil water content (mm) (p24)
 
     ! FLUXES are:
     ! 1 = GPP
@@ -543,8 +516,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !    ! Debugging print statements
 !    print*,"carbon_model: "
 
-    ! Set some initial states for the io variables
-    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0
+    ! Set some initial states
+    infi = 0d0 ; FLUXES = 0d0 ; POOLS = 0d0 ; DIAGS = 0d0
     ! Reset hydrology variables
     intercepted_rainfall = 0d0 ; canopy_storage = 0d0 ; snow_storage = 0d0
     transpiration = 0d0 ; soilevaporation = 0d0 ; wetcanopy_evap = 0d0 ; snowsublimation = 0d0
@@ -556,6 +529,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Generate some generic location specific variables for radiation balance
     call calculate_radiation_commons(lat,pars(33:38))
+    !call calculate_radiation_commons(lat)
 
     ! load ACM-GPP-ET parameters
     ceff = pars(11) ! Canopy efficiency (umolC/m2/s)
@@ -565,23 +539,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     root_k = pars(26) ; max_depth = pars(27)
 
     ! assigning initial conditions
-    if (start == 1) then
-       POOLS(1,1) = pars(18) ! labile
-       POOLS(1,2) = pars(19) ! foliar
-       POOLS(1,3) = pars(20) ! roots
-       POOLS(1,4) = pars(21) ! wood
-       POOLS(1,5) = pars(22) ! litter
-       POOLS(1,6) = pars(23) ! som
-       !POOLS(1,7) = assigned later ! soil water (0-10cm)
-    endif
+    POOLS(1,1) = pars(18) ! labile
+    POOLS(1,2) = pars(19) ! foliar
+    POOLS(1,3) = pars(20) ! roots
+    POOLS(1,4) = pars(21) ! wood
+    POOLS(1,5) = pars(22) ! litter
+    POOLS(1,6) = pars(23) ! som
+    !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
     ! Some time consuming variables we only want to set once
     if (.not.allocated(deltat_1)) then
         ! allocate variables dimension which are fixed per site only the once
-        allocate(deltat_1(nodays),wSWP_time(nodays),rSWP_time(nodays),gs_demand_supply_ratio(nodays), &
-                 gs_total_canopy(nodays),gb_total_canopy(nodays),canopy_par_MJday_time(nodays), &
-                 daylength_hours(nodays),daylength_seconds(nodays),daylength_seconds_1(nodays), &
-                 rainfall_time(nodays),cica_time(nodays),root_depth_time(nodays),snow_storage_time(nodays))
+        allocate(deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
+                 daylength_seconds_1(nodays),rainfall_time(nodays),airt_zero_fraction_time(nodays))
 
         !
         ! Timing variables which are needed first
@@ -597,17 +567,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         do n = 1, nodays
            ! check positive values only for rainfall input
            rainfall_time(n) = max(0d0,met(7,n))
-           ! Calculate declination for the day of year
-           declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
            ! calculate daylength in hours and seconds
-           call calculate_daylength
+           call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat)
            daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
         end do
 
         ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = daylength_seconds ** (-1d0)
+        daylength_seconds_1 = 1d0 / daylength_seconds
         ! fraction of temperture period above freezing
-        airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+        airt_zero_fraction_time = 0d0
+        where (met(2,:) > 0d0) airt_zero_fraction_time = 1d0 
+        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
         ! number of time steps per year
         steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
@@ -651,25 +621,25 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     wl = pars(14)*sqrt(2d0) * 0.5d0
     ! magnitude coefficient
     ff = (log(pars(5))-log(pars(5)-1d0)) * 0.5d0
-    fl = (log(1.001d0)-log(0.001d0)) * 0.5d0
+    fl = 3.45437738965761021d0!(log(1.001d0)-log(0.001d0)) * 0.5d0
     ! set minium labile life span to one year
     ml = 1.001d0
     ! offset for labile and leaf turnovers
     osf = ospolynomial(pars(5),wf)
     osl = ospolynomial(ml,wl)
     ! scaling to biyearly sine curve
-    sf = 365.25d0/pi
+    sf = 116.262685928629551d0 !365.25d0/pi
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
-    ! Deforestation process functions in a sequenctial way.
-    ! Thus, the pool_loss is first determined as a function of met(n,8) and
+    ! Deforestation process functions in a sequential way.
+    ! Thus, the pool_loss is first determined as a function of met(8,n) and
     ! for fine and coarse roots whether this felling is associated with a mechanical
     ! removal from the ground. As the canopy and stem is removed (along with a proportion of labile)
     ! fine and coarse roots may subsequently undergo mortality from which they do not recover
     ! but allows for management activities such as grazing, mowing and coppice.
     ! The pool_loss is then partitioned between the material which is left within the system
-    ! as a residue and thus direcly placed within one of the dead organic matter pools.
+    ! as a residue and thus directly placed within one of the dead organic matter pools.
 
     !! Parameter values for deforestation variables
     !! Scenario 1
@@ -822,6 +792,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     vpd_kPa = met(16,1)*1d-3 ! vapour pressure deficit (Pa->kPa)
     meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
     leafT = (maxt*0.75d0) + (mint*0.25d0)   ! initial day time canopy temperature (oC)
+    soilT = meant
     seconds_per_step = deltat(1) * seconds_per_day
     days_per_step =  deltat(1)
     days_per_step_1 =  deltat_1(1)
@@ -844,8 +815,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     call calculate_Rtot
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29)) ! assume no evap or rainfall
-    ! Reset variable used to track ratio of water supply used to meet demand
-    gs_demand_supply_ratio = 0d0
 
     ! Store soil water content of the surface zone (mm)
     POOLS(1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
@@ -865,22 +834,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        rainfall = rainfall_time(n)
        meant = (mint + maxt) * 0.5d0 ! mean air temperature (oC)
        leafT = (meant + maxt) * 0.5d0 ! estimate mean daytime air temperature (oC)
+       soilT = meant ! Estimate mean day time soil temperature (oC)
        wind_spd = met(15,n) ! wind speed (m/s)
        vpd_kPa = met(16,n)*1d-3  ! Vapour pressure deficit (Pa -> kPa)
+       airt_zero_fraction = airt_zero_fraction_time(n) ! fraction of above / below freezing temperature
 
        ! calculate LAI value
-       lai_out(n) = POOLS(n,2)/pars(17)
-       lai = lai_out(n)
+       lai = POOLS(n,2)/pars(17)
+       DIAGS(n,1) = lai
 
        ! extract timing related values
        dayl_hours = daylength_hours(n)
        dayl_hours_fraction = dayl_hours * 0.04166667d0 ! 1/24 = 0.04166667
        dayl_seconds = daylength_seconds(n) ; dayl_seconds_1 = daylength_seconds_1(n)
-       seconds_per_step = seconds_per_day * deltat(n)
        days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+       seconds_per_step = seconds_per_day * days_per_step
 
        !!!!!!!!!!
-       ! Adjust snow balance balance based on temperture
+       ! Adjust snow balance balance based on temperature
        !!!!!!!!!!
 
        ! snowing or not...?
@@ -888,7 +859,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! on average above freezing so no snow
            snowfall = 0d0
        else
-           ! on average below freezing, so some snow based on proportion of temperture
+           ! on average below freezing, so some snow based on proportion of temperature
            ! below freezing
            snowfall = rainfall * (1d0 - airt_zero_fraction) ; rainfall = rainfall - snowfall
            ! Add rainfall to the snowpack and clear rainfall variable
@@ -899,7 +870,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        if (mint < 0d0 .and. maxt > 0d0) then
            ! Also melt some of the snow based on airt_zero_fraction
            ! default assumption is that snow is melting at 10 % per day hour above freezing
-           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, airt_zero_fraction * snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
@@ -907,14 +878,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            snow_melt = 0d0
        else if (mint > 0d0 .and. snow_storage > 0d0) then
            ! otherwise we assume snow is melting at 10 % per day above hour
-           snow_melt = min(snow_storage, snow_storage * 0.1d0 * deltat(n))
+           snow_melt = min(snow_storage, snow_storage * 0.1d0 * days_per_step)
            snow_storage = snow_storage - snow_melt
            ! adjust to rate for later addition to rainfall
            snow_melt = snow_melt / seconds_per_step
        else
            snow_melt = 0d0
        end if
-       snow_storage_time(n) = snow_storage
+       DIAGS(n,2) = snow_storage
 
        !!!!!!!!!!
        ! Calculate surface exchange coefficients
@@ -926,16 +897,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        convert_ms1_mmol_1 = convert_ms1_mol_1 * 1d3
        ! calculate aerodynamic using consistent approach with SPA
        call calculate_aerodynamic_conductance
-       ! Canopy scale aerodynamic conductance (mmolH2O/m2ground/s)
-       gb_total_canopy(n) = aerodynamic_conductance * convert_ms1_mmol_1 * &
-                            leaf_canopy_wind_scaling
+       ! Units converted from canopy top m/s to canopy scale (mmolH2O/m2ground/s)
+       DIAGS(n,6) = aerodynamic_conductance * convert_ms1_mmol_1 * &
+                    leaf_canopy_wind_scaling
+       DIAGS(n,15) = leaf_canopy_wind_scaling ! canopy area scaling as a function of wind profiles
 
        !!!!!!!!!!
        ! Determine net shortwave and isothermal longwave energy balance
        !!!!!!!!!!
 
        call calculate_radiation_balance
-       canopy_par_MJday_time(n) = canopy_par_MJday
+       DIAGS(n,3) = canopy_par_MJday ! Absorbed PAR by canopy (MJ/m2ground/day)
+       DIAGS(n,14) = leaf_canopy_light_scaling ! canopy area scaling as a function of light profiles
+       DIAGS(n,13) = soil_par_MJday
 
        !!!!!!!!!!
        ! Calculate physically constrained evaporation and
@@ -955,18 +929,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        fine_root_biomass = max(min_root,POOLS(n,3)*2d0)
        root_biomass = fine_root_biomass + max(min_root,POOLS(n,4)*pars(25)*2d0)
        call calculate_Rtot
-       ! Pass wSWP to output variable
-       wSWP_time(n) = wSWP ; rSWP_time(n) = rSWP ; root_depth_time(n) = root_reach
+       ! Pass root~water~soil variables to output variable
+       DIAGS(n,8) = root_reach ! Rooting depth (m)
+       DIAGS(n,10) = wSWP      ! Soil water potential weighted by supply of water
+       DIAGS(n,11) = rSWP      ! Soil water potential weighted by access water
+       DIAGS(n,12) = Reff      ! Effective hydraulic resistance MPa.s.m2.mmol-1 H20
 
        ! calculate radiation absorption and estimate stomatal conductance
        call calculate_stomatal_conductance
        ! Estimate stomatal conductance relative to its minimum / maximum, i.e. how
-       ! close are we to maxing out supply (note 0.01 taken from min_gs)
-       gs_demand_supply_ratio(n) = (stomatal_conductance  - minimum_conductance) &
-                                 / (potential_conductance - minimum_conductance)
+       ! close are we to maxing out supply
+       DIAGS(n,7) = (stomatal_conductance  - minimum_conductance) &
+                  / (potential_conductance - minimum_conductance)
        ! Store the canopy level stomatal conductance (mmolH2O/m2ground/s)
-       !gs_total_canopy(n) = stomatal_conductance * dayl_seconds_1
-       gs_total_canopy(n) = stomatal_conductance
+       DIAGS(n,5) = stomatal_conductance
 
        ! Note that soil mass balance will be calculated after phenology
        ! adjustments
@@ -976,15 +952,27 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            ! Gross primary productivity (gC/m2/day)
            ! Assumes acm_gpp_stage_1 ran as part of stomatal conductance calculation
            FLUXES(n,1) = acm_gpp_stage_2(stomatal_conductance) * umol_to_gC * dayl_seconds
-           cica_time(n) = ci / co2
+           ! Estimate the ratio of leaf internal to ambient CO2 concentrations
+           DIAGS(n,4) = ci / co2       
            ! Canopy transpiration (kgH2O/m2/day)
            call calculate_transpiration(transpiration)
            ! restrict transpiration to positive only
            transpiration = max(0d0,transpiration)
        else
            ! assume zero fluxes
-           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; cica_time(n) = 0d0
+           FLUXES(n,1) = 0d0 ; transpiration = 0d0 ; DIAGS(n,4) = 0d0
        endif
+       ! Determine the water unlimited potential GPP (gC/m2/day)
+       !potential_gpp = acm_gpp_stage_2(potential_stomatal_conductance) * umol_to_gC * dayl_seconds
+
+       ! Estimate average leaf water potential (MPa) based on effective hydraulic resistance, wSWP and transpiration.
+       ! Positive LWPs can be estimated given very small gs and cold temperatures.
+       ! Debugging print statements
+       !print*,"Estimate LWP"
+       !LWP = SWP(1:nos_root_layers) - head*canopy_height &
+       !     - transpiration*uptake_fraction(1:nos_root_layers) &
+       !     * (dayl_seconds_1/mmol_to_kg_water)/Rcond_layer(1:nos_root_layers)
+       DIAGS(n,9) =  min(0d0, wSWP - (head*canopy_height) - (((transpiration*dayl_seconds_1)/mmol_to_kg_water) * Reff))
 
        ! temprate (i.e. temperature modified rate of metabolic activity))
        FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
@@ -1000,7 +988,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        FLUXES(n,7) = FLUXES(n,1)-FLUXES(n,3)-FLUXES(n,4)-FLUXES(n,5)-FLUXES(n,6)
 
        ! Labile release and leaffall factors
-       FLUXES(n,9) = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
+       FLUXES(n,9)  = (2d0/sqrt(pi))*(ff/wf)*exp(-(sin((doy-pars(15)+osf)/sf)*sf/wf)**2d0)
        FLUXES(n,16) = (2d0/sqrt(pi))*(fl/wl)*exp(-(sin((doy-pars(12)+osl)/sf)*sf/wl)**2d0)
 
        !
@@ -1008,46 +996,41 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        !
 
        ! total labile release
-       FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**deltat(n))/deltat(n)
+       FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**days_per_step)/days_per_step
        ! total leaf litter production
-       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**deltat(n))/deltat(n)
-       ! total wood production
-       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**deltat(n))/deltat(n)
+       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**days_per_step)/days_per_step
+       ! total wood litter production
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**days_per_step)/days_per_step
        ! total root litter production
-       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**deltat(n))/deltat(n)
+       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**days_per_step)/days_per_step
 
        !
        ! those with temperature AND time dependancies
        !
 
        ! respiration heterotrophic litter
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**deltat(n))/deltat(n)
+       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**days_per_step)/days_per_step
        ! respiration heterotrophic som
-       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**deltat(n))/deltat(n)
+       FLUXES(n,14) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**days_per_step)/days_per_step
        ! litter to som
-       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**deltat(n))/deltat(n)
-
-       ! calculate the NEE
-       NEE(n) = (-FLUXES(n,1)+FLUXES(n,3)+FLUXES(n,13)+FLUXES(n,14))
-       ! load GPP
-       GPP(n) = FLUXES(n,1)
+       FLUXES(n,15) = POOLS(n,5)*(1d0-(1d0-pars(1)*FLUXES(n,2))**days_per_step)/days_per_step
 
        !
        ! update pools for next timestep
        !
 
        ! labile pool
-       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*deltat(n)
+       POOLS(n+1,1) = POOLS(n,1) + (FLUXES(n,5)-FLUXES(n,8))*days_per_step
        ! foliar pool
-       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10) + FLUXES(n,8))*deltat(n)
+       POOLS(n+1,2) = POOLS(n,2) + (FLUXES(n,4)-FLUXES(n,10)+FLUXES(n,8))*days_per_step
        ! wood pool
-       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*deltat(n)
+       POOLS(n+1,4) = POOLS(n,4) + (FLUXES(n,7)-FLUXES(n,11))*days_per_step
        ! root pool
-       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6) - FLUXES(n,12))*deltat(n)
+       POOLS(n+1,3) = POOLS(n,3) + (FLUXES(n,6)-FLUXES(n,12))*days_per_step
        ! litter pool
-       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*deltat(n)
+       POOLS(n+1,5) = POOLS(n,5) + (FLUXES(n,10)+FLUXES(n,12)-FLUXES(n,13)-FLUXES(n,15))*days_per_step
        ! som pool
-       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*deltat(n)
+       POOLS(n+1,6) = POOLS(n,6) + (FLUXES(n,15)-FLUXES(n,14)+FLUXES(n,11))*days_per_step
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -1065,13 +1048,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! store soil water content of the surface zone (mm)
        POOLS(n+1,7) = 1d3 * soil_waterfrac(1) * layer_thickness(1)
        ! Assign all water variables to output variables (kgH2O/m2/day)
-       FLUXES(n,41) = transpiration   ! transpiration (kgH2O/m2/day)
-       FLUXES(n,42) = soilevaporation ! soil evaporation (kgH2O/m2/day)
-       FLUXES(n,43) = wetcanopy_evap  ! wet canopy evaporation (kgH2O/m2/day)
-       FLUXES(n,44) = runoff          ! soil surface runoff (kgH2O/m2/day)
-       FLUXES(n,45) = underflow       ! drainage from bottom of soil column (kgH2O/m2/day)
-       FLUXES(n,46) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd (kgH2O/m2/day)
-       FLUXES(n,47) = infiltrated     ! soil surface infiltration by rain (kgH2O/m2/day) 
+       FLUXES(n,41) = transpiration   ! transpiration
+       FLUXES(n,42) = soilevaporation ! soil evaporation
+       FLUXES(n,43) = wetcanopy_evap  ! wet canopy evaporation
+       FLUXES(n,44) = runoff          ! soil surface runoff
+       FLUXES(n,45) = underflow       ! drainage from bottom of soil column
+       FLUXES(n,46) = water_grav_flow(1) ! drainage from the surface soil layer to 2nd
+       FLUXES(n,47) = infiltrated(1)  ! top soil surface infiltration by rain (kgH2O/m2/day)
+       FLUXES(n,50) = infiltrated(2)  ! middle soil surface infiltration by rain (kgH2O/m2/day)
+       FLUXES(n,51) = infiltrated(3)  ! bottom soil surface infiltration by rain (kgH2O/m2/day)       
        FLUXES(n,48) = uptake_fraction(1) ! transpiration fraction extracted from 1st rooting layer (the soil surface)
        FLUXES(n,49) = uptake_fraction(2) ! transpiration fraction extracted from 2nd rooting layer (dynamic 2nd layer)
 
@@ -1149,17 +1134,17 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                ! For dead organic matter pools, in most cases these will be zeros.
                ! But these variables allow for subseqent management where surface litter
                ! pools are removed or mechanical extraction from soil occurs.
-               FLUXES(n,31) = (labile_loss-labile_residue) / deltat(n)  ! Labile extraction
-               FLUXES(n,32) = (foliar_loss-foliar_residue) / deltat(n)  ! foliage extraction
-               FLUXES(n,33) = (roots_loss-roots_residue) / deltat(n)    ! fine roots extraction
-               FLUXES(n,34) = (wood_loss-wood_residue) / deltat(n)      ! wood extraction
+               FLUXES(n,31) = (labile_loss-labile_residue) / days_per_step  ! Labile extraction
+               FLUXES(n,32) = (foliar_loss-foliar_residue) / days_per_step  ! foliage extraction
+               FLUXES(n,33) = (roots_loss-roots_residue) / days_per_step    ! fine roots extraction
+               FLUXES(n,34) = (wood_loss-wood_residue) / days_per_step      ! wood extraction
                FLUXES(n,35) = 0d0 ! litter extraction
-               FLUXES(n,36) = soil_loss_with_roots / deltat(n)          ! som extraction
+               FLUXES(n,36) = soil_loss_with_roots / days_per_step          ! som extraction
                ! Convert harvest related residue generations to daily rate for output
-               FLUXES(n,37) = labile_residue / deltat(n) ! labile residues
-               FLUXES(n,38) = foliar_residue / deltat(n) ! foliage residues
-               FLUXES(n,39) = roots_residue / deltat(n)  ! fine roots residues
-               FLUXES(n,40) = wood_residue / deltat(n)   ! wood residues
+               FLUXES(n,37) = labile_residue / days_per_step ! labile residues
+               FLUXES(n,38) = foliar_residue / days_per_step ! foliage residues
+               FLUXES(n,39) = roots_residue / days_per_step  ! fine roots residues
+               FLUXES(n,40) = wood_residue / days_per_step   ! wood residues
 
                ! Total C extraction, including any potential litter and som.
                FLUXES(n,30) = sum(FLUXES(n,31:36))
@@ -1175,7 +1160,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 !       if (met(8,n) > 0d0) then
 !           tmp = (POOLS(n+1,2)+POOLS(n+1,4))/sum(POOLS(n+1,2:4))
 !           if (allocated(extracted_C)) then
-!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / deltat(n)
+!               extracted_C(n) = (((POOLS(n+1,1)*tmp) + POOLS(n+1,2) + POOLS(n+1,4)) * met(8,n)) / days_per_step
 !           endif
 !           POOLS(n+1,1) = tmp &
 !                        * POOLS(n+1,1)*(1d0-met(8,n)) ! remove labile
@@ -1206,28 +1191,28 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            if (burnt_area > 0d0) then
 
                ! first calculate combustion / emissions fluxes in g C m-2 d-1
-               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/deltat(n) ! labile
-               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/deltat(n) ! foliar
-               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/deltat(n) ! roots
-               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/deltat(n) ! wood
-               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/deltat(n) ! litter
-               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/deltat(n) ! som
+               FLUXES(n,18) = POOLS(n+1,1)*burnt_area*cf(1)/days_per_step ! labile
+               FLUXES(n,19) = POOLS(n+1,2)*burnt_area*cf(2)/days_per_step ! foliar
+               FLUXES(n,20) = POOLS(n+1,3)*burnt_area*cf(3)/days_per_step ! roots
+               FLUXES(n,21) = POOLS(n+1,4)*burnt_area*cf(4)/days_per_step ! wood
+               FLUXES(n,22) = POOLS(n+1,5)*burnt_area*cf(5)/days_per_step ! litter
+               FLUXES(n,23) = POOLS(n+1,6)*burnt_area*cf(6)/days_per_step ! som
 
                ! second calculate litter transfer fluxes in g C m-2 d-1, all pools except som
-               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/deltat(n) ! labile into litter
-               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/deltat(n) ! foliar into litter
-               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/deltat(n) ! roots into litter
-               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/deltat(n) ! wood into som
-               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/deltat(n) ! litter into som
+               FLUXES(n,24) = POOLS(n+1,1)*burnt_area*(1d0-cf(1))*(1d0-rfac(1))/days_per_step ! labile into litter
+               FLUXES(n,25) = POOLS(n+1,2)*burnt_area*(1d0-cf(2))*(1d0-rfac(2))/days_per_step ! foliar into litter
+               FLUXES(n,26) = POOLS(n+1,3)*burnt_area*(1d0-cf(3))*(1d0-rfac(3))/days_per_step ! roots into litter
+               FLUXES(n,27) = POOLS(n+1,4)*burnt_area*(1d0-cf(4))*(1d0-rfac(4))/days_per_step ! wood into som
+               FLUXES(n,28) = POOLS(n+1,5)*burnt_area*(1d0-cf(5))*(1d0-rfac(5))/days_per_step ! litter into som
 
                ! update pools - first remove burned vegetation
-               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * deltat(n) ! labile
-               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * deltat(n) ! foliar
-               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * deltat(n) ! roots
-               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * deltat(n) ! wood
+               POOLS(n+1,1) = POOLS(n+1,1) - (FLUXES(n,18) + FLUXES(n,24)) * days_per_step ! labile
+               POOLS(n+1,2) = POOLS(n+1,2) - (FLUXES(n,19) + FLUXES(n,25)) * days_per_step ! foliar
+               POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * days_per_step ! roots
+               POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * days_per_step ! wood
                ! update pools - add litter transfer
-               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * deltat(n)
-               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * deltat(n)
+               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * days_per_step
+               POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * days_per_step
 
                ! calculate ecosystem emissions (gC/m2/day)
                FLUXES(n,17) = FLUXES(n,18)+FLUXES(n,19)+FLUXES(n,20)+FLUXES(n,21)+FLUXES(n,22)+FLUXES(n,23)
@@ -1256,7 +1241,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! Declare local variables
-    double precision :: a, b, c, Pl_max, PAR_m2, airt_adj
+    double precision :: a, b, c, Pl_max, PAR_m2, airt_ad
 
     !
     ! Metabolic limited photosynthesis
@@ -1288,8 +1273,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Note the ratio of H20:CO2 diffusion through leaf level boundary layer is
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
-    rb_mol_1 = (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
-              leaf_canopy_wind_scaling) ** (-1d0)
+    rb_mol_1 = 1d0 / (aerodynamic_conductance * convert_ms1_mol_1 * gb_H2O_CO2 * &
+              leaf_canopy_wind_scaling)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
@@ -1324,7 +1309,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Estimation of ci is based on the assumption that metabilic limited
     ! photosynthesis is equal to diffusion limited. For details
-    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882–894
+    ! see Williams et al, (1997), Ecological Applications,7(3), 1997, pp. 882â€“894
 
     ! Daily canopy conductance dertmined through combination of aerodynamic and
     ! stomatal conductances. Both conductances are scaled to canopy aggregate.
@@ -1334,7 +1319,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! Combining in series the stomatal and boundary layer conductances
     ! to make canopy resistence (s/m2/molCO2)
-    rc = (gs*gs_H2Ommol_CO2mol) ** (-1d0) + rb_mol_1
+    rc = 1d0 / (gs*gs_H2Ommol_CO2mol) + rb_mol_1
 
     ! pp and qq represent limitation by metabolic (temperature & N) and
     ! diffusion (co2 supply) respectively
@@ -1346,7 +1331,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate CO2 limited rate of photosynthesis (umolC.m-2.s-1)
     ! Then scale to day light period as this is then consistent with the light
     ! capture period (1/24 = 0.04166667)
-    !pd = ((co2-ci)/rc) * umol_to_gC * dayl_hours_fraction
     pd = ((co2-ci)/rc)
 
     !
@@ -1356,12 +1340,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! calculate combined light and CO2 limited photosynthesis (umolC/m2/s)
     acm_gpp_stage_2 = light_limited_photosynthesis*pd/(light_limited_photosynthesis+pd)
 
-    !pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
-    !! calculate internal CO2 concentration (ppm or umol/mol)
-    !ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
+    ! Estimate ci as a function of the final combined GPP estimate
+    pp = acm_gpp_stage_2*rc ; mult = co2+qq-pp
+    ! calculate internal CO2 concentration (ppm or umol/mol)
+    ci = 0.5d0*(mult+sqrt((mult*mult)-4d0*(co2*qq-pp*co2_comp_point)))
 
     ! sanity check
-    if (acm_gpp_stage_2 /= acm_gpp_stage_2) acm_gpp_stage_2 = 0d0
+    if (acm_gpp_stage_2 /= acm_gpp_stage_2) then
+        acm_gpp_stage_2 = 0d0 ; ci = 0d0
+    end if
 
     ! don't forget to return
     return
@@ -1428,7 +1415,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         denom = (denom / (lambda * total_water_flux * mmol_to_kg_water)) - slope
         potential_conductance = (aerodynamic_conductance * leaf_canopy_wind_scaling) / (denom / psych)
 
-        ! convert m.s-1 to mmolH2O.m-2.s-1, per unit ground area, note that this
+        ! convert m.s-1 to mmolH2O.m-2.d-1, per unit ground area, note that this
         ! is implicitly the canopy scaled value
         potential_conductance = potential_conductance * convert_ms1_mmol_1
         ! if conditions are dew forming then set conductance to maximum as we
@@ -1447,6 +1434,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
         call acm_gpp_stage_1
+
+        ! In all other cases iterate
+        !potential_stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
+        !                                        find_gs_iWUE,minimum_conductance,max_gs*leaf_canopy_light_scaling, & 
+        !                                        tol_gs*lai,iWUE_step*0.10d0)
 
 !        if (do_iWUE) then
             ! Intrinsic WUE optimisation
@@ -1575,7 +1567,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Change units of potential stomatal conductance
     ! (mmolH2O.m-2.d-1 -> m.s-1).
     ! Note assumption of sea surface pressure only
- !   gs = (stomatal_conductance / convert_ms1_mmol_1) * dayl_seconds_1
     gs = stomatal_conductance / convert_ms1_mmol_1
     ! Scale aerodynamic conductance to canopy scale
     gb = aerodynamic_conductance * leaf_canopy_wind_scaling
@@ -1649,6 +1640,44 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
+  subroutine calculate_potential_evaporation(potential_evap)
+
+    ! Estimates potential surface evapotransporation based on the Penman-Monteith model
+    ! (kgH20.m-2.day-1). FAO Chapter 3 Determination of ETo, see chapter 2 for derivation.
+
+    implicit none
+
+    ! arguments
+    double precision, intent(out) :: potential_evap ! kgH2O.m-2.day-1
+
+    ! local variables
+    double precision :: canopy_radiation  ! isothermal net radiation (W/m2)
+
+    !!!!!!!!!!
+    ! Estimate energy radiation balance (W.m-2)
+    !!!!!!!!!!
+
+    ! Absorbed shortwave radiation MJ.m-2.day-1
+    canopy_radiation = canopy_swrad_MJday + soil_swrad_MJday & 
+                     + (canopy_lwrad_Wm2 * 1d-6 * seconds_per_day) &
+                     + (soil_lwrad_Wm2 * 1d-6 * seconds_per_day)
+
+    !!!!!!!!!!
+    ! Calculate canopy evaporative fluxes (kgH2O/m2/day)
+    !!!!!!!!!!
+
+    ! Calculate numerator of Penman Montheith (kgH2O.m-2.day-1)
+    ! NOTE: Rn - G, neglected as G (ground heat) near zero on daily scales
+    ! 0.34 estimates the ratio of canopy and stomatal conductance
+    ! 0.408 is the inverse of lambda as described in this code.
+    potential_evap = ((0.408d0*slope*canopy_radiation) + &
+                      (psych*(900d0 / (meant + 273d0)) * wind_spd * vpd_kPa)) &
+                   / (slope + psych * (1d0+0.34d0*wind_spd))
+
+  end subroutine calculate_potential_evaporation
+  !
+  !------------------------------------------------------------------
+  !
   subroutine calculate_soil_evaporation(soilevap)
 
     ! Estimate soil surface evaporation based on the Penman-Monteith model of
@@ -1668,7 +1697,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                               ,gws   ! water vapour conductance through soil air space (m.s-1)
 
     ! oC -> K for local temperature value
-    local_temp = maxt + freeze
+    local_temp = soilT + freeze
 
     !!!!!!!!!!
     ! Estimate energy radiation balance (W.m-2)
@@ -1708,8 +1737,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !
     ! Calculates the aerodynamic or bulk canopy conductance (m.s-1). Here we
     ! assume neutral conditions due to the lack of an energy balance calculation
-    ! in either ACM or DALEC. The equations used here are with SPA at the time
-    ! of the calibration
+    ! in either ACM or DALEC. The equations used here are extracted from SPA.
     !
 
     implicit none
@@ -1717,43 +1745,57 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! local variables
     double precision :: local_lai, &
            mixing_length_momentum, & ! mixing length parameter for momentum (m)
-            length_scale_momentum    ! length scale parameter for momentum (m)
+            length_scale_momentum, & ! length scale parameter for momentum (m)
+                     canopy_decay    ! within canopy decay coefficient for wind
+
+    ! parameters
+    double precision, parameter :: foliage_drag = 0.2d0 ! foliage drag coefficient
 
     ! Restrict LAI used here to greater than a minium value which prevents un-realistic outputs
     local_lai = max(min_lai,lai)
 
-    ! calculate the zero plane displacement and roughness length
+    ! Calculate the zero plane displacement and roughness length
     call z0_displacement(ustar_Uh,local_lai)
-    ! calculate friction velocity at tower height (reference height ) (m.s-1)
+    ! Calculate friction velocity at tower height (reference height) (m.s-1)
     ! WARNING neutral conditions only; see WRF module_sf_sfclay.F for 'with
     ! stability versions'
     !    ustar = (wind_spd / log((tower_height-displacement)/roughl)) * vonkarman
     ustar = wind_spd * ustar_Uh
 
-    ! both length scale and mixing length are considered to be constant within
-    ! the canopy (under dense canopy conditions) calculate length scale (lc)
-    ! for momentum absorption within the canopy; Harman & Finnigan (2007)
-    ! and mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
+    ! Both the length scale and mixing length are assumed to be constant within
+    ! the canopy (under dense canopy conditions). 
+    ! Calculate length scale (lc) for momentum absorption within the canopy; Harman & Finnigan (2007)
+    ! Calculate mixing length (lm) for vertical momentum within the canopy Harman & Finnigan (2008)
     length_scale_momentum = (4d0*canopy_height) / local_lai
     mixing_length_momentum = 2d0*(ustar_Uh**3)*length_scale_momentum
 
-    ! based on Harman & Finnigan (2008); neutral conditions only
+    ! Estimate above canopy wind speed decay followin Harman & Finnigan (2008)
+    ! and assuming neutral conditions only.
     call log_law_decay
 
-    ! now we are interested in the within canopy wind speed,
-    ! here we assume that the wind speed just inside of the canopy is most important.
-    !canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*0.5d0)-canopy_height))/mixing_length_momentum)
-    ! Estimate canopy scaling factor for use with aerodynamic conductance.
-    ! Based on the canopy scaling of photosynthetic capacity due to light from 
-    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
-    leaf_canopy_wind_scaling = exp((ustar_Uh/mixing_length_momentum)) &
-                             / (ustar_Uh/mixing_length_momentum)
+    ! Calculate canopy decay coefficient with stability correction
+    ! NOTE this is not consistent with canopy momentum decay done by Harman &
+    ! Finnigan (2008) instead follows Nui & Yang 2004; Qin et al 2002.
+    canopy_decay = sqrt((foliage_drag*canopy_height*local_lai)/mixing_length_momentum)
 
-    ! calculate_soil_conductance
-    call calculate_soil_conductance(mixing_length_momentum,local_lai)
-    ! calculate leaf level conductance (m/s) for water vapour under forced convective conditions
+    ! Estimating the within canopy wind speed, we assume that the wind speed 
+    ! just inside of the canopy is most important.
+    !canopy_wind = canopy_wind*exp((ustar_Uh*((canopy_height*1d0)-canopy_height))/mixing_length_momentum)   
+
+    ! Calculate_soil_conductance
+    call calculate_soil_conductance(mixing_length_momentum,local_lai,canopy_decay)
+    ! Calculate top of canopy leaf conductance (m/s) for water vapour under forced convective conditions
+    ! The leaf-to-canopy scaling is achieved with the leaf_canopy_wind_scaling scalar.
     call average_leaf_conductance(aerodynamic_conductance)
 
+    ! Estimate leaf to canopy scaling factor for use with aerodynamic conductance.
+    ! Based on the canopy scaling of photosynthetic capacity due to light from 
+    ! Sellers et al., (1992), Remote Sensing Environment, 42(3), 187-216.
+    ! But now applied on the within canopy decay gradient.
+    leaf_canopy_wind_scaling = exp(canopy_decay*(1d0-(soil_roughl/canopy_height))) &
+                             - exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))
+    leaf_canopy_wind_scaling = leaf_canopy_wind_scaling / exp(canopy_decay)
+                                 
   end subroutine calculate_aerodynamic_conductance
   !
   !------------------------------------------------------------------
@@ -1807,9 +1849,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! 1/vonkarman * 0.31 = 0.7710906
     canopy_wind = ustar * vonkarman_1 * log((canopy_height-displacement) / roughl)
 
-    ! set minimum value for wind speed at canopy top (m.s-1)
-!    canopy_wind = max(min_wind,canopy_wind)
-
   end subroutine log_law_decay
   !
   !-----------------------------------------------------------------
@@ -1817,7 +1856,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine calculate_field_capacity
 
     use brent_zero, only: zbrent
-
+    
     ! field capacity calculations for saxton eqns !
 
     implicit none
@@ -1838,23 +1877,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_daylength
+  subroutine calculate_daylength(doy,lat)
 
     ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
     ! combined with trigonomic functions to calculate day length in hours and seconds
 
     implicit none
 
+    ! arguments
+    double precision, intent(in) :: doy, lat
+
     ! local variables
-    double precision :: dec, sinld, cosld, aob
+    double precision :: dec, mult, sinld, cosld, aob
 
     !
     ! Estimate solar geometry variables needed
     !
 
+    ! Declination
+    ! NOTE: 0.002739726d0 = 1/365
+    !    dec = - asin( sin( 23.45d0 * deg_to_rad ) * cos( 2d0 * pi * ( doy + 10d0 ) / 365d0 ) )
+    !    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) / 365d0 ) )
+    dec = - asin( sin_dayl_deg_to_rad * cos( two_pi * ( doy + 10d0 ) * 0.002739726d0 ) )
+
+    ! latitude in radians
+    mult = lat * deg_to_rad
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
-    sinld = sin_latitude_radians * sin( declination )
-    cosld = cos_latitude_radians * cos( declination )
+    sinld = sin( mult ) * sin( dec )
+    cosld = cos( mult ) * cos( dec )
     aob = max(-1d0,min(1d0,sinld / cosld))
 
     ! estimate day length in hours and seconds and upload to module variables
@@ -1886,25 +1936,30 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision ::    dT, & ! Canopy transmittance for long wave radiation
                         lwrad, & ! downward long wave radiation from sky (W.m-2)
         longwave_release_soil, & ! emission of long wave radiation from surfaces per m2
-      longwave_release_canopy    ! assuming isothermal condition (W.m-2)
+      longwave_release_canopy, & ! assuming isothermal condition (W.m-2)
+                        Vc_dT    ! Multi-use variable
 
     ! estimate long wave radiation from atmosphere (W.m-2)
-    lwrad = emiss_boltz * (maxt+freeze-20d0) ** 4
+    lwrad = emiss_boltz * (maxt+freeze-20d0)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_soil = emiss_boltz * (soil_temperature+freeze) ** 4
+    longwave_release_soil = emiss_boltz * (soil_temperature+freeze)**4d0
     ! estimate isothermal long wave emission per unit area
-    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze) ** 4
+    longwave_release_canopy = emiss_boltz * (canopy_temperature+freeze)**4d0
     ! Canopy transmittance for thermal radiation
-    dT = 1d0-exp(-lai/Vc*mu_obar)
+    dT = 1d0-exp(-lai/Vc*mu_obar) ; Vc_dT = Vc*dT
 
     !!!!!!!!!!
     ! Isothermal net long wave canopy and soil balance (W.m-2)
     !!!!!!!!!!
 
     ! Diffuse longwave absorbed by the canopy
-    canopy_lwrad_Wm2 = (lwrad*Vc*dT) - (Vc*dT*2d0*longwave_release_canopy) + (Vc*dT*longwave_release_soil)
+    canopy_lwrad_Wm2 = (lwrad*Vc_dT) - (Vc_dT*2d0*longwave_release_canopy) + (Vc_dT*longwave_release_soil)
     ! Diffuse longwave absorbed by the soil
-    soil_lwrad_Wm2 = (lwrad*(1d0-(Vc*dT))) + (Vc*dT*longwave_release_canopy) - longwave_release_soil
+    soil_lwrad_Wm2 = (lwrad*(1d0-Vc_dT)) + (Vc_dT*longwave_release_canopy) - longwave_release_soil
+    ! Determine the radiative heat conductance term of the canopy (m/s)
+    canopy_radiative_thermal_conductance = ((4d0 * emiss_boltz * (canopy_temperature+freeze)**3d0) / (air_density_kg * cpair))*Vc_dT 
+    ! Determine the radiative heat conductance term of the soil (m/s)
+    soil_radiative_thermal_conductance = ((4d0 * emiss_boltz * (soil_temperature+freeze)**3d0) / (air_density_kg * cpair)) 
 
   end subroutine calculate_longwave_isothermal
   !
@@ -1951,21 +2006,22 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate shortwave radiation balance
     call calculate_shortwave_balance
     ! Estimate isothermal long wave radiation balance
-    call calculate_longwave_isothermal(meant,meant)
-    ! Apply linear correction to soil surface isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
-                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                 soil_iso_to_net_const
-    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
-    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
-    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
-    ! Apply linear correction to canopy isothermal->net longwave radiation
-    ! balance based on absorbed shortwave radiation
-    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
-                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
-                canopy_iso_to_net_const
-    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
+    call calculate_longwave_isothermal(leafT,soilT)
+!    ! Apply linear correction to soil surface isothermal->net longwave radiation
+!    ! balance based on absorbed shortwave radiation
+!    delta_iso = (soil_iso_to_net_coef_LAI * lai) + &
+!                (soil_iso_to_net_coef_SW * (soil_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+!                 soil_iso_to_net_const
+!
+!    ! In addition to the iso to net adjustment, SPA analysis shows that soil net never gets much below zero
+!    !soil_lwrad_Wm2 = max(-0.1d0,soil_lwrad_Wm2 + delta_iso)
+!    soil_lwrad_Wm2 = soil_lwrad_Wm2 + delta_iso
+!    ! Apply linear correction to canopy isothermal->net longwave radiation
+!    ! balance based on absorbed shortwave radiation
+!    delta_iso = (canopy_iso_to_net_coef_LAI * lai) + &
+!                (canopy_iso_to_net_coef_SW * (canopy_swrad_MJday * 1d6 * seconds_per_day_1)) + &
+!                canopy_iso_to_net_const
+!    canopy_lwrad_Wm2 = canopy_lwrad_Wm2 + delta_iso
 
   end subroutine calculate_radiation_balance
   !
@@ -1984,13 +2040,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     double precision, dimension(no_wavelength), parameter :: &
                                    newsnow_reflectance = (/0.73d0,0.95d0/) ! NIR/PAR new snow reflectance fraction
     ! local variables
-    double precision :: Gu, K, mu, S2, fsnow, diffuse_fraction
+    double precision :: Gu, K, mu, S2, S3, fsnow, diffuse_fraction
     ! Local variables with different values per wavelength
     double precision, dimension(no_wavelength) :: &
                       as_mu, dd, ff, sigma, u1, u2, u3, &
-                      S1, p1, p2, p3, p4, D1, D2, &
-                      h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, &
-                      Iup, Idown, soil_albedo, &
+                      S1, S1_1, p1, p2, p3, p4, D1, D1_1, D2, D2_1, &
+                      h1, h1_sigma, h2, h3, h4, h4_sigma, h5, h6, h7, h8, h9, h10, &
+                      mu_obar_hh, mu_obar_K, &
+                      Iup, Idown, soil_albedo, soil_absorption, & 
                       canopy_absorption_fraction_diffuse, &
                       canopy_absorption_fraction_direct, &
                       soil_absorption_fraction_diffuse, &
@@ -2018,49 +2075,53 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Extinction coefficient for direct radiation, related to Gu and the cosine zenith angle
     K = Gu / mu
+    ! Combination of the inverse spectral characteristics and light extinction coefficient
+    mu_obar_K = mu_obar * K
     ! Single leaf scattering albedo within the canopy, varied by mu, leaf distribution and wavelength
     as_mu = ((canopy_scattering * 0.5d0) * (Gu / (Gu+(mu*O2)))) &
           * (1d0 - (mu*(O1/(Gu+(mu*O2)))*log((Gu+(mu*O2)+(mu*O1))/(mu*O1)) ) )
 
     ! Upscatting coefficient for direct radiation, varied by mu and wavelength
-    beta0 = ((1d0+(mu_obar*K)) / (canopy_scattering*mu_obar*K)) * as_mu
+    beta0 = ((1d0+mu_obar_K) / (canopy_scattering*mu_obar_K)) * as_mu
 
     ! Various terms, yet to have their specific functions determined
     ! Note that notations from Sellers (1985) have been given double letters if only single character was used,
     ! or written word for greek notation
-    dd = canopy_scattering * mu_obar * K * beta0
-    ff = canopy_scattering * mu_obar * K * (1-beta0)
-    sigma = cc**2 + bb**2 + (mu_obar*K)**2
+    dd = canopy_scattering * mu_obar_K * beta0
+    ff = canopy_scattering * mu_obar_K * (1-beta0)
+    sigma = (cc*cc) + (bb*bb) + (mu_obar_K*mu_obar_K)
     u1 = bb - (cc/soil_reflectance) ; u2 = bb - (cc*soil_reflectance) ; u3 = ff + (cc*soil_reflectance)
-    S1 = exp(-hh*lai) ; S2 = exp(-K*lai)
+    S1 = exp(-hh*lai) ; S1_1 = 1d0/S1 ; S2 = exp(-K*lai)
+    mu_obar_hh = mu_obar*hh
 
     ! Related to diffuse radiation
-    p1 = bb + (mu_obar*hh) ; p2 = bb - (mu_obar*hh)
+    p1 = bb + mu_obar_hh ; p2 = bb - mu_obar_hh
     ! Related to direct radiation
-    p3 = bb + (mu_obar*K) ; p4 = bb - (mu_obar*K)
+    p3 = bb + mu_obar_K ; p4 = bb - mu_obar_K
     !
-    D1 = (p1 * (u1 - (mu_obar*hh)) * (1d0/S1)) - (p2*(u2+(mu_obar*hh))*S1)
-    D2 = ((u2+(mu_obar*hh))*(1d0/S1)) - ((u2-(mu_obar*hh))*S1)
+    D1 = (p1 * (u1 - mu_obar_hh) * S1_1) - (p2*(u2+mu_obar_hh)*S1) ; D1_1 = 1d0/D1
+    D2 = ((u2+mu_obar_hh)*S1_1) - ((u2-mu_obar_hh)*S1) ; D2_1 = 1d0/D2
 
     !
     ! Direct radiation specific components
     !
 
-    h1 = (-dd*p4) - (cc*ff)
-    h2 =  (1d0/D1) * ( ((dd-((h1/sigma)*p3))*((u1-(mu_obar*hh))*(1d0/S1))) &
-                     - (p2*(dd-cc-((h1/sigma)*(u1+(mu_obar*K))))*S2) )
-    h3 = (-1d0/D1) * ( ((dd-((h1/sigma)*p3))*(u1+(mu_obar*hh))*S1) &
-                     - (p1*(dd-cc-((h1/sigma)*(u1+(mu_obar*K))))*S2) )
+    h1 = (-dd*p4) - (cc*ff) ; h1_sigma = h1 / sigma
+    h2 =  D1_1 * ( ((dd-(h1_sigma*p3))*((u1-mu_obar_hh)*S1_1)) &
+                     - (p2*(dd-cc-(h1_sigma*(u1+mu_obar_K)))*S2) )
+    h3 = -D1_1 * ( ((dd-(h1_sigma*p3))*(u1+mu_obar_hh)*S1) &
+                     - (p1*(dd-cc-(h1_sigma*(u1+mu_obar_K)))*S2) )
     h4 = (-dd*p3) - (cc*ff) ! NOTE: "-" at the beginning is a correction identified in Sellers et al., (1996)
-    h5 = (-1d0/D2) * ( ((h4/sigma)*(u2+(mu_obar*hh))*(1d0/S1)) &
-                     + (u3-((h4/sigma)*(u2-(mu_obar*K))*S2)) )
-    h6 = (1d0/D2) * ( ((h4/sigma)*(u2-(mu_obar*hh))*S1) &
-                     + (u3-((h4/sigma)*(u2-(mu_obar*K))*S2)) )
+    h4_sigma = h4 / sigma
+    h5 = -D2_1 * ( (h4_sigma*(u2+mu_obar_hh)*S1_1) &
+                     + (u3-(h4_sigma*(u2-mu_obar_K)*S2)) )
+    h6 =  D2_1 * ( (h4_sigma*(u2-mu_obar_hh)*S1) &
+                     + (u3-(h4_sigma*(u2-mu_obar_K)*S2)) )
 
     ! Fraction of direct radiation which leaves the canopy top as diffuse
-    Iup = ((h1*exp(-K*lai))/sigma) + (h2*exp(-hh*lai)) + (h3*exp(hh*lai))
+    Iup = ((h1*S2)/sigma) + (h2*S1) + (h3*S1_1)
     ! Fraction of direct radiation which leaves the canopy base as diffuse
-    Idown = ((h4*exp(-K*lai))/sigma) + (h5*exp(-hh*lai)) + (h6*exp(hh*lai))
+    Idown = ((h4*S2)/sigma) + (h5*S1) + (h6*S1_1)
 
     ! Update soil reflectance based on snow cover
     if (snow_storage > 0d0) then
@@ -2072,32 +2133,35 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         !soil_albedo = (soil_surface_reflectance * Vg) + ((1d0-Vg) * soil_reflectance)
         soil_albedo = soil_reflectance
     endif
+    ! Estimate soil absorption fraction
+    soil_absorption = 1d0 - soil_albedo
 
+    S3 = exp(-K*lai/Vc)
     ! Fraction of direct radiation absorbed by the canopy
-    canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*(1-soil_albedo)) &
-                                             - (exp(-K*lai/Vc)*(1-soil_albedo)))
+    canopy_absorption_fraction_direct = Vc * (1d0 - Iup - (Idown*soil_absorption) &
+                                             - (S3*soil_absorption))
     ! Fraction of direct radiation absorbed by the soil
-    soil_absorption_fraction_direct = ((1d0-Vc)*(1-soil_albedo)) &
-                                    + (Vc*((Idown*(1d0-soil_albedo)) + (exp(-K*lai/Vc)*(1-soil_albedo))))
+    soil_absorption_fraction_direct = ((1d0-Vc)*soil_absorption) &
+                                    + (Vc*((Idown*soil_absorption) + (S3*soil_absorption)))
 
     !
     ! Diffuse radiation specific components
     !
 
-    h7  = (cc/D1) * (u1-(mu_obar*hh)) * (1d0/S1)
-    h8  = (-cc/D1) * (u1+(mu_obar*hh)) * S1
-    h9  = (1d0/D2) * (u2+(mu_obar*hh)) * (1d0/S1)
-    h10 = (-1d0/D2) * (u2-(mu_obar*hh)) * S1
+    h7  = (cc/D1)  * (u1-mu_obar_hh) * S1_1
+    h8  = (-cc/D1) * (u1+mu_obar_hh) * S1
+    h9  =  D2_1 * (u2+mu_obar_hh) * S1_1
+    h10 = -D2_1 * (u2-mu_obar_hh) * S1
 
     ! Fraction of diffuse radiation which leaves the canopy top as diffuse
-    Iup = (h7*exp(-hh*lai)) + (h8*exp(hh*lai))
+    Iup = (h7*S1) + (h8*S1_1)
     ! Fraction of diffuse radiation which leaves the canopy base as diffuse
-    Idown = (h9*exp(-hh*lai)) + (h10*exp(hh*lai))
+    Idown = (h9*S1) + (h10*S1_1)
 
     ! Fraction of diffuse radiation absorbed by the canopy
-    canopy_absorption_fraction_diffuse = Vc * (1d0 - Iup - (Idown*(1d0-soil_albedo)))
+    canopy_absorption_fraction_diffuse = Vc * (1d0 - Iup - (Idown*soil_absorption))
     ! Fraction of diffuse radiation absorbed by the soil
-    soil_absorption_fraction_diffuse = ((1d0-Vc)*(1d0-soil_albedo)) + (Vc*((Idown*(1d0-soil_albedo))))
+    soil_absorption_fraction_diffuse = ((1d0-Vc)*soil_absorption) + (Vc*((Idown*soil_absorption)))
 
     !
     ! Combine direct and diffuse, convert into actual units of energy (MJ/m2/d)
@@ -2132,14 +2196,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !-----------------------------------------------------------------
   !
   subroutine calculate_radiation_commons(lat,rad_pars)
+  !subroutine calculate_radiation_commons(lat)
 
     implicit none
 
     ! Description
 
     ! Declare arguments
-    double precision, intent(in) :: lat, & ! site latitude in degrees
-                               rad_pars(6) !
+    double precision, intent(in) :: lat ! site latitude in degrees
+    double precision, dimension(6), intent(in) :: rad_pars
 
     ! Calculate some common variables and place into memory
     latitude = lat
@@ -2148,12 +2213,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     cos_latitude_radians = cos(latitude_radians)
 
     ! Load canopy optical properties to their module variables
-    canopy_reflectance(1)   = rad_pars(1) ! canopy_nir_reflectance
-    canopy_reflectance(2)   = rad_pars(2) ! canopy_par_reflectance
-    canopy_transmittance(1) = rad_pars(3) ! canopy_nir_transmittance
-    canopy_transmittance(2) = rad_pars(4) ! canopy_par_transmittance
-    soil_reflectance(1)     = rad_pars(5) ! soil_nir_reflectance
-    soil_reflectance(2)     = rad_pars(6) ! soil_par_reflectance
+!    canopy_reflectance(1)   = rad_pars(1) ! canopy_nir_reflectance
+!    canopy_reflectance(2)   = rad_pars(2) ! canopy_par_reflectance
+!    canopy_transmittance(1) = rad_pars(3) ! canopy_nir_transmittance
+!    canopy_transmittance(2) = rad_pars(4) ! canopy_par_transmittance
+!    soil_reflectance(1)     = rad_pars(5) ! soil_nir_reflectance
+!    soil_reflectance(2)     = rad_pars(6) ! soil_par_reflectance
 
     ! Canopy scattering of incident light, varied by wavelength
     ! NOTE: if we want to put snow fall on the canopy in the model, then this
@@ -2255,11 +2320,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimate sunset solar angle
     sunset_solar_angle = acos(-tan(latitude_radians)*tan(declination))
     ! Estimate clear day light solar radiation (MJ/m2/d)
-    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos((360d0*doy)/365d0)) &
+    clear_day_swrad = So * pi_1 * (1d0+0.033d0*cos(two_pi*doy/365d0)) &
                     * (cos_latitude_radians*cos(declination)*sin(sunset_solar_angle) &
                       + sin_latitude_radians*sin(declination))
     ! Estimate the ratio of actual to clear day radiation (MJ/m2/d over MJ/m2/d)
-    Kt = swrad / clear_day_swrad
+    Kt = min(1d0,swrad / clear_day_swrad)
 
     ! Calculate diffuse ratio
     if (sunset_solar_angle < 1.4208d0) then
@@ -2305,8 +2370,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                                                ! of the root mass is assumed to be located
 
     ! reset water flux
-    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0
-    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0
+    total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0 ; wSWP = 0d0 ; rSWP = 0d0 ; Reff = 0d0 
+    slpa = 0d0 ; root_length = 0d0 ; root_mass = 0d0 ; Rcond_layer = 0d0 ; conductance_mmolH2OMPam2s = 0d0
     ! calculate soil depth to which roots reach
     root_reach = max_depth * root_biomass / (root_k + root_biomass)
     ! calculate the plant hydraulic resistance component. Currently unclear
@@ -2439,8 +2504,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Turn the output resistance into conductance
     Rcond_layer = Rcond_layer**(-1d0)
 
-    ! if freezing then assume soil surface is frozen, therefore no water flux
-    if (meant < 1d0) then
+    ! If freezing then assume soil surface is frozen, therefore no water flux
+    if (soilT < 1d0) then
         water_flux_mmolH2Om2s(1) = 0d0
         Rcond_layer(1) = 0d0
     end if
@@ -2750,7 +2815,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        ! Determine drainage flux between surface -> sub surface
        call gravitational_drainage(1)
-!print*,day,rainfall_in,Esoil_local,Esnow_local,runoff/dble(day),underflow/dble(day)
+
     end do ! days_per_step
 
     ! apply time step correction kgH2O/m2/step -> kgH2O/m2/day
@@ -2773,12 +2838,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Update soil layer thickness
     !!!!!!!!!!
 
-    depth_change = (top_soil_depth+min_layer) ; water_change = 0
+    ! Determine the root depth below which we will consider layer thickness changes,
+    ! and reset the water_change variable, used for maintaining mass balance.
+    depth_change = top_soil_depth+min_layer ; water_change = 0
     ! if roots extent down into the bucket
-    if (root_reach > depth_change .and. previous_depth <= depth_change) then
+    if (root_reach > depth_change) then
 
         !!!!!!!!!!
         ! Soil profile is within the bucket layer (layer 3)
+        ! therefore we must expand the soil layer (layer 2).
         !!!!!!!!!!
 
         if (previous_depth > depth_change) then
@@ -2904,16 +2972,33 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! arguments
-    double precision, intent(in) :: rainfall_in ! rainfall (kg.m-2.day-1)
+    double precision, intent(in) :: rainfall_in ! rainfall (kgH2O.m-2.day-1)
 
     ! local argumemts
     integer :: i
-    double precision :: add, & ! surface water available for infiltration (m)
-                      wdiff    ! available space in a given soil layer for water to fill (m)
-
+    double precision :: &
+            pot_runoff, & ! Potential rate of runoff (MgH2O/m2/day)
+                   add, & ! surface water available for infiltration (m)
+                 wdiff    ! available space in a given soil layer for water to fill (m)
+    
+    ! Parameters
+    double precision, parameter :: beta_s = 0.5d0 ! Infiltration enhancement factor (See Best et al., 2011, Table 6)
+                                                  ! i.e. if this was == 1 then there would be more infiltration
     ! convert rainfall water from mm -> m (or kgH2O.m-2.day-1 -> MgH2O.m-2.day-1)
-    add = rainfall_in * 1d-3
+    add = rainfall_in * 1d-3 
 
+    ! Estimate the potential infiltration rate, assumed as half the conductivity rate at porosity.
+    ! This is consistent with JULES, ORCHIDEE, CLM models as examples.
+    ! The *0.5 is the Beta_s factor taken from JULES, but other values are used in the other models.
+    call calculate_soil_conductivity(1,porosity(1),pot_runoff) 
+    ! Scaled to 2.5 hours, on the mean number of hours over which rainfall typically occurs. 
+    ! This is based on reported precipitation time series from global fluxnet2025 database.
+    pot_runoff = pot_runoff * seconds_per_day * (2.5d0/24d0) * beta_s 
+    pot_runoff = add * exp(-(pot_runoff / add)) ! potential runoff
+    ! Update cumulative runoff and substract from the rainfall addition
+    runoff = runoff + (pot_runoff*1d3) ; add = add - pot_runoff ; pot_runoff = 0d0
+
+    ! Loop through soil layers to drain
     do i = 1 , nos_soil_layers
 
        ! is the input of water greater than available space
@@ -2936,9 +3021,128 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! if after all of this we have some water left assume it is runoff (kgH2O.m-2.day-1)
     ! NOTE that runoff is reset outside of the daily soil loop
     runoff = runoff + (add * 1d3)
-    infiltrated = infiltrated + (waterchange(1) * 1e3)
+    infiltrated = infiltrated + (waterchange(1:nos_soil_layers) * 1d3)
 
   end subroutine infiltrate
+  !
+  !-----------------------------------------------------------------
+  !
+!  subroutine gravitational_drainage(time_period_days)
+!
+!    ! Integrator for soil gravitational drainage.
+!    ! Due to the longer time steps undertake by ACM / DALEC and the fact that
+!    ! drainage is a concurrent processes we assume that drainage occurs at
+!    ! the bottom of the column first creating space into which water can drain
+!    ! from the top down. Therefore we draing from the bottom first and then the top.
+!    ! NOTE: Assumes that any previous water movement due to infiltration and evaporation
+!    !       has already been updated in soil mass balance
+!
+!    implicit none
+!
+!    ! arguments
+!    integer, intent(in) :: time_period_days
+!
+!    ! local variables..
+!    integer :: t
+!    double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
+!                                               halfway, & ! half way point between start and end point of integration
+!                                                liquid, & ! liquid water in local soil layer (m3/m3)
+!                                         avail_to_flow, & ! liquid content above field capacity (m3/m3)
+!                                               iceprop, & ! fraction of soil layer which is ice
+!                                          pot_drainage    ! estimats of time step potential drainage rate (m/s)
+!    double precision  :: tmp1,tmp2,tmp3 &
+!                                 ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
+!                                ,change   ! absolute volume of water drainage in current layer (m3/day)
+!
+!    ! calculate soil ice proportion; at the moment
+!    ! assume everything liquid
+!    iceprop = 0d0
+!
+!    ! except the surface layer in the mean daily temperature is < 0oC
+!    if (meant < 1d0) iceprop(1) = 1d0
+!
+!    ! zero water fluxes
+!    waterchange = 0d0
+!
+!    ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+!    ! therefore we must convert
+!    underflow = underflow * 1d-3
+!    water_grav_flow = water_grav_flow * 1d-3
+!
+!    ! estimate potential drainage rate for the current time period
+!    liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
+!    ! estimate how much liquid is available to flow
+!    avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
+!    ! trapezium rule scaler and the half-way point between current and field capacity
+!    dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
+!    do t = 1, nos_soil_layers
+!       if (avail_to_flow(t) > 0d0) then
+!           ! Trapezium rule for approximating integral of drainage rate
+!           call calculate_soil_conductivity(t,liquid(t),tmp1)
+!           call calculate_soil_conductivity(t,field_capacity(t),tmp2)
+!           call calculate_soil_conductivity(t,halfway(t),tmp3)
+!           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
+!       else
+!           ! We are at field capacity currently even after rainfall has been infiltrated.
+!           ! Assume that the potential drainage rate is that at field capacity
+!           call calculate_soil_conductivity(t,field_capacity(t),pot_drainage(t))
+!       endif ! water above field capacity to flow?
+!    end do ! soil layers
+!    ! Scale potential drainage from per second to per day
+!    pot_drainage = pot_drainage * seconds_per_day
+!
+!    ! Integrate drainage over each day until time period has been reached or
+!    ! each soil layer has reached field capacity
+!    t = 1
+!    do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
+!
+!       ! Estimate liquid content and how much is available to flow / drain
+!       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
+!                     - field_capacity(1:nos_soil_layers)
+!
+!       ! ...then from the top down
+!       do soil_layer = 1, nos_soil_layers
+!
+!          ! initial conditions; i.e. is there liquid water and more water than
+!          ! layer can hold
+!          if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
+!
+!              ! Unsaturated volume of layer below (m3 m-2)
+!              unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
+!                    * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
+!              ! Restrict potential rate calculate above for the available water
+!              ! and available space in the layer below.
+!              ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
+!              change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
+!              ! update soil layer below with drained liquid
+!              waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
+!              waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
+!              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+!              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
+!
+!          end if ! some liquid water and drainage possible
+!
+!       end do ! soil layers
+!
+!       ! update soil water profile
+!       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
+!                                         + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
+!       ! estimate drainage from bottom of soil column (MgH2O/m2/day)
+!       ! NOTES: that underflow is reset outside of the daily soil loop
+!       underflow = underflow + waterchange(nos_soil_layers+1)
+!
+!       ! Reset now we have moves that liquid
+!       waterchange = 0d0
+!       ! integerate through time period
+!       t = t + 1
+!
+!    end do ! while condition
+!
+!    ! convert underflow and water_grav_flow from MgH2O/m2/day -> kgH2O/m2/day
+!    underflow = underflow * 1d3
+!    water_grav_flow = water_grav_flow * 1d3
+!
+!  end subroutine gravitational_drainage
   !
   !-----------------------------------------------------------------
   !
@@ -2958,98 +3162,153 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     integer, intent(in) :: time_period_days
 
     ! local variables..
-    integer :: t
+    integer :: t, d, s
+    double precision, dimension(nos_soil_layers+1) :: soil_waterfrac_local ! local copy of soil water content (m3.m-3)
     double precision, dimension(nos_soil_layers) :: dx, & ! range between the start and end points of the integration
                                                halfway, & ! half way point between start and end point of integration
-                                                liquid, & ! liquid water in local soil layer (m3/m3)
                                          avail_to_flow, & ! liquid content above field capacity (m3/m3)
-                                               iceprop, & ! fraction of soil layer which is ice
-                                          pot_drainage    ! estimats of time step potential drainage rate (m/s)
-    double precision  :: tmp1,tmp2,tmp3 &
-                                 ,unsat & ! unsaturated pore space in soil_layer below the current (m3/m3)
-                                ,change   ! absolute volume of water drainage in current layer (m3/day)
+                                       liquid_fraction    ! fraction of soil layer which is liquid
+    double precision, parameter :: integration_step_seconds = 1800d0*16d0, &
+                                   sixth = (1d0/6d0)
+    double precision  :: tmp1,tmp2,tmp3, tmp4 &
+                             ,pot_drainage_k0 & ! estimates of time step potential drainage rate (m/s)
+                             ,pot_drainage_k1 &
+                             ,pot_drainage_k2 & 
+                             ,pot_drainage_k3 &
+                             ,pot_drainage_k4 &
+                                      ,liquid & ! liquid water in local soil layer (m3/m3)                             
+                                       ,unsat & ! unsaturated pore space in soil layer below the current (m3/m3)
+                                      ,change   ! absolute volume of water drainage in current layer (m3/day)
 
-    ! calculate soil ice proportion; at the moment
-    ! assume everything liquid
-    iceprop = 0d0
+    ! Reset
+    liquid_fraction = 1d0 ; waterchange = 0d0 ; d = 1
 
+    ! calculate soil ice proportion;
     ! except the surface layer in the mean daily temperature is < 0oC
-    if (meant < 1d0) iceprop(1) = 1d0
+    if (meant < 1d0) liquid_fraction(1) = 0d0
 
-    ! zero water fluxes
-    waterchange = 0d0
-
-    ! underflow is tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
+    ! underflow and water_grav_flow are tracked in kgH2O/m2/day but estimated here in MgH2O/m2/day
     ! therefore we must convert
     underflow = underflow * 1d-3
     water_grav_flow = water_grav_flow * 1d-3
 
-    ! estimate potential drainage rate for the current time period
-    liquid = soil_waterfrac(1:nos_soil_layers) * ( 1d0 - iceprop(1:nos_soil_layers) )
-    ! estimate how much liquid is available to flow
-    avail_to_flow = liquid - field_capacity(1:nos_soil_layers)
-    ! trapezium rule scaler and the half-way point between current and field capacity
-    dx = avail_to_flow*0.5d0 ; halfway = liquid - dx
-    do t = 1, nos_soil_layers
-       if (avail_to_flow(t) > 0d0) then
-           ! Trapezium rule for approximating integral of drainage rate
-           call calculate_soil_conductivity(t,liquid(t),tmp1)
-           call calculate_soil_conductivity(t,field_capacity(t),tmp2)
-           call calculate_soil_conductivity(t,halfway(t),tmp3)
-           pot_drainage(t) = 0.5d0 * dx(t) * ((tmp1 + tmp2) + 2d0 * tmp3)
-       else
-           ! We are at field capacity currently even after rainfall has been infiltrated.
-           ! Assume that the potential drainage rate is that at field capacity
-           call calculate_soil_conductivity(t,field_capacity(t),pot_drainage(t))
-       endif ! water above field capacity to flow?
-    end do ! soil layers
-    ! Scale potential drainage from per second to per day
-    pot_drainage = pot_drainage * seconds_per_day
+    ! Estimate liquid content and how much is available to flow / drain
+    avail_to_flow = (soil_waterfrac(1:nos_soil_layers) * liquid_fraction(1:nos_soil_layers) ) &
+                  - field_capacity(1:nos_soil_layers)
 
-    ! Integrate drainage over each day until time period has been reached or
+    ! Integrate drainage over each 30 min within day until time period has been reached or
     ! each soil layer has reached field capacity
-    t = 1
-    do while (t < (time_period_days+1) .and. maxval(soil_waterfrac - field_capacity) > vsmall)
+    do while (d < 4 .and. maxval(avail_to_flow) > vsmall) 
 
-       ! Estimate liquid content and how much is available to flow / drain
-       avail_to_flow = ( soil_waterfrac(1:nos_soil_layers) * (1d0 - iceprop(1:nos_soil_layers)) ) &
-                     - field_capacity(1:nos_soil_layers)
+        ! ...then from the top down
+        do s = 1, nos_soil_layers
 
-       ! ...then from the top down
-       do soil_layer = 1, nos_soil_layers
+           ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is 
+           ! able to accept any water (i.e. is less than porosity).
+           if (avail_to_flow(s) > 0d0 .and. soil_waterfrac(s+1) < porosity(s+1)) then
 
-          ! initial conditions; i.e. is there liquid water and more water than
-          ! layer can hold
-          if (avail_to_flow(soil_layer) > 0d0 .and. soil_waterfrac(soil_layer+1) < porosity(soil_layer+1)) then
+               ! Reset the soil water change variable, this must be done at the beginning of the loop
+               ! to ensure that its content are left for extracting the underflow flux after the loop.
+               waterchange = 0d0
 
-              ! Unsaturated volume of layer below (m3 m-2)
-              unsat = ( porosity(soil_layer+1) - soil_waterfrac(soil_layer+1) ) &
-                    * layer_thickness(soil_layer+1) / layer_thickness(soil_layer)
-              ! Restrict potential rate calculate above for the available water
-              ! and available space in the layer below.
-              ! NOTE: * layer_thickness(soil_layer) converts units from m3/m2 -> (m3)
-              change = min(unsat,min(pot_drainage(soil_layer),avail_to_flow(soil_layer))) * layer_thickness(soil_layer)
-              ! update soil layer below with drained liquid
-              waterchange( soil_layer + 1 ) = waterchange( soil_layer + 1 ) + change
-              waterchange( soil_layer     ) = waterchange( soil_layer     ) - change
-              ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
-              water_grav_flow(soil_layer) = water_grav_flow(soil_layer) + change
+               !! Implement an explicit 4th order Runge-Kutta approach, to estimate the aggregated flux
+               !
+               ! Mathematical basis
+               ! ------------------
+               ! RK4 approximates the solution of  dS/dt = f(t, S)  over a step [t, t+dt]
+               ! by evaluating f at four points within the interval and forming a weighted
+               ! average of the resulting slopes:
+               !
+               !   k1 = f(t,          S)                   slope at the start
+               !   k2 = f(t + dt/2,   S + dt/2 * k1)       slope at the midpoint (Euler)
+               !   k3 = f(t + dt/2,   S + dt/2 * k2)       slope at the midpoint (corrected)
+               !   k4 = f(t + dt,     S + dt   * k3)       slope at the end
+               !
+               !   S_new = S + (dt/6) * (k1 + 2*k2 + 2*k3 + k4)
+               !
+               ! The weighting (1, 2, 2, 1)/6 gives Simpson's-rule-like accuracy.
 
-          end if ! some liquid water and drainage possible
+               ! Load the current soil water content into a local variable to be updated
+               soil_waterfrac_local = soil_waterfrac
+               ! Estimate the local liquid content in the current layer
+               liquid = soil_waterfrac_local(s) * liquid_fraction(s) 
 
-       end do ! soil layers
+               !! Estimate K1 - rate at the start
+               ! Estimate the soil water conductance (k1) at the start of the step
+               call calculate_soil_conductivity(s,liquid,pot_drainage_k1)
 
-       ! update soil water profile
-       soil_waterfrac(1:nos_soil_layers) = soil_waterfrac(1:nos_soil_layers) &
-                                         + (waterchange(1:nos_soil_layers)/layer_thickness(1:nos_soil_layers))
-       ! estimate drainage from bottom of soil column (MgH2O/m2/day)
-       ! NOTES: that underflow is reset outside of the daily soil loop
-       underflow = underflow + waterchange(nos_soil_layers+1)
+               !! Estimate K2 - rate at the mid-point
+               ! Increment the soil layer using the initial rate (k1) for half the time step
+               pot_drainage_k0 = pot_drainage_k1 * (integration_step_seconds * 0.5d0)
+               call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
+                                                        layer_thickness,field_capacity(s),porosity)
+               ! Estimate the soil water conductance at this new state
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )      
+               call calculate_soil_conductivity(s,liquid,pot_drainage_k2)
 
-       ! Reset now we have moves that liquid
-       waterchange = 0d0
-       ! integerate through time period
-       t = t + 1
+               !! Estimate K3 - rate at the corrected mid-point
+               ! Load the current soil water content into a local variable to be updated
+               soil_waterfrac_local = soil_waterfrac
+               ! Increment the soil layer using the mid-point rate (k2) for half the time step
+               pot_drainage_k0 = pot_drainage_k2 * (integration_step_seconds * 0.5d0)
+               call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
+                                                        layer_thickness,field_capacity(s),porosity)
+               ! Estimate the soil water conductance at this new state
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )         
+               call calculate_soil_conductivity(s,liquid,pot_drainage_k3)
+
+               !! Estimate K4 - rate at the end
+               ! Load the current soil water content into a local variable to be updated
+               soil_waterfrac_local = soil_waterfrac
+               ! Increment the soil layer using the mid-point rate (k3) for the full time step
+               pot_drainage_k0 = pot_drainage_k3 * integration_step_seconds
+               call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
+                                                        layer_thickness,field_capacity(s),porosity)
+               ! Estimate the soil water conductance at this new state
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )         
+               call calculate_soil_conductivity(s,liquid,pot_drainage_k4)
+
+               ! Calculate the Simpson's rule weighted average of the rates to estimate the effective average
+               ! Note the multiplication to the step time period.
+               pot_drainage_k0 = integration_step_seconds * sixth &
+                               * (pot_drainage_k1 + 2d0*pot_drainage_k2 + 2d0*pot_drainage_k3 + pot_drainage_k4)
+
+               !! Now update soils for real
+
+               ! Unsaturated volume of layer below (m3 m-2)
+               unsat = ( porosity(s+1) - soil_waterfrac(s+1) ) * layer_thickness(s+1) / layer_thickness(s)
+               ! Restrict potential rate calculate above for the available water
+               ! and available space in the layer below.
+               ! NOTE: * layer_thickness(s) converts units from m3/m2 -> (m3)
+               change = min(unsat,min(pot_drainage_k0,avail_to_flow(s))) * layer_thickness(s)
+               ! update soil layer below with drained liquid
+               waterchange( s + 1 ) = waterchange( s + 1 ) + change
+               waterchange( s     ) = waterchange( s     ) - change
+               ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
+               water_grav_flow(s) = water_grav_flow(s) + change
+
+               ! Update the current and below layer, note to avoid a min() bound being used we are allowing the core layer to be updated to. 
+               ! This MUST be corrected outside of this loop back to the field capacity
+               soil_waterfrac(s:(s+1)) = soil_waterfrac(s:(s+1)) + (waterchange(s:(s+1))/layer_thickness(s:(s+1)))
+
+               ! Update the available liquid content for drainage
+               avail_to_flow = (soil_waterfrac(1:nos_soil_layers) * liquid_fraction(1:nos_soil_layers) ) &
+                             - field_capacity(1:nos_soil_layers)
+
+           end if ! some liquid water and drainage possible
+
+        end do ! soil layers
+
+        ! Return the core layer back to field capacity
+        soil_waterfrac(nos_soil_layers+1) = field_capacity(nos_soil_layers)
+        ! Extract drainage from bottom of soil column (MgH2O/m2/day)
+        ! NOTES: that underflow is reset outside of the daily soil loop
+        underflow = underflow + waterchange(nos_soil_layers+1)
+
+        ! Reset now we have moves that liquid
+        waterchange = 0d0
+        ! integerate through time period
+        d = d + 1
 
     end do ! while condition
 
@@ -3058,6 +3317,58 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     water_grav_flow = water_grav_flow * 1d3
 
   end subroutine gravitational_drainage
+  !
+  !-----------------------------------------------------------------
+  !
+  subroutine gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage,liquid_fraction, &
+                                                 layer_thickness_local,field_capacity_local,porosity_local)
+
+     ! Subroutine will update a local copy of the soil water fraction for each soil layer
+
+     ! Arguments
+     integer, intent(in) :: s
+     double precision, intent(in) :: liquid_fraction, & ! Fraction of current layer assumed to be liquid (0-1)
+                                        pot_drainage, & ! Proprosed drainage for current layer (m/step)
+                                field_capacity_local    ! Field capacity of the current layer (m3/m3)
+     double precision, dimension(nos_soil_layers+1), intent(inout) :: soil_waterfrac_local ! Local copy of the soil water fraction (m3/m3)
+     double precision, dimension(nos_soil_layers+1), intent(in) :: layer_thickness_local, & ! Local copy of the soil layer thickness (m)
+                                                                          porosity_local    ! Local copy of the soil layer porosities (m3/m3)
+
+     ! Local variables
+     double precision :: unsat, change, avail_to_flow
+     double precision, dimension(nos_soil_layers+1) :: waterchange_local
+
+     ! Initialise
+     waterchange_local = 0d0 ; change = 0d0 ; unsat = 0d0 ; avail_to_flow = 0d0
+
+     ! Determine how much liquid water is available to flow in the current profile
+     avail_to_flow = (soil_waterfrac_local(s) * liquid_fraction ) - field_capacity_local
+
+     ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is 
+     ! able to accept any water (i.e. is less than porosity).
+     if (avail_to_flow > 0d0 .and. soil_waterfrac_local(s+1) < porosity_local(s+1)) then
+
+          ! Determine the unsaturated volume of layer below (m3 m-2)
+          unsat = ( porosity_local(s+1) - soil_waterfrac_local(s+1) ) &
+                * layer_thickness_local(s+1) / layer_thickness_local(s)
+          ! Restrict potential rate calculate above for the available water
+          ! and available space in the layer below.
+          ! NOTE: * layer_thickness_local(s) converts units from m3/m2 -> (m3)
+          change = min(unsat,min(pot_drainage,avail_to_flow)) * layer_thickness_local(s)
+          ! update soil layer below with drained liquid
+          waterchange_local( s + 1 ) = waterchange_local( s + 1 ) + change
+          waterchange_local( s     ) = waterchange_local( s     ) - change
+
+     end if ! some liquid water and drainage possible
+
+    ! Update soil water profile, just for the current layer and below
+    soil_waterfrac_local(s:nos_soil_layers) = soil_waterfrac_local(s:nos_soil_layers) &
+                                            + (waterchange_local(s:nos_soil_layers)/layer_thickness_local(s:nos_soil_layers))
+
+    ! Return back to user
+    return
+
+  end subroutine gravitational_drainage_local_update  
   !
   !-----------------------------------------------------------------
   !
@@ -3111,7 +3422,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     end do
     ! calculate soil porosity (m3/m3)
     call soil_porosity(soil_frac_clay,soil_frac_sand)
-    ! calculate field capacity (m3/m-3)
+    ! calculate field capacity (m3/m3)
     call calculate_field_capacity
 
     ! final sanity check for porosity
@@ -3139,7 +3450,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     integer :: i
 
     ! Load initial soil water fraction to the dynamic layers
-    soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    !soil_waterfrac(1:nos_soil_layers) = input_soilwater_frac
+    ! Load initial soil water fraction into the top soil layer...
+    soil_waterfrac(1) = input_soilwater_frac
+    ! ...and assume that the below dynamic layers have the same water content as a fraction of porosity.
+    ! This is to avoid the adverse changes to soil water potential estimates in deeper layers due to
+    ! differences in hydraulic characteristics at depth
+    soil_waterfrac(2:nos_soil_layers) = (input_soilwater_frac / field_capacity(1)) * field_capacity(2:nos_soil_layers)
     ! Assume that the 'core' soil layer is field capacity
     soil_waterfrac(nos_soil_layers+1) = field_capacity(nos_soil_layers)
     ! calculate initial soil water potential
@@ -3223,7 +3540,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_soil_conductance(lm,local_lai)
+  subroutine calculate_soil_conductance(lm,local_lai,canopy_decay)
 
     ! proceedsure to solve for soil surface resistance based on Monin-Obukov
     ! similarity theory stability correction momentum & heat are integrated
@@ -3234,11 +3551,12 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     implicit none
 
     ! declare arguments
-    double precision, intent(in) :: lm, local_lai
+    double precision, intent(in) :: lm, &
+                             local_lai, &
+                          canopy_decay    ! & ! canopy decay coefficient for soil exchange
 
     ! local variables
-    double precision :: canopy_decay & ! canopy decay coefficient for soil exchange
-                       ,Kh_canht       ! eddy diffusivity at canopy height (m2.s-1)
+    double precision :: Kh_canht       ! eddy diffusivity at canopy height (m2.s-1)
 
     ! parameters
     double precision, parameter :: foliage_drag = 0.2d0 ! foliage drag coefficient
@@ -3247,16 +3565,14 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Kaimal & Finnigan 1994; for near canopy approximation
     Kh_canht = vonkarman*ustar*(canopy_height-displacement)
 
-    ! calculate canopy decay coefficient with stability correction
-    ! NOTE this is not consistent with canopy momentum decay done by Harman &
-    ! Finnigan (2008)
-    canopy_decay = sqrt((foliage_drag*canopy_height*local_lai)/lm)
-
     ! approximation of integral for soil resistance (s/m) and conversion to
     ! conductance (m/s)
-    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
-                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
-                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+!    soil_conductance = ( canopy_height/(canopy_decay*Kh_canht) &
+!                       * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+!                          exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) ) ** (-1d0)
+    soil_conductance = 1d0 / ( canopy_height/(canopy_decay*Kh_canht) &
+                             * (exp(canopy_decay*(1d0-(soil_roughl/canopy_height)))- &
+                                exp(canopy_decay*(1d0-((roughl+displacement)/canopy_height)))) )
 
     return
 
@@ -3308,6 +3624,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! describes the departure of the velocity profile from just above the
     ! roughness from the intertial sublayer log law
+
 
     ! Estimate canopy drag coefficient
     sqrt_cd1_lai = sqrt(cd1 * local_lai)
@@ -3379,7 +3696,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     soilR2 = root_resist / (root_mass*root_reach_in)
     ! Estimate the total hydraulic resistance for the layer
     Rtot_layer = transpiration_resistance + soilR1 + soilR2
-
+    ! Track for later diagnosis of the effective canopy leaf water potential
+    if (demand > 0d0) conductance_mmolH2OMPam2s(root_layer) = 1d0/Rtot_layer
     ! Estimate the soil to plant flow of water mmolH2O/m2/s
     water_flux_mmolH2Om2s(root_layer) = demand/Rtot_layer
 
@@ -3426,7 +3744,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
      ! return to user
      return
 
-  end function calculate_declination
+  end function calculate_declination  
   !
   !----------------------------------------------------------------------
   !

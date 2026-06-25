@@ -24,18 +24,17 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H2.P1 model.
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function/subroutine specific comments for exceptions and contributors
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -43,15 +42,15 @@ use samplers_shared, only: PARINFO
   private
 
   ! specify explicitly the public
-  public:: pars_info
+  public :: pars_info
 
   contains
 
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -61,23 +60,18 @@ use samplers_shared, only: PARINFO
     implicit none
 
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
-    ! 22/11/2019-try not to lose this information as it is needed for comparability
+    ! 22/11/2019 - try not to lose this information as it is needed for comparability
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
 
-    PI%npars = 32
-    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
-    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
-
-    ! Decomposition of litter to som (fraction/day-1)
+    ! Decomposition of litter to som (fraction / day-1)
     ! Note is modified by exponential temperature function (p10)
     PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
     PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
-    ! Fraction of GPP respired as autotrophic (Ra:GPP), 
+    ! Fraction of GPP respired as autotrophic (Ra:GPP),
     ! i.e. 1-CUE
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
@@ -93,38 +87,40 @@ use samplers_shared, only: PARINFO
     ! Leaf Lifespan (yr)
     ! Wright et al. 2004
     PI%parmin(5) = 1.001d0
-    PI%parmax(5) = 6d0  ! 8d0
+    PI%parmax(5) = 6d0 !8d0
 
-    ! TOR wood*- 1% loss per year value
-    PI%parmin(6) = 0.000009d0  ! 304  years
+    ! TOR wood* - 1% loss per year value
+    PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
-    PI%parmin(7) = 0.001368925d0  ! 2    years  ! 0.0006844627d0  ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
+    PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
-    PI%parmin(8) = 0.0001141d0  ! 24   years at 0oC
+    PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
     PI%parmax(8) = 0.02d0      ! 0.13 years at 0oC
 
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
-    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC  ! 0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0  ! 27378.0 years at 0oC
+    PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
+!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
-    ! Kattge et al (2011) offers a potential prior range of 3.4-30.7 gC/m2leaf/day.
+    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
-    ! Thus CUE = NUE*avN -> 1.64/42.0
-    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61/29.68) from TRY
-    PI%parmin(11) = 10d0  ! 5d0
-    PI%parmax(11) = 100d0  ! 42d0  ! 50d0
+    ! Thus CUE = NUE * avN -> 1.64 / 42.0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
@@ -155,12 +151,12 @@ use samplers_shared, only: PARINFO
     PI%parmin(25) = 0.15d0
     PI%parmax(25) = 0.50d0
 
-    ! BUCKET-coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
     ! of max depth
     PI%parmin(26) = 100d0
-    PI%parmax(26) = 2500d0  ! 500d0
+    PI%parmax(26) = 2500d0 !500d0
 
-    ! BUCKET-maximum rooting depth
+    ! BUCKET - maximum rooting depth
     PI%parmin(27) = 0.35d0
     PI%parmax(27) = 20d0
 
@@ -176,7 +172,7 @@ use samplers_shared, only: PARINFO
     ! Combustion completeness factor for soil
     PI%parmin(31) = 0.01d0
     PI%parmax(31) = 0.1d0
-    ! Combustion completeness factor for foliage+fine root litter
+    ! Combustion completeness factor for foliage + fine root litter
     PI%parmin(32) = 0.01d0
     PI%parmax(32) = 0.99d0
 
@@ -206,7 +202,7 @@ use samplers_shared, only: PARINFO
 
     ! C_som
     PI%parmin(23) = 200d0
-    PI%parmax(23) = 250000d0  ! 90000d0
+    PI%parmax(23) = 250000d0 !90000d0
 
     ! Initial soil water fraction
     PI%parmin(24) = 0.05d0

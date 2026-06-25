@@ -102,6 +102,8 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "MTT_litter_years")) {grid_output$MTT_litter_years[slot_i,slot_j,] = site_output$MTT_litter_years}
            if (any(check_list == "MTT_woodlitter_years")) {grid_output$MTT_woodlitter_years[slot_i,slot_j,] = site_output$MTT_woodlitter_years}
            if (any(check_list == "MTT_som_years")) {grid_output$MTT_som_years[slot_i,slot_j,] = site_output$MTT_som_years}
+           if (any(check_list == "MTT_Ctotal_years")) {grid_output$MTT_Ctotal_years[slot_i,slot_j,] = site_output$MTT_Ctotal_years}
+           if (any(check_list == "MTT_annual_Ctotal_years")) {grid_output$MTT_annual_Ctotal_years[n,,] = site_output$MTT_annual_Ctotal_years}
            # Steady state C stock estimates (gC/m2)
            if (any(check_list == "SS_labile_gCm2")) {grid_output$SS_labile_gCm2[slot_i,slot_j,] = site_output$SS_labile_gCm2}
            if (any(check_list == "SS_foliage_gCm2")) {grid_output$SS_foliage_gCm2[slot_i,slot_j,] = site_output$SS_foliage_gCm2}
@@ -136,6 +138,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$Ctotal_gCm2[n,,]  = site_output$Ctotal_gCm2
            grid_output$dCtotal_gCm2[n,,] = site_output$dCtotal_gCm2
            grid_output$lai_m2m2[n,,]     = site_output$lai_m2m2
+           grid_output$dlai_m2m2[n,,]    = site_output$dlai_m2m2
            # Fluxes
            grid_output$nee_gCm2day[n,,]     = site_output$nee_gCm2day
            grid_output$gpp_gCm2day[n,,]     = site_output$gpp_gCm2day
@@ -148,19 +151,37 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$nbe_gCm2day[n,,]     = site_output$nbe_gCm2day
            grid_output$nbp_gCm2day[n,,]     = site_output$nbp_gCm2day
            # Always present but at annual time step
-           grid_output$mean_annual_cue[n,,] = site_output$mean_annual_cue
-           grid_output$mean_annual_Ctotal_gCm2[n,,] = site_output$mean_annual_Ctotal_gCm2
-           grid_output$mean_annual_lai_m2m2[n,,] = site_output$mean_annual_lai_m2m2
-           grid_output$mean_annual_nee_gCm2day[n,,] = site_output$mean_annual_nee_gCm2day
-           grid_output$mean_annual_gpp_gCm2day[n,,] = site_output$mean_annual_gpp_gCm2day
-           grid_output$mean_annual_rauto_gCm2day[n,,] = site_output$mean_annual_rauto_gCm2day
-           grid_output$mean_annual_rhet_gCm2day[n,,] = site_output$mean_annual_rhet_gCm2day
-           grid_output$mean_annual_reco_gCm2day[n,,] = site_output$mean_annual_reco_gCm2day
-           grid_output$mean_annual_npp_gCm2day[n,,] = site_output$mean_annual_npp_gCm2day
+           grid_output$mean_annual_cue[n,,]             = site_output$mean_annual_cue
+           grid_output$mean_annual_Ctotal_gCm2[n,,]     = site_output$mean_annual_Ctotal_gCm2
+           grid_output$mean_annual_lai_m2m2[n,,]        = site_output$mean_annual_lai_m2m2
+           grid_output$mean_annual_nee_gCm2day[n,,]     = site_output$mean_annual_nee_gCm2day
+           grid_output$mean_annual_gpp_gCm2day[n,,]     = site_output$mean_annual_gpp_gCm2day
+           grid_output$mean_annual_rauto_gCm2day[n,,]   = site_output$mean_annual_rauto_gCm2day
+           grid_output$mean_annual_rhet_gCm2day[n,,]    = site_output$mean_annual_rhet_gCm2day
+           grid_output$mean_annual_reco_gCm2day[n,,]    = site_output$mean_annual_reco_gCm2day
+           grid_output$mean_annual_npp_gCm2day[n,,]     = site_output$mean_annual_npp_gCm2day
            grid_output$mean_annual_harvest_gCm2day[n,,] = site_output$mean_annual_harvest_gCm2day
-           grid_output$mean_annual_fire_gCm2day[n,,] = site_output$mean_annual_fire_gCm2day
-           grid_output$mean_annual_nbe_gCm2day[n,,] = site_output$mean_annual_nbe_gCm2day
-           grid_output$mean_annual_nbp_gCm2day[n,,] = site_output$mean_annual_nbp_gCm2day
+           grid_output$mean_annual_fire_gCm2day[n,,]    = site_output$mean_annual_fire_gCm2day
+           grid_output$mean_annual_nbe_gCm2day[n,,]     = site_output$mean_annual_nbe_gCm2day
+           grid_output$mean_annual_nbp_gCm2day[n,,]     = site_output$mean_annual_nbp_gCm2day
+           # Always present but at annual time step differences
+           grid_output$mean_annual_dlai_m2m2[n,,]        = site_output$mean_annual_dlai_m2m2
+           grid_output$mean_annual_dCtotal_gCm2[n,,]     = site_output$mean_annual_dCtotal_gCm2
+           grid_output$mean_annual_dnee_gCm2day[n,,]     = site_output$mean_annual_dnee_gCm2day
+           grid_output$mean_annual_dgpp_gCm2day[n,,]     = site_output$mean_annual_dgpp_gCm2day
+           grid_output$mean_annual_drauto_gCm2day[n,,]   = site_output$mean_annual_drauto_gCm2day
+           grid_output$mean_annual_drhet_gCm2day[n,,]    = site_output$mean_annual_drhet_gCm2day
+           grid_output$mean_annual_dreco_gCm2day[n,,]    = site_output$mean_annual_dreco_gCm2day
+           grid_output$mean_annual_dnpp_gCm2day[n,,]     = site_output$mean_annual_dnpp_gCm2day
+           grid_output$mean_annual_dharvest_gCm2day[n,,] = site_output$mean_annual_dharvest_gCm2day
+           grid_output$mean_annual_dfire_gCm2day[n,,]    = site_output$mean_annual_dfire_gCm2day
+           grid_output$mean_annual_dnbe_gCm2day[n,,]     = site_output$mean_annual_dnbe_gCm2day
+           grid_output$mean_annual_dnbp_gCm2day[n,,]     = site_output$mean_annual_dnbp_gCm2day
+
+           # Extract quantiles
+           #grid_output$annual_change_Ctotal_gCm2[n,,] = site_output$annual_change_Ctotal_gCm2
+           #grid_output$annual_change_biomass_gCm2[n,,] = site_output$annual_change_biomass_gCm2
+           #grid_output$annual_change_dom_gCm2[n,,] = site_output$annual_change_dom_gCm2
 
            # Based on the presence of each pool define the grids for the mean and final values.
            # Also, create the time varying but quantile based values and time
@@ -183,6 +204,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$combined_biomass_to_litter_gCm2day[n,,] = site_output$combined_biomass_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_biomass_gCm2[n,,] = site_output$mean_annual_biomass_gCm2
+               grid_output$mean_annual_dCbiomass_gCm2[n,,] = site_output$mean_annual_dCbiomass_gCm2
                grid_output$mean_annual_outflux_biomass_gCm2day[n,,] = site_output$mean_annual_outflux_biomass_gCm2day
                grid_output$mean_annual_combined_biomass_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_biomass_to_litter_gCm2day
                grid_output$mean_annual_biomass_to_litter_gCm2day[n,,] = site_output$mean_annual_biomass_to_litter_gCm2day
@@ -239,6 +261,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$combined_labile_to_litter_gCm2day[n,,] = site_output$combined_labile_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_labile_gCm2[n,,] = site_output$mean_annual_labile_gCm2
+               grid_output$mean_annual_dClabile_gCm2[n,,] = site_output$mean_annual_dClabile_gCm2
                grid_output$mean_annual_outflux_labile_gCm2day[n,,] = site_output$mean_annual_outflux_labile_gCm2day
                grid_output$mean_annual_labile_to_foliage_gCm2day[n,,] = site_output$mean_annual_labile_to_foliage_gCm2day
                grid_output$mean_annual_alloc_labile_gCm2day[n,,] = site_output$mean_annual_alloc_labile_gCm2day
@@ -296,6 +319,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$combined_foliage_to_litter_gCm2day[n,,] = site_output$combined_foliage_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_foliage_gCm2[n,,] = site_output$mean_annual_foliage_gCm2
+               grid_output$mean_annual_dCfoliage_gCm2[n,,] = site_output$mean_annual_dCfoliage_gCm2               
                grid_output$mean_annual_outflux_foliage_gCm2day[n,,] = site_output$mean_annual_outflux_foliage_gCm2day
                grid_output$mean_annual_foliage_to_litter_gCm2day[n,,] = site_output$mean_annual_foliage_to_litter_gCm2day
                grid_output$mean_annual_combined_alloc_foliage_gCm2day[n,,] = site_output$mean_annual_combined_alloc_foliage_gCm2day
@@ -349,6 +373,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_roots_to_litter_gCm2day
                grid_output$mean_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_roots_gCm2day
                grid_output$annual_max_roots_gCm2[slot_i,slot_j,] = site_output$annual_max_roots_gCm2
+               grid_output$mean_combined_alloc_roots_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_roots_gCm2day                              
                grid_output$mean_combined_roots_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_roots_to_litter_gCm2day
                # Pixel specific time varying
                grid_output$roots_gCm2[n,,] = site_output$roots_gCm2
@@ -356,12 +381,15 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$outflux_roots_gCm2day[n,,] = site_output$outflux_roots_gCm2day
                grid_output$roots_to_litter_gCm2day[n,,] = site_output$roots_to_litter_gCm2day
                grid_output$alloc_roots_gCm2day[n,,] = site_output$alloc_roots_gCm2day
+               grid_output$combined_alloc_roots_gCm2day[n,,] = site_output$combined_alloc_roots_gCm2day                              
                grid_output$combined_roots_to_litter_gCm2day[n,,] = site_output$combined_roots_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_roots_gCm2[n,,] = site_output$mean_annual_roots_gCm2
+               grid_output$mean_annual_dCroots_gCm2[n,,] = site_output$mean_annual_dCroots_gCm2
                grid_output$mean_annual_outflux_roots_gCm2day[n,,] = site_output$mean_annual_outflux_roots_gCm2day
                grid_output$mean_annual_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_roots_to_litter_gCm2day
                grid_output$mean_annual_alloc_roots_gCm2day[n,,] = site_output$mean_annual_alloc_roots_gCm2day
+               grid_output$mean_annual_combined_alloc_roots_gCm2day[n,,] = site_output$mean_annual_combined_alloc_roots_gCm2day               
                grid_output$mean_annual_combined_roots_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_roots_to_litter_gCm2day
                grid_output$MTT_annual_roots_years[n,,] = site_output$MTT_annual_roots_years
                # Fractional partitioning of tunover to different drivers - should they exist
@@ -415,6 +443,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$mean_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_wood_to_litter_gCm2day
                grid_output$mean_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_alloc_wood_gCm2day
                grid_output$annual_max_wood_gCm2[slot_i,slot_j,] = site_output$annual_max_wood_gCm2
+               grid_output$mean_combined_alloc_wood_gCm2day[slot_i,slot_j,] = site_output$mean_combined_alloc_wood_gCm2day
                grid_output$mean_combined_wood_to_litter_gCm2day[slot_i,slot_j,] = site_output$mean_combined_wood_to_litter_gCm2day
                # Pixel specific time varying
                grid_output$wood_gCm2[n,,] = site_output$wood_gCm2
@@ -422,12 +451,15 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$outflux_wood_gCm2day[n,,] = site_output$outflux_wood_gCm2day
                grid_output$wood_to_litter_gCm2day[n,,] = site_output$wood_to_litter_gCm2day
                grid_output$alloc_wood_gCm2day[n,,] = site_output$alloc_wood_gCm2day
+               grid_output$combined_alloc_wood_gCm2day[n,,] = site_output$combined_alloc_wood_gCm2day               
                grid_output$combined_wood_to_litter_gCm2day[n,,] = site_output$combined_wood_to_litter_gCm2day
                # Annual information
                grid_output$mean_annual_wood_gCm2[n,,] = site_output$mean_annual_wood_gCm2
+               grid_output$mean_annual_dCwood_gCm2[n,,] = site_output$mean_annual_dCwood_gCm2
                grid_output$mean_annual_outflux_wood_gCm2day[n,,] = site_output$mean_annual_outflux_wood_gCm2day
                grid_output$mean_annual_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_wood_to_litter_gCm2day
                grid_output$mean_annual_alloc_wood_gCm2day[n,,] = site_output$mean_annual_alloc_wood_gCm2day
+               grid_output$mean_annual_combined_alloc_wood_gCm2day[n,,] = site_output$mean_annual_combined_alloc_wood_gCm2day               
                grid_output$mean_annual_combined_wood_to_litter_gCm2day[n,,] = site_output$mean_annual_combined_wood_to_litter_gCm2day
                grid_output$MTT_annual_wood_years[n,,] = site_output$MTT_annual_wood_years
                # Fractional partitioning of tunover to different drivers - should they exist
@@ -482,9 +514,11 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$combined_litter_to_som_gCm2day[n,,] = site_output$combined_litter_to_som_gCm2day
                # Annual information
                grid_output$mean_annual_litter_gCm2[n,,] = site_output$mean_annual_litter_gCm2
+               grid_output$mean_annual_dClitter_gCm2[n,,] = site_output$mean_annual_dClitter_gCm2
                grid_output$mean_annual_outflux_litter_gCm2day[n,,] = site_output$mean_annual_outflux_litter_gCm2day
                grid_output$mean_annual_litter_to_som_gCm2day[n,,] = site_output$mean_annual_litter_to_som_gCm2day
                grid_output$mean_annual_rhet_litter_gCm2day[n,,] = site_output$mean_annual_rhet_litter_gCm2day
+               grid_output$mean_annual_drhet_litter_gCm2day[n,,] = site_output$mean_annual_drhet_litter_gCm2day
                grid_output$mean_annual_combined_litter_to_som_gCm2day[n,,] = site_output$mean_annual_combined_litter_to_som_gCm2day
                grid_output$MTT_annual_litter_years[n,,] = site_output$MTT_annual_litter_years
                # Fractional partitioning of tunover to different drivers - should they exist
@@ -533,6 +567,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$combined_woodlitter_to_som_gCm2day[n,,] = site_output$combined_woodlitter_to_som_gCm2day
                # Annual information
                grid_output$mean_annual_woodlitter_gCm2[n,,] = site_output$mean_annual_woodlitter_gCm2
+               grid_output$mean_annual_dCwoodlitter_gCm2[n,,] = site_output$mean_annual_dCwoodlitter_gCm2
                grid_output$mean_annual_outflux_woodlitter_gCm2day[n,,] = site_output$mean_annual_outflux_woodlitter_gCm2day
                grid_output$mean_annual_woodlitter_to_som_gCm2day[n,,] = site_output$mean_annual_woodlitter_to_som_gCm2day
                grid_output$mean_annual_rhet_woodlitter_gCm2day[n,,] = site_output$mean_annual_rhet_woodlitter_gCm2day
@@ -580,8 +615,10 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$rhet_som_gCm2day[n,,] = site_output$rhet_som_gCm2day
                # Annual information
                grid_output$mean_annual_som_gCm2[n,,] = site_output$mean_annual_som_gCm2
+               grid_output$mean_annual_dCsom_gCm2[n,,] = site_output$mean_annual_dCsom_gCm2
                grid_output$mean_annual_outflux_som_gCm2day[n,,] = site_output$mean_annual_outflux_som_gCm2day
                grid_output$mean_annual_rhet_som_gCm2day[n,,] = site_output$mean_annual_rhet_som_gCm2day
+               grid_output$mean_annual_drhet_som_gCm2day[n,,] = site_output$mean_annual_drhet_som_gCm2day               
                grid_output$MTT_annual_som_years[n,,] = site_output$MTT_annual_som_years
                # Fractional partitioning of tunover to different drivers - should they exist
                grid_output$NaturalFractionOfTurnover_som[slot_i,slot_j,] = site_output$NaturalFractionOfTurnover_som
@@ -621,6 +658,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$rhet_dom_gCm2day[n,,] = site_output$rhet_dom_gCm2day
                # Annual information
                grid_output$mean_annual_dom_gCm2[n,,] = site_output$mean_annual_dom_gCm2
+               grid_output$mean_annual_dCdom_gCm2[n,,] = site_output$mean_annual_dCdom_gCm2
                grid_output$mean_annual_outflux_dom_gCm2day[n,,] = site_output$mean_annual_outflux_dom_gCm2day
                grid_output$mean_annual_rhet_dom_gCm2day[n,,] = site_output$mean_annual_rhet_dom_gCm2day
                grid_output$MTT_annual_dom_years[n,,] = site_output$MTT_annual_dom_years
@@ -652,6 +690,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                # currently water in the soil surface layer (0-30 cm)
                grid_output$mean_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$mean_SurfWater_kgH2Om2
                grid_output$mean_annual_SurfWater_kgH2Om2[n,,] = site_output$mean_annual_SurfWater_kgH2Om2
+               grid_output$mean_annual_dSurfWater_kgH2Om2[n,,] = site_output$mean_annual_dSurfWater_kgH2Om2
                grid_output$final_SurfWater_kgH2Om2[slot_i,slot_j,] = site_output$SurfWater_kgH2Om2[,grid_output$time_dim]
                grid_output$final_dSurfWater_kgH2Om2[slot_i,slot_j,] = site_output$dSurfWater_kgH2Om2[,grid_output$time_dim]
                grid_output$SurfWater_kgH2Om2[n,,] = site_output$SurfWater_kgH2Om2
@@ -659,10 +698,12 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                # plant apparent soil water potential (MPa)
                grid_output$mean_wSWP_MPa[slot_i,slot_j,] = site_output$mean_wSWP_MPa
                grid_output$mean_annual_wSWP_MPa[n,,] = site_output$mean_annual_wSWP_MPa
+               grid_output$mean_annual_dwSWP_MPa[n,,] = site_output$mean_annual_dwSWP_MPa
                grid_output$final_wSWP_MPa[slot_i,slot_j,] = site_output$wSWP_MPa[,grid_output$time_dim]
                grid_output$wSWP_MPa[n,,] = site_output$wSWP_MPa
                grid_output$dwSWP_MPa[n,,] = site_output$dwSWP_MPa
                # evapotranspiration (Etrans + Esoil + Ewetcanopy)
+               grid_output$mean_annual_dET_kgH2Om2day[n,,] = site_output$mean_annual_dET_kgH2Om2day               
                grid_output$mean_annual_ET_kgH2Om2day[n,,] = site_output$mean_annual_ET_kgH2Om2day
                grid_output$mean_ET_kgH2Om2day[slot_i,slot_j,] = site_output$mean_ET_kgH2Om2day
                grid_output$ET_kgH2Om2day[n,,] = site_output$ET_kgH2Om2day
@@ -673,6 +714,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                # Check whether the evaporation components exist
                if (any(check_list == "Etrans_kgH2Om2day")) {
                    # Transpiration
+                   grid_output$mean_annual_dEtrans_kgH2Om2day[n,,] = site_output$mean_annual_dEtrans_kgH2Om2day               
                    grid_output$mean_annual_Etrans_kgH2Om2day[n,,] = site_output$mean_annual_Etrans_kgH2Om2day
                    grid_output$mean_Etrans_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Etrans_kgH2Om2day
                    grid_output$Etrans_kgH2Om2day[n,,] = site_output$Etrans_kgH2Om2day
@@ -683,35 +725,40 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                }
                if (any(check_list == "Esoil_kgH2Om2day")) {
                    # Soil evaporation
+                   grid_output$mean_annual_dEsoil_kgH2Om2day[n,,] = site_output$mean_annual_dEsoil_kgH2Om2day               
                    grid_output$mean_annual_Esoil_kgH2Om2day[n,,] = site_output$mean_annual_Esoil_kgH2Om2day
                    grid_output$mean_Esoil_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Esoil_kgH2Om2day
                    grid_output$Esoil_kgH2Om2day[n,,] = site_output$Esoil_kgH2Om2day
                }
                if (any(check_list == "Ewetcanopy_kgH2Om2day")) {
                    # Wet canopy evaporation
+                   grid_output$mean_annual_dEwetcanopy_kgH2Om2day[n,,] = site_output$mean_annual_dEwetcanopy_kgH2Om2day               
                    grid_output$mean_annual_Ewetcanopy_kgH2Om2day[n,,] = site_output$mean_annual_Ewetcanopy_kgH2Om2day
                    grid_output$mean_Ewetcanopy_kgH2Om2day[slot_i,slot_j,] = site_output$mean_Ewetcanopy_kgH2Om2day
                    grid_output$Ewetcanopy_kgH2Om2day[n,,] = site_output$Ewetcanopy_kgH2Om2day
                }
                if (any(check_list == "runoff_kgH2Om2day")) {
-                   # Surface water runoff
+                   # Surface water 
+                   grid_output$mean_annual_drunoff_kgH2Om2day[n,,] = site_output$mean_annual_drunoff_kgH2Om2day               
                    grid_output$mean_annual_runoff_kgH2Om2day[n,,] = site_output$mean_annual_runoff_kgH2Om2day
                    grid_output$mean_runoff_kgH2Om2day[slot_i,slot_j,] = site_output$mean_runoff_kgH2Om2day
                    grid_output$runoff_kgH2Om2day[n,,] = site_output$runoff_kgH2Om2day
                }
                if (any(check_list == "underflow_kgH2Om2day")) {
                    # Underflow from bottom of soil column
+                   grid_output$mean_annual_dunderflow_kgH2Om2day[n,,] = site_output$mean_annual_dunderflow_kgH2Om2day               
                    grid_output$mean_annual_underflow_kgH2Om2day[n,,] = site_output$mean_annual_underflow_kgH2Om2day
                    grid_output$mean_underflow_kgH2Om2day[slot_i,slot_j,] = site_output$mean_underflow_kgH2Om2day
                    grid_output$underflow_kgH2Om2day[n,,] = site_output$underflow_kgH2Om2day
                }
                if (any(check_list == "total_drainage_kgH2Om2day")) {
-                   # Total drainage from soil surface and bottom of soil column
+                   # Total drainage from soil surface and bottom of soil 
+                   grid_output$mean_annual_dtotal_drainage_kgH2Om2day[n,,] = site_output$mean_annual_dtotal_drainage_kgH2Om2day               
                    grid_output$mean_annual_total_drainage_kgH2Om2day[n,,] = site_output$mean_annual_total_drainage_kgH2Om2day
                    grid_output$mean_total_drainage_kgH2Om2day[slot_i,slot_j,] = site_output$mean_total_drainage_kgH2Om2day
                    grid_output$total_drainage_kgH2Om2day[n,,] = site_output$total_drainage_kgH2Om2day
                }
-               if (any(check_list == "LWP_MPa")){ # if (exists(x = "LWP_MPa", where = site_output)){
+               if (any(check_list == "LWP_MPa")){ 
                    # Leaf water potential
                    grid_output$mean_LWP_MPa[slot_i,slot_j,] = site_output$mean_LWP_MPa
                    grid_output$LWP_MPa[n,,] = site_output$LWP_MPa
@@ -721,6 +768,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "snow_kgH2Om2")) {
                ## snow on soil surface
                grid_output$mean_annual_snow_kgH2Om2[n,,] = site_output$mean_annual_snow_kgH2Om2
+               grid_output$mean_annual_dsnow_kgH2Om2[n,,] = site_output$mean_annual_dsnow_kgH2Om2
                grid_output$mean_snow_kgH2Om2[slot_i,slot_j,] = site_output$mean_snow_kgH2Om2
                grid_output$snow_kgH2Om2[n,,] = site_output$snow_kgH2Om2
            }
@@ -728,12 +776,14 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            if (any(check_list == "APAR_MJm2day")) {
                # Absorbed photosynthetically active radation
                grid_output$mean_annual_APAR_MJm2day[n,,] = site_output$mean_annual_APAR_MJm2day
+               grid_output$mean_annual_dAPAR_MJm2day[n,,] = site_output$mean_annual_dAPAR_MJm2day
                grid_output$mean_APAR_MJm2day[slot_i,slot_j,] = site_output$mean_APAR_MJm2day
                grid_output$APAR_MJm2day[n,,] = site_output$APAR_MJm2day
            }
            if (any(check_list == "CiCa")) {
                # Canopy Ci:Ca
                grid_output$mean_annual_CiCa[n,,] = site_output$mean_annual_CiCa
+               grid_output$mean_annual_dCiCa[n,,] = site_output$mean_annual_dCiCa
                grid_output$mean_CiCa[slot_i,slot_j,] = site_output$mean_CiCa
                grid_output$CiCa[n,,] = site_output$CiCa
            }
@@ -741,6 +791,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                # Ratio of stomatal conductance relative to its maximum value,
                # this metric provides information on the demand vs supply constrains on stomatal conductance
                grid_output$mean_annual_gs_demand_supply_ratio[n,,] = site_output$mean_annual_gs_demand_supply_ratio
+               grid_output$mean_annual_dgs_demand_supply_ratio[n,,] = site_output$mean_annual_dgs_demand_supply_ratio
                grid_output$mean_gs_demand_supply_ratio[slot_i,slot_j,] = site_output$mean_gs_demand_supply_ratio
                grid_output$gs_demand_supply_ratio[n,,] = site_output$gs_demand_supply_ratio
            }
@@ -767,6 +818,8 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
               grid_output$soil_temperature_celcius[n,,] = site_output$soil_temperature_celcius
            }
 
+           # Parameter prior assimilated overlaps
+           grid_output$priors_assim_data_overlap_fraction[,slot_i,slot_j] = site_output$priors_assim_data_overlap_fraction
            # Any time series assimilated data overlaps?
            if (any(check_list == "gpp_assim_data_overlap_fraction")) {
                grid_output$gpp_assim_data_overlap_fraction[slot_i,slot_j] = site_output$gpp_assim_data_overlap_fraction
@@ -812,9 +865,7 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$lai_m2m2_to_NBP_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_NBP_gCm2day_correlation           
            grid_output$lai_m2m2_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rauto_gCm2day_correlation
            grid_output$lai_m2m2_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_Rhet_gCm2day_correlation
-           grid_output$lai_m2m2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_wood_gCm2_correlation
            grid_output$lai_m2m2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_som_gCm2_correlation
-           grid_output$lai_m2m2_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCwood_gCm2_correlation
            grid_output$lai_m2m2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCsom_gCm2_correlation
            # Correlations between NBP and key gross and net fluxes
            grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_GPP_gCm2day_correlation
@@ -822,11 +873,16 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
            grid_output$NBP_gCm2day_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_lai_m2m2_correlation           
            grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_Rauto_gCm2day_correlation
            grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_Rhet_gCm2day_correlation
-           grid_output$NBP_gCm2day_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_wood_gCm2_correlation
            grid_output$NBP_gCm2day_to_som_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_som_gCm2_correlation
-           grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_dCwood_gCm2_correlation
            grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_dCsom_gCm2_correlation  
-  
+
+           # If wood is estimated
+           if (any(check_list == "wood_gCm2")) {           
+               grid_output$lai_m2m2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_wood_gCm2_correlation
+               grid_output$lai_m2m2_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_dCwood_gCm2_correlation
+               grid_output$NBP_gCm2day_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_wood_gCm2_correlation
+               grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$NBP_gCm2day_to_dCwood_gCm2_correlation
+           }   
            # If harvest is estimated
            if (any(check_list == "harvest_gCm2day")) {
                grid_output$lai_m2m2_to_harvest_gCm2day_correlation[slot_i,slot_j] = site_output$lai_m2m2_to_harvest_gCm2day_correlation
@@ -881,6 +937,13 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$MTT_wood_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_lai_m2m2_correlation     
                grid_output$MTT_wood_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCwood_gCm2_correlation
                grid_output$MTT_wood_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_wood_years_to_dCsom_gCm2_correlation
+               grid_output$dCwood_gCm2_to_gpp_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_gpp_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_rauto_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_rauto_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_nee_gCm2day_correlation[slot_i,slot_j]  = site_output$dCwood_gCm2_to_nee_gCm2day_correlation 
+               grid_output$dCwood_gCm2_to_rhet_gCm2day_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_rhet_gCm2day_correlation
+               grid_output$dCwood_gCm2_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_wood_gCm2_correlation 
+               grid_output$dCwood_gCm2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_som_gCm2_correlation
+               grid_output$dCwood_gCm2_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$dCwood_gCm2_to_dCsom_gCm2_correlation
            }
            if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation") == TRUE) {
                grid_output$MTT_som_years_parameter_correlation[slot_i,slot_j,] = site_output$MTT_som_years_parameter_correlation
@@ -889,11 +952,22 @@ post_process_into_grid<-function(grid_output,site_output_all,PROJECT) {
                grid_output$MTT_som_years_to_NEE_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_NEE_gCm2day_correlation
                grid_output$MTT_som_years_to_Rauto_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_Rauto_gCm2day_correlation 
                grid_output$MTT_som_years_to_Rhet_gCm2day_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_Rhet_gCm2day_correlation
-               grid_output$MTT_som_years_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_wood_gCm2_correlation
                grid_output$MTT_som_years_to_som_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_som_gCm2_correlation
                grid_output$MTT_som_years_to_lai_m2m2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_lai_m2m2_correlation
-               grid_output$MTT_som_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCwood_gCm2_correlation     
                grid_output$MTT_som_years_to_dCsom_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCsom_gCm2_correlation
+               grid_output$dCsom_gCm2_to_gpp_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_gpp_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_rauto_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_rauto_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_nee_gCm2day_correlation[slot_i,slot_j]  = site_output$dCsom_gCm2_to_nee_gCm2day_correlation 
+               grid_output$dCsom_gCm2_to_rhet_gCm2day_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_rhet_gCm2day_correlation
+               grid_output$dCsom_gCm2_to_som_gCm2_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_som_gCm2_correlation   
+               grid_output$dCsom_gCm2_to_som_input_gCm2_correlation[slot_i,slot_j] = site_output$dCsom_gCm2_to_som_input_gCm2_correlation   
+
+               if (any(check_list == "MTT_wood_years_to_NPP_wood_gCm2day_correlation")) {
+                   grid_output$MTT_som_years_to_wood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_wood_gCm2_correlation
+                   grid_output$MTT_som_years_to_dCwood_gCm2_correlation[slot_i,slot_j] = site_output$MTT_som_years_to_dCwood_gCm2_correlation                    
+                   grid_output$dCsom_gCm2_to_wood_gCm2_correlation[slot_i,slot_j]  = site_output$dCsom_gCm2_to_wood_gCm2_correlation                
+               }
+
            }            
 
            # Tidy up

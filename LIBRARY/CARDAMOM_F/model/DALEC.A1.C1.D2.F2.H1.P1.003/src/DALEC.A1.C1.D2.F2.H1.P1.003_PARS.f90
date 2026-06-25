@@ -1,11 +1,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
-! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
-! assimilate observations and ecological theory to retrieve parameters for the 
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
-! used as a fully integrated component of CARDAMOM or independently. 
+! used as a fully integrated component of CARDAMOM or independently.
 ! Copyright (C) 2024  University of Edinburgh,
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -66,16 +66,18 @@ module MODEL_PARAMETERS
     ! declare parameters
     !
 
-    ! Decomposition litter -> som (day-1)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    ! Decomposition of litter to som (fraction / day-1)
+    ! Note is modified by exponential temperature function (p10)
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
 
-    ! Fraction of GPP respired as autotrophic
+    ! Fraction of GPP respired as autotrophic (Ra:GPP),
+    ! i.e. 1-CUE
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 
     ! Fraction of (1-fgpp) to foliage
-    PI%parmin(3) = 0.01d0
+    PI%parmin(3) = 0.1d0
     PI%parmax(3) = 0.5d0
 
     ! Fraction of (1-fgpp) to roots*/
@@ -91,9 +93,11 @@ module MODEL_PARAMETERS
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
@@ -105,17 +109,18 @@ module MODEL_PARAMETERS
 !    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
     ! Canopy Efficiency
     ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
-    ! Kattge et al (2011) offers a prior of 3.4 - 30.7 gC/m2leaf/day.
+    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
-    PI%parmin(11) = 3.4d0 !5d0
-    PI%parmax(11) = 42d0 !50d0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
@@ -142,21 +147,34 @@ module MODEL_PARAMETERS
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
 
+    ! fraction of Cwood which is coarse root
+    PI%parmin(24) = 0.15d0
+    PI%parmax(24) = 0.50d0
+
+    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! of max depth
+    PI%parmin(25) = 100d0
+    PI%parmax(25) = 2500d0 !500d0
+
+    ! BUCKET - maximum rooting depth
+    PI%parmin(26) = 0.35d0
+    PI%parmax(26) = 20d0
+
     ! Resilience factor for burned but not combusted C stocks
-    PI%parmin(24) = 0.1d0
-    PI%parmax(24) = 1d0
+    PI%parmin(27) = 0.01d0
+    PI%parmax(27) = 0.99d0
     ! Combustion completeness factor for foliage
-    PI%parmin(25) = 0.01d0
-    PI%parmax(25) = 0.99d0
-    ! Combustion completeness factor for fine root and wood
-    PI%parmin(26) = 0.01d0
-    PI%parmax(26) = 0.99d0
-    ! Combustion completeness factor for soil
-    PI%parmin(27) = 0.001d0
-    PI%parmax(27) = 0.1d0
-    ! Combustion completeness factor for foliage + fine root litter
-    PI%parmin(28)= 0.01d0
+    PI%parmin(28) = 0.01d0
     PI%parmax(28) = 0.99d0
+    ! Combustion completeness factor for fine root and wood
+    PI%parmin(29) = 0.01d0
+    PI%parmax(29) = 0.99d0
+    ! Combustion completeness factor for soil
+    PI%parmin(30) = 0.01d0
+    PI%parmax(30) = 0.1d0
+    ! Combustion completeness factor for foliage + fine root litter
+    PI%parmin(31) = 0.01d0
+    PI%parmax(31) = 0.99d0
 
     !
     ! INITIAL VALUES DECLARED HERE
