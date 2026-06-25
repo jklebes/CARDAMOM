@@ -151,7 +151,7 @@ extract_met_drivers<-function(n,timestep_days,start_year,end_year,lat_degrees,me
       # rolling averaged for GSI
       avg_days = 30 # assume that the first 30 days are just the actual values, We expect this should result in a small error only
       # create photoperiod information; add 30 days to the output
-      photoperiod_out = calc_photoperiod_sec(lat_degrees,c(seq(365-(avg_days+1),365,1),doy))
+      photoperiod_out = calc_photoperiod_sec(lat_degrees,c(seq(365-(avg_days-2),365,1),doy))
 
       # now take the daily values and turn them into rolling 30 day averages
       photoperiod_out = rollapply(photoperiod_out,avg_days,mean,na.rm=FALSE)

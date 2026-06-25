@@ -70,7 +70,7 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
    #print("...begin inserting LAI observations into model time steps")
-   while (b <= length(data_all$doy_obs)) {
+   while (b <= length(data_all$doy_obs) & i <= length(doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
@@ -85,13 +85,22 @@ extract_timeseries_observations_with_uncertainty<- function(i1,j1,timestep_days,
       # each time we come back to doy_obs[i]==1 we need to count on the year
       #if (length(data_all$doy_obs) < 10) {print(data_all$doy_obs)}
 
-      if (doy_obs[i] == 1 & b <= length(data_all$doy_obs)) {
+      if (i <= length(doy_obs) && doy_obs[i] == 1 && b <= length(data_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == data_all$missing_years[a]) { a = min(length(data_all$missing_years),a+1) }
           start_year = start_year + 1
       } # end if doy_obs[i] == 1
 
    } # end while condition
+
+   # Explicit diagnosis: if the daily sequence was exhausted before every observation
+   # was placed, the observation DOY stream is inconsistent with the model daily doy_obs
+   # sequence (e.g. an observation DOY that never occurs within the analysis period).
+   if (b <= length(data_all$doy_obs)) {
+       stop(paste("extract_observation_for_writing: failed to align all observations for ",
+                  est_var_name_in," - observation DOY stream inconsistent with the daily doy_obs sequence (placed ",
+                  b-1," of ",length(data_all$doy_obs)," observations).",sep=""))
+   }
 
    ## Aggregate to the model time steps by sum or mean
    if (length(timestep_days) == 1 & timestep_days[1] == 1) {
@@ -195,7 +204,7 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
    #print("...begin inserting LAI observations into model time steps")
-   while (b <= length(data_all$doy_obs)) {
+   while (b <= length(data_all$doy_obs) & i <= length(doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
@@ -208,13 +217,22 @@ extract_timeseries_observations_without_uncertainty<- function(i1,j1,timestep_da
       i = i + 1
 
       # each time we come back to doy_obs[i]==1 we need to count on the year
-      if (doy_obs[i] == 1 & b <= length(data_all$doy_obs)) {
+      if (i <= length(doy_obs) && doy_obs[i] == 1 && b <= length(data_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == data_all$missing_years[a]) { a = min(length(data_all$missing_years),a+1) }
           start_year = start_year + 1
       } # end if doy_obs[i] == 1
 
    } # end while condition
+
+   # Explicit diagnosis: if the daily sequence was exhausted before every observation
+   # was placed, the observation DOY stream is inconsistent with the model daily doy_obs
+   # sequence (e.g. an observation DOY that never occurs within the analysis period).
+   if (b <= length(data_all$doy_obs)) {
+       stop(paste("extract_observation_for_writing: failed to align all observations for ",
+                  est_var_name_in," - observation DOY stream inconsistent with the daily doy_obs sequence (placed ",
+                  b-1," of ",length(data_all$doy_obs)," observations).",sep=""))
+   }
 
    ## Aggregate to the model time steps by sum or mean
    if (length(timestep_days) == 1 & timestep_days[1] == 1) {
@@ -365,7 +383,7 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
    ## Line up the days of year which have observations into a complete timeseries of days...
    b = 1 ; i = 1 ; a = 1 ; start_year = as.numeric(years_to_load[1])
    #print("...begin inserting LAI observations into model time steps")
-   while (b <= length(data_all$doy_obs)) {
+   while (b <= length(data_all$doy_obs) & i <= length(doy_obs)) {
 
       # if we are in a year which is missing then we do not allow consideration of DOY
       if (start_year != data_all$missing_years[a]) {
@@ -378,13 +396,22 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
       i = i + 1
 
       # each time we come back to doy_obs[i]==1 we need to count on the year
-      if (doy_obs[i] == 1 & b <= length(data_all$doy_obs)) {
+      if (i <= length(doy_obs) && doy_obs[i] == 1 && b <= length(data_all$doy_obs)) {
           # and if we have just been in a missing year we need to count on the missing years vector to
           if (start_year == data_all$missing_years[a]) { a = min(length(data_all$missing_years),a+1) }
           start_year = start_year + 1
       } # end if doy_obs[i] == 1
 
    } # end while condition
+
+   # Explicit diagnosis: if the daily sequence was exhausted before every observation
+   # was placed, the observation DOY stream is inconsistent with the model daily doy_obs
+   # sequence (e.g. an observation DOY that never occurs within the analysis period).
+   if (b <= length(data_all$doy_obs)) {
+       stop(paste("extract_observation_for_writing: failed to align all observations for ",
+                  est_var_name_in," - observation DOY stream inconsistent with the daily doy_obs sequence (placed ",
+                  b-1," of ",length(data_all$doy_obs)," observations).",sep=""))
+   }
 
    ## Aggregate to the model time steps by sum or mean
    if (length(timestep_days) == 1 & timestep_days[1] == 1) {
@@ -398,14 +425,14 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
                     # then we do a time varied average based on compound 
                     # interest calculation to preserve the mass balance
                     # If lag is not zero then we should go through and distribute
-                    obs_out[max(1,y-obs_lag_out[y]):y] = 1-(1-obs_out[y])**(1/obs_lag_out[y])
+                    obs_out[max(1,y-obs_lag_out[y]):y] = 1-(1-obs_out[y])**(1/(obs_lag_out[y]+1))
                     # We also must update the lag now to be instantanuous
                     obs_lag_out[max(1,y-obs_lag_out[y]):y] = 0
                 } else {
                     # If this is an absolute, i.e. not a fractional rate, then we do a direct averaging
                     # to preserve the mass balance
                     # If lag is not zero then we should go through and distribute
-                    obs_out[max(1,y-obs_lag_out[y]):y] = obs_out[y] / obs_lag_out[y]
+                    obs_out[max(1,y-obs_lag_out[y]):y] = obs_out[y] / (obs_lag_out[y]+1)
                     # We also must update the lag now to be instantanuous
                     obs_lag_out[max(1,y-obs_lag_out[y]):y] = 0
                 } 
@@ -479,14 +506,14 @@ extract_timeseries_forcing<- function(i1,j1,timestep_days,years_to_load,doy_obs,
                         # then we do a time varied average based on compound 
                         # interest calculation to preserve the mass balance
                         # If lag is not zero then we should go through and distribute
-                        obs_agg[max(1,y-obs_lag_agg[y]):y] = 1-(1-obs_agg[y])**(1/obs_lag_agg[y])
+                        obs_agg[max(1,y-obs_lag_agg[y]):y] = 1-(1-obs_agg[y])**(1/(obs_lag_agg[y]+1))
                         # We also must update the lag now to be instantanuous
                         obs_lag_agg[max(1,y-obs_lag_agg[y]):y] = 0
                     } else {
                         # If this is an absolute, i.e. not a fractional rate, then we do a direct averaging
                         # to preserve the mass balance
                         # If lag is not zero then we should go through and distribute
-                        obs_agg[max(1,y-obs_lag_agg[y]):y] = obs_agg[y] / obs_lag_agg[y]
+                        obs_agg[max(1,y-obs_lag_agg[y]):y] = obs_agg[y] / (obs_lag_agg[y]+1)
                         # We also must update the lag now to be instantanuous
                         obs_lag_agg[max(1,y-obs_lag_agg[y]):y] = 0
                     } 

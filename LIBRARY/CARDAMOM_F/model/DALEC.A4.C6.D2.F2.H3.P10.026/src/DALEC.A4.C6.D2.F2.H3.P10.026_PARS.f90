@@ -115,14 +115,12 @@ module MODEL_PARAMETERS
     PI%parmin(12) = -8d0
     PI%parmax(12) = -0.5d0
 
+    ! Something else. For trend and initialising?
+    PI%parmin(13) = 0d0
+    PI%parmax(13) = 1d0
     ! Parameters linking the NCCE to the CMI
     ! via a Michaelis-Menten function. 
     ! This is the NCCE at which the CMI is at 50 %
-    PI%parmin(13) = -0.5d0
-    PI%parmax(13) = -0.00005d0
-    ! Parameters linking the NCCE gradient to the CMI
-    ! via a Michaelis-Menten function. This is the NCCE gradient 
-    ! 50 % value
     PI%parmin(14) = -0.5d0
     PI%parmax(14) = -0.00005d0
        
