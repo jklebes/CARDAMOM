@@ -408,7 +408,7 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$assimilated_lai_max_m2m2 = max(drivers$obs[filter,4])
       site_output$assimilated_lai_mean_m2m2 = mean(drivers$obs[filter,4])
       site_output$assimilated_lai_sd_m2m2 = sd(drivers$obs[filter,4])
-      site_output$assimilated_lai_unc_m2m2 = mean(drivers$obs[filter,4])
+      site_output$assimilated_lai_unc_m2m2 = mean(drivers$obs[filter,5])
   } else {
       site_output$assimilated_lai_max_m2m2 = NA
       site_output$assimilated_lai_mean_m2m2 = NA

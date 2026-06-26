@@ -729,7 +729,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
                                 pars(15),pars(45), &
-                                pars(46),pars(48),pars(49))
+                                pars(46),pars(48),pars(49), &
+                                pars(13),pars(5))
 
     else ! deltat_1 allocated?
 
@@ -754,12 +755,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Re-initialise leaf cohort age structure
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
                                 pars(15),pars(45), &
-                                pars(46),pars(48),pars(49))
+                                pars(46),pars(48),pars(49), &
+                                pars(13),pars(5))
 
     endif ! deltat_1 allocated
 
     ! Assign initial canopy NCCE values
-    ncce_lag_history = pars(5)
+    ncce_lag_history = 0d0
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -4858,7 +4860,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine initialise_cohorts(foliage, start_doy, r_opp, leaf_age_ref, &
-                                k_N_decline, mean_leaf_doy, sigma_leaf_doy)
+                                k_N_decline, mean_leaf_doy, sigma_leaf_doy, &
+                                C_accumulation_rate, C_accumulation_amp)
 
     ! Initialise the leaf cohort array using a Von Mises multi-year age-structure
     ! distribution (Kikuzawa 1991; Givnish 2002).
@@ -4892,7 +4895,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                leaf_age_ref, & ! reference leaf lifespan (days)
                                 k_N_decline, & ! leaf N decline rate (month-1)
                               mean_leaf_doy, & ! peak leaf-out DOY for Von Mises PDF (1-365)
-                             sigma_leaf_doy    ! seasonal spread of leaf production (days)
+                             sigma_leaf_doy, & ! seasonal spread of leaf production (days)
+                        C_accumulation_rate, & ! Linear cohort profit accumulation rate (day-1) 
+                         C_accumulation_amp    ! Amplitude of the profit accumulation rate
     integer, intent(in) :: start_doy ! day-of-year at simulation start (integer)
 
     ! Local variables
@@ -4994,7 +4999,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             leaf_cohorts(k)%ncce_average  = 0d0
             leaf_cohorts(k)%age_days      = age_d
             leaf_cohorts(k)%age_months    = age_mo
-            leaf_cohorts(k)%cum_profit    = 0d0 ! TLS: May need to initialise this also with a real value. Appear to be largely linear over time on annual time scales
+            leaf_cohorts(k)%cum_profit    = trend_seasonal(dble(age_d), leaf_cohorts(k)%Cc, & 
+                                                           C_accumulation_rate, C_accumulation_amp, &
+                                                           mean_leaf_doy, 365.25d0)
             leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
             leaf_cohorts(k)%is_alive      = .true.
             n_live_cohorts = n_live_cohorts + 1
@@ -5758,6 +5765,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     Return
 
   end subroutine new_leaf_update_canopy_NUE_rel
+  !
+  !------------------------------------------------------------------ 
+  !
+  pure function trend_seasonal(t, c0, c1, amp, peak_doy, period) result(y)
+
+    implicit none
+
+    ! Linear trend + single annual harmonic, additive coupling.
+    !
+    !  y(t) = c0 + c1*t + amp*cos( 2*pi*(t - (peak_doy-1)) / period )
+    !
+    ! Arguments:
+    double precision, intent(in) :: t, & ! Number of days since intercept value
+                                   c0, & ! Intercept value for linear trend
+                                   c1, & ! Gradient (per day)
+                                  amp, & ! seasonal amplitude (half the peak-to-trough range)
+                             peak_doy, & ! peak day of year (1-365)
+                               period    ! Period of the seasonal cycle (e.g. 365.25)
+    ! Local variables and result
+    double precision :: y, theta, p_safe
+
+    ! Sanity heck on the period
+    p_safe = max(period, vsmall)
+    ! Estimate the seasonal period
+    theta  = two_pi * (t - (peak_doy - 1d0)) / p_safe
+    ! Combine linear and seasonal component
+    y = c0 + c1 * t + amp * cos(theta)
+
+    return
+
+  end function trend_seasonal  
   !
   !------------------------------------------------------------------
   !

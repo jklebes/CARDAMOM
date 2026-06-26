@@ -80,9 +80,9 @@ module MODEL_PARAMETERS
     PI%parmin(4) = 1d0
     PI%parmax(4) = 20d0
 
-    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(5) = -0.10d0
-    PI%parmax(5) =  0.10d0
+    ! Seasonal amplitude of the cohort profit initialisation
+    PI%parmin(5) = 0.10d0
+    PI%parmax(5) = 10.0d0
 
     ! Turnover of wood (fraction / day)
     PI%parmin(6) = 0.000009d0 ! 304  years
@@ -115,7 +115,7 @@ module MODEL_PARAMETERS
     PI%parmin(12) = -8d0
     PI%parmax(12) = -0.5d0
 
-    ! Something else. For trend and initialising?
+    ! Linear trend component for initialising cohort profit (day-1)
     PI%parmin(13) = 0d0
     PI%parmax(13) = 1d0
     ! Parameters linking the NCCE to the CMI
