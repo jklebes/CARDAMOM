@@ -89,17 +89,21 @@ module samplers_shared
       !! Covariance matrix exists and is positive definite
    end type MCMC_OUTPUT
 
+   double precision:: neg_inf = -huge(1d0)
+
 contains
 
 !! utilities
 
-   logical function is_infinity(ll)
-!! Check whether a loglikelihood is infinity/likelihood is zero
-!! usually signalling hard reject of the state due to boundary conditions and physical constraints
-      double precision, intent(in):: ll
-! undo the log
-      is_infinity = (ll <= log(epsilon(1d0)))  ! check approx zero
-   end function is_infinity
+   subroutine init_infinity()
+      ! TODO not used.  `infini=0` is still used in model/.
+      use, intrinsic :: ieee_arithmetic, only: ieee_negative_inf, ieee_support_inf, ieee_value
+   if (ieee_support_inf(1d0)) then
+        neg_inf = ieee_value(1d0, ieee_negative_inf)
+    else
+        neg_inf = -huge(1d0)
+    end if
+   end subroutine init_infinity
 
 !! core sampler math
 
@@ -113,6 +117,8 @@ contains
       call random_number(r)
 ! TODO add optional pregen random
 ! l1/l2 > r  <=> logl1-logl2 > log(r)
+! TODO very small chance of r = exactly 0 .  (is this true with our generator)  
+! should catch and supply log(r) = -inf .  Performance  impact of check?
       metropolis_choice = ((new_loglikelihood - old_loglikelihood) > log(r))
    end function metropolis_choice
 

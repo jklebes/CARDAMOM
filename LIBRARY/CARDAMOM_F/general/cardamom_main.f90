@@ -42,6 +42,7 @@
 program cardamom_framework
    use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
    use model_shared, only: PI, initialize_carbon_model
+   use samplers_shared, only: init_infinity ! should be in Utils ?
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
@@ -115,6 +116,8 @@ program cardamom_framework
    ! TODO not to hardcode, from command line argument
    integer:: nchains = 3
    integer:: i
+
+   call init_infinity()
 
    allocate (MCOUT_list(nchains))
 

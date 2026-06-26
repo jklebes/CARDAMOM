@@ -43,9 +43,10 @@ module MHMCMC
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout)
    !-
 
-   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, number_filenames
+   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, number_filenames, neg_inf
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
+
 
    implicit none(type, external)
 
@@ -163,7 +164,7 @@ contains
    subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, chainid)
    !! Main function for a single adaptive MCMC simulation
       use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
-      use samplers_shared, only: init_pars_random, bounds_check, is_infinity, metropolis_choice
+      use samplers_shared, only: init_pars_random, bounds_check,  metropolis_choice
       use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
                              , write_covariance_info, write_mcmc_output, open_output_files
       use random_uniform, ONLY: UNIF_VECTOR, initialize_random
@@ -186,7 +187,8 @@ contains
          , PARS_proposed & ! parameter values for current proposal
          , BESTPARS        ! best set of parameters so far
 
-      double precision, dimension(PI%npars, MCO%nadapt):: PARSALL  ! All accepted normalised parameters since previous step adaption
+      double precision, allocatable, dimension(:,:):: PARSALL  
+         !! The history, accepted normalised parameter values in intervals nadapt .  npars x nadapt 
       double precision:: loglikelihood_previous, loglikelihood_proposed
         !! loglikelihood of a set of parameters
       double precision:: output_loglikelihood
@@ -254,6 +256,9 @@ contains
          chainid_ = 1
       end if
 
+      ! Allocate PARSALL, the history of the chain
+      allocate(PARSALL(PI%npars, MCO%nadapt))
+
       ! Initialize pregenerated random numbers, if using-local to this chain
       seed = irand()  ! TODO record later  ! TODO always the same ?
       call uniform_random_vector%initialize_random(seed)
@@ -286,6 +291,7 @@ contains
       opt_scaling = sqrt(MCO%opt_scaling_const/dble(PI%npars))
 
       if (MCO%restart) then
+         ! TODO
          ! For aborted simulations
          ! keep MCOUT, starting point, counters statistics collection
          ! implies start from last state
@@ -340,7 +346,7 @@ contains
          ! start statistics from previous statistics in MCOUT
       end if
 
-      if (.not. MCO%restart) then  ! if new simulation, from fixedpars or random pars
+      if (.not. MCO%restart) then  ! if new simulation, whether from fixedpars or random pars
          ! calculate initial ll
          call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
 
@@ -350,7 +356,7 @@ contains
          loglikelihood_previous = MCOUT%ll
       end if
 
-      if (loglikelihood_previous < -999999) then
+      if (loglikelihood_previous == neg_inf) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
          & AP-MCMC will get stuck, if so please check initial conditions"
          error stop 1
@@ -489,6 +495,7 @@ contains
       ! set flag MCMC completed
       MCOUT%complete = .true.
       ! tidy up
+      deallocate(PARSALL)
 
       ! completed AP-MCMC loop
       write (*, *) "AP-MCMC loop completed"

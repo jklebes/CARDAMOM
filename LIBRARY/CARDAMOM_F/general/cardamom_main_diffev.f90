@@ -1,6 +1,7 @@
 program cardamom_DEMCz
    use DEMCz, only: demczOPT, run_demcz
    use cardamom_MHMCMC, only: MCMC_OUTPUT, mcmc_options
+   use samplers_shared, only: init_infinity
    use model_shared, only: PI, initialize_carbon_model
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
@@ -41,6 +42,8 @@ program cardamom_DEMCz
    ! TODO not to hardcode, from command line argument
    integer:: nchains = 16
    integer:: i
+
+   call init_infinity()
 
    allocate (MCOUT_list(nchains))
 

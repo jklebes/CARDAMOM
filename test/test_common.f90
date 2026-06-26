@@ -32,10 +32,11 @@ contains
       double precision:: P, log_P
       P = 0.0_dp
       log_P = log(P)
-      call check(error, is_infinity(log_P), .true.)
+      call init_infinity()
+      call check(error, log_P == neg_inf, .true.)
       P = 0.01_dp
       log_P = log(P)
-      call check(error, is_infinity(log_P), .false.)
+      call check(error, log_P == neg_inf, .false.)
    end subroutine test_is_infinity
 
    subroutine test_init_pars_random(error)
