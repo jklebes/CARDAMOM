@@ -334,7 +334,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2)
+                        ,meantemp,EDC2, EDCD)
 
     use cardamom_structures, only: DATAin
 
@@ -1017,8 +1017,8 @@ module model_likelihood_module
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                        ,DATAin%meantemp,EDC2)      
+                        ,M_POOLS,M_FLUXES,M_DIAGS         &
+                        ,DATAin%meantemp,EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1212,13 +1212,13 @@ module model_likelihood_module
     if (DATAin%nCwood_growth > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
                                              DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
+                                             1d0,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
                                              DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
-                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
+                                             1d0,M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1236,9 +1236,6 @@ module model_likelihood_module
 
     ! Arguements
     double precision, intent(inout) :: ML_obs_out
-    double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
-    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
-    double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
     double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
@@ -1288,8 +1285,8 @@ module model_likelihood_module
     if (DATAin%nClit_stock > 0) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (sum(DATAin%M_FLUXES(1:DATAin%nodays,10))/sum(DATAin%M_FLUXES(1:DATAin%nodays,10)+DATAin%M_FLUXES(1:DATAin%nodays,12))) & 
-                 * DATAin%M_POOLS(1:DATAin%nodays,5)
+        mod = (sum(M_FLUXES(1:DATAin%nodays,10))/sum(M_FLUXES(1:DATAin%nodays,10)+M_FLUXES(1:DATAin%nodays,12))) &
+                 * M_POOLS(1:DATAin%nodays,5)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nClit_stock,DATAin%Clit_stockpts, &
                                              DATAin%Clit_stock,DATAin%Clit_stock_unc,DATAin%Clit_stock_lag, &
                                              DATAin%Clit_stock_scaling,mod)
@@ -1430,7 +1427,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        mod = sum(M_FLUXES(1:DATAin%nodays,29)) / sum(MET(7,1:DATAin%nodays) * 86400d0)
+        mod = sum(M_FLUXES(1:DATAin%nodays,29)) / sum(DATAin%MET(7,1:DATAin%nodays) * 86400d0)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(4)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(4),DATAin%otherpriorunc(4),dummy_lag,dummy_scaling,mod))
     end if
@@ -1440,7 +1437,7 @@ module model_likelihood_module
     ! residence time (i.e. no fire and biomass removal)
     if (DATAin%otherpriors(5) > -9998) then
         mod = (sum(M_FLUXES(1:DATAin%nodays,7))/dble(DATAin%nodays)) & 
-            * ( (sum(M_POOLS(1:DATAin%nodays,4) / (DATAin%M_FLUXES(1:DATAin%nodays,11)))) / dble(DATAin%nodays))
+            * ( (sum(M_POOLS(1:DATAin%nodays,4) / (M_FLUXES(1:DATAin%nodays,11)))) / dble(DATAin%nodays))
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(5)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
