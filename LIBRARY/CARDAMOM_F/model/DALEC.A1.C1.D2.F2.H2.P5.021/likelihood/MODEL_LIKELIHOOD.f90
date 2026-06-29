@@ -347,7 +347,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2)
+                        ,meantemp,EDC2, EDCD)
 
     use cardamom_structures, only: DATAin
 
@@ -1030,8 +1030,8 @@ module model_likelihood_module
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
-                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                        ,DATAin%meantemp,EDC2)      
+                        ,M_POOLS,M_FLUXES,M_DIAGS         &
+                        ,DATAin%meantemp,EDC2, EDCD)
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1223,13 +1223,13 @@ module model_likelihood_module
     if (DATAin%nCwood_growth > 0) then
         ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
                                                       DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,7))
+                                                      1d0,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
                                                       DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
-                                                      1d0,DATAin%M_FLUXES(1:DATAin%nodays,11))
+                                                      1d0,M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return

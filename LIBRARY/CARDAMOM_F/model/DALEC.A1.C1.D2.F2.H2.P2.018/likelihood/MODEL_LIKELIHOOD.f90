@@ -347,7 +347,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2)
+                        ,meantemp,EDC2, EDCD)
 
     use cardamom_structures, only: DATAin
 

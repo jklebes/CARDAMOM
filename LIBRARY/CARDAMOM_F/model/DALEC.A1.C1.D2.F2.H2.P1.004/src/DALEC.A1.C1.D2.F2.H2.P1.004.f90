@@ -853,7 +853,7 @@ module CARBON_MODEL_MOD
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(mV)
-    mV%dayl_seconds = mV%daylength_seconds(1) ; mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29), mV) ! assume no evap or rainfall
 

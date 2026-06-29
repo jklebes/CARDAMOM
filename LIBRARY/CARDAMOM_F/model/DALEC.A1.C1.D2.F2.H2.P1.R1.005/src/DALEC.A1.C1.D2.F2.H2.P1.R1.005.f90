@@ -604,9 +604,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
-    ! Some time consuming variables we only want to set once
+       ! Some time consuming variables we only want to set once
     if (.not.allocated(mV%deltat_1)) then
-        call update_soil_initial_conditions(pars(24), mV)
+      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
+      STOP 1
     else ! deltat_1 allocated?
 
         !

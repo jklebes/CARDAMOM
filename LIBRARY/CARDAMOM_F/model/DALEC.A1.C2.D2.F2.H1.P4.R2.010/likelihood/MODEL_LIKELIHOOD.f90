@@ -107,7 +107,7 @@ module model_likelihood_module
     if (.not.sanity_check) call model_sanity_check(PARS, thread_id)
 
     ! call EDCs which can be evaluated prior to running the model
-    call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1, EDCD)
+    call assess_EDC1(PARS,PI%npars, DATAIN%nomet, DATAIN%nodays, DATAin%meantemp, DATAin%meanrad, DATAIN%MET,  EDC1, EDCD)
 
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
@@ -243,7 +243,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine assess_EDC1(PARS, npars, meantemp, meanrad, EDC1, EDCD)
+  subroutine assess_EDC1(PARS, npars, nomet, nodays, meantemp, meanrad, met, EDC1, EDCD)
 
     ! subroutine assessed the current parameter sets for passing ecological and
     ! steady state contraints (Bloom & Williams 2015).
@@ -252,6 +252,9 @@ module model_likelihood_module
 
     ! declare input variables
     integer, intent(in) :: npars ! number of parameters
+    integer, intent(in) :: nomet ! number of met drivers
+    integer, intent(in) :: nodays
+    double precision, intent(in) :: met(nomet,nodays) ! array of met drivers
     double precision, intent(out) :: EDC1    ! EDC1 flag
     double precision, dimension(npars), intent(in) :: PARS ! current parameter set
     double precision, intent(in) :: meantemp & ! mean temperature (k)
@@ -313,18 +316,18 @@ module model_likelihood_module
     end if
 
     ! Photoperiod minimum cannot be substantially less than the observed minimum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(36) < minval(DATAin%MET(11,:))-14400d0)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(36) < minval(MET(11,:))-14400d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(9) = 0
     end if
     ! Photoperiod maximum cannot be greater than the observed maximum day length
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > maxval(DATAin%MET(11,:)))) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(37) > maxval(MET(11,:)))) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(10) = 0
     end if
 
     ! VPD at which stress in at maximum should be no larger than max(VPDlag21) +
     ! 1500 Pa from the max VPD tolerated parameter. The hypothesis being that plants would not
     ! make themselves resilient to an unexperiences environment.
-    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(39) > maxval(DATAin%MET(12,:))+1500d0)) then
+    if ((EDC1 == 1 .or. DIAG == 1) .and. (pars(39) > maxval(MET(12,:))+1500d0)) then
          EDC1 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
 
@@ -356,7 +359,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2)
+                        ,meantemp,EDC2, EDCD)
 
     use cardamom_structures, only: DATAin
 
@@ -928,7 +931,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1, EDCD)
+        call assess_EDC1(PARS,PI%npars, DATAIN%nomet, DATAIN%nodays, DATAin%meantemp, DATAin%meanrad, DATAIN%MET,  EDC1, EDCD)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -1004,7 +1007,7 @@ module model_likelihood_module
     if (DATAin%EDC == 1) then
 
         ! call EDCs which can be evaluated prior to running the model
-        call assess_EDC1(PARS,PI%npars,DATAin%meantemp, DATAin%meanrad,EDC1, EDCD)
+        call assess_EDC1(PARS,PI%npars, DATAIN%nomet, DATAIN%nodays, DATAin%meantemp, DATAin%meanrad, DATAIN%MET,  EDC1, EDCD)
 
         ! update the likelihood score based on EDCs driving total rejection
         ! proposed parameters
@@ -1026,7 +1029,7 @@ module model_likelihood_module
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                         ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
-                        ,DATAin%meantemp,EDC2)      
+                        ,DATAin%meantemp,EDC2, EDCD)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1435,7 +1438,7 @@ module model_likelihood_module
     ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
     ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
-        mod = sum(M_FLUXES(1:DATAin%nodays,29)) / sum(MET(7,1:DATAin%nodays) * 86400d0)
+        mod = sum(M_FLUXES(1:DATAin%nodays,29)) / sum(DATAIN%MET(7,1:DATAin%nodays) * 86400d0)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(4)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(4),DATAin%otherpriorunc(4),dummy_lag,dummy_scaling,mod))
     end if
