@@ -208,11 +208,12 @@ def edit_original_file(lines, procedures_altered, insert_declarations, filename)
         for i,line in enumerate(lines):
             line_p = line.partition('!')[0]
             words = re.split('\W+', line_p.strip())
-            if "call "+subroutine_name in line_p and "call "+ subroutine_name+"(" not in line_p:
+            if ("call "+subroutine_name in line_p and "call "+ subroutine_name+"(" not in line_p and 
+                 "call "+ subroutine_name+"_" not in line_p ):
                 index = line_p.find(subroutine_name) + len(subroutine_name)
                 lines[i] = line[:index] + "(mV)" + line[index:]
                 print("altered procedure call", lines[i])
-            elif cont or "call "+ subroutine_name in line_p:
+            elif cont or "call "+ subroutine_name + "(" in line_p:
                 for j,c in enumerate(line_p[max(0,line_p.find(subroutine_name)):]):
                     if c=='(':
                         opened +=1 

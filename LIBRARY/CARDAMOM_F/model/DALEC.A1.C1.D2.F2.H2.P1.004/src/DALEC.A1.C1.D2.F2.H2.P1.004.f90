@@ -382,7 +382,11 @@ module CARBON_MODEL_MOD
         ! initialise some time invarient parameters
         call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
         call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
-        !call update_soil_initial_conditions(pars(24), mV)
+
+        !call update_soil_initial_conditions(pars(24), mV) 
+        ! can't be done here because of dependence on PARS
+        ! that's ok because it's done in every carbon_model() call at else block
+
         ! save the initial conditions for later
         mV%field_capacity_initial = mV%field_capacity
         mV%porosity_initial = mV%porosity
@@ -624,10 +628,11 @@ module CARBON_MODEL_MOD
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
-       ! Some time consuming variables we only want to set once TODO move to initialize
-    if (.not.allocated(mV%deltat_1)) then
-        call update_soil_initial_conditions(pars(24), mV)
-    else  ! deltat_1 allocated?
+       ! Some time consuming variables we only want to set once
+    if (.not.allocated(mV%deltat_1)) then !never used - initialize_model() is always called before carbon_model()
+      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
+      STOP 1
+    else ! deltat_1 allocated?
 
         !
         ! Load initial soil water conditions from memory

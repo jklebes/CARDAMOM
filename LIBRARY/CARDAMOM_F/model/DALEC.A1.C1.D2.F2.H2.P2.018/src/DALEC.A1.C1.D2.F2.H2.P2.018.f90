@@ -49,18 +49,7 @@ module CARBON_MODEL_MOD
   public :: CARBON_MODEL     &
            ,top_soil_depth   &
            ,sw_par_fraction  &
-           ,soil_frac_clay   &
-           ,soil_frac_sand   &
-           ,nos_soil_layers  &
-           ,dim_1,dim_2      &
-           ,nos_trees        &
-           ,nos_inputs       &
-           ,leftDaughter     &
-           ,rightDaughter    &
-           ,nodestatus       &
-           ,xbestsplit       &
-           ,nodepred         &
-           ,bestvar
+           ,mVs , initialize_mv
 
   !!!!!!!!!
   ! Parameters
@@ -186,7 +175,8 @@ module CARBON_MODEL_MOD
   ! Module variables
   !!!!!!!!!
 
-  double precision :: minlwp = minlwp_default
+  type model_working_variables
+    double precision :: minlwp = minlwp_default
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
   ! massive
@@ -321,7 +311,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                         daylength_seconds, &
                                       daylength_seconds_1, &
                                             rainfall_time
-  contains
+  
+  end type
+  type(model_working_variables), allocatable, dimension(:):: mVs
+contains
   !
   !--------------------------------------------------------------------
   !
