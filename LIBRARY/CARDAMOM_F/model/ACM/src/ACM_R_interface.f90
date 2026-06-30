@@ -52,7 +52,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,pft            & ! plant functional type
                         ,pft_specific   & !

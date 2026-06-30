@@ -59,6 +59,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   # test for convergence and whether or not there is any single chain which can be removed in they do not converge
   notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars)) ; kept_chains = seq(1,dim(parameters)[3])
   while (dim(parameters)[3] > 2 & notconv) {
+  
      if (use_parallel == FALSE) {print("begin convergence checking")}
      converged = have_chains_converged(parameters)
      # If all chains are kept then we do not need to update kept_chains,
@@ -125,7 +126,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # if more than 2 chains
 
   # Return parameters to user
-  return(list(parameters = parameters,converged = converged, kept_chains = kept_chains))
+  return(list(parameters = parameters, converged = converged, kept_chains = kept_chains))
 
 } # end function determine_parameter_chains_to_run
 ## Use byte compile
@@ -170,7 +171,7 @@ dump_binary_files <-function(infile) {
 
 } # end function
 
-read_parameter_chains<- function(PROJECT_in,n) {
+read_parameter_chains<-function(PROJECT_in,n) {
 
   # Determine the intended name for the parmeter files
   pfile = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
@@ -178,7 +179,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
   # Return if no files
-  if (length(pfile) == 0) {return(-9999)}
+  if (length(pfile) == 0) { return(-9999) }
 
   # calculate the number of chains
   chains = seq(1, length(pfile))
@@ -280,7 +281,8 @@ read_parameter_chains<- function(PROJECT_in,n) {
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.005" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.006" ||
       PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.007" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.020" ||
       PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.018" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.021" ||
-      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.031") {
+      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.031" || PROJECT_in$model$name == "DALEC.A1.C7.D2.F2.H2.P1.R4.036" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H5.P1.037") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
   if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.013") {
@@ -288,6 +290,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
   }
 
   # return the parameter solutions
+  #return(list(parameters = param_sets_out, pfile = pfile))
   return(param_sets_out)
 
 } # end of function

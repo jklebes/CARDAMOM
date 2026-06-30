@@ -55,8 +55,35 @@ load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,
             # open the file
             data1 = nc_open(this_year)
 
-            # Extract spatial information
-            lat_in = ncvar_get(data1, "lat") ; long_in = ncvar_get(data1, "lon")
+            # Extract spatial information - latitude
+            if (length(which(names(data1$var) == "lat")) > 0 | length(which(names(data1$dim) == "lat"))) {
+                lat_in = ncvar_get(data1, "lat") 
+            } else if (length(which(names(data1$var) == "latitude")) > 0 | length(which(names(data1$dim) == "latitude"))) {
+                lat_in = ncvar_get(data1, "latitude") 
+            } else {
+                stop("......no variable or dimension called lat or latitude could be found")
+            } # finding lat
+            # Extract spatial information - longitude
+            if (length(which(names(data1$var) == "lon")) > 0 | length(which(names(data1$dim) == "lon"))) {
+                long_in = ncvar_get(data1, "lon") 
+            } else if (length(which(names(data1$var) == "longitude")) > 0 | length(which(names(data1$dim) == "longitude"))) {
+                long_in = ncvar_get(data1, "longitude") 
+            } else {
+                stop("......no variable or dimension called lat or latitude could be found")
+            } # finding lat
+            # Now check whether this is a 2D array or not
+            if (length(dim(lat_in)) == 2 && length(dim(long_in)) == 2) {
+                 # Do nothing, as this should be exactly what we want
+             } else {
+                 # We will assume that the arrays match the vectorisation order found in R.
+                 # A warning will be issued, placing the onus on the user to make sure this is right
+                 print("......The lat or lon information are provided as a vector and not as a 2D array, as specified in the dataset description documents")
+                 print("......The code will construct the 2D array assuming the vectorisation order used in R and that the vectors represent the x and y coordinates.")
+                 tmp1 = length(long_in) ; tmp2 = length(lat_in)
+                 lat_in = t(array(lat_in, dim=c(tmp2,tmp1)))
+                 long_in = array(long_in, dim=c(tmp1,tmp2))
+                 rm(tmp1,tmp2) 
+            } 
             # Extract the current global attributes
             global_attributes = ncatt_get(data1,0)
             # Check whether there is any information regarding the EPSG
@@ -100,13 +127,13 @@ load_static_observation_dataset_for_extraction<-function(latlon_in,cardamom_ext,
             rm(est_in)
             # Check that we have a uncertainty estimate
             if (std_present) {
-                std_out_tif = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(std_in[,,t]))
+                std_out_tif = data.frame(x = as.vector(long_in), y = as.vector(lat_in), z = as.vector(std_in))
                 std_out_tif = rast(std_out_tif, crs = paste("epsg:",epsg,sep=""), type="xyz")
                 rm(std_in)
             } 
 
             # Extract the epsg from the file
-            epsg = crs(var1, describe = TRUE)$code
+            epsg = crs(est_out_tif, describe = TRUE)$code
             if (is.null(epsg) | epsg == "") { stop(paste("the use_lcm specification leads to a geotif which does not contain epsg information."))}
             # If we have an epsg then we want to know if it differs from the one desired by the analysis
             if (epsg != gsub("epsg:","",grid_type)) {

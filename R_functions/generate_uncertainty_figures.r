@@ -45,7 +45,7 @@ single_site_plotting_control<-function(n,PROJECT) {
        converged = have_chains_converged(parameters)
        plot_parameters(PROJECT,parameters,converged,n)
        # generate file name of the output file created in stage 3
-       loadfile=paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
+       loadfile = paste(PROJECT$results_processedpath,PROJECT$sites[n],".RData",sep="")
        if (file.exists(loadfile)) {
            # model state and flux plotting with uncertainty
            uncertainty_figures(n,PROJECT,loadfile)

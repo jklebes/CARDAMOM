@@ -48,7 +48,7 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -99,7 +99,7 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
@@ -173,7 +173,9 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,47) = FLUXES(1:nodays,44)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,48) = FLUXES(1:nodays,45)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,46)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,50) = FLUXES(1:nodays,47)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,50) = FLUXES(1:nodays,47) &       ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,50) &       ! 
+                             + FLUXES(1:nodays,51)         !     
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,48)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,52) = FLUXES(1:nodays,49)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,53) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
@@ -209,6 +211,7 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

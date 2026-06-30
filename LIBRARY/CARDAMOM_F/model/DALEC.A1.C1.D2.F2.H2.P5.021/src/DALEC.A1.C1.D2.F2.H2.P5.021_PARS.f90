@@ -35,6 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -49,8 +50,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -64,13 +65,20 @@ module MODEL_PARAMETERS
 
     !
     ! declare parameters
+    type(PARINFO), intent(inout):: PI
     !
 
-    ! Decomposition litter -> som (day-1)
-    PI%parmin(1) = 0.00001d0
-    PI%parmax(1) = 0.01d0
+    PI%npars = 33
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
-    ! Fraction of GPP respired as autotrophic
+    ! Decomposition of litter to som (fraction/day-1)
+    ! Note is modified by exponential temperature function (p10)
+    PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
+    PI%parmax(1) = 0.02d0      ! 0.13 years at 0oC
+
+    ! Fraction of GPP respired as autotrophic (Ra:GPP),
+    ! i.e. 1-CUE
     PI%parmin(2) = 0.2d0
     PI%parmax(2) = 0.8d0
 
@@ -91,9 +99,11 @@ module MODEL_PARAMETERS
     PI%parmin(6) = 0.000009d0 ! 304  years
     PI%parmax(6) = 0.001d0    ! 2.74 years
 
-    ! TOR roots
+    ! Turnover fraction of roots
+    ! Gill and Jackson (2000), New Phytol., 147, 13–31
+    ! Fig. 6 turnover by diameter class
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
@@ -105,7 +115,7 @@ module MODEL_PARAMETERS
 !    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
 !    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
@@ -115,8 +125,8 @@ module MODEL_PARAMETERS
     ! Here, to be cautious we will expand accepted range
     ! Thus CUE = NUE * avN -> 1.64 / 42.0
     ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
-    PI%parmin(11) = 12d0 !3.4d0 !5d0
-    PI%parmax(11) = 30d0 !42d0 !50d0
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! max bud burst day
     PI%parmin(12) = 365.25d0
@@ -157,8 +167,8 @@ module MODEL_PARAMETERS
     PI%parmax(27) = 20d0
 
     ! Resilience factor for burned but not combusted C stocks
-    PI%parmin(28) = 0.1d0
-    PI%parmax(28) = 0.9d0
+    PI%parmin(28) = 0.01d0
+    PI%parmax(28) = 0.99d0
     ! Combustion completeness factor for foliage
     PI%parmin(29) = 0.01d0
     PI%parmax(29) = 0.99d0
@@ -166,7 +176,7 @@ module MODEL_PARAMETERS
     PI%parmin(30) = 0.01d0
     PI%parmax(30) = 0.99d0
     ! Combustion completeness factor for soil
-    PI%parmin(31) = 0.001d0
+    PI%parmin(31) = 0.01d0
     PI%parmax(31) = 0.1d0
     ! Combustion completeness factor for foliage + fine root litter
     PI%parmin(32) = 0.01d0
@@ -205,7 +215,7 @@ module MODEL_PARAMETERS
     PI%parmax(23) = 250000d0 !90000d0
 
     ! Initial soil water fraction
-    PI%parmin(24) = 0.01d0
+    PI%parmin(24) = 0.05d0
     PI%parmax(24) = 1.00d0
 
   end subroutine pars_info

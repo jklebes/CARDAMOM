@@ -87,9 +87,12 @@ load_met_function<- function (year_to_do,varid,infile_varid,spatial_type,cardamo
              # Set any missing value flags to NA
              var1[which(as.vector(var1) == -9999)] = NA
              # Match resolutions
-             if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) {
+             if (res(var1)[1] < res(cardamom_ext)[1] | res(var1)[2] < res(cardamom_ext)[2]) {
                  # Resample to correct grid
                  var1 = resample(var1, cardamom_ext, method="average") ; gc() 
+             } else if (res(var1)[1] != res(cardamom_ext)[1] | res(var1)[2] != res(cardamom_ext)[2]) { 
+                 # Resample to correct grid
+                 var1 = resample(var1, cardamom_ext, method="near") ; gc() 
              } # Aggrgeate to resolution
 
              # determine new (s)tart and (e)nd points for the output array

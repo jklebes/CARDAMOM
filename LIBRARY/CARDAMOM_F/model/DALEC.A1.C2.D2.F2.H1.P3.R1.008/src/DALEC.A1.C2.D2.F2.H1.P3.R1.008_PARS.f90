@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.A1.C2.D2.F2.H1.P3.R1 model.
+! Module contains uniform prior parameter information for the DALEC.A1.C2.D2.F2.H1.P3.R1.008 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -35,6 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -42,16 +43,15 @@ module MODEL_PARAMETERS
   private
 
   ! specify explicitly the public
-  public :: pars_info
+  public:: pars_info
 
   contains
 
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
-    use cardamom_structures, only: DATAin
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -62,7 +62,12 @@ module MODEL_PARAMETERS
 
     !
     ! declare parameters
+    type(PARINFO), intent(inout):: PI
     !
+
+    PI%npars = 39
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Decomposition efficiency of litter/CWD to som (fraction)
     PI%parmin(1) = 0.25d0
@@ -70,18 +75,17 @@ module MODEL_PARAMETERS
 
     ! Fraction of GPP respired as Rm(fol,root,wood)
     PI%parmin(2) = 0.1d0
-    PI%parmax(2) = 0.8d0
+    PI%parmax(2) = 0.7d0
 
-    ! Background leaf turnover rate
-    ! NOT IN USE
-    PI%parmin(3) = 0.0002737851d0 ! 10 years
-    PI%parmax(3) = 0.0009126169d0 !  3 year
+    ! Initial canopy GSI value 
+    PI%parmin(3) = 0d0
+    PI%parmax(3) = 1d0
 
     ! Fraction of (1-fgpp) to roots*/
     PI%parmin(4) = 0.1d0
     PI%parmax(4) = 0.80d0
 
-    ! GSI max leaf turnover
+    ! Potential leaf turnover rate
     PI%parmin(5) = 0.002737851d0 ! 1 year
     PI%parmax(5) = 0.016666667d0 ! 60 days
 
@@ -93,7 +97,7 @@ module MODEL_PARAMETERS
     ! Gill and Jackson (2000), New Phytol., 147, 13–31
     ! Fig. 6 turnover by diameter class
     PI%parmin(7) = 0.001368925d0 ! 2    years !0.0006844627d0 ! 4 years
-    PI%parmax(7) = 0.02d0        ! 0.13 years
+    PI%parmax(7) = 0.01d0        ! 0.27 years
 
     ! Turnover of litter (fraction; temperature adjusted)
     PI%parmin(8) = 0.0001141d0 ! 24   years at 0oC
@@ -102,18 +106,20 @@ module MODEL_PARAMETERS
     ! Turnover of som to Rhet (fraction; temperature adjusted)
     PI%parmin(9) = 1.368925d-06   ! 2000 years at 0oC
     PI%parmax(9) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
-!    PI%parmin(9) = 0.0000001d0 ! 27378.0 years at 0oC
-!    PI%parmax(9) = 0.001d0     !     2.7 years at 0oC
 
     ! Exponential coefficient for Rhet temperature response
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(10) = 0.019d0
     PI%parmax(10) = 0.08d0
 
-    ! log10 avg foliar N (gN.m-2)
-    ! Kattge et al., (2011) (Quantiles 25% / 75%)
-    ! and Thomas et al., (2019) (Aconite canopy paper)
-    PI%parmin(11) = 0.07918125d0!0d0 !-0.2218487d0 !TLS: restricted to 1.2 gN/m2leaf
-    PI%parmax(11) = 0.4771213d0 ! 0.5563025d0 ! TLS: restricted to 3 gC/m2leaf
+    ! Canopy Efficiency
+    ! NUE and avN combination give a Vcmax equivalent, the canopy efficiency.
+    ! Kattge et al (2011) offers a potential prior range of 3.4 - 30.7 gC/m2leaf/day.
+    ! Here, to be cautious we will expand accepted range
+    ! Thus CUE = NUE * avN -> 1.64 / 42.0
+    ! TLS: 27/10/2021 restricted again based now on 95 %CI (12.61 / 29.68) from TRY
+    PI%parmin(11) = 10d0 !5d0
+    PI%parmax(11) = 100d0 !42d0 !50d0
 
     ! Max labile turnover fraction to foliage
     PI%parmin(12) = 0.002737851d0 !  1 years
@@ -121,89 +127,75 @@ module MODEL_PARAMETERS
 
     ! Fraction of GPP to Clab*/
     PI%parmin(13) = 0.05d0
-    PI%parmax(13) = 0.35d0
+    PI%parmax(13) = 0.5d0
 
-    ! GSI min temperature threshold (oC)
-    PI%parmin(14) = 235d0
-    PI%parmax(14) = 330d0
+    ! Canopy GSI phenology gradient threshold
+    PI%parmin(14) = -1d-2
+    PI%parmax(14) =  1d-2
+    ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
+    PI%parmin(15) = 0.001d0
+    PI%parmax(15) = 0.1d0
 
-    ! GSI max temperature threshold (oC)
-    PI%parmin(15) = 273.15d0 !243d0 !235d0
-    PI%parmax(15) = 330d0
-
-    ! GSI min photoperiod threshold (sec)
-    PI%parmin(16) = 3600d0*3d0  !  3 hours
-    PI%parmax(16) = 3600d0*21d0 ! 21 hours
+    ! Turnover rate for CWD
+    PI%parmin(16) = 1.368925d-05 ! 200.00 years at 0oC
+    PI%parmax(16) = 0.001d0      !   2.74 years at 0oC
 
     ! LMA
     ! Kattge et al. 2011,
     PI%parmin(17) = 20d0
     PI%parmax(17) = 180d0
 
-    ! GSI max photoperiod threshold (sec)
-    PI%parmin(24) = 3600d0*3d0   !  3 hours
-    PI%parmax(24) = 3600d0*21d0  ! 21 hours
-
-    ! GSI min VPD threshold (Pa)
-    PI%parmin(25) = 10d0 !100d0
-    PI%parmax(25) = 5500d0
-
-    ! GSI max VPD threshold (Pa)
-    PI%parmin(26) = 10d0 !1000d0
-    PI%parmax(26) = 5500d0
-
-    ! GPP return on new Cfol investment (gCperGPP per gCnewfol)
-    PI%parmin(27) = 0.001d0
-    PI%parmax(27) = 0.1d0
-
-    ! Initial GSI value
-    PI%parmin(28) = 0d0
-    PI%parmax(28) = 1d0
-
     ! fraction of Cwood which is coarse root
-    PI%parmin(29) = 0.15d0
-    PI%parmax(29) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
+    PI%parmin(25) = 0.15d0
+    PI%parmax(25) = 0.50d0 ! increased based on evidence of savannah system 50 % below !0.30d0
 
-    ! GSI senstivity for leaf senescence
-    PI%parmin(34) = -1d-3
-    PI%parmax(34) = -1d-4
-
-    ! Turnover rate for CWD
-    PI%parmin(35) = 1.368925d-05 ! 200.00 years at 0oC
-    PI%parmax(35) = 0.001d0      !   2.74 years at 0oC
-
-    ! Optimum nitrogen use efficiency (gC/gN per m2 at optimum temperature)
-    ! Derived from Vcmax reported in Wullschleger (1993), Journal of
-    ! Experimental Botany, Vol 44, No. 262, pp. 907-920.
-    ! ~40 gC/gN/day
-    ! TRY database equivalent 2.5 % = 1.648512; 97.5 % = 19.906560
-    ! Xu et al., (2017):
-    ! Variations of leaf longevity in tropical moist forests predicted by a
-    ! trait-driven carbon optimality model,
-    ! Ecology Letters, doi: 10.1111/ele.12804, upper value of 82 gC/gN/day
-    ! Thus we will compromise on the value between these but closer to the
-    ! newer estimate (i.e. 30 gC/gN/day)
-    PI%parmin(36) =  1.6d0
-    PI%parmax(36) = 40.0d0
+    ! BUCKET - coarse root biomass (i.e. gbio/m2 not gC/m2) needed to reach 50 %
+    ! of max depth
+    PI%parmin(26) = 100d0
+    PI%parmax(26) = 2500d0 !500d0
+    ! BUCKET - maximum rooting depth
+    PI%parmin(27) = 0.35d0
+    PI%parmax(27) = 20d0
 
     ! Resilience factor for burned but not combusted C stocks
-    PI%parmin(38) = 0.1d0
-    PI%parmax(38) = 0.9d0
+    PI%parmin(28) = 0.01d0
+    PI%parmax(28) = 0.99d0
     ! Combustion completeness factor for foliage
-    PI%parmin(39) = 0.01d0
-    PI%parmax(39) = 0.99d0
+    PI%parmin(29) = 0.01d0
+    PI%parmax(29) = 0.99d0
     ! Combustion completeness factor for fine root and wood
-    PI%parmin(40) = 0.01d0
-    PI%parmax(40) = 0.99d0
+    PI%parmin(30) = 0.01d0
+    PI%parmax(30) = 0.99d0
     ! Combustion completeness factor for soil
-    PI%parmin(41) = 0.001d0
-    PI%parmax(41) = 0.1d0
+    PI%parmin(31) = 0.01d0
+    PI%parmax(31) = 0.1d0
     ! Combustion completeness factor for foliage + fine root litter
-    PI%parmin(42) = 0.01d0
-    PI%parmax(42) = 0.99d0
+    PI%parmin(32) = 0.01d0
+    PI%parmax(32) = 0.99d0
     ! Combustion completeness factor for wood litter
-    PI%parmin(43) = 0.01d0
-    PI%parmax(43) = 0.99d0
+    PI%parmin(33) = 0.01d0
+    PI%parmax(33) = 0.99d0
+
+    ! GSI min temperature threshold (K)
+    PI%parmin(34) = 235d0
+    PI%parmax(34) = 330d0
+    ! GSI max temperature threshold (K)
+    PI%parmin(35) = 273.15d0 !243d0 !235d0
+    PI%parmax(35) = 330d0
+
+    ! GSI min photoperiod threshold (sec)
+    PI%parmin(36) = 3600d0*3d0  !  3 hours
+    PI%parmax(36) = 3600d0*21d0 ! 21 hours
+    ! GSI max photoperiod threshold (sec)
+    PI%parmin(37) = 3600d0*3d0   !  3 hours
+    PI%parmax(37) = 3600d0*21d0  ! 21 hours
+
+    ! GSI min VPD threshold (Pa)
+    PI%parmin(38) = 10d0 !100d0
+    PI%parmax(38) = 5500d0
+    ! GSI max VPD threshold (Pa)
+    PI%parmin(39) = 10d0 !1000d0
+    PI%parmax(39) = 5500d0
 
     !
     ! INITIAL VALUES DECLARED HERE
@@ -234,28 +226,8 @@ module MODEL_PARAMETERS
     PI%parmax(23) = 250000d0 !90000d0
 
     ! C CWD
-    PI%parmin(37) = 1d0
-    PI%parmax(37) = 10000d0
-
-    !
-    ! Replanting pools values
-    !
-
-    ! C labile
-    PI%parmin(30) = 1.0d0
-    PI%parmax(30) = 100.0d0
-
-    ! C foliar
-    PI%parmin(31) = 1.0d0
-    PI%parmax(31) = 100.0d0
-
-    ! C roots
-    PI%parmin(32) = 1.0d0
-    PI%parmax(32) = 100.0d0
-
-    ! C_wood derived from forestry yield curves age = 1
-    PI%parmin(33) = 1.0d0
-    PI%parmax(33) = 1000.0d0
+    PI%parmin(24) = 1d0
+    PI%parmax(24) = 10000d0
 
   end subroutine pars_info
   !

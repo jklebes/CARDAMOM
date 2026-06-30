@@ -19,41 +19,10 @@
 # top level sampling loop was not a big factor in performance. 
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
+library(assert)
+library(here)
 
-# Run the "cmake ..", "make" of cardamom to generate the shared library
-cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
-dyn.load(cardamom_dll)
-
-
-## ----- Pass model to R ----------
-out_ <- .C("C_initialize_stresstest_circle")
-
-# TODO keep R wrappers in a different file
-#model_name <- .C("getmodelname")
-
-out <- as.integer(0)
-model_npars <- .C("C_getmodelnpars", out)[[1]]
-
-out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
-print("Fetched model parmin")
-print(model_parmin)
-model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
-print("Fetched model parmax")
-print(model_parmax)
-
-get_initial <- function(){
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
-}
-
-#wrap that .C function to a more usual R function
-cardamom_stresstestcirclelikelihood <- function(pars){
-    #print("Calling")
-    out_ <- 0.0
-    ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
-    # l <- -pars[3]**2+model_npars
-    #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
-}
+source(file.path(here(), "LIBRARY/CARDAMOM_F/general/Rscripts/load_stresstest.R"))
 
 # call modellikelihood once as a test
 print("random initial:")
@@ -78,7 +47,10 @@ bayesianSetup <- createBayesianSetup(likelihood = cardamom_stresstestcirclelikel
                                      )
 
 # sampler AM works with this outer-level parallelization only.  We run N
-# separate single-chain samplers on N cores.
+# separate single-chain samplers on N cores of a cluser.
+# This is N completely independednt AM runs.  Could be handled by taskarray,
+# here parallelism is instead handled by R parallel cluster.  This runs on 
+# multiple CPUs .
 
 parallel::clusterEvalQ(cl, library(BayesianTools))
 parallel::clusterExport(cl, "cardamom_dll" )
@@ -88,11 +60,12 @@ parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
 parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
 iter = 100000
 
+# one chain within each core
 settings = list(iterations = iter, nrChains=1, message = TRUE)
 #parallel::clusterExport(cl, "bayesianSetup")
 #parallel::clusterExport(cl, "settings")
 
-# This will be useful for when you want to pass chainId X to function:
+# This parLapply will be useful for when you want to pass chainId X to function:
 out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
     bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
 

@@ -1,5 +1,5 @@
 module cardamom_main_utils
-   implicit none
+   implicit none(type, external)
    public
 
 contains
@@ -10,8 +10,7 @@ contains
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       allocate (MCOUT%covariance(npars, npars), MCOUT%parvar(npars), MCOUT%meanpar(npars))
       call reset_stats(MCOUT, npars)
-   end subroutine
-
+   end subroutine initialize_stats
 
    subroutine reset_stats(MCOUT, npars)
       use cardamom_MHMCMC, only: MCMC_OUTPUT
@@ -26,7 +25,7 @@ contains
       do n = 1, npars
          MCOUT%covariance(n, n) = 1d0
       end do
-   end subroutine
+   end subroutine reset_stats
 
    !
    !------------------------------------------------------------------
@@ -42,7 +41,7 @@ contains
       use model_likelihood_wrapper  ! TODO next refactoring step
       use cardamom_structures, only: DATAin
 
-      implicit none
+      implicit none(type, external)
 
       ! declare local variables
       integer, intent(in):: nchains
@@ -99,73 +98,69 @@ contains
       ! position we must being the EDC search procedure to find an ecologically
       ! consistent initial parameter set
 
-         ! set up edc log likelihood for MHMCMC initial run
-         PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
-         success_count = 0
+      ! set up edc log likelihood for MHMCMC initial run
+      PEDC_prev = -1000d0; PEDC = -1d0; counter_local = 0
+      success_count = 0
 
-            write (*, *) "Beginning EDC search attempt "
-            write (*, *) nchains, "chains working ... "
-            MCO%randparini = .false.
-            ! TODO limit number to number of available hardware threads
-            !$omp parallel do private(ll) firstprivate(MCO)
-            do i = 1, nchains
-             do while (success_count < nchains)!(PEDC < 0d0)
-               ! call the MHMCMC directing to the appropriate likelihood function
-            call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, chainid = i)
-               MCO%fixedpars = .true. !continue from this position next round, until resetting every 5 attempts 
+      write (*, *) "Beginning EDC search attempt "
+      write (*, *) nchains, "chains working ... "
+      MCO%randparini = .false.
+      ! TODO limit number to number of available hardware threads
+      !$omp parallel do private(ll) firstprivate(MCO)
+      do i = 1, nchains
+         do while (success_count < nchains)!(PEDC < 0d0)
+            ! call the MHMCMC directing to the appropriate likelihood function
+            call run_mcmc(edc_model_likelihood_fct, PI, MCO, MCOUT_list_tmp(i), model_likelihood_fct, chainid=i)
+            MCO%fixedpars = .true. !continue from this position next round, until resetting every 5 attempts
 
-               ! turn off random selection for initial values
-               write (*, *) "...intermediate EDC search progress check"
+            ! turn off random selection for initial values
 
-               ! store the best parameters from that loop
-               PEDC(i) = MCOUT_list_tmp(i)%bestll
-               write (*, *) "Found best loglikelihood", PEDC(i)
-               ! if any chains's MCOUT object is success (reached loglikelihood = 0), 
-               ! copy it to MCOUT_list
-               !$omp critical
-               if (MCOUT_list_tmp(i)%ll >= (0d0-10*epsilon(1.0d0))) then
-                  success_count = success_count+1
-                  write (*, *) "Found ", success_count, "EDC-compatible starting points (", i, ")"
-                  if (success_count <= nchains) then
-                     MCOUT_list(success_count) = MCOUT_list_tmp(i)
-                  end if
-                  call reset_stats(MCOUT_list_tmp(i), PI%npars)
-                  MCO%randparini = .true. ! TODO problem
-                  PEDC_prev(i) = -1000d0
-                  MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
-                  counter_local(i) = 0
-                  MCO%fixedpars=.false.
-
+            ! store the best parameters from that loop
+            PEDC(i) = MCOUT_list_tmp(i)%bestll
+            ! if any chains's MCOUT object is success (reached loglikelihood = 0),
+            ! copy it to MCOUT_list
+            !$omp critical
+            if (MCOUT_list_tmp(i)%ll >= (0d0 - 10*epsilon(1.0d0))) then
+               success_count = success_count + 1
+               write (*, *) "Found ", success_count, "EDC-compatible starting points"
+               if (success_count <= nchains) then
+                  MCOUT_list(success_count) = MCOUT_list_tmp(i)
                end if
-               !$omp end critical
+               call reset_stats(MCOUT_list_tmp(i), PI%npars)
+               MCO%randparini = .true. ! TODO problem
+               PEDC_prev(i) = -1000d0
+               MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
+               counter_local(i) = 0
+               MCO%fixedpars = .false.
 
-               ! keep track of attempts
-               counter_local(i) = counter_local(i) + 1
-               ! periodically reset the initial conditions
-               if (PEDC(i) < 0d0 .and. PEDC(i) <= PEDC_prev(i) .and. counter_local(i) > 5) then
-                  ! Reset the previous EDC likelihood score
-                  PEDC_prev(i) = -1000d0
-                  ! Reset parameters back to default
-                  MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
-                  ! reset to select random starting point
-                  MCO%randparini = .true. ! TODO problem
-                  ! reset the parameter step size at the beginning of each attempt
-                  call reset_stats(MCOUT_list_tmp(i), PI%npars)
-                  counter_local(i) = 0
-                  MCO%fixedpars=.false.
-                  write (*, *) "resetting to initial"
-               else
-                  PEDC_prev(i) = PEDC(i)
-               end if
-               end do  ! for while condition
-            end do
-            !$omp end parallel do
+            end if
+            !$omp end critical
 
+            ! keep track of attempts
+            counter_local(i) = counter_local(i) + 1
+            ! periodically reset the initial conditions
+            if (PEDC(i) < 0d0 .and. PEDC(i) <= PEDC_prev(i) .and. counter_local(i) > 5) then
+               ! Reset the previous EDC likelihood score
+               PEDC_prev(i) = -1000d0
+               ! Reset parameters back to default
+               MCOUT_list_tmp(i)%PARS = DATAin%parpriors(1:PI%npars)
+               ! reset to select random starting point
+               MCO%randparini = .true. ! TODO problem
+               ! reset the parameter step size at the beginning of each attempt
+               call reset_stats(MCOUT_list_tmp(i), PI%npars)
+               counter_local(i) = 0
+               MCO%fixedpars = .false.
+            else
+               PEDC_prev(i) = PEDC(i)
+            end if
+         end do  ! for while condition
+      end do
+      !$omp end parallel do
 
       ! reset so that currently saved parameters will be used
       ! starting point in main MCMC
       ! PI%parfix(1:PI%npars) = 0  ! TODO
       !MCOUT%bestpars = 0d0
 
-      end subroutine
-end module
+   end subroutine find_edc_initial_values
+end module cardamom_main_utils

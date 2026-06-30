@@ -1,4 +1,4 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+﻿!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
 ! assimilate observations and ecological theory to retrieve parameters for the 
@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.C4.D1.F2 and the R code
+! Subroutine to allow direct interface between DALEC.C4.D1.F2.012 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 !
@@ -33,7 +33,7 @@ subroutine rdalec12(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
                    ,out_var1,out_var2,out_var3,out_var4,out_var5 &
                    ,lat,nopars,nomet &
-                   ,nofluxes,nopools,nodays,nos_years,deltat &
+                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
                    ,nos_iter)
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL
@@ -44,43 +44,44 @@ subroutine rdalec12(output_dim,MTT_dim,SS_dim &
   implicit none
   ! declare input variables
   integer, intent(in) :: nopars         & ! number of parameters in vector
-                        ,output_dim     & ! number of outputted variables
+                        ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
-                        ,nos_iter       & ! number of iterations
-                        ,nos_years        & ! number of years simulated
+                        ,nos_iter       & !
                         ,nomet          & ! number of meteorological fields
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
-                        ,nodays           ! number of days in simulation
+                        ,nodiags        & ! number of model diagnositics
+                        ,nodays         & ! number of time steps in simulation
+                        ,nos_years        ! number of years in simulation
 
-  double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
-  double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
-                             ,pars(nopars,nos_iter)   & ! number of parameters
-                             ,lat                       ! site latitude (degrees)
+  double precision, intent(inout) :: deltat(nodays) ! time step in decimal days
+  double precision, intent(in), dimension(nomet,nodays) :: met ! met drivers, note reverse of needed
+  double precision, intent(in), dimension(nopars,nos_iter) :: pars ! number of parameters
+  double precision, intent(in) :: lat ! site latitude (degrees)
 
   ! output declaration
-  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
-  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2  ! Mean annual MRT (years)
-  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3  ! Steady State (gC/m2)
-  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4 ! Long term mean of out_var1
+  double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1    ! Variables at model time step
+  double precision, intent(out), dimension(nos_iter,MTT_dim) :: out_var2              ! Mean annual MRT (years)
+  double precision, intent(out), dimension(nos_iter,SS_dim) :: out_var3               ! Steady State (gC/m2)
+  double precision, intent(out), dimension(nos_iter,output_dim) :: out_var4           ! Long term mean of out_var1
   double precision, intent(out), dimension(nos_iter,nos_years,output_dim) :: out_var5 ! Mean annual of out_var1
 
   ! local variables
   ! vector of ecosystem pools
-  integer :: i, y, y_s, y_e, nos_years, steps_per_year
+  integer :: a, e, i, s, v, steps_per_year!, nos_years
   integer, dimension(nodays) :: pool_hak
+  ! array of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
-  ! vector of ecosystem fluxes
+  ! array of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: tmp &
-                                        ,lai & ! leaf area index
-                                        ,GPP & ! Gross primary productivity
-                                        ,NEE   ! net ecosystem exchange of CO2s
+  ! array of ecosystem diagnositcs
+  double precision, dimension(nodays,nodiags) :: DIAGS
+  double precision, dimension(nodays) :: tmp
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
+  POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -88,15 +89,15 @@ subroutine rdalec12(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
-                      ,lat,lai,NEE,FLUXES,POOLS &
-                      ,nopars,nomet,nopools,nofluxes,GPP)
+                      ,lat,FLUXES,POOLS,DIAGS &
+                      ,nopars,nomet,nopools,nofluxes,nodiags)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
@@ -135,7 +136,8 @@ subroutine rdalec12(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,21) = POOLS(1:nodays,2)        ! fine root + wood (gC/m2)
      out_var1(i,1:nodays,22) = POOLS(1:nodays,3)        ! dom (gC/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,23) = lai                      ! LAI (m2/m2)
+     out_var1(i,1:nodays,23) = DIAGS(1:nodays,1)        ! LAI (m2/m2)
+     out_var1(i,1:nodays,24) = DIAGS(1:nodays,2)        ! ratio of leaf internal to external CO2
 
      !
      ! Calculate long-term mean of out_var1
@@ -154,6 +156,7 @@ subroutine rdalec12(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

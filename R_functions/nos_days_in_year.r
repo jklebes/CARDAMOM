@@ -31,15 +31,19 @@
 
 nos_days_in_year<-function(year) {
 
+    # This function uses scalar control flow; a vector year would error under
+    # R >= 4.2 ("condition has length > 1"). Enforce the scalar contract explicitly.
+    if (length(year) > 1) {stop("nos_days_in_year expects a single year")}
+
     # is current year a leap or not
     nos_days = 365
-    mod=as.numeric(year)-round((as.numeric(year)/4))*4
+    mod = as.numeric(year)-round((as.numeric(year)/4))*4
     if (mod == 0) {
         nos_days = 366
-        mod=as.numeric(year)-round((as.numeric(year)/100))*100
+        mod = as.numeric(year)-round((as.numeric(year)/100))*100
         if (mod == 0) {
             nos_days  = 365
-            mod=as.numeric(year)-round((as.numeric(year)/400))*400
+            mod = as.numeric(year)-round((as.numeric(year)/400))*400
             if (mod == 0) {
                 nos_days  = 366
             }

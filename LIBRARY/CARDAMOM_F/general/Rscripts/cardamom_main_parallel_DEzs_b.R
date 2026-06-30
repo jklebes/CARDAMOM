@@ -1,4 +1,4 @@
-## Alternative cardamom stresstest as R script !
+## Alternative cardamom main loop as R script !
 #
 # jklebes 2025
 #
@@ -8,43 +8,16 @@
 # shared-mmeory parallelism in the same fortran simulation/
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
+library(assert)
+library(here)
 
 # Run the "cmake ..", "make" of cardamom to generate the shared library
-cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
+cardamom_dll = file.path(here(),"build/LIBRARY/CARDAMOM_F/libCARDAMOM.so")
 dyn.load(cardamom_dll)
 
+source(file.path(here(), "LIBRARY/CARDAMOM_F/general/Rscripts/load_cardamom_model.R"))
 
-## ----- Pass model to R ----------
-filename <- "/home/jklebes/CARDAMOM/test/data/UK_baseline_sites_AliceHolt.bin"
-out_ <- .C("C_initialize_model", filename)
-
-# TODO keep R wrappers in a different file
-out <- as.integer(0)
-model_npars <- .C("C_getmodelnpars", out)[[1]]
-
-out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
-print("Fetched model parmin")
-print(model_parmin)
-model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
-print("Fetched model parmax")
-print(model_parmax)
-
-
-get_initial <- function(){
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
-}
-
-
-
-#wrap that .C function to a more usual R function
-cardamom_edc_modellikelihood <- function(pars){
-    out_ <- 0.0
-    ll <- .C("C_edcmodellikelihood", pars, model_npars, out_, as.integer(1))[[3]]
-    #l <- -pars[3]**2
-    #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
-}
-
+assert(model_npars==32)
 
 # call modellikelihood once as a test
 print("random initial:")
@@ -60,7 +33,7 @@ print(ll)
 
 print("Running R adaptive MCMC on Stresstest Circle")
 
-nchains <- 8
+nchains <- 4
 
 cl <- parallel::makeCluster(nchains)
 parallel::clusterEvalQ(cl, library(BayesianTools))
@@ -71,7 +44,7 @@ parallel::clusterExport(cl, "model_parmin" )
 parallel::clusterExport(cl, "filename" )
 parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
 parallel::clusterExport(cl, "cardamom_edc_modellikelihood")
-parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model") )
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_model", filename) )
 parallel::clusterExport(cl, "get_initial")
 parallel::clusterEvalQ(cl,  initial <- get_initial())
 
@@ -83,7 +56,7 @@ plikelihood <- function(paramArr) {
     if (! is.matrix(paramArr)){
         paramArr = t(as.matrix(paramArr))
     }
-    parallel::parApply(cl= cl, X=paramArr, MARGIN = 1, FUN = cardamom_edc_modellikelihood)
+    parallel::parApply(cl= cl, X=paramArr, MARGIN = 1, FUN = cardamom_modellikelihood)
 }
 
 
@@ -94,15 +67,22 @@ bayesianSetup <- createBayesianSetup(likelihood = plikelihood,
                                      upper = model_parmax, 
                                      parallel='external', # use the cluster
                                      )
-iter = 100000
+iter = 10000
 
-settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
-#test
-plikelihood(initialMatrix)
-plikelihood(bayesianSetup$prior$sampler(nchains))
 
+settings = list(iterations = iter, nrChains=1, message = TRUE)
+parallel::clusterExport(cl, "bayesianSetup")
+parallel::clusterExport(cl, "settings")
+# This will be useful for when you want to pass chainId X to function:
+out <- parallel::parLapply(cl, 1:nchains, function(X, bayesianSetup, settings) runMCMC(
+  bayesianSetup, settings, sampler = "AM") , bayesianSetup, settings)
+out <- createMcmcSamplerList(out)
+
+# make sure all chains got to EDC_loglikelihood 0 !
+
+settings = list(iterations = iter, nrChains=1 , message = TRUE , 
+                startValue = t ( sapply(c(1:nchains), function(x) (out[[x]]$current)) ))
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
 
-plot(out_parallel[["chain"]][[1]][,'LL'])
+plot(out_parallel$chain[,'LL'])
 
-out_parallel <- runMCMC(out_parallel, sampler="DEzs", settings=settings)

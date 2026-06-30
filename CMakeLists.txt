@@ -1,27 +1,36 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(CARDAMOM VERSION 1.0 #TODO
+project(CARDAMOM VERSION 2.0 
 	DESCRIPTION "University of Edinburgh / NCEO (UK) CARbon DAta MOdel FraMework" 
   LANGUAGES Fortran)
 enable_language(Fortran)
 
 include(CTest)
 
-set (
-  CMAKE_Fortran_FLAGS
-  #"${CMAKE_Fortran_FLAGS} -ffree-line-length-0 -O0 -g -pg -Wall -no-pie" 
-  "${CMAKE_Fortran_FLAGS} -ffree-line-length-0 -O3" 
-)
-# I put a lot of extra flags here to try to make gprof work, but it turned out to be
-# related to shared libraries - gprof can't do shared libraries
+
+# Debug mode with flags 
+set(CMAKE_Fortran_FLAGS_DEBUG "-ffree-line-length-0 -O2 -g -pg -Wall") 
+set(CMAKE_Fortran_FLAGS_RELEASE "-ffree-line-length-0 -O3")
+
+# Make Release the default CMAKE_BUILD_TYPE
+IF(NOT CMAKE_BUILD_TYPE)
+    get_property(
+        CMAKE_BUILD_TYPE_HELPSTRING
+        CACHE CMAKE_BUILD_TYPE
+        PROPERTY HELPSTRING
+    )
+    set(
+      CMAKE_BUILD_TYPE "RELEASE" CACHE STRING
+        "${CMAKE_BUILD_TYPE_HELPSTRING}" FORCE
+    )
+ENDIF()
+
+IF(${CMAKE_BUILD_TYPE} STREQUAL "DEBUG")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg -g")
-
-## Code coverage analysis
-#add_compile_options(--coverage -fprofile-arcs -ftest-coverage) 
-#add_link_options(-lgcov --coverage) 
-
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF) #different needs for grpof and R
-
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF) #for gprof
+ELSE()
+  option(BUILD_SHARED_LIBS "Build using shared libraries" ON) #For R wrappers
+ENDIF()
 add_subdirectory(LIBRARY/CARDAMOM_F)
 
 set_target_properties(
@@ -33,6 +42,8 @@ set_target_properties(
   SOVERSION "${PROJECT_VERSION_MAJOR}"
   Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/include"
 )
+
+
 target_include_directories(
   "cardamom-lib"
   PUBLIC
@@ -48,6 +59,11 @@ endif()
 
 if(ENABLE_TESTING)
   # add the testsuite
+  # Code coverage analysis # TODO improve
+target_compile_options(cardamom-samplers-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+target_link_options(cardamom-samplers-lib PRIVATE -lgcov --coverage) 
+target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
   enable_testing()
   add_subdirectory("test")
 endif()

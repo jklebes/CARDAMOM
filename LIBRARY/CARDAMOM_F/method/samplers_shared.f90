@@ -1,5 +1,7 @@
 module samplers_shared
-implicit none
+   implicit none(type, external)
+   public
+
 !> A collection of info about the model's parameters
 !> npars and min, max bounds as two arrays
 !> Closely related to model fct; model fct must take this number
@@ -23,7 +25,7 @@ implicit none
       integer:: nwrite = 1000
       integer:: nprint = 1000
       integer:: nout
-      double precision:: P_target = 0d0 
+      double precision:: P_target = 0d0
       !! termination criterion-a loglikelihood to stop at (optional)
 !> file names
       character(350):: outfile = "parout.txt"
@@ -33,7 +35,7 @@ implicit none
       logical:: append
       real:: fadapt  ! TODO fraction adapt-move to outside
       logical:: randparini
-      logical:: returnpars  
+      logical:: returnpars
       !! a variable that is never used and has no effect, needs deleting in all model likelihood files
       logical:: restart = .false.
       !! is it a restart ?
@@ -59,7 +61,7 @@ implicit none
    type MCMC_OUTPUT
       double precision:: bestll
       !! best (maximum) loglikelihood value found so far
-      double precision:: ll 
+      double precision:: ll
       !! latest loglikelihood value
       double precision, allocatable, dimension(:):: bestpars
       !! best (loglikelihood-maximizing) parameter values found so far
@@ -87,23 +89,26 @@ implicit none
       !! Covariance matrix exists and is positive definite
    end type MCMC_OUTPUT
 
+   double precision:: neg_inf = -huge(1d0)
 
 contains
 
 !! utilities
 
-   logical function is_infinity(ll)
-!! Check whether a loglikelihood is infinity/likelihood is zero
-!! usually signalling hard reject of the state due to boundary conditions and physical constraints
-      double precision, intent(in):: ll
-! undo the log
-      is_infinity = (ll <= log(epsilon(1d0)))  ! check approx zero
-   end function
+   subroutine init_infinity()
+      ! TODO not used.  `infini=0` is still used in model/.
+      use, intrinsic :: ieee_arithmetic, only: ieee_negative_inf, ieee_support_inf, ieee_value
+   if (ieee_support_inf(1d0)) then
+        neg_inf = ieee_value(1d0, ieee_negative_inf)
+    else
+        neg_inf = -huge(1d0)
+    end if
+   end subroutine init_infinity
 
 !! core sampler math
 
 !> Accept or reject
-!> First argument is new/proposed log(!)likelihood, 
+!> First argument is new/proposed log(!)likelihood,
 !> second is old log likelihood
 !> return logical
    logical function metropolis_choice(new_loglikelihood, old_loglikelihood)
@@ -112,20 +117,22 @@ contains
       call random_number(r)
 ! TODO add optional pregen random
 ! l1/l2 > r  <=> logl1-logl2 > log(r)
-      metropolis_choice = ((new_loglikelihood-old_loglikelihood) > log(r))
-   end function
+! TODO very small chance of r = exactly 0 .  (is this true with our generator)  
+! should catch and supply log(r) = -inf .  Performance  impact of check?
+      metropolis_choice = ((new_loglikelihood - old_loglikelihood) > log(r))
+   end function metropolis_choice
 
 !!!! routines for random initialization
 
    subroutine init_pars_random(PI, pars0, fix_pars_flag, uniform_random_vector)
       use random_uniform, only: UNIF_VECTOR, next_random_uniform
       use samplers_math, only: log_nor2par
-      implicit none
+      implicit none(type, external)
       type(PARINFO), intent(in):: PI  ! give number, bounds of params
       double precision, dimension(PI%npars), intent(inout):: pars0  ! return random initial values-nonnormalized
       logical, dimension(PI%npars), optional, intent(in):: fix_pars_flag  ! flags .true. to keep inidividual pars
       logical, dimension(PI%npars):: fix_pars_flag_  ! internal version
-      type(UNIF_VECTOR), optional:: uniform_random_vector  ! object supplying pre-generated randoms 0 to 1  ! TODO make optional
+      type(UNIF_VECTOR), optional, intent(inout):: uniform_random_vector  ! object supplying pre-generated randoms 0 to 1  ! TODO make optional
       integer:: i
 
       if (.not. (present(fix_pars_flag))) then
@@ -151,11 +158,11 @@ contains
       end do  ! for PI%npar loop
       !TODO test
       !TODO merge, optional uniform_random_vector arg
-   end subroutine
+   end subroutine init_pars_random
 
    subroutine init_latin_square(PI, pars0, n_chains)  ! TODO
       use samplers_math, only: nor2par
-      implicit none
+      implicit none(type, external)
       type(PARINFO), intent(in):: PI  ! give number, bounds, and potentially current value of params
       integer, intent(in):: n_chains
       double precision, dimension(PI%npars, n_chains), intent(out):: pars0  ! return initial values-nonnormalized
@@ -171,7 +178,7 @@ contains
          end do
       end do
 
-   end subroutine
+   end subroutine init_latin_square
 
    pure logical function bounds_check(PI, PARS)
       type(PARINFO), intent(in):: PI
@@ -181,20 +188,20 @@ contains
       ! or check directly against real boundary values
       bounds_check = all((PARS > PI%parmin) .and. (PARS < PI%parmax))
 
-   end function
+   end function bounds_check
 
    subroutine number_filenames(outfile, stepfile, covfile, covifile, chainid)
       character(len=*), intent(inout):: outfile, stepfile, covfile, covifile
       integer, intent(in):: chainid
       character(4):: chainid_str
       !! internal char version of chainid number, for filenames
-         ! internal write to convert int -> str
-         write (chainid_str, '(i0)') chainid
-         ! append number to file names
-         outfile = trim(outfile)//"_"//trim(chainid_str)
-         stepfile = trim(stepfile)//"_"//trim(chainid_str)
-         covfile = trim(covfile)//"_"//trim(chainid_str)
-         covifile = trim(covifile)//"_"//trim(chainid_str)
-   end subroutine
+      ! internal write to convert int -> str
+      write (chainid_str, '(i0)') chainid
+      ! append number to file names
+      outfile = trim(outfile)//"_"//trim(chainid_str)
+      stepfile = trim(stepfile)//"_"//trim(chainid_str)
+      covfile = trim(covfile)//"_"//trim(chainid_str)
+      covifile = trim(covifile)//"_"//trim(chainid_str)
+   end subroutine number_filenames
 
-end module
+end module samplers_shared

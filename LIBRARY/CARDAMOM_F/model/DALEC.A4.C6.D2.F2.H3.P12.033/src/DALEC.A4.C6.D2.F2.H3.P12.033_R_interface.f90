@@ -44,7 +44,7 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -98,7 +98,7 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
   ! number of years in analysis
   !nos_years = nint(sum(deltat)/365.25d0)
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
@@ -174,7 +174,9 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,49) = FLUXES(1:nodays,44)         ! runoff (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,50) = FLUXES(1:nodays,45)         ! underflow (kgH2O.m-2.day-1)
      out_var1(i,1:nodays,51) = FLUXES(1:nodays,46)         ! 1st->2nd layer drainage (kgH2O.m-2.day-1)
-     out_var1(i,1:nodays,52) = FLUXES(1:nodays,47)         ! infiltration (kgH2O.m-2.day-1)
+     out_var1(i,1:nodays,52) = FLUXES(1:nodays,47) &       ! infiltration (kgH2O.m-2.day-1)
+                             + FLUXES(1:nodays,50) &       ! 
+                             + FLUXES(1:nodays,51)         !               
      out_var1(i,1:nodays,53) = FLUXES(1:nodays,48)         ! Etrans extracted from 1st layer (0-1)
      out_var1(i,1:nodays,54) = FLUXES(1:nodays,49)         ! Etrans extracted from 2nd layer (0-1)
      out_var1(i,1:nodays,55) = POOLS(1:nodays,7)           ! surface water (kgH2O.m-2.30cmdepth)
@@ -202,15 +204,16 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,72) = DIAGS(1:nodays,19)          ! wSWP limitation on foliage growth (0-1)
      out_var1(i,1:nodays,73) = DIAGS(1:nodays,20)          ! NOT IN USE wSWP limitation on fine root growth (0-1)
      out_var1(i,1:nodays,74) = DIAGS(1:nodays,21)          ! wSWP limitation on wood growth (0-1)
-     out_var1(i,1:nodays,75) = DIAGS(1:nodays,22)          ! Canopy photosynthetic return (i.e. GPP(dayl) - Rm_leaf(24hr))
+     out_var1(i,1:nodays,75) = DIAGS(1:nodays,22) &        ! NCCE (gC/gCleaf/m2/day -> gC/m2/day)     
+                             * POOLS(1:nodays,2)
      ! Canopy aerodynamic diagnostics
      out_var1(i,1:nodays,76) = DIAGS(1:nodays,23)          ! Canopy area scaling as a function of light
      out_var1(i,1:nodays,77) = DIAGS(1:nodays,24)          ! Canopy area scaling as a function of wind
      ! Canopy phenology
      out_var1(i,1:nodays,78) = DIAGS(1:nodays,25)          ! Combined limitation on canopy growth
-     out_var1(i,1:nodays,79) = DIAGS(1:nodays,26)          ! NOT IN USE Foliage MTT rolling average over last year (days)
-     out_var1(i,1:nodays,80) = DIAGS(1:nodays,27)          ! NOT IN USE Rolling average NCCE - whole plant C spend (gC/m2/day)
-     out_var1(i,1:nodays,81) = DIAGS(1:nodays,28)          ! ?
+     out_var1(i,1:nodays,79) = DIAGS(1:nodays,26)          ! Combined index of NCCE(step) and NCCE gradient driven foliar loss
+     out_var1(i,1:nodays,80) = DIAGS(1:nodays,27)          ! NCCE gradient (gC/gC/day)
+     out_var1(i,1:nodays,81) = DIAGS(1:nodays,28)          ! 
      out_var1(i,1:nodays,82) = DIAGS(1:nodays,29)          ! NCCE of canopy growth (gC/gC-1)
      out_var1(i,1:nodays,83) = DIAGS(1:nodays,30)          ! NCCE of canopy loss   (gC/gC-1)
 
@@ -231,6 +234,7 @@ subroutine rdalec33(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

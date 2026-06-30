@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Module contains uniform prior parameter information for the DALEC.C4.D1.F2 model.
+! Module contains uniform prior parameter information for the DALEC.C4.D1.F2.012 model.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -89,7 +89,7 @@ module MODEL_PARAMETERS
     PI%parmin(5) = 1.368925d-06   ! 2000 years at 0oC
     PI%parmax(5) = 9.126169d-05   !   30 years at 0oC !0.0001368926d0 !   20 years at 0oC
 
-    ! Temp factor* = Q10 = 1.2-1.6
+    ! Temp factor* = Q10 = 1.2-2.2
     PI%parmin(6) = 0.019d0
     PI%parmax(6) = 0.08d0
 

@@ -10,7 +10,7 @@ program main
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -22,7 +22,7 @@ program main
 !
   use brent_zero, only: zero
   use cardamom_zbrent, only: zbrent
-  implicit none
+  implicit none (type, external)
 
   call timestamp ( )
   write ( *, '(a)' ) ' '
@@ -41,7 +41,7 @@ program main
   call timestamp ( )
 
   stop 0
-end
+end program main
 subroutine test_zero_all ( )
 
 !*****************************************************************************80
@@ -50,7 +50,7 @@ subroutine test_zero_all ( )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -60,10 +60,10 @@ subroutine test_zero_all ( )
 !
 !    John Burkardt
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
+  real ( kind = 8 ) :: a
+  real ( kind = 8 ) :: b
   interface
      pure function f_01( val )
       integer, parameter:: dp = selected_real_kind(15, 9)
@@ -105,9 +105,9 @@ subroutine test_zero_all ( )
   end interface
 
 
-  real ( kind = 8 ) machep
-  real ( kind = 8 ) t
-  real ( kind = 8 ) ftol
+  real ( kind = 8 ) :: machep
+  real ( kind = 8 ) :: t
+  real ( kind = 8 ) :: ftol
 
   write ( *, '(a)' ) ' '
   write ( *, '(a)' ) 'TEST_ZERO_ALL'
@@ -150,7 +150,7 @@ subroutine test_zero_all ( )
     'f_05(x) = (x+3) * (x-1) * (x-1)' )
 
   return
-end
+end subroutine test_zero_all
 subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
 
 !*****************************************************************************80
@@ -159,7 +159,7 @@ subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -187,20 +187,20 @@ subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
 !
   use brent_zero, only: zero
   use cardamom_zbrent, only: zbrent
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) a
-  real ( kind = 8 ) b
-  real ( kind = 8 ) fa
-  real ( kind = 8 ) fb
-  real ( kind = 8 ) fz
-  real ( kind = 8 ) fz2
-  real ( kind = 8 ) machep
-  real ( kind = 8 ) t
-  real ( kind = 8 ) ftol
-  character ( len = *  ) title
-  real ( kind = 8 ) z
-  real ( kind = 8 ) z2
+  real ( kind = 8 ) :: a
+  real ( kind = 8 ) :: b
+  real ( kind = 8 ) :: fa
+  real ( kind = 8 ) :: fb
+  real ( kind = 8 ) :: fz
+  real ( kind = 8 ) :: fz2
+  real ( kind = 8 ) :: machep
+  real ( kind = 8 ) :: t
+  real ( kind = 8 ) :: ftol
+  character ( len = *  ) :: title
+  real ( kind = 8 ) :: z
+  real ( kind = 8 ) :: z2
   interface
      pure function f( val )
       integer, parameter:: dp = selected_real_kind(15, 9)
@@ -208,7 +208,7 @@ subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
       real ( kind = dp )            :: f
     end function f
   end interface
-  
+
   z = zero (title, f, a, b, t, ftol )
   z2 = zbrent (title, f, a, b, t*2, ftol )  ! tolerance is halved on entering cardamom zbrent
   fz = f ( z )
@@ -233,7 +233,7 @@ subroutine test_zero_one ( a, b, machep, t, ftol, f, title )
   write ( *, '(2x, g14.6, 2x, g14.6, 2x, g14.6)' ) fa, fz2, fb
 
   return
-end
+end subroutine test_zero_one
 pure function f_01 ( x )
 
 !*****************************************************************************80
@@ -242,7 +242,7 @@ pure function f_01 ( x )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -258,15 +258,15 @@ pure function f_01 ( x )
 !
 !    Output, real ( kind = 8 ) F_01, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) f_01
+  real ( kind = 8 ) :: f_01
   real ( kind = 8 ), intent(in) ::  x
 
   f_01 = sin ( x ) - 0.5D+00*x
 
   return
-end
+end function f_01
 pure function f_02 ( x )
 
 !*****************************************************************************80
@@ -275,7 +275,7 @@ pure function f_02 ( x )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -291,15 +291,15 @@ pure function f_02 ( x )
 !
 !    Output, real ( kind = 8 ) F_02, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) f_02
+  real ( kind = 8 ) :: f_02
   real ( kind = 8 ), intent(in):: x
 
   f_02 = 2.0D+00*x - exp ( - x )
 
   return
-end
+end function f_02
 pure function f_03 ( x )
 
 !*****************************************************************************80
@@ -320,15 +320,15 @@ pure function f_03 ( x )
 !
 !    Output, real ( kind = 8 ) F_03, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) f_03
+  real ( kind = 8 ) :: f_03
   real ( kind = 8 ), intent(in):: x
 
   f_03 = x*exp ( - x )
 
   return
-end
+end function f_03
 pure function f_04 ( x )
 
 !*****************************************************************************80
@@ -337,7 +337,7 @@ pure function f_04 ( x )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -353,15 +353,15 @@ pure function f_04 ( x )
 !
 !    Output, real ( kind = 8 ) F_04, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) f_04
+  real ( kind = 8 ) :: f_04
   real ( kind = 8 ), intent(in):: x
 
   f_04 = exp ( x ) - 1.0D+00/100.0D+00/x / x
 
   return
-end
+end function f_04
 pure function f_05 ( x )
 
 !*****************************************************************************80
@@ -370,7 +370,7 @@ pure function f_05 ( x )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -386,15 +386,15 @@ pure function f_05 ( x )
 !
 !    Output, real ( kind = 8 ) F_05, the value of the function at X.
 !
-  implicit none
+  implicit none (type, external)
 
-  real ( kind = 8 ) f_05
+  real ( kind = 8 ) :: f_05
   real ( kind = 8 ), intent(in):: x
 
   f_05 = ( x+3.0D+00 ) * ( x-1.0D+00 ) * ( x-1.0D+00 )
 
   return
-end
+end function f_05
 subroutine timestamp ( )
 
 !*****************************************************************************80
@@ -421,21 +421,21 @@ subroutine timestamp ( )
 !
 !    None
 !
-  implicit none
+  implicit none (type, external)
 
-  character ( len = 8 ) ampm
-  integer ( kind = 4 ) d
-  integer ( kind = 4 ) h
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) mm
-  character ( len = 9 ), parameter, dimension(12):: month = (/ &
+  character ( len = 8 ) :: ampm
+  integer ( kind = 4 ) :: d
+  integer ( kind = 4 ) :: h
+  integer ( kind = 4 ) :: m
+  integer ( kind = 4 ) :: mm
+  character ( len = 9 ), parameter, dimension(12):: month = [ &
     'January  ', 'February ', 'March    ', 'April    ', &
     'May      ', 'June     ', 'July     ', 'August   ', &
-    'September', 'October  ', 'November ', 'December ' /)
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ) s
-  integer ( kind = 4 ) values(8)
-  integer ( kind = 4 ) y
+    'September', 'October  ', 'November ', 'December ' ]
+  integer ( kind = 4 ) :: n
+  integer ( kind = 4 ) :: s
+  integer ( kind = 4 ) :: values(8)
+  integer ( kind = 4 ) :: y
 
   call date_and_time ( values = values )
 
@@ -472,4 +472,4 @@ subroutine timestamp ( )
     d, trim ( month(m) ), y, h, ':', n, ':', s, '.', mm, trim ( ampm )
 
   return
-end
+end subroutine timestamp

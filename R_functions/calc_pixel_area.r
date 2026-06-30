@@ -64,9 +64,12 @@ calc_pixel_area<-function(longitude,latitude) {
 
     # Determine the longitude / latitude difference
     dlon = diff(longitude[,1]) ; dlat = diff(latitude[1,])
-    # Ensure that the grid is regular
-    if (length(unique(dlon)) != 1) {stop("calc_pixel_area: longitude dimension not on regular grid")}
-    if (length(unique(dlat)) != 1) {stop("calc_pixel_area: latitude dimension not on regular grid")}
+    # Ensure that the grid is regular.
+    # NOTE: use all.equal (relative tolerance ~1.5e-8) rather than exact equality
+    # via unique(), so floating-point round-off in coordinates (common when grids
+    # come from netCDF / projection round-trips) does not trigger a spurious stop.
+    if (!isTRUE(all.equal(min(dlon), max(dlon)))) {stop("calc_pixel_area: longitude dimension not on regular grid")}
+    if (!isTRUE(all.equal(min(dlat), max(dlat)))) {stop("calc_pixel_area: latitude dimension not on regular grid")}
     # Extract resolution (lon/lat)
     resolution = c(dlon[1],dlat[1])
     

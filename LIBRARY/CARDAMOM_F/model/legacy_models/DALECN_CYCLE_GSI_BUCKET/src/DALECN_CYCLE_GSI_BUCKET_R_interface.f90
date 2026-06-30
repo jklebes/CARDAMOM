@@ -49,7 +49,7 @@ subroutine rdalecncyclegsibucket(output_dim,aNPP_dim,met,pars,out_var,out_var2,l
 
   ! declare input variables
   character(pathlength), intent(in) :: exepath
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,pathlength     & !
                         ,output_dim     & !
                         ,aNPP_dim       & ! NPP allocation fraction variable dimension

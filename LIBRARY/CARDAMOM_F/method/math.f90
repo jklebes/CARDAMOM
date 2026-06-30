@@ -36,7 +36,7 @@ module samplers_math
    ! NOTE: that minimum number of values to be returned is 100
    !#
 
-   implicit none
+   implicit none (type, external)
 
    ! assume default private
    private
@@ -63,12 +63,12 @@ contains
       ! X = mean for parameter
       ! Xi = ith member of the vector
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: naccepted
@@ -106,14 +106,14 @@ contains
       ! Mi = new mean vector for updated variance_matrix
       ! ar = number of new parameters to be added
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       ! Translation to fortran and subsequent modifications by T. L. Smallman
       ! University of Edinburgh, t.l.smallman@ed.ac.uk
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: new
@@ -155,14 +155,14 @@ contains
       ! Y = mean parameter 2
       ! Xi = ith member of the vector
       ! N = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       ! Translation to fortran and subsequent modifications by T. L. Smallman
       ! University of Edinburgh, t.l.smallman@ed.ac.uk
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: npars, naccepted
@@ -206,12 +206,12 @@ contains
       ! meanpar = new mean vector for updated covariance_matrix
       ! new = number of new parameters to be added
       ! npars = number of parameters accepted so far
-      ! This code was based on CARDAMOM routines provided by A. A. Bloom, 
+      ! This code was based on CARDAMOM routines provided by A. A. Bloom,
       ! available at github.com/CARDAMOM-framework/CARDAMOM_2.1.6c
       ! (contact abloom@jpl.nasa.gov for access)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! Arguments
       integer, intent(in):: npars
@@ -220,7 +220,7 @@ contains
       !! number of new values
       integer, intent(inout):: cur1
       !! current position in list of parameters going into to the running calcualtions
-      !! = number of values in history 
+      !! = number of values in history
       !!
       !! warning : changed by this function, incrmented by+new
       double precision, intent(in):: PARSALL(npars, new)
@@ -284,7 +284,7 @@ contains
       !===========================================================
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: n
@@ -365,7 +365,7 @@ contains
    subroutine matrix_vector_func(uplo, n, alpha, A, lda, X, incx, beta, Y, incy)
       !#
       ! Performs the matrix-vector operation
-      ! y := alpha*A*x+beta*y, 
+      ! y := alpha*A*x+beta*y,
       ! where alpha and beta are scalars, x and y are n element vectors and
       ! A is an n by n symmetric matrix.
       !
@@ -591,7 +591,7 @@ contains
 
          ! Form  y  when A is stored in upper triangle.
 
-         if ((incx .eq. 1) .and. (incy .eq. 1)) then
+         if ((incx == 1) .and. (incy == 1)) then
 
             do j = 1, n
                tmp1 = alpha*x(j)
@@ -627,7 +627,7 @@ contains
 
          ! Form  y  when A is stored in lower triangle.
 
-         if (incx .eq. 1 .and. incy .eq. 1) then
+         if (incx == 1 .and. incy == 1) then
             do j = 1, n
                tmp1 = alpha*x(j)
                tmp2 = zero
@@ -676,7 +676,7 @@ contains
       ! inputs are the vector of values and number of values included
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! declare inputs
       integer, intent(in):: n  ! number of values in vector
@@ -714,7 +714,7 @@ contains
     ! un-normalised value.
 
     ! converting parameters on log scale between 0-1 for min/max values
-    implicit none
+    implicit none (type, external)
     double precision, intent(in):: min_par, max_par
     double precision, intent(in):: initial_par
     double precision:: out_par
@@ -729,7 +729,7 @@ contains
       ! Converting values back from normalised (0-1) to 'real' numbers
       !#
 
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -750,7 +750,7 @@ contains
       !#
 
       ! Converting parameters on log scale between 0-1 for min/max values
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par, par_adj
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -777,7 +777,7 @@ contains
       ! Converting values back from log-normalised (0-1) to 'real' numbers
       !#
 
-      implicit none
+      implicit none (type, external)
       double precision, intent(in):: min_par, max_par, par_adj  ! adjustment prevents negative values being fed into the analysis
       double precision, intent(in):: initial_par
       double precision:: out_par
@@ -809,7 +809,7 @@ contains
       ! (https://jblevins.org/mirror/amiller/rnorm.f90, last updated February 2004)
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       double precision, intent(out):: fn_val
@@ -889,7 +889,7 @@ contains
       !
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: m, & ! number of parameters
@@ -913,7 +913,7 @@ contains
          end do  ! j
       end do  ! i
 
-      ! Requires variance-covariance matrix, however as the matrix is over written, 
+      ! Requires variance-covariance matrix, however as the matrix is over written,
       ! make a duplicate
       r(1:m, 1:m) = a(1:m, 1:m)
       call cholesky_factor(m, r, info)
@@ -988,10 +988,10 @@ contains
       !
       !  Reference:
       !
-      !    Jack Dongarra, Jim Bunch, Cleve Moler, Pete Stewart, 
-      !    LINPACK User's Guide, 
-      !    SIAM, 1979, 
-      !    ISBN13: 978-0-898711-72-1, 
+      !    Jack Dongarra, Jim Bunch, Cleve Moler, Pete Stewart,
+      !    LINPACK User's Guide,
+      !    SIAM, 1979,
+      !    ISBN13: 978-0-898711-72-1,
       !    LC: QA214.L56.
       !
       !  Parameters:
@@ -1008,7 +1008,7 @@ contains
       !
       !#
 
-      implicit none
+      implicit none (type, external)
 
       ! arguments
       integer, intent(in):: n

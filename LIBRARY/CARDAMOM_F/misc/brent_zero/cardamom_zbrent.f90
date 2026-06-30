@@ -1,7 +1,7 @@
 module cardamom_zbrent
   contains
-  
-  ! The Cardamom-native zbrent function, formerly included in every model file. 
+
+  ! The Cardamom-native zbrent function, formerly included in every model file.
   ! Also ultimately descended form Brent "Algorithms for minimization without derivatives" (1973)
   ! A copy is kept here for reference and testing
   double precision function zbrent( called_from, func, x1, x2, tol, toltol)
@@ -19,7 +19,7 @@ module cardamom_zbrent
     ! 5) The root of the function does now lie between supplied bounds    !
     ! For a full description see Press et al. (1986).                     !
 
-    implicit none
+    implicit none (type, external)
 
     ! arguments..
     character(len=*), intent(in):: called_from    ! name of procedure calling (used to pass through for errors)
@@ -78,7 +78,7 @@ module cardamom_zbrent
         d  = b-a
         e  = d
       end if
-      if ( abs(fc) .lt. abs(fb) ) then
+      if ( abs(fc) < abs(fb) ) then
         a  = b
         b  = c
         c  = a
@@ -89,13 +89,13 @@ module cardamom_zbrent
       tol1 = EPS*abs(b) + tol0
       xm   = 0.5d0 * ( c-b )
 !      if ( ( abs(xm) .le. tol1 ) .or. ( fb .eq. 0d0 ) ) then
-      if ( ( abs(xm) .le. tol1 ) .or. ( abs(fb) < toltol ) ) then
+      if ( ( abs(xm) <= tol1 ) .or. ( abs(fb) < toltol ) ) then
         zbrent = b
         return
       end if
-      if ( ( abs(e) .ge. tol1 ) .and. ( abs(fa) .gt. abs(fb) ) ) then
+      if ( ( abs(e) >= tol1 ) .and. ( abs(fa) > abs(fb) ) ) then
         s = fb/fa
-        if ( a .eq. c ) then
+        if ( a == c ) then
           p = 2d0*xm*s
           q = 1d0-s
         else
@@ -104,9 +104,9 @@ module cardamom_zbrent
           p = s * ( 2d0*xm*q * ( q-r ) - ( b-a ) * ( r-1d0 ) )
           q = ( q-1d0 ) * ( r-1d0 ) * ( s-1d0 )
         end if
-        if ( p .gt. 0d0 ) q = -q
+        if ( p > 0d0 ) q = -q
         p = abs( p )
-        if ( (2d0*p) .lt. min( 3d0*xm*q-abs(tol1*q), abs(e*q) ) ) then
+        if ( (2d0*p) < min( 3d0*xm*q-abs(tol1*q), abs(e*q) ) ) then
           e = d
           d = p/q
         else
@@ -119,7 +119,7 @@ module cardamom_zbrent
       end if
       a  = b
       fa = fb
-      if ( abs(d) .gt. tol1 ) then
+      if ( abs(d) > tol1 ) then
         b = b+d
       else
         b = b+sign( tol1, xm )
@@ -130,4 +130,4 @@ module cardamom_zbrent
     zbrent = b
 
   end function zbrent
-end module
+end module cardamom_zbrent

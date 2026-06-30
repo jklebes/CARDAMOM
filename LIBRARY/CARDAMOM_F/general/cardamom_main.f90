@@ -4,8 +4,8 @@
 ! assimilate observations and ecological theory to retrieve parameters for the
 ! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
 ! used as a fully integrated component of CARDAMOM or independently.
-! Copyright (C) 2024  University of Edinburgh, 
-!                     Mathew Williams (mat.williams@ed.ac.uk), 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk),
 !                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
 ! UoE = University of Edinburgh
 
@@ -14,7 +14,7 @@
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 
-! This program is distributed in the hope that it will be useful, 
+! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
@@ -42,11 +42,12 @@
 program cardamom_framework
    use cardamom_MHMCMC, only: MCMC_OUTPUT, MCMC_OPTIONS, run_mcmc, run_parallel_mcmc
    use model_shared, only: PI, initialize_carbon_model
+   use samplers_shared, only: init_infinity ! should be in Utils ?
    use cardamom_structures, only: DATAin
    use cardamom_io, only: initialize, &
                           read_options, &
-                         update_obs_scaling_normal, update_obs_scaling_nsamples, &
-                        update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
+                          update_obs_scaling_normal, update_obs_scaling_nsamples, &
+                          update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
    use samplers_io, only: open_output_files, &
                           check_for_existing_output_files, &
                           update_for_restart_simulation, &
@@ -95,7 +96,7 @@ program cardamom_framework
    ! 6) 0/1 flag to use normalised log-likelihood pre-mcmc
    ! 7) Flag to select the cost function normalisation approach
 
-   implicit none
+   implicit none(type, external)
 
    ! declare local variables
    character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
@@ -104,10 +105,10 @@ program cardamom_framework
              nOUT_save, do_inflate_dble, cost_func_scaling_dble
    logical:: do_inflate = .false.
    logical:: sub_sample_complete = .false.
-   double precision:: sub_fraction = 0.2d0 
+   double precision:: sub_fraction = 0.2d0
     !! run this percentage of simulation with variant function
-   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list 
-    !! array of output objects from each thread 
+   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
+    !! array of output objects from each thread
    type(MCMC_OPTIONS):: MCO
      !! options for sampler
    logical:: restart
@@ -115,6 +116,8 @@ program cardamom_framework
    ! TODO not to hardcode, from command line argument
    integer:: nchains = 3
    integer:: i
+
+   call init_infinity()
 
    allocate (MCOUT_list(nchains))
 
@@ -179,15 +182,15 @@ program cardamom_framework
 
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
-     !call run_stresstest()
-     ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
-     stop 
-   endif
+      !call run_stresstest()
+      ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+      stop
+   end if
 
    ! read input data file
-   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  
-                           ! sets cardamom_structures:: DATAin
-   
+   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model
+   ! sets cardamom_structures:: DATAin
+
    call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
@@ -204,118 +207,117 @@ program cardamom_framework
    do i = 1, nchains
       call check_for_existing_output_files(PI%npars, MCO, sub_fraction, i, restart)
       MCO%restart = MCO%restart .and. restart
-   !if all nchains files were found, read them to get a starting point
-   if (MCO%restart) then
-     call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
-   endif 
+      !if all nchains files were found, read them to get a starting point
+      if (MCO%restart) then
+         call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
+      end if
    end do
 
    ! Report which model ID we are using
-   write (*, *) "Running model version ", DATAin%ID  
-  
-      if (.not. MCO%restart) then
-        ! Begin search for initial conditions
-        write (*, *) "Beginning search for initial parameter conditions"
-        ! Determine initial values, this requires using the AP-MCMC
-        call find_edc_initial_values(MCO, MCOUT_list, nchains)
-        ! Having done EDC search phase, flag to start the next phase from this state
-        MCO%fixedpars = .true.
+   write (*, *) "Running model version ", DATAin%ID
+
+   if (.not. MCO%restart) then
+      ! Begin search for initial conditions
+      write (*, *) "Beginning search for initial parameter conditions"
+      ! Determine initial values, this requires using the AP-MCMC
+      call find_edc_initial_values(MCO, MCOUT_list, nchains)
+      ! Having done EDC search phase, flag to start the next phase from this state
+      MCO%fixedpars = .true.
       do i = 1, nchains
-        MCOUT_list(i)%nos_iterations = 0
-        end do
-      endif
-
-      do i = 1, nchains
-
-         ! Reset the MCMC parameters for the next stage
-         call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-
-         ! Reset stepsize and covariance for main DRAM-MCMC
-         call reset_stats(MCOUT_list(i), PI%npars)
-
+         MCOUT_list(i)%nos_iterations = 0
       end do
+   end if
 
-      ! sub-sampling phase, first sub_fraction% of the simulation with variant loglikelihood
-      if (DATAin%total_obs > 0 .and. MCOUT_list(1)%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
+   do i = 1, nchains
 
-         ! Having found an EDC compliant parameter vector, we want to do a MCMC
-         ! search on inflated uncertainties. This inflation search allows us to
-         ! more easily move towards higher likelihoods, where the inflation
-         ! allows easier movement through parameter space.
+      ! Reset the MCMC parameters for the next stage
+      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
-         ! The inflated search phase will make use of three stages over which the
-         ! inflation will be reduced. Phase 1 used half of the allocated
-         ! iterations for the inflation while the second and third is
+      ! Reset stepsize and covariance for main DRAM-MCMC
+      call reset_stats(MCOUT_list(i), PI%npars)
 
-         ! Set flag to indicate this phase has occurred and make a record of the
-         ! total iterations to be attempted
-         sub_sample_complete = .true.; nOUT_save = MCO%nOUT
+   end do
 
-         ! Report to the user
-         write (*, *) "Beginning parameter search on sample size normalised likelihoods"
+   ! sub-sampling phase, first sub_fraction% of the simulation with variant loglikelihood
+   if (DATAin%total_obs > 0 .and. MCOUT_list(1)%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
 
-         MCO%nOUT = nint(dble(nout_save)*sub_fraction) 
-         MCO%fADAPT = 1d0 
-         MCO%fixedpars = .true. ! start from end points of EDC phase
-         ! Second phase, run Mcmc with sub scaling 
-         call update_obs_scaling_nsamples
-         call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
-         MCO%fixedpars = .true.
-         do i = 1, nchains
+      ! Having found an EDC compliant parameter vector, we want to do a MCMC
+      ! search on inflated uncertainties. This inflation search allows us to
+      ! more easily move towards higher likelihoods, where the inflation
+      ! allows easier movement through parameter space.
+
+      ! The inflated search phase will make use of three stages over which the
+      ! inflation will be reduced. Phase 1 used half of the allocated
+      ! iterations for the inflation while the second and third is
+
+      ! Set flag to indicate this phase has occurred and make a record of the
+      ! total iterations to be attempted
+      sub_sample_complete = .true.; nOUT_save = MCO%nOUT
+
+      ! Report to the user
+      write (*, *) "Beginning parameter search on sample size normalised likelihoods"
+
+      MCO%nOUT = nint(dble(nout_save)*sub_fraction)
+      MCO%fADAPT = 1d0
+      MCO%fixedpars = .true. ! start from end points of EDC phase
+      ! Second phase, run Mcmc with sub scaling
+      call update_obs_scaling_nsamples
+      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+      MCO%fixedpars = .true.
+      do i = 1, nchains
          ! Use the best parameter set as the starting point for the next stage
-         MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars) 
+         MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars)
 
          ! Leave parameter and covariance structures as they come out form the
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT_list(i)%cov .and. MCOUT_list(i)%use_multivariate) then
             ! TODO check this branch is happening
-            write(*,*) "in this branch"
-            MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars+1
-            write(*,*) "Set Nparvar to", MCOUT_list(i)%Nparvar
+            write (*, *) "in this branch"
+            MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars + 1
+            write (*, *) "Set Nparvar to", MCOUT_list(i)%Nparvar
          else
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)
          end if  ! do we need a new covariance matrix or can we use the existing one?
-         end do
-
-         MCOUT_list(i)%nos_iterations = 0
-
-      end if 
-
-      ! Restore module variables needed for the run-these components could be split
-      ! into two subroutines to avoid double calling of file name creation
-      ! components.
-      call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-
-      MCO%nOUT = nout_save*(1-sub_fraction)  !number of steps in final phase
-      MCO%fixedpars = .true.
-
-      ! Update the user
-      write (*, *) "Beginning parameter search in real likelihoods"
-      write (*, *) "Nos iterations to be proposed = ", MCO%nOUT-MCOUT_list(1)%nos_iterations
-
-      ! Call the main MCMC
-      ! The specific normalisation of the cost function is determined here.
-      ! But to avoid getting through the EDC do_inflate sections before finding
-      ! out that the cost_function_scaling has not been set correctly, 
-      ! ensure code after the command line read (above) has been correctly maintained
-      if (cost_func_scaling_dble == 0) then
-         call update_obs_scaling_normal
-      else if (cost_func_scaling_dble == 1) then
-         call update_obs_scaling_nsamples
-      else if (cost_func_scaling_dble == 2) then
-         call update_obs_scaling_sqrt_nsamples
-      else if (cost_func_scaling_dble == 3) then
-         call update_obs_scaling_log_nsamples
-      end if  ! cost_func_scaling_dble ==
-      do i = 1, nchains
       end do
-      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains = nchains)
 
-      ! Let the user know we are done
-      write (*, *) "AP-MCMC done now, moving on ..."
+      MCOUT_list(i)%nos_iterations = 0
 
+   end if
+
+   ! Restore module variables needed for the run-these components could be split
+   ! into two subroutines to avoid double calling of file name creation
+   ! components.
+   call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
+
+   MCO%nOUT = nout_save*(1 - sub_fraction)  !number of steps in final phase
+   MCO%fixedpars = .true.
+
+   ! Update the user
+   write (*, *) "Beginning parameter search in real likelihoods"
+   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT - MCOUT_list(1)%nos_iterations
+
+   ! Call the main MCMC
+   ! The specific normalisation of the cost function is determined here.
+   ! But to avoid getting through the EDC do_inflate sections before finding
+   ! out that the cost_function_scaling has not been set correctly,
+   ! ensure code after the command line read (above) has been correctly maintained
+   if (cost_func_scaling_dble == 0) then
+      call update_obs_scaling_normal
+   else if (cost_func_scaling_dble == 1) then
+      call update_obs_scaling_nsamples
+   else if (cost_func_scaling_dble == 2) then
+      call update_obs_scaling_sqrt_nsamples
+   else if (cost_func_scaling_dble == 3) then
+      call update_obs_scaling_log_nsamples
+   end if  ! cost_func_scaling_dble ==
+   do i = 1, nchains
+   end do
+   call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+
+   ! Let the user know we are done
+   write (*, *) "AP-MCMC done now, moving on ..."
 
    ! tidy up by closing all files
    do i = 1, nchains

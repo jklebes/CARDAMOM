@@ -48,7 +48,7 @@ module model_likelihood_module
   type EDCDIAGNOSTICS
     integer :: EDC
     integer :: DIAG
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks
     integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
@@ -408,7 +408,7 @@ module model_likelihood_module
 
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
+    EDCD%nedc = 150
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !

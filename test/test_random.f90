@@ -34,9 +34,9 @@ subroutine test_fill_random_uniform(error)
   implicit none
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
-  integer:: n 
+  integer:: n
   double precision, dimension(:), allocatable:: arr
-  integer:: seed 
+  integer:: seed
   seed = irand()
   call random_uniform%initialize_random(seed)
   n = random_uniform%length
@@ -48,14 +48,14 @@ subroutine test_fill_random_uniform(error)
   call check(error, arr(5) > 0d0 .and. arr(5) <= 1.0 )
   call check(error, arr(n) > 0d0 .and. arr(n) <= 1.0 )
   call check(error, arr(2) /= arr(1) )
-end subroutine 
+end subroutine test_fill_random_uniform
 
 subroutine test_initialize(error)
-  !! Call type bound initialize() of UNIF_VECTOR 
+  !! Call type bound initialize() of UNIF_VECTOR
   implicit none
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
-  integer:: seed 
+  integer:: seed
   seed = irand()
   call random_uniform%initialize_random(seed)
   call check(error, random_uniform%index, 1 )
@@ -63,7 +63,7 @@ subroutine test_initialize(error)
   call check(error, random_uniform%u(2) > 0d0 .and. random_uniform%u(2) <= 1.0 )
   call check(error, random_uniform%u(2) /= random_uniform%u(1) )
   call check(error, random_uniform%u(random_uniform%length) > 0d0 .and. random_uniform%u(random_uniform%length) <= 1.0 )
-end subroutine
+end subroutine test_initialize
 
 subroutine test_get_random_uniform(error)
   !! Get array of random values from UNIF_VECTOR object
@@ -71,8 +71,8 @@ subroutine test_get_random_uniform(error)
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
   integer:: n
-  double precision, dimension(:), allocatable:: x 
-  integer:: seed 
+  double precision, dimension(:), allocatable:: x
+  integer:: seed
   seed = irand()
   call random_uniform%initialize_random(seed)
   n = 1
@@ -82,25 +82,25 @@ subroutine test_get_random_uniform(error)
   x = random_uniform%get_random_uniform(n)
   call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
   call check(error, x(n) > 0d0 .and. x(n) <= 1.0 )
-  !n = random_uniform%length+1 
+  !n = random_uniform%length+1
   !x = random_uniform%get_random_uniform(n)  ! TODO not handled,  error/crash expected
-end subroutine
+end subroutine test_get_random_uniform
 
 subroutine test_next_random_uniform(error)
   !! Get single value from UNIF_VECTOR object
   implicit none
   type(error_type), allocatable, intent(out):: error
-  double precision  :: x 
+  double precision  :: x
   integer ::  index
   type(UNIF_VECTOR):: random_uniform
-  integer:: seed 
+  integer:: seed
   seed = irand()
   call random_uniform%initialize_random(seed)
   index = random_uniform%index
   x = random_uniform%next_random_uniform()
   call check(error, x > 0d0 .and. x <= 1.0 )
   call check(error, random_uniform%index, index+1)
-end subroutine
+end subroutine test_next_random_uniform
 
 subroutine test_set_seed(error)
   !! initialize UNIF_VECTOR object with a seed
@@ -108,7 +108,7 @@ subroutine test_set_seed(error)
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
   integer:: n
-  double precision, dimension(:), allocatable:: x 
+  double precision, dimension(:), allocatable:: x
   integer:: seed = 155
   call random_uniform%initialize_random(seed)
   call check(error, random_uniform%seed, seed)
@@ -116,7 +116,7 @@ subroutine test_set_seed(error)
   x = random_uniform%get_random_uniform(n)
   call check(error, x(1) > 0d0 .and. x(1) <= 1.0 )
   call check(error, x(103) > 0d0 .and. x(103) <= 1.0 )
-end subroutine
+end subroutine test_set_seed
 
 subroutine test_set_seed_consistency(error)
   !! Check that same explicit seed leads to same random values
@@ -142,7 +142,7 @@ subroutine test_set_seed_consistency(error)
   call check(error, value1, random_uniform%next_random_uniform())
   values = random_uniform%get_random_uniform(11)
   call check(error, value12, values(11))
-end subroutine
+end subroutine test_set_seed_consistency
 
 subroutine test_set_threadsafe_seed(error)
   !! Initialize multiple UNIF_VECTOR objects with different explicit seeds
@@ -157,7 +157,7 @@ subroutine test_set_threadsafe_seed(error)
   call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
   call check(error, random_uniform1%next_random_uniform() /= random_uniform2%next_random_uniform())
   call check(error, random_uniform1%seed /= random_uniform2%seed)
-end subroutine
+end subroutine test_set_threadsafe_seed
 
 
 subroutine test_threadsafe_refill(error)
@@ -168,8 +168,8 @@ subroutine test_threadsafe_refill(error)
   type(UNIF_VECTOR):: random_uniform2
   type(UNIF_VECTOR):: random_uniform3
   double precision:: value1, value2, value3
-  integer:: seed1 
-  integer:: seed2 
+  integer:: seed1
+  integer:: seed2
   seed1 = irand()
   seed2 = irand()
 
@@ -197,7 +197,7 @@ subroutine test_threadsafe_refill(error)
   call check(error, value3, random_uniform3%next_random_uniform())
   call check(error, random_uniform1%seed, random_uniform3%seed)
   call check(error, random_uniform1%seed /= random_uniform2%seed)
-end subroutine
+end subroutine test_threadsafe_refill
 
 subroutine test_random_multivariate(error)
   !! TODO
@@ -205,10 +205,10 @@ subroutine test_random_multivariate(error)
   type(error_type), allocatable, intent(out):: error
   ! make covariance matrix
   ! make npars
-  ! make vector mu (mean) to center the step on 
+  ! make vector mu (mean) to center the step on
   ! get vector rn
   !call random_multivariate(npars, 1, covariance_matrix, mu, rn)
-end subroutine test_random_multivariate 
+end subroutine test_random_multivariate
 
 
 subroutine test_random_normal(error)
@@ -217,7 +217,7 @@ subroutine test_random_normal(error)
   type(error_type), allocatable, intent(out):: error
   ! make covariance matrix
   ! make npars
-  ! make vector mu (mean) to center the step on 
+  ! make vector mu (mean) to center the step on
   ! get output value result
   !call random_normal(result)
 end subroutine test_random_normal

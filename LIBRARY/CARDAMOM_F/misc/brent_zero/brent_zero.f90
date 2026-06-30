@@ -21,7 +21,7 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -34,15 +34,15 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !
 !  Reference:
 !
-!    Richard Brent, 
-!    Algorithms for Minimization Without Derivatives, 
-!    Dover, 2002, 
-!    ISBN: 0-486-41998-3, 
+!    Richard Brent,
+!    Algorithms for Minimization Without Derivatives,
+!    Dover, 2002,
+!    ISBN: 0-486-41998-3,
 !    LC: QA402.5.B74.
 !
 !  Parameters:
 !
-!    Input, real ( kind = dp ) A, B, the endpoints of the change of 
+!    Input, real ( kind = dp ) A, B, the endpoints of the change of
 !    sign interval.
 !
 !
@@ -57,7 +57,7 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !    Output, real ( kind = dp ) zbrent, the estimated value of a zero of
 !    the function F.
 !
-!    2024 jklebes modified for CARDAMOM: 
+!    2024 jklebes modified for CARDAMOM:
 !       - pulled this function from brent.f90 and wrapped it in a module
 !       - renamed from ZERO to zbrent
 !       - kind 8 -> dp
@@ -66,36 +66,36 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !       - added loop counter and limit ITMAX = 8 after cardamom
 !       - adjusted tolerances setting to match CARDAMOM
 !         - added ftol
-!         - MACHEP-brent had input argument, cardamom had hard-coded 6d-8, 
+!         - MACHEP-brent had input argument, cardamom had hard-coded 6d-8,
 !                    I use intrinsic
 !       - argument t halved on entry to match cardamom zbrent
-  implicit none
+  implicit none (type, external)
   integer, parameter:: dp = kind(1.d0)
   real ( kind = dp )  :: zbrent
   character(len=*), intent(in):: called_from  ! name of procedure calling (used to pass through for errors)
   real ( kind = dp ), intent(in):: a, b
-  real ( kind = dp ) c
-  real ( kind = dp ) d
-  real ( kind = dp ) e
-  real ( kind = dp ) fa
-  real ( kind = dp ) fb
-  real ( kind = dp ) fc
-  real ( kind = dp ) m
-  real ( kind = dp ) machep
-  real ( kind = dp ) p
-  real ( kind = dp ) q
-  real ( kind = dp ) r
-  real ( kind = dp ) s
-  real ( kind = dp ) sa
-  real ( kind = dp ) sb
+  real ( kind = dp ) :: c
+  real ( kind = dp ) :: d
+  real ( kind = dp ) :: e
+  real ( kind = dp ) :: fa
+  real ( kind = dp ) :: fb
+  real ( kind = dp ) :: fc
+  real ( kind = dp ) :: m
+  real ( kind = dp ) :: machep
+  real ( kind = dp ) :: p
+  real ( kind = dp ) :: q
+  real ( kind = dp ) :: r
+  real ( kind = dp ) :: s
+  real ( kind = dp ) :: sa
+  real ( kind = dp ) :: sb
   real ( kind = dp ), intent(in) ::  ftol   ! tolerance on magnitude of f
-  real ( kind = dp ), intent(in) ::  t_2  ! input, = 2*t 
-  real ( kind = dp )  ::  t  
-  real ( kind = dp ) tol      ! for iteratively updated tolerance
+  real ( kind = dp ), intent(in) ::  t_2  ! input, = 2*t
+  real ( kind = dp )  ::  t
+  real ( kind = dp ) :: tol      ! for iteratively updated tolerance
   integer            :: iter
   integer, parameter:: ITMAX = 10
 
-  
+
   interface
      function f( val )
       integer, parameter:: dp = selected_real_kind(15, 9)
@@ -211,5 +211,5 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
   zbrent = sb
 
   return
-end function
-end module
+end function zbrent
+end module brent_zero

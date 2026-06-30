@@ -4,12 +4,12 @@ module test_model
   !! - they always print warnings 'Integer overflow when calculating the amount of memory to allocate'
   !!   Attempt to DEALLOCATE unallocated '%s' , but these don't seem to cause tests to fail
   !! - Line numbers of failing checks are sometimes not pointing to the true problem
-  !! - They pass or fail for random reasons such as presence of a write(*,*) statement in 
+  !! - They pass or fail for random reasons such as presence of a write(*,*) statement in
   !!    (not even run) model_sanity_check, or allocation of 'test' array .
   use testdrive, only : new_unittest, unittest_type, error_type, check
   use test_functions
   use test_math, only: approx
-  use random_uniform  
+  use random_uniform
   use model_shared, only: initialize_carbon_model, destroy_carbon_model
   use cardamom_MHMCMC
   use model_shared, only: PI
@@ -50,10 +50,10 @@ subroutine test_model_initialize(error)
   use CARBON_MODEL_MOD, only: mvs
   implicit none
   type(error_type), allocatable, intent(out):: error
-  integer:: nchains 
+  integer:: nchains
   type(MCMC_OUTPUT):: MCOUT
-  nchains = 1 
-    call initialize(infile) 
+  nchains = 1
+    call initialize(infile)
     call initialize_carbon_model(nchains)
     call initialize_stats(MCOUT, PI%npars)
     ! check initialized?
@@ -63,13 +63,13 @@ subroutine test_model_initialize(error)
 end subroutine test_model_initialize
 
 subroutine test_model_loglikelihood(error)
-  !! A number should come back as loglikelihood, 
+  !! A number should come back as loglikelihood,
   !! expect not NaN and negative
   type(error_type), allocatable, intent(out):: error
 end subroutine test_model_loglikelihood
 
 subroutine test_model_sanity_check(error)
-    !! check model repeatabilty via inbuilt "sanity check" function, 
+    !! check model repeatabilty via inbuilt "sanity check" function,
     !! should have same result as tests here
     use model_likelihood_module, only: model_sanity_check, sanity_check
     use cardamom_structures, only: DATAin
@@ -79,21 +79,21 @@ subroutine test_model_sanity_check(error)
     integer:: nchains, seed
     type(UNIF_VECTOR):: random_uniform
     nchains = 1
-    call initialize(infile) 
+    call initialize(infile)
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()  
+    seed = irand()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call model_sanity_check(PARS, 1)
     call check(error, sanity_check )
     call destroy_carbon_model()
-end subroutine
+end subroutine test_model_sanity_check
 
 
 subroutine test_carbon_model_not_nan(error)
   !! Test Model-internal subroutine carbon_model :
-  !! POOLS, FLUXES, DIAGS arrays to compare to data should 
+  !! POOLS, FLUXES, DIAGS arrays to compare to data should
   !! come back filled and not NaN
   use CARBON_MODEL_MOD, only: mvs, carbon_model
     use cardamom_structures, only: DATAin
@@ -110,14 +110,14 @@ subroutine test_carbon_model_not_nan(error)
     type(UNIF_VECTOR):: random_uniform
     allocate(test(97, 49))
     nchains = 1
-    call initialize(infile) 
+    call initialize(infile)
     allocate(pools(DATAin%nodays+1, DATAin%nopools))
     ! TODO here we get ' Integer overflow when calculating the amount of memory to allocate '
     allocate(fluxes(DATAin%nodays, DATAin%nofluxes))
     allocate(diags(DATAin%nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()  
+    seed = irand()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
@@ -141,20 +141,20 @@ subroutine test_model_repeat_evaluation(error)
     use samplers_shared, only : init_pars_random
   implicit none
   type(error_type), allocatable, intent(out):: error
-  integer:: nchains 
+  integer:: nchains
     double precision, dimension(:), allocatable:: PARS
     double precision, dimension(:,:), allocatable:: pools1, pools2
     double precision, dimension(:,:), allocatable:: fluxes1, fluxes2
     double precision, dimension(:,:), allocatable:: diags1, diags2
     double precision:: pool_error, flux_error, diag_error
     double precision, dimension(:,:), allocatable:: test
-    ! These are here because they're kept at this level in model_likelihood.f90 files, 
+    ! These are here because they're kept at this level in model_likelihood.f90 files,
     ! and they are there in DALEC models because this text insertion was the simplest way to edit 37 models
     integer:: seed
     type(UNIF_VECTOR):: random_uniform
     allocate(test(97, 49))
     nchains = 1
-    call initialize(infile) 
+    call initialize(infile)
     allocate(pools1(DATAin%nodays+1, DATAin%nopools), pools2(DATAin%nodays+1, DATAin%nopools))
     allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes))
     allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
@@ -202,7 +202,7 @@ subroutine test_model_group_repeat_evaluation(error)
   !! Similar to original cardamom "Sanity check" function
   implicit none
   type(error_type), allocatable, intent(out):: error
-  integer:: nchains 
+  integer:: nchains
     double precision, dimension(PI%npars):: PARS
     double precision, dimension(:,:), allocatable:: pools1, pools2
     double precision, dimension(:,:), allocatable:: fluxes1, fluxes2
@@ -211,12 +211,12 @@ subroutine test_model_group_repeat_evaluation(error)
 integer:: seed, i, clock
     type(UNIF_VECTOR):: random_uniform
     nchains = 1
-    call initialize(infile) 
+    call initialize(infile)
     allocate(pools1((DATAin%nodays+1), DATAin%nopools), pools2((DATAin%nodays+1), DATAin%nopools))
     allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes))
     allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()  
+    seed = irand()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call initialize_carbon_model(nchains)
@@ -259,7 +259,7 @@ subroutine test_model_group_repeat_evaluation_3(error)
     use samplers_shared, only : init_pars_random
   implicit none
   type(error_type), allocatable, intent(out):: error
-  integer:: nchains 
+  integer:: nchains
     double precision, dimension(PI%npars):: PARS
     double precision, dimension(:,:), allocatable:: pools1, pools2, pools3
     double precision, dimension(:,:), allocatable:: fluxes1, fluxes2, fluxes3
@@ -268,7 +268,7 @@ subroutine test_model_group_repeat_evaluation_3(error)
 integer:: seed, i, nodays
     type(UNIF_VECTOR):: random_uniform
     nchains = 1
-    call initialize(infile) 
+    call initialize(infile)
     nodays = DATAin%nodays
     allocate(pools1((nodays+1), DATAin%nopools), pools2((nodays+1), DATAin%nopools), pools3((nodays+1), DATAin%nopools))
     allocate(fluxes1(nodays, DATAin%nofluxes), fluxes2(nodays, DATAin%nofluxes), fluxes3(nodays, DATAin%nofluxes))

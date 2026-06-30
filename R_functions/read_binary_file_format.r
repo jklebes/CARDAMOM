@@ -37,43 +37,43 @@ read_binary_file_format<- function(infile) {
       #print("Beginning read of binary input files...")
       # Open and read the DALEC binary driver file
       # open this chains binary file into R, instructing 'r' to read and 'b' for binary
-      bob=file(infile,'rb') ; nos_var=1e6
-      bd=readBin(bob, double(),nos_var)
+      bob = file(infile,'rb') ; nos_var = 1e6
+      bd = readBin(bob, double(),nos_var)
       # keep reading until we have read all that can be read
-      set1=NA
+      set1 = NA
       while (length(set1) > 0) {
-	      set1=readBin(bob, double(),nos_var)
-	      bd=append(bd,set1)
+	      set1 = readBin(bob, double(),nos_var)
+	      bd = append(bd,set1)
       }
       # now close this chain
       close(bob)
 
       # begin preparing to disagregate the different sections of the file
-      k=0
+      k = 0
       # extract static data (50 places)
-      static=bd[(k+1):(k+50)]
-      k=k+50
+      static = bd[(k+1):(k+50)]
+      k = k+50
       # extract priors
-      pr=bd[(k+1):(k+100)]
-      k=k+100
+      pr = bd[(k+1):(k+100)]
+      k = k+100
       # extract prior uncertainties (100 places)
-      pru=bd[(k+1):(k+100)]
-      k=k+100
+      pru = bd[(k+1):(k+100)]
+      k = k+100
       # extract prior weighting (100 places)
-      prw=bd[(k+1):(k+100)]
-      k=k+100
+      prw = bd[(k+1):(k+100)]
+      k = k+100
       # other priors (50 places)
-      opr=bd[(k+1):(k+50)]
-      k=k+50
+      opr = bd[(k+1):(k+50)]
+      k = k+50
       # other prior uncertainties (50 places)
-      opru=bd[(k+1):(k+50)]
-      k=k+50
+      opru = bd[(k+1):(k+50)]
+      k = k+50
       # other prior weighting (50 places)
-      oprw=bd[(k+1):(k+50)]
-      k=k+50
+      oprw = bd[(k+1):(k+50)]
+      k = k+50
 
       # store prior information
-      md=list(parpriors=pr,parpriorunc=pru,parpriorweight=prw,otherpriors=opr,otherpriorunc=opru,otherpriorweight=oprw)
+      md = list(parpriors=pr,parpriorunc=pru,parpriorweight=prw,otherpriors=opr,otherpriorunc=opru,otherpriorweight=oprw)
 
       # id code (not currently used)
       md$id = static[1]
@@ -105,7 +105,6 @@ read_binary_file_format<- function(infile) {
       md$top_clay = static[14]
       # Bot clay %
       md$bot_clay = static[15]
-
 
       # extract temporal data (met and obs)
       tempdata = bd[(k+1):(k+((md$nomet+md$noobs)*md$nodays))]

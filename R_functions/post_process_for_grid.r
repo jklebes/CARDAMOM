@@ -68,6 +68,54 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           stop("Error, CARDAMOM cannnot determine where C allocation foliage has come from")
       }
   }
+  # The total allocation of C to the fine root pool can, depending on model,
+  # be the combined total of direct allocation and that via a labile pool.
+  # For many comparison we will need their combined total.
+  if (any(check_list == "alloc_roots_gCm2day") &&
+      any(check_list == "labile_to_roots_gCm2day")) {
+      states_all$combined_alloc_roots_gCm2day = states_all$alloc_roots_gCm2day + states_all$labile_to_roots_gCm2day
+      states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_alloc_roots_gCm2day + states_all$mean_labile_to_roots_gCm2day
+      states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_alloc_roots_gCm2day + states_all$mean_annual_labile_to_roots_gCm2day
+  } else {
+      if (any(check_list == "labile_to_roots_gCm2day")) {
+          states_all$combined_alloc_roots_gCm2day = states_all$labile_to_roots_gCm2day
+          states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_labile_to_roots_gCm2day
+          states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_labile_to_roots_gCm2day
+      } else if (any(check_list == "alloc_roots_gCm2day")) {
+          states_all$combined_alloc_roots_gCm2day = states_all$alloc_roots_gCm2day
+          states_all$mean_combined_alloc_roots_gCm2day = states_all$mean_alloc_roots_gCm2day
+          states_all$mean_annual_combined_alloc_roots_gCm2day = states_all$mean_annual_alloc_roots_gCm2day
+      } else {
+          stop("Error, CARDAMOM cannnot determine where C allocation roots has come from")
+      }
+  }
+  # The total allocation of C to the wood pool can, depending on model,
+  # be the combined total of direct allocation and that via a labile pool.
+  # For many comparison we will need their combined total.
+  if (any(check_list == "alloc_wood_gCm2day") &&
+      any(check_list == "labile_to_wood_gCm2day")) {
+      states_all$combined_alloc_wood_gCm2day = states_all$alloc_wood_gCm2day + states_all$labile_to_wood_gCm2day
+      states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_alloc_wood_gCm2day + states_all$mean_labile_to_wood_gCm2day
+      states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_alloc_wood_gCm2day + states_all$mean_annual_labile_to_wood_gCm2day
+  } else {
+      if (any(check_list == "labile_to_wood_gCm2day")) {
+          states_all$combined_alloc_wood_gCm2day = states_all$labile_to_wood_gCm2day
+          states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_labile_to_wood_gCm2day
+          states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_labile_to_wood_gCm2day
+      } else if (any(check_list == "alloc_wood_gCm2day")) {
+          states_all$combined_alloc_wood_gCm2day = states_all$alloc_wood_gCm2day
+          states_all$mean_combined_alloc_wood_gCm2day = states_all$mean_alloc_wood_gCm2day
+          states_all$mean_annual_combined_alloc_wood_gCm2day = states_all$mean_annual_alloc_wood_gCm2day
+      } else {
+          # Check whether this model is a managed grassland version, or other which does not simulate a wood / stem carbon pool.
+          if (grepl(".M2.",PROJECT$model$name)) {
+              # Do nothing
+          } else {
+              # Stop we have an issue
+              stop("Error, CARDAMOM cannnot determine where C allocation wood has come from")
+          }
+      }
+  }        
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 
@@ -300,6 +348,20 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   states_all$Ctotal_gCm2 = states_all$biomass_gCm2 + states_all$dom_gCm2
   states_all$mean_Ctotal_gCm2 = states_all$mean_biomass_gCm2 + states_all$mean_dom_gCm2
   states_all$mean_annual_Ctotal_gCm2 = states_all$mean_annual_biomass_gCm2 + states_all$mean_annual_dom_gCm2
+
+#  # Calculate the annual delta in biomass, dom and total C
+#  states_all$annual_change_Ctotal_gCm2 = array(NA, dim=dim(states_all$mean_annual_Ctotal_gCm2))
+#  states_all$annual_change_biomass_gCm2 = array(NA, dim=dim(states_all$mean_annual_biomass_gCm2))
+#  states_all$annual_change_dom_gCm2 = array(NA, dim=dim(states_all$mean_annual_dom_gCm2))
+#  # Now loop through each year to calculate the delta's
+#  a = 1 ; b = steps_per_year
+#  for (y in seq(1, dim(states_all$mean_annual_Ctotal_gCm2)[2])) {
+#       states_all$annual_change_Ctotal_gCm2[,y] = states_all$Ctotal_gCm2[,b] - states_all$Ctotal_gCm2[,a]
+#       states_all$annual_change_biomass_gCm2[,y] = states_all$biomass_gCm2[,b] - states_all$biomass_gCm2[,a]
+#       states_all$annual_change_dom_gCm2[,y] = states_all$dom_gCm2[,b] - states_all$dom_gCm2[,a]
+#       a = b + 1 ; b = b + steps_per_year
+#  }
+
   # Update the list variables in states_all which we will be searching
   check_list = names(states_all)
 
@@ -442,57 +504,88 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   if (any(check_list == "SS_som_gCm2")) {site_output$SS_som_gCm2 = quantile(states_all$SS_som_gCm2, prob=num_quantiles, na.rm = na_flag)}
 
   # State variables - NOTE: extraction of pixel specific means done here to account for different ensemble trajectories, i.e. correlation in time.
-  site_output$lai_m2m2                = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles, na.rm = na_flag)
-  site_output$mean_lai_m2m2           = quantile(states_all$mean_lai_m2m2,prob=num_quantiles, na.rm = na_flag)
-  site_output$mean_annual_lai_m2m2    = apply(states_all$mean_annual_lai_m2m2,2,quantile,prob=num_quantiles, na.rm = na_flag)
-  site_output$Ctotal_gCm2             = apply(states_all$Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
-  site_output$mean_Ctotal_gCm2        = quantile(states_all$mean_Ctotal_gCm2,prob=num_quantiles, na.rm = na_flag)
-  site_output$mean_annual_Ctotal_gCm2 = apply(states_all$mean_annual_Ctotal_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
+  site_output$lai_m2m2                    = apply(states_all$lai_m2m2,2,quantile,prob=num_quantiles, na.rm = na_flag)
+  site_output$mean_lai_m2m2               = quantile(states_all$mean_lai_m2m2,prob=num_quantiles, na.rm = na_flag)
+  site_output$mean_annual_lai_m2m2        = apply(states_all$mean_annual_lai_m2m2,2,quantile,prob=num_quantiles, na.rm = na_flag)
+  dvar = states_all$mean_annual_lai_m2m2 - states_all$mean_annual_lai_m2m2[,1] # difference from initial
+  site_output$mean_annual_dlai_m2m2       = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
+  site_output$Ctotal_gCm2                 = apply(states_all$Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  site_output$mean_Ctotal_gCm2            = quantile(states_all$mean_Ctotal_gCm2,prob=num_quantiles, na.rm = na_flag)
+  site_output$mean_annual_Ctotal_gCm2     = apply(states_all$mean_annual_Ctotal_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
+  dvar = states_all$mean_annual_Ctotal_gCm2 - states_all$mean_annual_Ctotal_gCm2[,1] # difference from initial
+  site_output$mean_annual_dCtotal_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   # Fluxes second
   site_output$gpp_gCm2day                 = apply(states_all$gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_gpp_gCm2day            = quantile(states_all$mean_gpp_gCm2day ,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_gpp_gCm2day     = apply(states_all$mean_annual_gpp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_gpp_gCm2day - states_all$mean_annual_gpp_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dgpp_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$rauto_gCm2day               = apply(states_all$rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_rauto_gCm2day          = quantile(states_all$mean_rauto_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_rauto_gCm2day   = apply(states_all$mean_annual_rauto_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_rauto_gCm2day - states_all$mean_annual_rauto_gCm2day[,1] # difference from initial
+  site_output$mean_annual_drauto_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$rhet_gCm2day                = apply(states_all$rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_rhet_gCm2day           = quantile(states_all$mean_rhet_gCm2day ,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_rhet_gCm2day    = apply(states_all$mean_annual_rhet_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_rhet_gCm2day - states_all$mean_annual_rhet_gCm2day[,1] # difference from initial
+  site_output$mean_annual_drhet_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$nee_gCm2day                 = apply(states_all$nee_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_nee_gCm2day            = quantile(states_all$mean_nee_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_nee_gCm2day     = apply(states_all$mean_annual_nee_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_nee_gCm2day - states_all$mean_annual_nee_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dnee_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$npp_gCm2day                 = apply(states_all$npp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_npp_gCm2day            = quantile(states_all$mean_npp_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_npp_gCm2day     = apply(states_all$mean_annual_npp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_npp_gCm2day - states_all$mean_annual_npp_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dnpp_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$nbe_gCm2day                 = apply(states_all$nbe_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_nbe_gCm2day            = quantile(states_all$mean_nbe_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_nbe_gCm2day     = apply(states_all$mean_annual_nbe_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_nbe_gCm2day - states_all$mean_annual_nbe_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dnbe_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$nbp_gCm2day                 = apply(states_all$nbp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_nbp_gCm2day            = quantile(states_all$mean_nbp_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_nbp_gCm2day     = apply(states_all$mean_annual_nbp_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_nbp_gCm2day - states_all$mean_annual_nbp_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dnbp_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$reco_gCm2day                = apply(states_all$reco_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_reco_gCm2day           = quantile(states_all$reco_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_reco_gCm2day    = apply(states_all$mean_annual_reco_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_reco_gCm2day - states_all$mean_annual_reco_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dreco_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$harvest_gCm2day             = apply(states_all$harvest_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_harvest_gCm2day        = quantile(states_all$mean_harvest_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_harvest_gCm2day = apply(states_all$mean_annual_harvest_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_harvest_gCm2day - states_all$mean_annual_harvest_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dharvest_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   site_output$fire_gCm2day                = apply(states_all$fire_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
   site_output$mean_fire_gCm2day           = quantile(states_all$mean_fire_gCm2day,prob=num_quantiles, na.rm = na_flag)
   site_output$mean_annual_fire_gCm2day    = apply(states_all$mean_annual_fire_gCm2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$mean_annual_fire_gCm2day - states_all$mean_annual_fire_gCm2day[,1] # difference from initial
+  site_output$mean_annual_dfire_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
   # C-cycle diagnostics which are mean annuals apply vs rowMeans
   site_output$mean_annual_cue      = apply(states_all$mean_annual_cue, 2, quantile, prob = num_quantiles, na.rm = na_flag)
   site_output$mean_cue             = quantile(rowMeans(states_all$mean_annual_cue, na.rm=na_flag), prob = num_quantiles, na.rm = na_flag)
+  # Estimate total ecosystem mean transit times for the analysis mean and the mean annual estimate (years)
+  site_output$MTT_Ctotal_years = quantile(apply(states_all$Ctotal_gCm2/((states_all$reco_gCm2day + states_all$harvest_gCm2day + states_all$fire_gCm2day)*365.25), 1, mean), prob=num_quantiles, na.rm = na_flag)
+  site_output$MTT_annual_Ctotal_years = apply((states_all$mean_annual_Ctotal_gCm2 / ((states_all$mean_annual_reco_gCm2day + states_all$mean_annual_harvest_gCm2day + states_all$mean_annual_fire_gCm2day)*365.25)),2,quantile, prob=num_quantiles, na.rm=na_flag)
 
   ###
   # Track net pool change over time
   ###
 
   # Start with the common variables
-  dCbio = states_all$Ctotal_gCm2 - states_all$Ctotal_gCm2[,1] # difference in total C from initial
-  site_output$dCtotal_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$Ctotal_gCm2 - states_all$Ctotal_gCm2[,1] # difference in total C from initial
+  site_output$dCtotal_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+  dvar = states_all$lai_m2m2 - states_all$lai_m2m2[,1] #  difference in lai from initial
+  site_output$dlai_m2m2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
 
-  dCbio = states_all$lai_m2m2 - states_all$lai_m2m2[,1] #  difference in lai from initial
-  site_output$dlai_m2m2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+#  # Extract quantiles
+#  site_output$annual_change_Ctotal_gCm2 = apply(states_all$annual_change_Ctotal_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+#  site_output$annual_change_biomass_gCm2 = apply(states_all$annual_change_biomass_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+#  site_output$annual_change_dom_gCm2 = apply(states_all$annual_change_dom_gCm2,2,quantile,prob=num_quantiles,na.rm = na_flag)
 
   # Then do model specific pool combinations
   # Include the pool, its net change, the allocation of C from GPP / NPP direct
@@ -505,26 +598,46 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_labile_gCm2 = quantile(states_all$mean_labile_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_labile_gCm2 = apply(states_all$mean_annual_labile_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$labile_gCm2 - states_all$labile_gCm2[,1] # difference in labile from initial
-      site_output$dClabile_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$labile_gCm2 - states_all$labile_gCm2[,1] # difference in labile from initial
+      site_output$dClabile_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_labile_gCm2 - states_all$mean_annual_labile_gCm2[,1] # difference from initial
+      site_output$mean_annual_dClabile_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
       # Determine the allocation to labile - in all cases this must be a direct variable
       site_output$alloc_labile_gCm2day = apply(states_all$alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_alloc_labile_gCm2day = quantile(states_all$mean_alloc_labile_gCm2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_alloc_labile_gCm2day = apply(states_all$mean_annual_alloc_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
+      site_output$outflux_labile_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
       site_output$combined_labile_to_litter_gCm2day = array(0, dim=dim(states_all$labile_gCm2))
       site_output$FireFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
       site_output$HarvestFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
       site_output$GRAZINGFractionOfTurnover_labile = array(0, dim=dim(states_all$labile_gCm2))
-      # Check for the possible loss pathways
+      # Check for the possible loss pathways from labile, assumes that foliage is the most likely pool to come from labile
       if (any(check_list == "labile_to_foliage_gCm2day")) {
           site_output$labile_to_foliage_gCm2day = apply(states_all$labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_labile_to_foliage_gCm2day = quantile(states_all$mean_labile_to_foliage_gCm2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_labile_to_foliage_gCm2day = apply(states_all$mean_annual_labile_to_foliage_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output for the outflux and later for natural turnover
           site_output$NaturalFractionOfTurnover_labile = states_all$labile_to_foliage_gCm2day
-          # Begin accumulating the total output
-          site_output$outflux_labile_gCm2day = states_all$labile_to_foliage_gCm2day
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_foliage_gCm2day 
       }
+      if (any(check_list == "labile_to_roots_gCm2day")) {
+          site_output$labile_to_roots_gCm2day = apply(states_all$labile_to_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_labile_to_roots_gCm2day = quantile(states_all$mean_labile_to_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_labile_to_roots_gCm2day = apply(states_all$mean_annual_labile_to_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output
+          site_output$NaturalFractionOfTurnover_labile = site_output$NaturalFractionOfTurnover_labile + states_all$labile_to_roots_gCm2day          
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_roots_gCm2day
+      }
+      if (any(check_list == "labile_to_wood_gCm2day")) {
+          site_output$labile_to_wood_gCm2day = apply(states_all$labile_to_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_labile_to_wood_gCm2day = quantile(states_all$mean_labile_to_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_labile_to_wood_gCm2day = apply(states_all$mean_annual_labile_to_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          # Begin accumulating the total output
+          site_output$NaturalFractionOfTurnover_labile = site_output$NaturalFractionOfTurnover_labile + states_all$labile_to_wood_gCm2day          
+          site_output$outflux_labile_gCm2day = site_output$outflux_labile_gCm2day + states_all$labile_to_wood_gCm2day
+      }      
       # Other natural flux pathways should really go here before disturbance related
       if (any(check_list == "FIREemiss_labile_gCm2day")) {
           site_output$FIREemiss_labile_gCm2day = apply(states_all$FIREemiss_labile_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -606,8 +719,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_foliage_gCm2 = quantile(states_all$mean_foliage_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_foliage_gCm2 = apply(states_all$mean_annual_foliage_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
-      site_output$dCfoliage_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$foliage_gCm2 - states_all$foliage_gCm2[,1] # difference in root from initial
+      site_output$dCfoliage_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_foliage_gCm2 - states_all$mean_annual_foliage_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCfoliage_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$FireFractionOfTurnover_foliage = array(0, dim=dim(states_all$foliage_gCm2))
       site_output$HarvestFractionOfTurnover_foliage = array(0, dim=dim(states_all$foliage_gCm2))
@@ -700,16 +816,23 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
 
   # Fine roots related pool, change, input and output variables
   if (any(check_list == "roots_gCm2")) {
+      # A combined total of C to fine roots must always exist
+      site_output$combined_alloc_roots_gCm2day = apply(states_all$combined_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_combined_alloc_roots_gCm2day = quantile(states_all$mean_combined_alloc_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_annual_combined_alloc_roots_gCm2day = apply(states_all$mean_annual_combined_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Assign pool to site_output
       site_output$roots_gCm2 = apply(states_all$roots_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_roots_gCm2 = quantile(states_all$mean_roots_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_roots_gCm2 = apply(states_all$mean_annual_roots_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$roots_gCm2 - states_all$roots_gCm2[,1] # difference in root from initial
-      site_output$dCroots_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$roots_gCm2 - states_all$roots_gCm2[,1] # difference in root from initial
+      site_output$dCroots_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_roots_gCm2 - states_all$mean_annual_roots_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCroots_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Calculate the mean annual maximums
-      dCbio = apply(states_all$roots_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
-      site_output$annual_max_roots_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
+      dvar = apply(states_all$roots_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
+      site_output$annual_max_roots_gCm2 = quantile(dvar, prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_roots_to_litter_gCm2day = array(NA, dim=dim(states_all$roots_gCm2))
       site_output$FireFractionOfTurnover_roots = array(0, dim=dim(states_all$roots_gCm2))
@@ -720,14 +843,18 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$RootDepth_m = apply(states_all$RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_RootDepth_m = quantile(states_all$mean_RootDepth_m, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_RootDepth_m = apply(states_all$mean_annual_RootDepth_m,2,quantile,prob=num_quantiles, na.rm = na_flag)
-          dCbio = states_all$RootDepth_m - states_all$RootDepth_m[,1] # difference in root from initial
-          site_output$dRootDepth_m = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$RootDepth_m - states_all$RootDepth_m[,1] # difference in root from initial
+          site_output$dRootDepth_m = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
       }
       # Check for the possible pathways
       if (any(check_list == "alloc_roots_gCm2day")) {
           site_output$alloc_roots_gCm2day = apply(states_all$alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_roots_gCm2day = quantile(states_all$mean_alloc_roots_gCm2day, prob=num_quantiles, na.rm = na_flag)
-          site_output$mean_annual_alloc_roots_gCm2day = apply(states_all$mean_annual_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+          site_output$mean_annual_alloc_roots_gCm2day = apply(states_all$mean_annual_alloc_roots_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)      
+      } else {
+          site_output$alloc_roots_gCm2day = array(0, dim = dim(site_output$roots_gCm2))
+          site_output$mean_alloc_roots_gCm2day = array(0, dim = length(site_output$mean_roots_gCm2))
+          site_output$mean_annual_alloc_roots_gCm2day = array(0, dim = dim(site_output$mean_annual_roots_gCm2))
       }
       if (any(check_list == "roots_to_litter_gCm2day")) {
           site_output$roots_to_litter_gCm2day = apply(states_all$roots_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -812,26 +939,37 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
 
   # Wood related pool, change, input and output variables
   if (any(check_list == "wood_gCm2")) {
+      # A combined total of C to foliage must always exist
+      site_output$combined_alloc_wood_gCm2day = apply(states_all$combined_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_combined_alloc_wood_gCm2day = quantile(states_all$mean_combined_alloc_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
+      site_output$mean_annual_combined_alloc_wood_gCm2day = apply(states_all$mean_annual_combined_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Assign pool to site_output
       site_output$wood_gCm2 = apply(states_all$wood_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_wood_gCm2 = quantile(states_all$mean_wood_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_wood_gCm2 = apply(states_all$mean_annual_wood_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
-      site_output$dCwood_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$wood_gCm2 - states_all$wood_gCm2[,1] # difference in wood from initial
+      site_output$dCwood_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_wood_gCm2 - states_all$mean_annual_wood_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCwood_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Calculate the mean annual maximums
-      dCbio = apply(states_all$wood_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
-      site_output$annual_max_wood_gCm2 = quantile(dCbio, prob=num_quantiles, na.rm = na_flag)
+      dvar = apply(states_all$wood_gCm2, 1, rollapply_mean_annual_max, step = steps_per_year)
+      site_output$annual_max_wood_gCm2 = quantile(dvar, prob=num_quantiles, na.rm = na_flag)
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$combined_wood_to_litter_gCm2day = array(NA, dim=dim(states_all$wood_gCm2))
       site_output$FireFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
       site_output$HarvestFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
       site_output$GRAZINGFractionOfTurnover_wood = array(0, dim=dim(states_all$wood_gCm2))
-      # Check for the possible pathways
+      # Check how we assign wood C
       if (any(check_list == "alloc_wood_gCm2day")) {
           site_output$alloc_wood_gCm2day = apply(states_all$alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
           site_output$mean_alloc_wood_gCm2day = quantile(states_all$mean_alloc_wood_gCm2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_alloc_wood_gCm2day = apply(states_all$mean_annual_alloc_wood_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      } else {
+          site_output$alloc_wood_gCm2day = array(0, dim = dim(site_output$wood_gCm2))
+          site_output$mean_alloc_wood_gCm2day = array(0, dim = length(site_output$mean_wood_gCm2))
+          site_output$mean_annual_alloc_wood_gCm2day = array(0, dim = dim(site_output$mean_annual_wood_gCm2))
       }
       if (any(check_list == "wood_to_litter_gCm2day")) {
           site_output$wood_to_litter_gCm2day = apply(states_all$wood_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
@@ -921,8 +1059,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_litter_gCm2 = quantile(states_all$mean_litter_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_litter_gCm2 = apply(states_all$mean_annual_litter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$litter_gCm2 - states_all$litter_gCm2[,1] # difference in litter from initial
-      site_output$dClitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$litter_gCm2 - states_all$litter_gCm2[,1] # difference in litter from initial
+      site_output$dClitter_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_litter_gCm2 - states_all$mean_annual_litter_gCm2[,1] # difference from initial
+      site_output$mean_annual_dClitter_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Accumulate total output
       site_output$outflux_litter_gCm2day = states_all$rhet_litter_gCm2day + states_all$litter_to_som_gCm2day
       site_output$NaturalFractionOfTurnover_litter = site_output$outflux_litter_gCm2day
@@ -930,6 +1071,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$rhet_litter_gCm2day = apply(states_all$rhet_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_rhet_litter_gCm2day = quantile(states_all$mean_rhet_litter_gCm2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_rhet_litter_gCm2day = apply(states_all$mean_annual_rhet_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      dvar = states_all$mean_annual_rhet_litter_gCm2day - states_all$mean_annual_rhet_litter_gCm2day[,1] # difference from initial
+      site_output$mean_annual_drhet_litter_gCm2day= apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
+
       # Decomposition
       site_output$litter_to_som_gCm2day = apply(states_all$litter_to_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_litter_to_som_gCm2day = quantile(states_all$mean_litter_to_som_gCm2day, prob=num_quantiles, na.rm = na_flag)
@@ -1003,8 +1147,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_woodlitter_gCm2 = quantile(states_all$mean_woodlitter_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_woodlitter_gCm2 = apply(states_all$mean_annual_woodlitter_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$woodlitter_gCm2 - states_all$woodlitter_gCm2[,1] # difference in wood litter from initial
-      site_output$dCwoodlitter_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$woodlitter_gCm2 - states_all$woodlitter_gCm2[,1] # difference in wood litter from initial
+      site_output$dCwoodlitter_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_woodlitter_gCm2 - states_all$mean_annual_woodlitter_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCwoodlitter_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Begin accumulating losses from wood litter
       site_output$outflux_woodlitter_gCm2day = states_all$rhet_woodlitter_gCm2day + states_all$woodlitter_to_som_gCm2day
       site_output$NaturalFractionOfTurnover_woodlitter = site_output$outflux_woodlitter_gCm2day
@@ -1085,8 +1232,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_som_gCm2 = quantile(states_all$mean_som_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_som_gCm2 = apply(states_all$mean_annual_som_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
-      site_output$dCsom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$som_gCm2 - states_all$som_gCm2[,1] # difference in som from initial
+      site_output$dCsom_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_som_gCm2 - states_all$mean_annual_som_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCsom_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Begin accumulating losses from som
       site_output$outflux_som_gCm2day = states_all$rhet_som_gCm2day
       site_output$NaturalFractionOfTurnover_som = site_output$outflux_som_gCm2day
@@ -1094,6 +1244,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$rhet_som_gCm2day = apply(states_all$rhet_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_rhet_som_gCm2day = quantile(states_all$mean_rhet_som_gCm2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_rhet_som_gCm2day = apply(states_all$mean_annual_rhet_som_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
+      dvar = states_all$mean_annual_rhet_som_gCm2day - states_all$mean_annual_rhet_som_gCm2day[,1] # difference from initial
+      site_output$mean_annual_drhet_som_gCm2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
+
       # Declare combined natural, fire and harvest driven creation of litter
       site_output$FireFractionOfTurnover_som = array(0, dim=dim(states_all$som_gCm2))
       site_output$HarvestFractionOfTurnover_som = array(0, dim=dim(states_all$som_gCm2))      
@@ -1152,8 +1305,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_biomass_gCm2 = quantile(states_all$mean_biomass_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_biomass_gCm2 = apply(states_all$mean_annual_biomass_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
-      site_output$dCbiomass_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$biomass_gCm2 - states_all$biomass_gCm2[,1] # difference in labile from initial
+      site_output$dCbiomass_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_biomass_gCm2 - states_all$mean_annual_biomass_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCbiomass_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Track natural biomass losses
       site_output$biomass_to_litter_gCm2day = apply(states_all$biomass_to_litter_gCm2day,2,quantile,prob=num_quantiles, na.rm = na_flag)
       site_output$mean_biomass_to_litter_gCm2day = quantile(states_all$mean_biomass_to_litter_gCm2day, prob=num_quantiles, na.rm = na_flag)
@@ -1242,8 +1398,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_dom_gCm2 = quantile(states_all$mean_dom_gCm2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_dom_gCm2 = apply(states_all$mean_annual_dom_gCm2,2,quantile,prob=num_quantiles, na.rm = na_flag)
       # Determine net pool change over time
-      dCbio = states_all$dom_gCm2 - states_all$dom_gCm2[,1] # difference in dom from initial
-      site_output$dCdom_gCm2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$dom_gCm2 - states_all$dom_gCm2[,1] # difference in dom from initial
+      site_output$dCdom_gCm2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_dom_gCm2 - states_all$mean_annual_dom_gCm2[,1] # difference from initial
+      site_output$mean_annual_dCdom_gCm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
       # Accumulating output fluxes from dead organic matter
       site_output$outflux_dom_gCm2day = states_all$rhet_dom_gCm2day
       site_output$NaturalFractionOfTurnover_dom = site_output$outflux_dom_gCm2day
@@ -1317,21 +1476,28 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_SurfWater_kgH2Om2 = quantile(states_all$mean_SurfWater_kgH2Om2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_SurfWater_kgH2Om2 = apply(states_all$mean_annual_SurfWater_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$SurfWater_kgH2Om2 - states_all$SurfWater_kgH2Om2[,1] # difference in surface water from initial
-      site_output$dSurfWater_kgH2Om2 = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$SurfWater_kgH2Om2 - states_all$SurfWater_kgH2Om2[,1] # difference in surface water from initial
+      site_output$dSurfWater_kgH2Om2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_SurfWater_kgH2Om2 - states_all$mean_annual_SurfWater_kgH2Om2[,1] # difference from initial
+      site_output$mean_annual_dSurfWater_kgH2Om2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)       
 
       # plant apparent soil water potential (MPa)
       site_output$wSWP_MPa = apply(states_all$wSWP_MPa,2,quantile,prob=num_quantiles,na.rm = na_flag)
       site_output$mean_wSWP_MPa = quantile(states_all$mean_wSWP_MPa, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_wSWP_MPa = apply(states_all$mean_annual_wSWP_MPa,2,quantile,prob=num_quantiles,na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$wSWP_MPa - states_all$wSWP_MPa[,1] # difference from initial
-      site_output$dwSWP_MPa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$mean_annual_wSWP_MPa - states_all$mean_annual_wSWP_MPa[,1] # difference from initial
+      site_output$mean_annual_dwSWP_MPa = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
+      dvar = states_all$wSWP_MPa - states_all$wSWP_MPa[,1] # difference from initial
+      site_output$dwSWP_MPa = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
 
       # evapotranspiration (Etrans + Esoil + Ewetcanopy)
       site_output$ET_kgH2Om2day = apply(states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
       site_output$mean_ET_kgH2Om2day = quantile(states_all$mean_ET_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_ET_kgH2Om2day = apply(states_all$mean_annual_ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$mean_annual_ET_kgH2Om2day - states_all$mean_annual_ET_kgH2Om2day[,1] # difference from initial
+      site_output$mean_annual_dET_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
 
       # Calculate the ecosystem water use efficiency
       site_output$wue_eco_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$ET_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
@@ -1346,6 +1512,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$Etrans_kgH2Om2day = apply(states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Etrans_kgH2Om2day = quantile(states_all$mean_Etrans_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_Etrans_kgH2Om2day = apply(states_all$mean_annual_Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$mean_annual_Etrans_kgH2Om2day - states_all$mean_annual_Etrans_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_dEtrans_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)  
+
           # Calculate the plant water use efficiency
           site_output$wue_plant_gCkgH2O = apply(states_all$gpp_gCm2day/states_all$Etrans_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_wue_plant_gCkgH2O = quantile(rowSums(states_all$gpp_gCm2day)/rowSums(states_all$Etrans_kgH2Om2day), prob=num_quantiles, na.rm = na_flag)
@@ -1358,12 +1527,16 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$Esoil_kgH2Om2day = apply(states_all$Esoil_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Esoil_kgH2Om2day = quantile(states_all$mean_Esoil_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_Esoil_kgH2Om2day = apply(states_all$mean_annual_Esoil_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$mean_annual_Esoil_kgH2Om2day - states_all$mean_annual_Esoil_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_dEsoil_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)            
       }
       if (any(check_list == "Ewetcanopy_kgH2Om2day")) {
           # Wet canopy evaporation
           site_output$Ewetcanopy_kgH2Om2day = apply(states_all$Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_Ewetcanopy_kgH2Om2day = quantile(states_all$mean_Ewetcanopy_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_Ewetcanopy_kgH2Om2day = apply(states_all$mean_annual_Ewetcanopy_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$mean_annual_Ewetcanopy_kgH2Om2day - states_all$mean_annual_Ewetcanopy_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_dEwetcanopy_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)            
       }
       # Check whether surface runoff exists?
       if (any(check_list == "runoff_kgH2Om2day")) {
@@ -1371,6 +1544,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$runoff_kgH2Om2day = apply(states_all$runoff_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_runoff_kgH2Om2day = quantile(states_all$mean_runoff_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_runoff_kgH2Om2day = apply(states_all$mean_annual_runoff_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$mean_annual_runoff_kgH2Om2day - states_all$mean_annual_runoff_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_drunoff_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)            
           # Accumulating total drainage (runoff and underflow)
           site_output$total_drainage_kgH2Om2day = states_all$runoff_kgH2Om2day
       }
@@ -1380,6 +1555,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           site_output$underflow_kgH2Om2day = apply(states_all$underflow_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_underflow_kgH2Om2day = quantile(states_all$mean_underflow_kgH2Om2day, prob=num_quantiles, na.rm = na_flag)
           site_output$mean_annual_underflow_kgH2Om2day = apply(states_all$mean_annual_underflow_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
+          dvar = states_all$mean_annual_underflow_kgH2Om2day - states_all$mean_annual_underflow_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_dunderflow_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)            
           # Accumulating total drainage (runoff and underflow)
           site_output$total_drainage_kgH2Om2day = site_output$total_drainage_kgH2Om2day + states_all$underflow_kgH2Om2day
       }
@@ -1388,8 +1565,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
           # Total drainage from surface and soil bottom
           site_output$total_drainage_kgH2Om2day = apply(site_output$total_drainage_kgH2Om2day,2,quantile,prob=num_quantiles,na.rm = na_flag)
           site_output$mean_total_drainage_kgH2Om2day = quantile(rowMeans(site_output$total_drainage_kgH2Om2day, na.rm = na_flag), prob=num_quantiles)
-          site_output$mean_annual_total_drainage_kgH2Om2day = apply(t(apply(site_output$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year)), 2,quantile, prob=num_quantiles, na.rm = na_flag)
-              
+          # The annual value is a locally derived value, rather than from the fortran code, so we do the annual bit here...
+          site_output$mean_annual_total_drainage_kgH2Om2day = t(apply(site_output$total_drainage_kgH2Om2day,1, rollapply_mean_annual, step = steps_per_year))
+          # For the delta annual variables we do this difference here
+          dvar = site_output$mean_annual_total_drainage_kgH2Om2day - site_output$mean_annual_total_drainage_kgH2Om2day[,1] # difference from initial
+          site_output$mean_annual_dtotal_drainage_kgH2Om2day    = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)                
+          # ...having done the differencing bit we can work out the quantiles for this too.
+          site_output$mean_annual_total_drainage_kgH2Om2day = apply(site_output$mean_annual_total_drainage_kgH2Om2day, 2,quantile, prob=num_quantiles, na.rm = na_flag)          
       }
       # Update the mean Leaf Water Potential
       if (any(check_list == "LWP_MPa")){ 
@@ -1404,6 +1586,9 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$snow_kgH2Om2 = apply(states_all$snow_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
       site_output$mean_snow_kgH2Om2 = quantile(states_all$mean_snow_kgH2Om2, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_snow_kgH2Om2 = apply(states_all$mean_annual_snow_kgH2Om2,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_snow_kgH2Om2 - states_all$mean_annual_snow_kgH2Om2[,1] # difference from initial
+      site_output$mean_annual_dsnow_kgH2Om2 = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)             
   }
   
   ###
@@ -1417,8 +1602,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_APAR_MJm2day = quantile(states_all$mean_APAR_MJm2day, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_APAR_MJm2day = apply(states_all$mean_annual_APAR_MJm2day,2,quantile, prob=num_quantiles, na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$APAR_MJm2day - states_all$APAR_MJm2day[,1] # difference in dom from initial
-      site_output$dAPAR_MJm2day = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$APAR_MJm2day - states_all$APAR_MJm2day[,1] # difference in dom from initial
+      site_output$dAPAR_MJm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_APAR_MJm2day - states_all$mean_annual_APAR_MJm2day[,1] # difference from initial
+      site_output$mean_annual_dAPAR_MJm2day = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)             
   }
   if (any(check_list == "CiCa")) {
       # Extract the internal vs ambient CO2 ratio
@@ -1426,8 +1614,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_CiCa = quantile(states_all$mean_CiCa, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_CiCa = apply(states_all$mean_annual_CiCa,2,quantile, prob=num_quantiles, na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
-      site_output$dCiCa = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$CiCa - states_all$CiCa[,1] # difference in dom from initial
+      site_output$dCiCa = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_CiCa - states_all$mean_annual_CiCa[,1] # difference from initial
+      site_output$mean_annual_dCiCa = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)                   
   }
   if (any(check_list == "gs_demand_supply_ratio")) {
       # Extract the ratio of stomatal conductance relative to its maximum value,
@@ -1436,8 +1627,11 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_gs_demand_supply_ratio = quantile(states_all$mean_gs_demand_supply_ratio, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_gs_demand_supply_ratio = apply(states_all$mean_annual_gs_demand_supply_ratio,2,quantile, prob=num_quantiles, na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial
-      site_output$dgs_demand_supply_ratio = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$gs_demand_supply_ratio - states_all$gs_demand_supply_ratio[,1] # difference in dom from initial   
+      site_output$dgs_demand_supply_ratio = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      # Determine annual net pool change over time
+      dvar = states_all$mean_annual_gs_demand_supply_ratio - states_all$mean_annual_gs_demand_supply_ratio[,1] # difference from initial
+      site_output$mean_annual_dgs_demand_supply_ratio = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)                         
   }
   if (any(check_list == "gs_mmolH2Om2s")) {
       # Extract the canopy stomatal conductance
@@ -1445,8 +1639,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_gs_mmolH2Om2s = quantile(states_all$mean_gs_mmolH2Om2s, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_gs_mmolH2Om2s = apply(states_all$mean_annual_gs_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$gs_mmolH2Om2s - states_all$gs_mmolH2Om2s[,1] # difference in dom from initial
-      site_output$dgs_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$gs_mmolH2Om2s - states_all$gs_mmolH2Om2s[,1] # difference in dom from initial
+      site_output$dgs_mmolH2Om2s = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
   if (any(check_list == "gb_mmolH2Om2s")) {
       # Extract the canopy boundary layer conductance
@@ -1454,8 +1648,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$mean_gb_mmolH2Om2s = quantile(states_all$mean_gb_mmolH2Om2s, prob=num_quantiles, na.rm = na_flag)
       site_output$mean_annual_gb_mmolH2Om2s = apply(states_all$mean_annual_gb_mmolH2Om2s,2,quantile, prob=num_quantiles, na.rm = na_flag)
       # Calculate change over time
-      dCbio = states_all$gb_mmolH2Om2s - states_all$gb_mmolH2Om2s[,1] # difference in dom from initial
-      site_output$dgb_mmolH2Om2s = apply(dCbio,2,quantile,prob=num_quantiles,na.rm = na_flag)
+      dvar = states_all$gb_mmolH2Om2s - states_all$gb_mmolH2Om2s[,1] # difference in dom from initial
+      site_output$dgb_mmolH2Om2s = apply(dvar,2,quantile,prob=num_quantiles,na.rm = na_flag)
   }
   if (any(check_list == "leaf_temperature_celcius") == TRUE) {
       # Canopy temperature 
@@ -1473,6 +1667,8 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   # information
   ###
 
+  # Any parameter prior assimilated overlaps?
+  site_output$priors_assim_data_overlap_fraction = states_all$priors_assim_data_overlap_fraction
   # Any time series assimilated data overlaps?
   if (any(check_list == "gpp_assim_data_overlap_fraction")) {
       site_output$gpp_assim_data_overlap_fraction = states_all$gpp_assim_data_overlap_fraction
@@ -1534,10 +1730,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$lai_m2m2_to_NBP_gCm2day_correlation = states_all$lai_m2m2_to_NBP_gCm2day_correlation           
   site_output$lai_m2m2_to_Rauto_gCm2day_correlation = states_all$lai_m2m2_to_Rauto_gCm2day_correlation
   site_output$lai_m2m2_to_Rhet_gCm2day_correlation = states_all$lai_m2m2_to_Rhet_gCm2day_correlation
-  site_output$lai_m2m2_to_wood_gCm2_correlation = states_all$lai_m2m2_to_wood_gCm2_correlation
   site_output$lai_m2m2_to_som_gCm2_correlation = states_all$lai_m2m2_to_som_gCm2_correlation
   site_output$lai_m2m2_to_dCwood_gCm2_correlation = states_all$lai_m2m2_to_dCwood_gCm2_correlation
   site_output$lai_m2m2_to_dCsom_gCm2_correlation = states_all$lai_m2m2_to_dCsom_gCm2_correlation  
+  # If wood exists
+  if (any(check_list == "wood_gCm2")) {
+    site_output$lai_m2m2_to_wood_gCm2_correlation = states_all$lai_m2m2_to_wood_gCm2_correlation 
+  }
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
       site_output$lai_m2m2_to_harvest_gCm2day_correlation = states_all$lai_m2m2_to_harvest_gCm2day_correlation
@@ -1549,10 +1748,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
   site_output$NBP_gCm2day_to_lai_m2m2_correlation = states_all$NBP_gCm2day_to_lai_m2m2_correlation           
   site_output$NBP_gCm2day_to_Rauto_gCm2day_correlation = states_all$NBP_gCm2day_to_Rauto_gCm2day_correlation
   site_output$NBP_gCm2day_to_Rhet_gCm2day_correlation = states_all$NBP_gCm2day_to_Rhet_gCm2day_correlation
-  site_output$NBP_gCm2day_to_wood_gCm2_correlation = states_all$NBP_gCm2day_to_wood_gCm2_correlation
   site_output$NBP_gCm2day_to_som_gCm2_correlation = states_all$NBP_gCm2day_to_som_gCm2_correlation
   site_output$NBP_gCm2day_to_dCwood_gCm2_correlation = states_all$NBP_gCm2day_to_dCwood_gCm2_correlation
   site_output$NBP_gCm2day_to_dCsom_gCm2_correlation = states_all$NBP_gCm2day_to_dCsom_gCm2_correlation  
+  # If wood exists
+  if (any(check_list == "wood_gCm2")) {
+      site_output$NBP_gCm2day_to_wood_gCm2_correlation = states_all$NBP_gCm2day_to_wood_gCm2_correlation
+  }
   # If harvest is estimated
   if (any(check_list == "harvest_gCm2day")) {
       site_output$NBP_gCm2day_to_harvest_gCm2day_correlation = states_all$NBP_gCm2day_to_harvest_gCm2day_correlation
@@ -1591,6 +1793,13 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$MTT_wood_years_to_lai_m2m2_correlation = states_all$MTT_wood_years_to_lai_m2m2_correlation
       site_output$MTT_wood_years_to_dCwood_gCm2_correlation = states_all$MTT_wood_years_to_dCwood_gCm2_correlation
       site_output$MTT_wood_years_to_dCsom_gCm2_correlation = states_all$MTT_wood_years_to_dCsom_gCm2_correlation
+      site_output$dCwood_gCm2_to_gpp_gCm2day_correlation = states_all$dCwood_gCm2_to_gpp_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_rauto_gCm2day_correlation = states_all$dCwood_gCm2_to_rauto_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_nee_gCm2day_correlation  = states_all$dCwood_gCm2_to_nee_gCm2day_correlation 
+      site_output$dCwood_gCm2_to_rhet_gCm2day_correlation = states_all$dCwood_gCm2_to_rhet_gCm2day_correlation
+      site_output$dCwood_gCm2_to_wood_gCm2_correlation  = states_all$dCwood_gCm2_to_wood_gCm2_correlation 
+      site_output$dCwood_gCm2_to_som_gCm2_correlation = states_all$dCwood_gCm2_to_som_gCm2_correlation
+      site_output$dCwood_gCm2_to_dCsom_gCm2_correlation = states_all$dCwood_gCm2_to_dCsom_gCm2_correlation      
   }
   if (any(check_list == "MTT_som_years_to_dCsom_gCm2_correlation")) {
       site_output$MTT_som_years_parameter_correlation = states_all$MTT_som_years_parameter_correlation
@@ -1599,11 +1808,20 @@ post_process_for_grid<-function(outfile_stock_fluxes,PROJECT,drivers,parameters,
       site_output$MTT_som_years_to_NEE_gCm2day_correlation = states_all$MTT_som_years_to_NEE_gCm2day_correlation
       site_output$MTT_som_years_to_Rauto_gCm2day_correlation = states_all$MTT_som_years_to_Rauto_gCm2day_correlation 
       site_output$MTT_som_years_to_Rhet_gCm2day_correlation = states_all$MTT_som_years_to_Rhet_gCm2day_correlation
-      site_output$MTT_som_years_to_wood_gCm2_correlation = states_all$MTT_som_years_to_wood_gCm2_correlation
       site_output$MTT_som_years_to_som_gCm2_correlation = states_all$MTT_som_years_to_som_gCm2_correlation
       site_output$MTT_som_years_to_lai_m2m2_correlation = states_all$MTT_som_years_to_lai_m2m2_correlation
-      site_output$MTT_som_years_to_dCwood_gCm2_correlation = states_all$MTT_som_years_to_dCwood_gCm2_correlation     
       site_output$MTT_som_years_to_dCsom_gCm2_correlation = states_all$MTT_som_years_to_dCsom_gCm2_correlation
+      site_output$dCsom_gCm2_to_gpp_gCm2day_correlation = states_all$dCsom_gCm2_to_gpp_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_rauto_gCm2day_correlation = states_all$dCsom_gCm2_to_rauto_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_nee_gCm2day_correlation  = states_all$dCsom_gCm2_to_nee_gCm2day_correlation 
+      site_output$dCsom_gCm2_to_rhet_gCm2day_correlation = states_all$dCsom_gCm2_to_rhet_gCm2day_correlation
+      site_output$dCsom_gCm2_to_som_gCm2_correlation = states_all$dCsom_gCm2_to_som_gCm2_correlation      
+      site_output$dCsom_gCm2_to_som_input_gCm2_correlation = states_all$dCsom_gCm2_to_som_input_gCm2_correlation
+      if (any(check_list == "wood_gCm2")) {
+          site_output$MTT_som_years_to_wood_gCm2_correlation = states_all$MTT_som_years_to_wood_gCm2_correlation
+          site_output$MTT_som_years_to_dCwood_gCm2_correlation = states_all$MTT_som_years_to_dCwood_gCm2_correlation     
+          site_output$dCsom_gCm2_to_wood_gCm2_correlation  = states_all$dCsom_gCm2_to_wood_gCm2_correlation           
+      }
   }     
 
   # save to pixel specific file for the moment... in "run_mcmc_results" these will be combined into a single grid

@@ -23,7 +23,7 @@
 ! along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
-! Subroutine to allow direct interface between DALEC.C3.M1 and the R code
+! Subroutine to allow direct interface between DALEC.C3.M1.014 and the R code
 !
 ! Author: T. Luke Smallman (02/05/2024)
 !
@@ -33,12 +33,11 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
                    ,met,pars &
                    ,out_var1,out_var2,out_var3,out_var4,out_var5 &
                    ,lat,nopars,nomet &
-                   ,nofluxes,nopools,nodays,nos_years,deltat &
+                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                    ,pathlength)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, nos_soil_layers, &
-                              cica_time, DS_time, avN_time
+  use carbon_model_mod, only: carbon_model, nos_soil_layers
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -71,7 +70,7 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
   ! declare input variables
   integer, intent(in) :: pathlength
   !character(pathlength), intent(in) :: exepath
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -80,14 +79,16 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
                         ,nofluxes       & ! number of model fluxes
                         ,nopools        & ! number of model pools
                         ,nodays         & ! number of time steps in simulation
-                        ,nos_years        ! number of years in simulation
+                        ,nos_years      & ! number of years in simulation
+                        ,nodiags          ! number of model diagnostics
 
   double precision, intent(inout) :: deltat(nodays)     ! time step in decimal days
   double precision, intent(in) :: met(nomet,nodays)   & ! met drivers, note reverse of needed
                   ,soil_frac_clay_in(nos_soil_layers) & ! clay in soil (%)
                   ,soil_frac_sand_in(nos_soil_layers) & ! sand in soil (%)
                        ,pars(nopars,nos_iter)         & ! number of parameters
-                       ,lat                 ! site latitude (degrees)
+                       ,lat                             ! site latitude (degrees)
+
 
   ! output declaration
   double precision, intent(out), dimension(nos_iter,nodays,output_dim) :: out_var1
@@ -101,14 +102,13 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
   character(350) :: exepath
   integer :: a, e, i, s, v, steps_per_year!, nos_years
   integer, dimension(nodays) :: pool_hak
+  ! array of ecosystem pools
   double precision, dimension((nodays+1),nopools) :: POOLS
-  ! vector of ecosystem fluxes
+  ! array of ecosystem fluxes
   double precision, dimension(nodays,nofluxes) :: FLUXES
-  double precision, dimension(nodays) :: tmp &
-                                        ,lai & ! leaf area index
-                                        ,GPP & ! Gross primary productivity
-                                        ,NEE   ! net ecosystem exchange of CO2
-
+  ! array of ecosystem diagnostics
+  double precision, dimension(nodays,nodiags) :: DIAGS
+  double precision, dimension(nodays) :: tmp
 
   ! crop development parameters declared here. These are also found in
   ! MHMCMC_STRUCTURES PI%
@@ -125,8 +125,8 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
                                                        LRRT
 
   ! zero initial conditions
-  lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
-  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
+  POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
+  out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -134,7 +134,7 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! Determine which crop development file are we looking for
   if (pathlength == 1) then
@@ -156,9 +156,9 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
   ! begin iterations
   do i = 1, nos_iter
      ! call the model
-     call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
-                      ,lai,NEE,FLUXES,POOLS,nopars,nomet,nopools,nofluxes &
-                      ,GPP,stock_seed_labile,DS_shoot,DS_root,fol_frac &
+     call carbon_model(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
+                      ,FLUXES,POOLS,DIAGS,nopars,nomet,nopools,nofluxes &
+                      ,nodiags,stock_seed_labile,DS_shoot,DS_root,fol_frac &
                       ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
@@ -214,15 +214,15 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
      out_var1(i,1:nodays,37) = POOLS(1:nodays,5)           ! litter (gC/m2)
      out_var1(i,1:nodays,38) = POOLS(1:nodays,6)           ! som (gC/m2)
      out_var1(i,1:nodays,39) = POOLS(1:nodays,7)           ! autotrophic (gC/m2)
-     out_var1(i,1:nodays,40) = POOLS(1:nodays,8)           ! storage organ (gC/m2)
-     out_var1(i,1:nodays,41) = POOLS(1:nodays,9)           ! dead but still standing foliage (gC/m2)
+     out_var1(i,1:nodays,40) = POOLS(1:nodays,9)           ! storage organ (gC/m2)
+     out_var1(i,1:nodays,41) = POOLS(1:nodays,10)          ! dead but still standing foliage (gC/m2)
      ! Canopy (phenology) properties
-     out_var1(i,1:nodays,42) = lai                         ! LAI (m2/m2)
+     out_var1(i,1:nodays,42) = DIAGS(1:nodays,1)           ! LAI (m2/m2)
      ! Photosynthesis / C~water coupling related
-     out_var1(i,1:nodays,43) = cica_time                   ! ratio of leaf internal to external CO2
+     out_var1(i,1:nodays,43) = DIAGS(1:nodays,4)           ! ratio of leaf internal to external CO2
      ! misc
-     out_var1(i,1:nodays,44) = DS_time                     ! Development stage (0-2)
-     out_var1(i,1:nodays,45) = avN_time                    ! Foliar N content (gN/m2leaf)
+     out_var1(i,1:nodays,44) = DIAGS(1:nodays,3)          ! Development stage (0-2)
+     out_var1(i,1:nodays,45) = DIAGS(1:nodays,2)          ! Foliar N content (gN/m2leaf)
    
      !
      ! Calculate long-term mean of out_var1
@@ -241,6 +241,7 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

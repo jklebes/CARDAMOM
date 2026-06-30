@@ -12,30 +12,30 @@ module test_functions
 contains
 
 subroutine ll_normal(pars, npars, res, id)
-!! A test function E = A*(x-x_0)^2+B*(y-y_0)^2 
-  integer, intent(in):: npars 
+!! A test function E = A*(x-x_0)^2+B*(y-y_0)^2
+  integer, intent(in):: npars
 double precision, dimension(npars), intent(inout):: pars  ! has to be inout because of C compatibilty
 double precision, intent(out):: res
 integer, intent(in), optional:: id
 double precision:: x, y  ! the pars to fit
 double precision:: x_0, y_0  ! The correct, energy/loglikelihood-minimizing answer will be x = x0, y = y0
-double precision:: A, B 
+double precision:: A, B
 x = pars(1)
 y = pars(2)
 x_0 = x_ideal
 y_0 = y_ideal
 A = 1.0
 B = 1.6  ! covariance matrix expected to have inversely proportional entries on diagonal
-! and zeros on off-diagonal 
+! and zeros on off-diagonal
 res = -(A*(x-x_0)**2+B*(y-y_0)**2)
-end subroutine
+end subroutine ll_normal
 
 subroutine ll_step(pars, npars, res, id)
   !! A test function that is a stepped rectangular well
   !! It's "correct" with value ll = 0 for x=(0, 5) and y=(1, 9)
   !! and has penalty of-5 in steps for values outside of the target domain
-  integer, intent(in):: npars 
-double precision, dimension(npars), intent(inout):: pars  
+  integer, intent(in):: npars
+double precision, dimension(npars), intent(inout):: pars
 double precision, intent(out):: res
   !! result : loglikelihood penalty
 integer, intent(in), optional:: id
@@ -58,14 +58,14 @@ if (y < y_1) then
 else if (y > y_2) then
   res = res-5 * ceiling((y-y_2)/5)
 endif
-end subroutine
+end subroutine ll_step
 
 subroutine ll_bounded(pars, npars, res, id)
-  !! A test function that is quadratic potential, 
-  !! plus hard boundaries resticting it to the domain 
+  !! A test function that is quadratic potential,
+  !! plus hard boundaries resticting it to the domain
   !! that can be found by ll_step
-  integer, intent(in):: npars 
-double precision, dimension(npars), intent(inout):: pars  
+  integer, intent(in):: npars
+double precision, dimension(npars), intent(inout):: pars
 double precision, intent(out):: res
   !! result : loglikelihood penalty
 integer, intent(in), optional:: id
@@ -80,13 +80,13 @@ x = pars(1)
 y = pars(2)
 res = 0d0
 A = 1.0
-B = 1.6  
+B = 1.6
 if (x >= x_1 .and. x <= x_2 .and. y >= y_1 .and. y <= y_2 ) then
   res = -(A*(x-x_ideal)**2+B*(y-y_ideal)**2)
-else 
+else
   res = log(P)  ! loglikelihood = -Infinity as signal to always reject
 endif
-end subroutine
+end subroutine ll_bounded
 
 subroutine init_PI()
   PI_xy%npars = 2
@@ -103,6 +103,6 @@ subroutine init_PI()
 
   if (.not. allocated(PI_xy%fix_pars)) allocate(PI_xy%fix_pars(PI_xy%npars))
   PI_xy%fix_pars = .false.
-end subroutine
+end subroutine init_PI
 
-end module
+end module test_functions

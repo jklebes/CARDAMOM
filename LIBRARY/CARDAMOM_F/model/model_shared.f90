@@ -2,6 +2,7 @@ module model_shared
   use samplers_shared, only: PARINFO  
   use cardamom_structures, only: DATA_TYPE
 
+
   type(PARINFO)  :: PI  ! should not be writted to except by pars_info() !  
                                 ! If we want parallel runs 
                                 ! now Contains read-only description of the model parameters only

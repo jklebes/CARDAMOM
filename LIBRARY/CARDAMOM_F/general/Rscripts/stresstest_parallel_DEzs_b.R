@@ -1,52 +1,21 @@
+
 ## Alternative cardamom stresstest as R script !
 #
 # jklebes 2025
 #
 #
-# this version demonstrates simplest automatic R parallelism using R bayesianTools DEMcz and 
-# CARDAMOM stresstest, which unlike cardamom main model is not stateful.  For
-# Cardamom main model different parallelism will be required.
+# R parallelism using R bayesianTools DEMcz - Option b
+# similar to parallel_AM demo, this versio uses an R-cluster
+# which is given parallel function over a matrix containting N
+# prpoposed paramter vectors as loglikelihood function.
 
 # very slow version - lots of communication overhead
 
 library(BayesianTools) # if not found install.packages("BayesianTools")
+library(assert)
+library(here)
 
-# Run the "cmake ..", "make" of cardamom to generate the shared library
-cardamom_dll = "/home/jklebes/CARDAMOM/build/LIBRARY/CARDAMOM_F/libCARDAMOM.so"
-dyn.load(cardamom_dll)
-
-
-## ----- Pass model to R ----------
-out_ <- .C("C_initialize_stresstest_circle")
-
-# TODO keep R wrappers in a different file
-out <- as.integer(0)
-model_npars <- .C("C_getmodelnpars", out)[[1]]
-
-out <- rep(as.numeric(0), model_npars)
-model_parmin <- .C("C_getmodelparmin", npars=model_npars, out)[[2]]
-print("Fetched model parmin")
-print(model_parmin)
-model_parmax <- .C("C_getmodelparmax", npars=model_npars, out)[[2]]
-print("Fetched model parmax")
-print(model_parmax)
-
-
-get_initial <- function(){
-    initial <- runif(model_npars)*(model_parmax-model_parmin) + model_parmin
-}
-
-
-
-#wrap that .C function to a more usual R function
-cardamom_stresstestcirclelikelihood <- function(pars){
-    #print("Calling")
-    out_ <- 0.0
-    ll <- .C("C_stresstest_likelihood", pars, model_npars, out_)[[3]]
-    #l <- -pars[3]**2
-    #ll <- generateTestDensityMultiNormal(sigma = "no correlation")
-}
-
+source(file.path(here(), "LIBRARY/CARDAMOM_F/general/Rscripts/load_stresstest.R"))
 
 # call modellikelihood once as a test
 print("random initial:")
@@ -66,14 +35,17 @@ nchains <- 4
 
 cl <- parallel::makeCluster(nchains)
 parallel::clusterEvalQ(cl, library(BayesianTools))
+# pass the variables on to cluster
 parallel::clusterExport(cl, "cardamom_dll" )
 parallel::clusterExport(cl, "model_npars" )
 parallel::clusterExport(cl, "model_parmax" )
 parallel::clusterExport(cl, "model_parmin" )
 parallel::clusterExport(cl, "filename" )
+# load cardamom library on each cluster node
 parallel::clusterEvalQ(cl, dyn.load(cardamom_dll))
 parallel::clusterExport(cl, "cardamom_stresstestcirclelikelihood")
-parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle") )
+# initialize a model on each cluster node
+parallel::clusterEvalQ(cl, out_ <- .C("C_initialize_stresstest_circle", filename) )
 parallel::clusterExport(cl, "get_initial")
 parallel::clusterEvalQ(cl,  initial <- get_initial())
 
@@ -96,12 +68,19 @@ bayesianSetup <- createBayesianSetup(likelihood = plikelihood,
                                      upper = model_parmax, 
                                      parallel='external', # use the cluster
                                      )
+
+# note this will be interpreted as iter/nchains iterations per chain
+# while in cardamom-samplers each chain does n_out number of steps
 iter = 10000
 
+# only one chain per cluster core
 settings = list(iterations = iter, nrChains=1 , message = TRUE , startValue = bayesianSetup$prior$sampler(nchains))
 #test
 plikelihood(initialMatrix)
 plikelihood(bayesianSetup$prior$sampler(nchains))
 
 out_parallel <- runMCMC(bayesianSetup, sampler="DEzs", settings=settings)
+plot(out_parallel$chain[,'LL'])
 
+#expect convergence on approx. pi :
+plot(out_parallel$chain[,1])
