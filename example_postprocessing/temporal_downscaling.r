@@ -3,7 +3,8 @@
 ## This script is intended to take CARDAMOM gridded analyses and 
 ## post-process them into temporally downscaled estimates (i.e. >= daily -> hourly).
 ## These estimates continue to have quantile based uncertainty information for each location and time step
-## Version 1: T. L. Smallman (22/04/2021)
+## Version 1.0: T. L. Smallman (22/04/2021)
+## Version 1.1: T. L. Smallman (22/04/2021), packaged function to enhance readability.
 ###
 
 ###
@@ -20,9 +21,7 @@ library(ncdf4)
 ## Define input project information
 
 # load CARDAMOM gridded project file
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_LU_FIRES_MHMCMC/global_1deg_C1/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_MHMCMC/DAREUK_0.5deg_monthly/infofile.RData")
-load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC_CDEA_ACM2_BUCKET_MHMCMC/global_1deg_C7_trendy_lca_agb_gpp_fire/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/DAREUK_0.5deg_monthly/infofile.RData")
 # Then load parameter and C stocks / flux files
 load(paste(PROJECT$results_processedpath,"/",PROJECT$name,"_stock_flux.RData",sep=""))
 # Output file name modifiers
@@ -52,12 +51,16 @@ dyn.load("./LIBRARY/weather_generator_F/weather_generator.so")
 ## Declare gridded output variables for those we want to use
 
 # Specify the number of quantiles we will be extracting from the CARDAMOM output.
-# We will assume we take the lowest, median and highest quantiles
-quantiles_locs = median(c(1:dim(grid_output$nee_gCm2day)[2]))
-#quantiles_locs = c(1,tmp,dim(grid_output$nee_gCm2day)[2])
-#quantiles_wanted = grid_output$num_quantiles[quantiles_locs]
 quantiles_wanted = c(0.5)
-#quantiles_wanted = c(0.025,0.5,0.975)
+
+# Then find their location in the array
+quantiles_loc = rep(NA, length(quantiles_wanted))
+for (q in seq(1, length(quantiles_wanted))) {
+     tmp = which(grid_output$num_quantiles == quantiles_wanted[q])
+     if (length(tmp) == 1) {quantiles_loc[q] = tmp} else {print("Problem finding the desired quantiles for processing")}
+}
+# In all cases we want the median
+mid_loc = median(c(1:length(grid_output$num_quantiles)))
 
 ###
 ## Loop through each year in turn
@@ -73,12 +76,12 @@ for (yr in seq(1,nos_years)) {
 
      # Create the hourly output variables
      dims = dim(grid_output$mean_nee_gCm2day)
-     nee_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
-     nbe_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
-     gpp_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
-     reco_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
-     fire_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
-     harvest_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_locs),hrs_in_year))
+     nee_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
+     nbe_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
+     gpp_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
+     reco_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
+     fire_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
+     harvest_gCm2hr = array(NA, dim=c(dims[1],dims[2],length(quantiles_loc),hrs_in_year))
 
      # Loop through each pixel in turn and downscale
      for (n in seq(1,PROJECT$nosites)) {
@@ -135,26 +138,26 @@ for (yr in seq(1,nos_years)) {
               ## Determine downscaling coefficient for GPP from daily to hourly based on radiation curve
               hold_gpp = swrad_out/rep(rollapply(swrad_out, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each = steps_per_day)
               ## Determine downscale respiration fluxes based on temperature curve and exponential response function
-              hold_resp=exp(grid_output$parameters[slot_i,slot_j,10,quantiles_locs[2]]*sat_out)
-              hold_resp=hold_resp/rep(rollapply(hold_resp, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each=steps_per_day)
+              hold_resp = exp(grid_output$parameters[slot_i,slot_j,10,mid_loc]*sat_out)
+              hold_resp = hold_resp/rep(rollapply(hold_resp, width = steps_per_day, by = steps_per_day, FUN=sum, na.rm=TRUE), each=steps_per_day)
               # Determine hourly flux rate for variables which we assume constant emission over the day
               hold_const = 1/steps_per_day
 
               # Now apply the scaler adjustments and expand to fill each day of the month with the same value
               timestep_days_local = PROJECT$model$timestep_days[start:finish]
-              for (q in seq(1, length(quantiles_locs))) {
+              for (q in seq(1, length(quantiles_loc))) {
                    yy = 0 ; ww = 0 
                    for (zz in seq(1,length(time))) {
                         # Determine the period to be covered by the same day
                         yy = yy + steps_per_day ; ww = ww + (timestep_days_local[zz]*steps_per_day) ; adjustment=(ww-((timestep_days_local[zz]*steps_per_day)-1))
                         # Apply disaggregation based on radiation curve for gpp
-                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$gpp_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy]
+                        gpp_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$gpp_gCm2day[n,quantiles_loc[q],(start+zz-1)]*hold_gpp[(yy-(steps_per_day-1)):yy]
                         # Apply disaggredation based on temperature curve for ra
-                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$reco_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy]
+                        reco_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$reco_gCm2day[n,quantiles_loc[q],(start+zz-1)]*hold_resp[(yy-(steps_per_day-1)):yy]
                         # Apply disaggredation based on constant emissions for fire
-                        fire_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$fire_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const
+                        fire_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$fire_gCm2day[n,quantiles_loc[q],(start+zz-1)]*hold_const
                         # Apply disaggredation based on constant emissions for fire
-                        harvest_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$harvest_gCm2day[n,quantiles_locs[q],(start+zz-1)]*hold_const
+                        harvest_gCm2hr[slot_i,slot_j,q,adjustment:ww] = grid_output$harvest_gCm2day[n,quantiles_loc[q],(start+zz-1)]*hold_const
                    } # Downscaling and filling
               } # loop each quantile
 
@@ -171,8 +174,8 @@ for (yr in seq(1,nos_years)) {
      ## Output now
 
      # create lat / long axes, assumes WGS-84 grid
-     latitude = seq(PROJECT$latitude[1]+(PROJECT$resolution*0.5),PROJECT$latitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$lat_dim)
-     longitude = seq(PROJECT$longitude[1]+(PROJECT$resolution*0.5),PROJECT$longitude[2]-(PROJECT$resolution*0.5), length.out = PROJECT$long_dim)
+     latitude = grid_output$lat[1,]
+     longitude = grid_output$long[,1]
 
      ## define dimension
      lat_dimen <- ncdim_def( "lat", units="degree north (-90->90)", latitude )

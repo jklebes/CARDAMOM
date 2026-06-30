@@ -1,3 +1,33 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Subroutine to allow direct interface between ACM-GPP-ET and the R code
+!
+! Author: T. Luke Smallman (02/05/2024)
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
                ,nofluxes,nopools,pft,pft_specific,nodays,deltat &
@@ -22,7 +52,7 @@ subroutine racm(output_dim,met,pars,out_var,lat,nopars,nomet &
 
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,pft            & ! plant functional type
                         ,pft_specific   & !

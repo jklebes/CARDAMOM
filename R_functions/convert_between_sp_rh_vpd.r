@@ -1,10 +1,34 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Functions for converting between specific humidity, relative humidity and vapour pressure deficit
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function for converting between specific humidity, relative humidity and 
+# vapour pressure deficit. 
 # These functions were coded by T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
 # See function for relevant source references
+#
+#########################################################################################
 
 sp_humidity_to_vpd<-function(sp_moist,atmos_press,air_temperature) {
 
@@ -45,7 +69,7 @@ vpd_to_rh<-function(vpd_in,air_temperature) {
    # RH is the ratio of vapour presure in the air and vapour pressure at saturation.
    # Below pressure is estimated from the saturation vapour pressure and vapour pressure deficit.
    # Units (Pa)
-   rh = (vpsat - vpd_pa) / vpsat
+   rh = (vpsat - vpd_in) / vpsat
    rh[rh > 1] <- 1
    rh[rh < 0] <- 0
    # clean up

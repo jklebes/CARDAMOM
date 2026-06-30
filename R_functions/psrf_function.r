@@ -1,11 +1,36 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function determines whether or not parametr chains have statistically converged
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
-# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function determines whether or not parameter chains have statistically converged.
+# 
+# This function is based on an original Matlab function development by A. A. Bloom 
+# (UoE, now at the Jet Propulsion Laboratory). Translation to R and subsequent 
+# modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 # Exceptions are given within specific functions.
+#
+#########################################################################################
 
 psrf<- function (X) {
       #PSRF Potential Scale Reduction Factor
@@ -58,16 +83,16 @@ psrf<- function (X) {
       # D = nos_parameters
 
       # Therefore X = N,D,M
-      N=dim(X)[1] ; D=dim(X)[2] ; M=dim(X)[3]
+      N = dim(X)[1] ; D = dim(X)[2] ; M = dim(X)[3]
 
       # must have more than 1 time step for variance to be assessed
-      if (N < 1) {stop('Too few samples')}
+      if (N < 2) {stop('Too few samples')}
 
       # Calculate means W of the variances
-      W = array(0,dim=c(1,D))
-      for (n in seq(1,M)) { ####arrays don't match here try in matlab first
-	x = X[,,n] - matrix(colMeans(X[,,n]),nrow=N,ncol=length(colMeans(X[,,n])),byrow=TRUE)
-	W = W + colSums(x*x)
+      W = array(0, dim = c(1,D))
+      for (n in seq(1,M)) { 
+	       x = X[,,n] - matrix(colMeans(X[,,n]), nrow = N, ncol = length(colMeans(X[,,n])), byrow = TRUE)
+	       W = W + colSums(x*x)
       }
       W = W / ((N-1) * M)
 
@@ -75,20 +100,23 @@ psrf<- function (X) {
       Bpn = array(0,dim=c(1,D))
       m = rowMeans(colMeans(X))
       for (n in seq(1,M)) {
-	x = colMeans(X[,,n]) - m
-	Bpn = Bpn + x*x
+	       x = colMeans(X[,,n]) - m
+	       Bpn = Bpn + x*x
       }
       Bpn = Bpn / (M-1)
 
       # Calculate reduction factors
       S = (N-1)/N * W + Bpn
-      R = (M+1)/M * S / W - (N-1)/M/N
+      R = (M+1)/M * S / W - (N-1)/M/N # Ratio of variability between chains to that within
       V = R * W
       R = sqrt(R)
       B = Bpn*N
       neff = min(M*N*V/B,M*N)
-      output=list(R=R,neff=neff,V=V,W=W,B=B)
+      output = list(R = R, neff = neff, V = V, W = W, B = B)
+
+      # Return output
       return(output)
-}
+
+} # end function psrf
 ## Use byte compile
 psrf<-cmpfun(psrf)

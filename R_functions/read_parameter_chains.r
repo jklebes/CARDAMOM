@@ -1,8 +1,34 @@
-###
-## Function to read parameter chains and determine which will be ran, based on their convergence criterion
-###
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-# This function was created by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to read parameter chains and determine which will be ran, 
+# based on their convergence criterion
+# 
+# Author: T. Luke Smallman (12/11/2024)
+#
+#########################################################################################
 
 determine_parameter_chains_to_run<-function(PROJECT,n) {
 
@@ -31,10 +57,14 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # error check
 
   # test for convergence and whether or not there is any single chain which can be removed in they do not converge
-  notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars))
+  notconv = TRUE ; converged = rep("TRUE", times = max(PROJECT$model$nopars)) ; kept_chains = seq(1,dim(parameters)[3])
   while (dim(parameters)[3] > 2 & notconv) {
+  
      if (use_parallel == FALSE) {print("begin convergence checking")}
      converged = have_chains_converged(parameters)
+     # If all chains are kept then we do not need to update kept_chains,
+     # otherwise we will need to adjust below.
+
      # if log-likelihood has passed then we are not interested
      if (converged[length(converged)] == "FAIL") {
          #if (use_parallel == FALSE) {print("...not converged begin removing potential parameter vectors")}
@@ -54,13 +84,15 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
                 if (CI90[1] > CI90[2]) {
                     # rejected chain (while others converge) is actually better and the others have gotten stuck in a local minima.
                     # we will now assume that we use the single good chain instead...
-                    parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2))
+                    parameters = array(parameters[,,(i-1)],dim=c(dim(parameters)[1:2],2)) # Update parameter array
+                    kept_chains = kept_chains[(i-1)] # Update tracker of kept parameter chains
                     notconv = FALSE ; i = (i-1) * -1
                     if (use_parallel == FALSE) {print(paste("............chain ",i*-1," only has been accepted",sep=""))}
                 } else {
                     # if the non-converged chain is worse or just the same in likelihood terms as the others then we will ditch it
                     notconv = FALSE ; i = i-1 # converged now?
-                    parameters = parameters[,,-i]
+                    parameters = parameters[,,-i] # Update parameter array
+                    kept_chains = kept_chains[-i] # Update tracker of kept parameter chains
                     if (use_parallel == FALSE) {print(paste("............chain rejected = ",i,sep=""))}
                 }
             }
@@ -73,6 +105,8 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
                 parameters = parameters[,,-i]
                 # Update the maximum likelihood vector also
                 max_likelihood = max_likelihood[-i]
+                # Update the tracker of kept parameter chains
+                kept_chains = kept_chains[-i]
                 # Update the user
                 if (use_parallel == FALSE) {print(paste(".........single chain removal couldn't find convergence; removing lowest likelihood chain = ",i,sep=""))}
                 # reset counter
@@ -92,7 +126,7 @@ determine_parameter_chains_to_run<-function(PROJECT,n) {
   } # if more than 2 chains
 
   # Return parameters to user
-  return(list(parameters = parameters,converged = converged))
+  return(list(parameters = parameters, converged = converged, kept_chains = kept_chains))
 
 } # end function determine_parameter_chains_to_run
 ## Use byte compile
@@ -137,15 +171,15 @@ dump_binary_files <-function(infile) {
 
 } # end function
 
-read_parameter_chains<- function(PROJECT_in,n) {
+read_parameter_chains<-function(PROJECT_in,n) {
 
   # Determine the intended name for the parmeter files
-  pfile=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
+  pfile = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c(1:PROJECT_in$nochains),"_PARS",sep="")
 
   # Find and remove any files which have no data in them
   is_it = file.size(pfile) ; is_it = which(is_it > 0) ; pfile = pfile[is_it]
   # Return if no files
-  if (length(pfile) == 0) {return(-9999)}
+  if (length(pfile) == 0) { return(-9999) }
 
   # calculate the number of chains
   chains = seq(1, length(pfile))
@@ -191,7 +225,7 @@ read_parameter_chains<- function(PROJECT_in,n) {
                print('Likely cause is appended solutions in previously existing file')
                print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
                # keep only the end of the parameter sets
-               param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
+               param_sets = param_sets[,(((dim(param_sets)[2]-PROJECT_in$nsubsamples)+1):dim(param_sets)[2])]
                status[c] = 2
                # ...or fewer parameter sets than expected
            } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {
@@ -241,20 +275,22 @@ read_parameter_chains<- function(PROJECT_in,n) {
   # Potentially dangerous hack, take modulus of parameters which are nominally 1-365, 
   # but retrieved using broader parameter ranges to aid searching.
   if (PROJECT_in$model$name == "DALEC_1005" || PROJECT_in$model$name == "DALEC_1005a" ||
-      PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H3.P1" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#" ||
-      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#" ||
-      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.#") {
+      PROJECT_in$model$name == "DALEC.C1.D1.F2.P1.002" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.019" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H1.P1.003" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.004" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H3.P1.029" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.005" || PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.006" ||
+      PROJECT_in$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.007" || PROJECT_in$model$name == "DALEC.A2.C1.D2.F2.H2.P1.020" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P2.018" || PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H2.P5.021" ||
+      PROJECT_in$model$name == "DALEC.A4.C6.D2.F2.H2.P11.031" || PROJECT_in$model$name == "DALEC.A1.C7.D2.F2.H2.P1.R4.036" ||
+      PROJECT_in$model$name == "DALEC.A1.C1.D2.F2.H5.P1.037") {
       param_sets_out[c(12,15),,] = ((param_sets_out[c(12,15),,]-1)%%365.25)+1
   }
-  if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.#") {
+  if (PROJECT_in$model$name == "DALEC.C5.D1.F2.P1.013") {
       param_sets_out[c(8,11),,] = ((param_sets_out[c(8,11),,]-1)%%365.25)+1
   }
 
   # return the parameter solutions
+  #return(list(parameters = param_sets_out, pfile = pfile))
   return(param_sets_out)
 
 } # end of function

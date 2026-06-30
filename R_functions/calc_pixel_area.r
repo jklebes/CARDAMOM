@@ -1,3 +1,34 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# This function is to determine the area of a pixel at any location in meter squared.
+# This function is based on an Python function development by J. F. Exbrayat (UoE).
+# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# Note assume regular grid, though allows for differing lat and long resolutions
+#
+#########################################################################################
 
 ###
 ## Function to determine the area of a pixel at any location in meter squared
@@ -33,9 +64,12 @@ calc_pixel_area<-function(longitude,latitude) {
 
     # Determine the longitude / latitude difference
     dlon = diff(longitude[,1]) ; dlat = diff(latitude[1,])
-    # Ensure that the grid is regular
-    if (length(unique(dlon)) != 1) {stop("calc_pixel_area: longitude dimension not on regular grid")}
-    if (length(unique(dlat)) != 1) {stop("calc_pixel_area: latitude dimension not on regular grid")}
+    # Ensure that the grid is regular.
+    # NOTE: use all.equal (relative tolerance ~1.5e-8) rather than exact equality
+    # via unique(), so floating-point round-off in coordinates (common when grids
+    # come from netCDF / projection round-trips) does not trigger a spurious stop.
+    if (!isTRUE(all.equal(min(dlon), max(dlon)))) {stop("calc_pixel_area: longitude dimension not on regular grid")}
+    if (!isTRUE(all.equal(min(dlat), max(dlat)))) {stop("calc_pixel_area: latitude dimension not on regular grid")}
     # Extract resolution (lon/lat)
     resolution = c(dlon[1],dlat[1])
     

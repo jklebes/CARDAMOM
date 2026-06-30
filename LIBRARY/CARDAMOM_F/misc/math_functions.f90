@@ -1,3 +1,39 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Module contains functions needed to mathematical calculations in CARDAMOM
+! 
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! J. F. Exbrayat (University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module math_functions
 
@@ -16,19 +52,7 @@ module math_functions
             random_multivariate, increment_covariance_matrix, &
             par2nor, nor2par, log_par2nor, log_nor2par, &
             cholesky_factor, inverse_matrix, matrix_vector_func, &
-            calculate_variance, increment_variance
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
+            calculate_variance, increment_variance, linear_model_gradient
 
   !!!!!!!!!!!
   ! Subroutines rand(), narray() and rnstrt() are from:
@@ -140,7 +164,7 @@ module math_functions
     double precision, intent(inout) :: cur, mean_par, variance
 
     ! local variables
-    integer :: n, i, j
+    integer :: n
     double precision :: new_mean_par, nnew
 
     nnew = 1d0
@@ -776,6 +800,47 @@ module math_functions
   !
   !------------------------------------------------------------------
   !
+  double precision function linear_model_gradient(x,y,interval)
+
+    ! Function to calculate the gradient of a linear model for a given depentent
+    ! variable (y) based on predictive variable (x). The typical use of this
+    ! function will in fact be to assume that x is time.
+
+    implicit none
+
+    ! declare input variables
+    integer :: interval ! the total number of variables being regressed over
+    double precision, dimension(interval) :: x,y 
+
+    ! declare local variables
+    double precision :: sum_x, sum_y, sumsq_x,sum_product_xy
+
+    ! calculate the sum of x
+    sum_x = sum(x)
+    ! calculate the sum of y
+    sum_y = sum(y)
+    ! calculate the sum of squares of x
+    !sumsq_x = sum(x*x)
+    ! calculate the sum of the product of xy
+    !sum_product_xy = sum(x*y)
+    ! calculate the gradient
+    !linear_model_gradient = ( (dble(interval)*sum_product_xy) - (sum_x*sum_y) ) &
+    !                      / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+    ! Linear regression done as single line to reduce assignment requirements
+    linear_model_gradient = ( (dble(interval)*sum(x*y)) - (sum_x*sum_y) ) &
+                          / ( (dble(interval)*sum(x*x)) - (sum_x*sum_x) )
+
+    ! for future reference here is how to calculate the intercept
+!    intercept = ( (sum_y*sumsq_x) - (sum_x*sum_product_xy) ) &
+!              / ( (dble(interval)*sumsq_x) - (sum_x*sum_x) )
+
+    ! don't forget to return to the user
+    return
+
+  end function linear_model_gradient
+  !
+  !------------------------------------------------------------------
+  !
   double precision function randn(option)
 
     ! From Numerical Recipes p271 Press et al., 1986 2nd Edition Chapter 7,
@@ -834,7 +899,7 @@ module math_functions
             enddo
             iy = iv(1)
         endif
-        k = nint(idum)/IQ
+        k = nint(idum/dble(IQ))
         idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
         if (idum < 0d0) idum = idum+dble(IM)
         j = 1+iy/NDIV
@@ -845,14 +910,14 @@ module math_functions
         if (idum < 0d0 .or. iy == 0) then
             idum = max(-idum,const)
             do j = (NTAB+8),1,-1
-               k = nint(idum)/IQ
+               k = nint(idum/dble(IQ))
                idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
                if (idum < 0d0) idum = idum+dble(IM)
                if (j < NTAB) iv(j) = nint(idum)
             enddo
             iy = iv(1)
         endif
-        k = nint(idum)/IQ
+        k = nint(idum/dble(IQ))
         idum = dble(IA)*(idum-dble(k*IQ))-dble(IR*k)
         if (idum < 0d0) idum = idum + dble(IM)
         j = 1+iy/NDIV

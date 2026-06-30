@@ -243,8 +243,8 @@ run_each_site_local<-function(site,ssp,PROJECT,outdir,original_end,cardamom_lat,
       states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,site)
                                       
       # we want straight forward reduced dataset of common stocks and fluxes
-      num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975)
-      #num_quantiles = c(0.025,0.5,0.975)
+      #num_quantiles = c(0.025,0.1607143,0.2964286,0.4321429,0.5,0.5678571,0.7035714,0.8392857,0.975)
+      num_quantiles = c(0.025,0.5,0.975)
       na_flag = TRUE
 
       # Run post-processing for gridded analysis

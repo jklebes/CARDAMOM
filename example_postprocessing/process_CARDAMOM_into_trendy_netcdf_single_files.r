@@ -1,7 +1,7 @@
 
 ###
 ## Process CARDAMOM-DALEC output files into NetCDF files 
-## consistent with the TRENDYv13 / GCP model intercomparison structure
+## consistent with the TRENDYv14 / GCP model intercomparison structure
 ## In constrast to the sibling script which groups variables together into different files,
 ## this script places everything into a single file per document consistent with the latest guidance.
 ### 
@@ -9,17 +9,13 @@
 ###
 ## Job specific information
 
-print("Begin creation of Trendy v13 compatible single variable netcdf files...")
+print("Begin creation of Trendy v14 compatible single variable netcdf files...")
 
 # set working directory
 setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/")
 
 # set input and output directories
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood"
-input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB_waterEDC"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE"
-#input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_GEOSCHEM_GOSAT_NBE"
+input_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR"
 
 # Specify any extra information for the filename
 output_prefix = "CARDAMOM_S3_" # follow with "_"
@@ -52,7 +48,8 @@ if (dir.exists(out_dir) == FALSE) {
 ## Begin creating information for processing and subsequent saving to files
 
 # Time information
-nos_years = length(c(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year)))
+years = c(as.numeric(PROJECT$start_year):as.numeric(PROJECT$end_year))
+nos_years = length(years)
 steps_per_year = dim(grid_output$lai_m2m2)[3] / nos_years
 
 # create lat / long axes, assumes regular WGS-84 grid
@@ -72,7 +69,7 @@ if (length(which(quantiles_wanted == 0.025)) == 1) {
     q1_quant_lab = "2.5pc"
     q1_quant_longlab = "2.5 % quantile"
 } else {
-    stop("Desired low quantile cannot be found")
+    stop("Desired min quantile cannot be found")
 }
 # A lower quantile
 if (length(which(quantiles_wanted == 0.05)) == 1) {
@@ -83,10 +80,10 @@ if (length(which(quantiles_wanted == 0.05)) == 1) {
     stop("Desired low quantile cannot be found")
 }
 # A lower quartile
-if (length(which(quantiles_wanted == 0.25)) == 1) {
-    q3_quant = which(quantiles_wanted == 0.25)
-    q3_quant_lab = "25pc"
-    q3_quant_longlab = "25 % quantile"
+if (length(which(quantiles_wanted == 0.160)) == 1) {
+    q3_quant = which(quantiles_wanted == 0.160)
+    q3_quant_lab = "16pc"
+    q3_quant_longlab = "16 % quantile"
 } else {
     stop("Desired lower quartile cannot be found")
 }
@@ -97,10 +94,10 @@ if (length(which(quantiles_wanted == 0.5)) == 1) {
     stop("Median quantile cannot be found")
 }
 # A upper quartile
-if (length(which(quantiles_wanted == 0.75)) == 1) {
-    q4_quant = which(quantiles_wanted == 0.75)
-    q4_quant_lab = "75pc"
-    q4_quant_longlab = "75 % quantile"
+if (length(which(quantiles_wanted == 0.84)) == 1) {
+    q4_quant = which(quantiles_wanted == 0.84)
+    q4_quant_lab = "84pc"
+    q4_quant_longlab = "84 % quantile"
 } else {
     stop("Desired upper quartile cannot be found")
 }
@@ -214,6 +211,8 @@ if (exists(x = "combined_wood_to_litter_gCm2day", where = grid_output)) {Combine
 # Combined natural, fire and harvest driven litter to som creation
 if (exists(x = "combined_litter_to_som_gCm2day", where = grid_output)) {Combined_litter_som_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "combined_woodlitter_to_som_gCm2day", where = grid_output)) {Combined_woodlitter_som_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
+# Ecological ratios
+if (exists(x = "mean_annual_cue", where = grid_output)) {ACUE = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,nos_years))}
 # Direct allocation of NPP (labile, foliar, fine root, wood, gC/m2/day)
 if (exists(x = "alloc_wood_gCm2day", where = grid_output)) {NPP_wood_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
 if (exists(x = "alloc_roots_gCm2day", where = grid_output)) {NPP_root_FLX = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim,nos_quantiles,length(PROJECT$model$timestep_days)))}
@@ -340,6 +339,8 @@ for (n in seq(1, length(PROJECT$sites))) {
          # Combined natural, fire and harvest driven litter to som creation
          if (exists(x = "Combined_litter_som_FLX")) {Combined_litter_som_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_litter_to_som_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists(x = "Combined_woodlitter_som_FLX")) {Combined_woodlitter_som_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$combined_woodlitter_to_som_gCm2day[n,,]* 1e-3 * (1/86400)}
+         # Ecological ratios
+         if (exists(x = "ACUE")) {ACUE[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$mean_annual_cue[n,,]}
          # NPP (foliar, root, wood; gC/m2/day -> kgC/m2/s)
          if (exists("NPP_root_FLX")) {NPP_root_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_roots_gCm2day[n,,]* 1e-3 * (1/86400)}
          if (exists("NPP_wood_FLX")) {NPP_wood_FLX[grid_output$i_location[n],grid_output$j_location[n],,] = grid_output$alloc_wood_gCm2day[n,,]* 1e-3 * (1/86400)}
@@ -363,6 +364,13 @@ for (n in seq(1, length(PROJECT$sites))) {
      } # Does the file exist / has it been processed
 
 } # site loop
+
+# Extract to final common information
+area_m2 = grid_output$area_m2
+land_fraction = grid_output$land_fraction
+
+# Tidy away the main objects to save memory
+rm(grid_output) ; gc()
 
 ###
 ## Define dimensions which will be used across all files
@@ -406,9 +414,9 @@ if(exists("AIRT_MIN")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AIRT_MIN)
    # Close the existing file to ensure its written to file
@@ -431,9 +439,9 @@ if(exists("AIRT_MAX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AIRT_MAX)
    # Close the existing file to ensure its written to file
@@ -456,9 +464,9 @@ if(exists("AIRT_AVG")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AIRT_AVG)
    # Close the existing file to ensure its written to file
@@ -481,9 +489,9 @@ if(exists("SWRAD")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, SWRAD)
    # Close the existing file to ensure its written to file
@@ -506,9 +514,9 @@ if(exists("CO2")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, CO2)
    # Close the existing file to ensure its written to file
@@ -531,9 +539,9 @@ if(exists("PRECIP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, PRECIP)
    # Close the existing file to ensure its written to file
@@ -556,9 +564,9 @@ if(exists("FLOSS_FRAC")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FLOSS_FRAC)
    # Close the existing file to ensure its written to file
@@ -581,9 +589,9 @@ if(exists("BURNT_FRAC")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, BURNT_FRAC)
    # Close the existing file to ensure its written to file
@@ -606,9 +614,9 @@ if(exists("WINDSPD")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, WINDSPD)
    # Close the existing file to ensure its written to file
@@ -631,9 +639,9 @@ if(exists("VPD")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, VPD)
    # Close the existing file to ensure its written to file
@@ -643,6 +651,42 @@ if(exists("VPD")) {
 ###
 ## Model state variables
 
+# Annual carbon use efficiency (gC/gC, NPP / GPP)
+if(exists("ACUE")) {
+   # Define the output file name
+   output_name = paste(PROJECT$results_processedpath,output_prefix,"mean_annual_cue",output_suffix,".nc",sep="")
+   # Delete if the file currently exists
+   if (file.exists(output_name)) {file.remove(output_name)}
+   # Define the new variable
+   var_new  = ncvar_def("cue", unit="kg.m-2.s-1", longname = "Mean Annual Carbon Use Efficiency - Median estimate", dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q1 = ncvar_def(paste("cue_",q1_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q1_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q2 = ncvar_def(paste("cue_",q2_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q2_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q3 = ncvar_def(paste("cue_",q3_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q3_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q4 = ncvar_def(paste("cue_",q4_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q4_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q5 = ncvar_def(paste("cue_",q5_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q5_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   var_q6 = ncvar_def(paste("cue_",q6_quant_lab,sep=""), unit="0-1", longname = paste("Mean Annual Carbon Use Efficiency - ",q6_quant_longlab,sep=""), dim=list(long_dimen,lat_dimen,year_dimen), missval = -99999, prec="single",compression = 9)
+   # Create the empty file space
+   new_file=nc_create(filename=output_name, vars=list(var0,var1,var2,var_new,var_q1,var_q2,var_q3,var_q4,var_q5,var_q6), force_v4 = TRUE)
+   # Load first variable into the file
+   # TIMING
+   ncvar_put(new_file, var0, drivers$met[,1])
+   # Grid area 
+   ncvar_put(new_file, var1, area_m2)
+   # Land fraction
+   ncvar_put(new_file, var2, land_fraction)
+   # VARIABLE
+   ncvar_put(new_file, var_new, ACUE[,,mid_quant,])
+   ncvar_put(new_file, var_q1,  ACUE[,,q1_quant,])
+   ncvar_put(new_file, var_q2,  ACUE[,,q2_quant,])
+   ncvar_put(new_file, var_q3,  ACUE[,,q3_quant,])
+   ncvar_put(new_file, var_q4,  ACUE[,,q4_quant,])   
+   ncvar_put(new_file, var_q5,  ACUE[,,q5_quant,])
+   ncvar_put(new_file, var_q6,  ACUE[,,q6_quant,])   
+   # Close the existing file to ensure its written to file
+   nc_close(new_file)
+}
+
+         
 # LAI
 if(exists("LAI")) {
    # Define the output file name
@@ -665,9 +709,9 @@ if(exists("LAI")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, LAI[,,mid_quant,])
    ncvar_put(new_file, var_q1,  LAI[,,q1_quant,])
@@ -700,9 +744,9 @@ if(exists("LAB")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, LAB[,,mid_quant,])
    ncvar_put(new_file, var_q1,  LAB[,,q1_quant,])
@@ -735,9 +779,9 @@ if(exists("FOL")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FOL[,,mid_quant,])
    ncvar_put(new_file, var_q1,  FOL[,,q1_quant,])
@@ -770,9 +814,9 @@ if(exists("ROOT")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ROOT[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ROOT[,,q1_quant,])
@@ -805,9 +849,9 @@ if(exists("WOOD")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, WOOD[,,mid_quant,])
    ncvar_put(new_file, var_q1,  WOOD[,,q1_quant,])
@@ -840,9 +884,9 @@ if(exists("LIT")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, LIT[,,mid_quant,])
    ncvar_put(new_file, var_q1,  LIT[,,q1_quant,])
@@ -875,9 +919,9 @@ if(exists("WLIT")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, WLIT[,,mid_quant,])
    ncvar_put(new_file, var_q1,  WLIT[,,q1_quant,])
@@ -910,9 +954,9 @@ if(exists("SOIL")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, SOIL[,,mid_quant,])
    ncvar_put(new_file, var_q1,  SOIL[,,q1_quant,])
@@ -945,9 +989,9 @@ if(exists("DOM")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, DOM[,,mid_quant,])
    ncvar_put(new_file, var_q1,  DOM[,,q1_quant,])
@@ -980,9 +1024,9 @@ if(exists("BIO")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, BIO[,,mid_quant,])
    ncvar_put(new_file, var_q1,  BIO[,,q1_quant,])
@@ -1015,9 +1059,9 @@ if(exists("dBIO")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, dBIO[,,mid_quant,])
    ncvar_put(new_file, var_q1,  dBIO[,,q1_quant,])
@@ -1050,9 +1094,9 @@ if(exists("TOT")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, TOT[,,mid_quant,])
    ncvar_put(new_file, var_q1,  TOT[,,q1_quant,])
@@ -1085,9 +1129,9 @@ if(exists("GPP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, GPP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  GPP[,,q1_quant,])
@@ -1120,9 +1164,9 @@ if(exists("AGPP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AGPP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AGPP[,,q1_quant,])
@@ -1155,9 +1199,9 @@ if(exists("RAU")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, RAU[,,mid_quant,])
    ncvar_put(new_file, var_q1,  RAU[,,q1_quant,])
@@ -1190,9 +1234,9 @@ if(exists("ARAU")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ARAU[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ARAU[,,q1_quant,])
@@ -1225,9 +1269,9 @@ if(exists("RHE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, RHE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  RHE[,,q1_quant,])
@@ -1261,9 +1305,9 @@ if(exists("ARHE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ARHE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ARHE[,,q1_quant,])
@@ -1297,9 +1341,9 @@ if(exists("RECO")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, RECO[,,mid_quant,])
    ncvar_put(new_file, var_q1,  RECO[,,q1_quant,])
@@ -1332,9 +1376,9 @@ if(exists("ARECO")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ARECO[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ARECO[,,q1_quant,])
@@ -1367,9 +1411,9 @@ if(exists("NPP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NPP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NPP[,,q1_quant,])
@@ -1402,9 +1446,9 @@ if(exists("ANPP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ANPP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ANPP[,,q1_quant,])
@@ -1437,9 +1481,9 @@ if(exists("NEE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NEE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NEE[,,q1_quant,])
@@ -1472,9 +1516,9 @@ if(exists("ANEE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ANEE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ANEE[,,q1_quant,])
@@ -1507,9 +1551,9 @@ if(exists("NBE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NBE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NBE[,,q1_quant,])
@@ -1542,9 +1586,9 @@ if(exists("ANBE")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ANBE[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ANBE[,,q1_quant,])
@@ -1577,9 +1621,9 @@ if(exists("NBP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NBP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NBP[,,q1_quant,])
@@ -1612,9 +1656,9 @@ if(exists("ANBP")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ANBP[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ANBP[,,q1_quant,])
@@ -1648,9 +1692,9 @@ if(exists("FIR")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FIR[,,mid_quant,])
    ncvar_put(new_file, var_q1,  FIR[,,q1_quant,])
@@ -1683,9 +1727,9 @@ if(exists("AFIR")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AFIR[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AFIR[,,q1_quant,])
@@ -1718,9 +1762,9 @@ if(exists("HARV")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, HARV[,,mid_quant,])
    ncvar_put(new_file, var_q1,  HARV[,,q1_quant,])
@@ -1753,9 +1797,9 @@ if(exists("AHARV")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AHARV[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AHARV[,,q1_quant,])
@@ -1788,9 +1832,9 @@ if(exists("Combined_bio_litter_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_bio_litter_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_bio_litter_FLX[,,q1_quant,])
@@ -1821,9 +1865,9 @@ if(exists("Combined_labile_litter_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_labile_litter_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_labile_litter_FLX[,,q1_quant,])
@@ -1856,9 +1900,9 @@ if(exists("Combined_foliage_litter_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_foliage_litter_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_foliage_litter_FLX[,,q1_quant,])
@@ -1891,9 +1935,9 @@ if(exists("Combined_roots_litter_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_roots_litter_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_roots_litter_FLX[,,q1_quant,])
@@ -1927,9 +1971,9 @@ if(exists("Combined_wood_litter_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_wood_litter_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_wood_litter_FLX[,,q1_quant,])
@@ -1962,9 +2006,9 @@ if(exists("Combined_litter_som_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_litter_som_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_litter_som_FLX[,,q1_quant,])
@@ -1997,9 +2041,9 @@ if(exists("Combined_woodlitter_som_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # Variables
    ncvar_put(new_file, var_new, Combined_woodlitter_som_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Combined_woodlitter_som_FLX[,,q1_quant,])
@@ -2032,9 +2076,9 @@ if(exists("FIREemiss_litter")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FIREemiss_litter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    ncvar_put(new_file, var_q1,  FIREemiss_litter[,,q1_quant,]*(44/12)) # NOTE: unit change from C -> CO2
@@ -2067,9 +2111,9 @@ if(exists("FIREemiss_woodlitter")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FIREemiss_woodlitter[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    ncvar_put(new_file, var_q1,  FIREemiss_woodlitter[,,q1_quant,]*(44/12)) # NOTE: unit change from C -> CO2
@@ -2102,9 +2146,9 @@ if(exists("FIREemiss_som")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FIREemiss_som[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    ncvar_put(new_file, var_q1,  FIREemiss_som[,,q1_quant,]*(44/12)) # NOTE: unit change from C -> CO2
@@ -2138,9 +2182,9 @@ if(exists("FIREemiss_bio")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, FIREemiss_bio[,,mid_quant,]*(44/12)) # NOTE: unit change from C -> CO2
    ncvar_put(new_file, var_q1,  FIREemiss_bio[,,q1_quant,]*(44/12)) # NOTE: unit change from C -> CO2
@@ -2179,9 +2223,9 @@ if(exists("NPP_combinedfoliage_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NPP_combinedfoliage_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NPP_combinedfoliage_FLX[,,q1_quant,])
@@ -2214,9 +2258,9 @@ if(exists("NPP_root_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NPP_root_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NPP_root_FLX[,,q1_quant,])
@@ -2249,9 +2293,9 @@ if(exists("NPP_wood_FLX")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, NPP_wood_FLX[,,mid_quant,])
    ncvar_put(new_file, var_q1,  NPP_wood_FLX[,,q1_quant,])
@@ -2288,9 +2332,9 @@ if (exists("ET")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, ET[,,mid_quant,])
    ncvar_put(new_file, var_q1,  ET[,,q1_quant,])
@@ -2323,9 +2367,9 @@ if (exists("Etrans")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, Etrans[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Etrans[,,q1_quant,])
@@ -2358,9 +2402,9 @@ if (exists("Esoil")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, Esoil[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Esoil[,,q1_quant,])
@@ -2393,9 +2437,9 @@ if (exists("Ewetevap")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, Ewetcanopy[,,mid_quant,])
    ncvar_put(new_file, var_q1,  Ewetcanopy[,,q1_quant,])
@@ -2428,9 +2472,9 @@ if (exists("total_drainage")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, total_drainage[,,mid_quant,])
    ncvar_put(new_file, var_q1,  total_drainage[,,q1_quant,])
@@ -2463,9 +2507,9 @@ if (exists("runoff")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, runoff[,,mid_quant,])
    ncvar_put(new_file, var_q1,  runoff[,,q1_quant,])
@@ -2498,9 +2542,9 @@ if (exists("underflow")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, underflow[,,mid_quant,])
    ncvar_put(new_file, var_q1,  underflow[,,q1_quant,])
@@ -2542,9 +2586,9 @@ if (exists(x = "MTT_biomass_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_biomass_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_biomass_years[,,q1_quant])
@@ -2582,9 +2626,9 @@ if (exists(x = "MTT_dom_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_dom_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_dom_years[,,q1_quant])
@@ -2622,9 +2666,9 @@ if (exists(x = "MTT_labile_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_labile_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_labile_years[,,q1_quant])
@@ -2662,9 +2706,9 @@ if (exists(x = "MTT_foliage_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_foliage_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_foliage_years[,,q1_quant])
@@ -2702,9 +2746,9 @@ if (exists(x = "MTT_roots_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_roots_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_roots_years[,,q1_quant])
@@ -2742,9 +2786,9 @@ if (exists(x = "MTT_wood_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_wood_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_wood_years[,,q1_quant])
@@ -2782,9 +2826,9 @@ if (exists(x = "MTT_litter_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_litter_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_litter_years[,,q1_quant])
@@ -2822,9 +2866,9 @@ if (exists(x = "MTT_woodlitter_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_woodlitter_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_woodlitter_years[,,q1_quant])
@@ -2862,9 +2906,9 @@ if (exists(x = "MTT_som_years", where = grid_output)) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, grid_output$MTT_som_years[,,mid_quant])
    ncvar_put(new_file, var_q1,  grid_output$MTT_som_years[,,q1_quant])
@@ -2902,9 +2946,9 @@ if (exists(x = "AMTT_bio")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_bio[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_bio[,,q1_quant,])
@@ -2942,9 +2986,9 @@ if (exists(x = "AMTT_lab")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_lab[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_lab[,,q1_quant,])
@@ -2982,9 +3026,9 @@ if (exists(x = "AMTT_fol")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_fol[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_fol[,,q1_quant,])
@@ -3022,9 +3066,9 @@ if (exists(x = "AMTT_roots")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_roots[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_roots[,,q1_quant,])
@@ -3062,9 +3106,9 @@ if (exists(x = "AMTT_wood")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_wood[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_wood[,,q1_quant,])
@@ -3102,9 +3146,9 @@ if (exists(x = "AMTT_lit")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_lit[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_lit[,,q1_quant,])
@@ -3142,9 +3186,9 @@ if (exists(x = "AMTT_wlit")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_wlit[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_wlit[,,q1_quant,])
@@ -3182,9 +3226,9 @@ if (exists(x = "AMTT_som")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_som[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_som[,,q1_quant,])
@@ -3222,9 +3266,9 @@ if (exists(x = "AMTT_dom")) {
    # TIMING
    ncvar_put(new_file, var0, drivers$met[,1])
    # Grid area 
-   ncvar_put(new_file, var1, grid_output$area_m2)
+   ncvar_put(new_file, var1, area_m2)
    # Land fraction
-   ncvar_put(new_file, var2, grid_output$land_fraction)
+   ncvar_put(new_file, var2, land_fraction)
    # VARIABLE
    ncvar_put(new_file, var_new, AMTT_dom[,,mid_quant,])
    ncvar_put(new_file, var_q1,  AMTT_dom[,,q1_quant,])

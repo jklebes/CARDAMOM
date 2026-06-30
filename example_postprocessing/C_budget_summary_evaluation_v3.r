@@ -26,30 +26,10 @@ setwd("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM")
 ## Load analysis
 
 # PointsOfChange
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec2_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_CsomPriorNCSDC3m/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/reccap2_permafrost_1deg_dalec4_isimip3a_agb_lca_nbe_gpp_CsomPriorNCSDC3m/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_AGB/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2_2.5deg_oneAGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB_NBE/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
-#load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
-load("/exports/csce/datastore/geos/users/lsmallma/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_2x2.5deg_dalec4_trendyv13_LCA_AGB_GEOSCHEM_GOSAT_NBE/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/infofile.RData")
-#load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/infofile.RData")
+load("/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv13_LCA_AGB/infofile.RData")
 
 # Set output path for figures and tables
 out_dir = PROJECT$figpath
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/Miombo_0.5deg_allWood/FIGURES/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.#_MHMCMC/global_1deg_dalec4_trendyv12_LCA_AGB/FIGURES/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/ESSD_update/figures/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/RECCAP2/figures/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/LTSS_CARBON_INTEGRATION/InternationalScience/figures_africa/"
-#out_dir = "~/WORK/GREENHOUSE/models/CARDAMOM/SECO/figures/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/UK_0.0625deg_baseline/FIGURES/"
-#out_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/CARDAMOM_OUTPUTS/DALEC.A4.C6.D2.F2.H2.P11.#_MHMCMC/global_2x2.5deg_dalec4_trendyv12_LCA_AGB_FAPAR/FIGURES/"
 
 ### Print screen to file for later review
 sink(file = paste(out_dir,"C_budget_summary_",PROJECT$name,"_",Sys.Date(),".txt",sep=""))
@@ -59,8 +39,10 @@ sink(file = paste(out_dir,"C_budget_summary_",PROJECT$name,"_",Sys.Date(),".txt"
 load(paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep=""))
 
 # Specify the position within the stored ensemble for the median estimate and the desired uncertainty bands
-mid_quant = 4 ; low_quant = 2 ; high_quant = 6
-wanted_quant = c(low_quant,3,mid_quant,5,high_quant)
+#mid_quant = 4 ; low_quant = 1 ; high_quant = 7 # 95 %
+mid_quant = 4 ; low_quant = 2 ; high_quant = 6 # 90 %
+mid_quant = 4 ; low_quant = 3 ; high_quant = 5 # 68, i.e. 1-SD %
+wanted_quant = c(1:7) # all quantiles
 
 # Extract timing information
 run_years = as.numeric(PROJECT$start_year) : as.numeric(PROJECT$end_year)
@@ -216,7 +198,7 @@ if (length(par_labels) == dim(grid_output$parameters)[3]) {
 ## Determine needed spatial information
 
 # generate the lat / long grid again
-output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
 grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 cardamom_ext = output$cardamom_ext
@@ -245,7 +227,7 @@ par_array_tmp=par_array_tmp[actual_forests,]
 par_array_tmp=array(par_array_tmp,dim=c((length(par_array_tmp)/dim(par_array_median_normalised)[3]),dim(par_array_median_normalised)[3]))
 
 # K-means
-nos_desired_clusters = 3 # specify the number of clusters wanted
+nos_desired_clusters = 6 # specify the number of clusters wanted
 cluster = kmeans(par_array_tmp, centers = nos_desired_clusters, iter.max = 10, nstart = 50)
 
 # Extract the cluster information which we can then use in maps / aggregation
@@ -257,7 +239,7 @@ for (i in seq(1, grid_output$nos_pars_clusters_kmeans)) {
 grid_output$clusters_kmeans=array(grid_output$clusters_kmeans,dim=c(dim(par_array_median_normalised)[1:2]))
 
 #par(mfrow=c(2,2)) ; image.plot(grid_output$pars_clusters) ; image.plot(grid_output$pars_clusters_kmeans)
-image.plot(grid_output$clusters_kmeans, main=3)
+image.plot(grid_output$clusters_kmeans, main=6)
 
 ### 
 ## Create land mask / boundary overlays needed
@@ -418,7 +400,6 @@ if (is.na(max(biome_names))) {
 #    tmp[which(is.na(grid_output$clusters))] = NA
     grid_output$clusters = tmp
     grid_output$nos_clusters = length(biome_names)  
-
 }
 
 ###
@@ -497,17 +478,17 @@ wood_TgC = rep(0,nos_years) ; wood_lower_TgC = rep(0,nos_years) ; wood_upper_TgC
 litter_TgC = rep(0,nos_years) ; litter_lower_TgC = rep(0,nos_years) ; litter_upper_TgC = rep(0,nos_years)
 woodlitter_TgC = rep(0,nos_years) ; woodlitter_lower_TgC = rep(0,nos_years) ; woodlitter_upper_TgC = rep(0,nos_years)
 soil_TgC = rep(0,nos_years) ; soil_lower_TgC = rep(0,nos_years) ; soil_upper_TgC = rep(0,nos_years)
+# Pool anomalies
+dCwood_TgC = rep(0,nos_years) ; dCwood_lower_TgC = rep(0,nos_years) ; dCwood_upper_TgC = rep(0,nos_years)
+dClitter_TgC = rep(0,nos_years) ; dClitter_lower_TgC = rep(0,nos_years) ; dClitter_upper_TgC = rep(0,nos_years)
+dCwoodlitter_TgC = rep(0,nos_years) ; dCwoodlitter_lower_TgC = rep(0,nos_years) ; dCwoodlitter_upper_TgC = rep(0,nos_years)
+dCsoil_TgC = rep(0,nos_years) ; dCsoil_lower_TgC = rep(0,nos_years) ; dCsoil_upper_TgC = rep(0,nos_years)
 # Flux trends
 gpp_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 rauto_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 rhet_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 lai_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 et_trend = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
-# Flux normalised by first year trends
-#gpp_trend_normalised = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
-#rauto_trend_normalised = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
-#rhet_trend_normalised = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
-#lai_trend_normalised = array(NA, dim=c(dim(grid_output$mean_nee_gCm2day)[1],dim(grid_output$mean_nee_gCm2day)[2]))
 # Timing variable needed
 time_vector = seq(0,nos_years, length.out = dim(grid_output$nee_gCm2day)[3])
 
@@ -535,20 +516,11 @@ for (n in seq(1, PROJECT$nosites)) {
          tmp3 = rollapply(grid_output$rhet_gCm2day[n,mid_quant,], by = steps_per_year, width = steps_per_year, FUN = mean, na.rm=TRUE)*365.25
          tmp4 = rollapply(grid_output$lai_m2m2[n,mid_quant,], by = steps_per_year, width = steps_per_year, FUN = mean, na.rm=TRUE)
          tmp5 = rollapply(grid_output$ET_kgH2Om2day[n,mid_quant,], by = steps_per_year, width = steps_per_year, FUN = mean, na.rm=TRUE)*365.25
-         #gpp_trend[i_loc,j_loc]   = coef(lm(grid_output$gpp_gCm2day[n,mid_quant,] ~ time_vector))[2]   # median selected
-         #rauto_trend[i_loc,j_loc] = coef(lm(grid_output$rauto_gCm2day[n,mid_quant,] ~ time_vector))[2] # median selected
-         #rhet_trend[i_loc,j_loc]  = coef(lm(grid_output$rhet_gCm2day[n,mid_quant,] ~ time_vector))[2]  # median selected
-         #lai_trend[i_loc,j_loc]   = coef(lm(grid_output$lai_m2m2[n,mid_quant,] ~ time_vector))[2]      # median selected
          gpp_trend[i_loc,j_loc]   = coef(lm(tmp1 ~ c(1:nos_years)))[2] 
          rauto_trend[i_loc,j_loc] = coef(lm(tmp2 ~ c(1:nos_years)))[2] 
          rhet_trend[i_loc,j_loc]  = coef(lm(tmp3 ~ c(1:nos_years)))[2] 
          lai_trend[i_loc,j_loc]   = coef(lm(tmp4 ~ c(1:nos_years)))[2] 
          et_trend[i_loc,j_loc]    = coef(lm(tmp5 ~ c(1:nos_years)))[2] 
-         # Estimate pixel level trends normalised by first year
-         #gpp_trend_normalised[i_loc,j_loc]   = coef(lm((tmp1/tmp1[1]) ~ c(1:nos_years)))[2] 
-         #rauto_trend_normalised[i_loc,j_loc] = coef(lm((tmp2/tmp2[1]) ~ c(1:nos_years)))[2] 
-         #rhet_trend_normalised[i_loc,j_loc]  = coef(lm((tmp3/tmp3[1]) ~ c(1:nos_years)))[2] 
-         #lai_trend_normalised[i_loc,j_loc]   = coef(lm((tmp4/tmp4[1]) ~ c(1:nos_years)))[2] 
          # Cumulate the total area actually used in the analysis
          cumarea = cumarea + area[i_loc,j_loc]
          lai_grid[i_loc,j_loc,] = rollapply(grid_output$lai_m2m2[n,mid_quant,], width = steps_per_year, by = steps_per_year, mean, na.rm=TRUE)         
@@ -580,6 +552,21 @@ for (n in seq(1, PROJECT$nosites)) {
          soil_TgC               = soil_TgC          + rollapply(grid_output$som_gCm2[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
          soil_lower_TgC         = soil_lower_TgC    + rollapply(grid_output$som_gCm2[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          soil_upper_TgC         = soil_upper_TgC    + rollapply(grid_output$som_gCm2[n,high_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         # Stocks anomalies
+         dCwood_TgC             = dCwood_TgC          + rollapply(grid_output$dCwood_gCm2[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+         dCwood_lower_TgC       = dCwood_lower_TgC    + rollapply(grid_output$dCwood_gCm2[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         dCwood_upper_TgC       = dCwood_upper_TgC    + rollapply(grid_output$dCwood_gCm2[n,high_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         dClitter_TgC           = dClitter_TgC        + rollapply(grid_output$dClitter_gCm2[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+         dClitter_lower_TgC     = dClitter_lower_TgC  + rollapply(grid_output$dClitter_gCm2[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         dClitter_upper_TgC     = dClitter_upper_TgC  + rollapply(grid_output$dClitter_gCm2[n,high_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         if (length(which(names(grid_output) == "woodlitter_gCm2")) > 0) {
+             dCwoodlitter_TgC       = dCwoodlitter_TgC       + rollapply(grid_output$dCwoodlitter_gCm2[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+             dCwoodlitter_lower_TgC = dCwoodlitter_lower_TgC + rollapply(grid_output$dCwoodlitter_gCm2[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+             dCwoodlitter_upper_TgC = dCwoodlitter_upper_TgC + rollapply(grid_output$dCwoodlitter_gCm2[n,high_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         }
+         dCsoil_TgC             = dCsoil_TgC          + rollapply(grid_output$dCsom_gCm2[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)
+         dCsoil_lower_TgC       = dCsoil_lower_TgC    + rollapply(grid_output$dCsom_gCm2[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
+         dCsoil_upper_TgC       = dCsoil_upper_TgC    + rollapply(grid_output$dCsom_gCm2[n,high_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean)         
          # Fluxes
          mean_et_PgH2Oyr        = mean_et_PgH2Oyr     + (rollapply(grid_output$ET_kgH2Om2day[n,mid_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
          et_lower_PgH2Oyr       = et_lower_PgH2Oyr    + (rollapply(grid_output$ET_kgH2Om2day[n,low_quant,]*grid_output$land_fraction[i_loc,j_loc]*area[i_loc,j_loc], width = steps_per_year, by = steps_per_year, mean) * 365.25)
@@ -683,32 +670,44 @@ litter_TgC          = litter_TgC * 1e-12
 woodlitter_TgC      = woodlitter_TgC * 1e-12
 wood_TgC            = wood_TgC * 1e-12
 soil_TgC            = soil_TgC * 1e-12
+dClitter_TgC        = dClitter_TgC * 1e-12
+dCwoodlitter_TgC    = dCwoodlitter_TgC * 1e-12
+dCwood_TgC          = dCwood_TgC * 1e-12
+dCsoil_TgC          = dCsoil_TgC * 1e-12
 # lower
-gpp_lower_TgCyr      = gpp_lower_TgCyr * 1e-12
-npp_lower_TgCyr      = npp_lower_TgCyr * 1e-12
-rauto_lower_TgCyr    = rauto_lower_TgCyr * 1e-12
-rhet_lower_TgCyr     = rhet_lower_TgCyr * 1e-12
-nee_lower_TgCyr      = nee_lower_TgCyr * 1e-12
-nbe_lower_TgCyr      = nbe_lower_TgCyr * 1e-12
-fire_lower_TgCyr     = fire_lower_TgCyr * 1e-12
-harvest_lower_TgCyr  = harvest_lower_TgCyr * 1e-12
-litter_lower_TgC     = litter_lower_TgC * 1e-12
-woodlitter_lower_TgC = woodlitter_lower_TgC * 1e-12
-wood_lower_TgC       = wood_lower_TgC * 1e-12
-soil_lower_TgC       = soil_lower_TgC * 1e-12
+gpp_lower_TgCyr        = gpp_lower_TgCyr * 1e-12
+npp_lower_TgCyr        = npp_lower_TgCyr * 1e-12
+rauto_lower_TgCyr      = rauto_lower_TgCyr * 1e-12
+rhet_lower_TgCyr       = rhet_lower_TgCyr * 1e-12
+nee_lower_TgCyr        = nee_lower_TgCyr * 1e-12
+nbe_lower_TgCyr        = nbe_lower_TgCyr * 1e-12
+fire_lower_TgCyr       = fire_lower_TgCyr * 1e-12
+harvest_lower_TgCyr    = harvest_lower_TgCyr * 1e-12
+litter_lower_TgC       = litter_lower_TgC * 1e-12
+woodlitter_lower_TgC   = woodlitter_lower_TgC * 1e-12
+wood_lower_TgC         = wood_lower_TgC * 1e-12
+soil_lower_TgC         = soil_lower_TgC * 1e-12
+dClitter_lower_TgC     = dClitter_lower_TgC * 1e-12
+dCwoodlitter_lower_TgC = dCwoodlitter_lower_TgC * 1e-12
+dCwood_lower_TgC       = dCwood_lower_TgC * 1e-12
+dCsoil_lower_TgC       = dCsoil_lower_TgC * 1e-12
 # upper
-gpp_upper_TgCyr      = gpp_upper_TgCyr * 1e-12
-npp_upper_TgCyr      = npp_upper_TgCyr * 1e-12
-rauto_upper_TgCyr    = rauto_upper_TgCyr * 1e-12
-rhet_upper_TgCyr     = rhet_upper_TgCyr * 1e-12
-nee_upper_TgCyr      = nee_upper_TgCyr * 1e-12
-nbe_upper_TgCyr      = nbe_upper_TgCyr * 1e-12
-fire_upper_TgCyr     = fire_upper_TgCyr * 1e-12
-harvest_upper_TgCyr  = harvest_upper_TgCyr * 1e-12
-litter_upper_TgC     = litter_upper_TgC * 1e-12
-woodlitter_upper_TgC = woodlitter_upper_TgC * 1e-12
-wood_upper_TgC       = wood_upper_TgC * 1e-12
-soil_upper_TgC       = soil_upper_TgC * 1e-12
+gpp_upper_TgCyr        = gpp_upper_TgCyr * 1e-12
+npp_upper_TgCyr        = npp_upper_TgCyr * 1e-12
+rauto_upper_TgCyr      = rauto_upper_TgCyr * 1e-12
+rhet_upper_TgCyr       = rhet_upper_TgCyr * 1e-12
+nee_upper_TgCyr        = nee_upper_TgCyr * 1e-12
+nbe_upper_TgCyr        = nbe_upper_TgCyr * 1e-12
+fire_upper_TgCyr       = fire_upper_TgCyr * 1e-12
+harvest_upper_TgCyr    = harvest_upper_TgCyr * 1e-12
+litter_upper_TgC       = litter_upper_TgC * 1e-12
+woodlitter_upper_TgC   = woodlitter_upper_TgC * 1e-12
+wood_upper_TgC         = wood_upper_TgC * 1e-12
+soil_upper_TgC         = soil_upper_TgC * 1e-12
+dClitter_upper_TgC     = dClitter_upper_TgC * 1e-12
+dCwoodlitter_upper_TgC = dCwoodlitter_upper_TgC * 1e-12
+dCwood_upper_TgC       = dCwood_upper_TgC * 1e-12
+dCsoil_upper_TgC       = dCsoil_upper_TgC * 1e-12
 # Now adjust units kgH2O -> PgH2O
 mean_et_PgH2Oyr      = mean_et_PgH2Oyr * 1e-12
 et_lower_PgH2Oyr     = et_lower_PgH2Oyr * 1e-12
@@ -726,6 +725,8 @@ print(paste("Percentage of locations where observed change is greater than CI = 
 
 # Store original land filter 
 landfilter_keep = landfilter
+skip_clusters = TRUE
+if (skip_clusters == FALSE) {
 for (c in seq(1, grid_output$nos_clusters)) {
     # Add further filtering based on the cluster
     landfilter[which(is.na(grid_output$clusters) | grid_output$clusters != c)] = 0
@@ -852,7 +853,7 @@ for (c in seq(1, grid_output$nos_clusters)) {
     landfilter = landfilter_keep
 
 } # cluster loop
-
+} # skip cluster
 # Reset land filter after each cluster to return back to the correct map
 landfilter = landfilter_keep
 
@@ -990,11 +991,10 @@ c_colours = colorRampPalette(brewer.pal(8,"Accent"))
 c_colours = c_colours(grid_output$nos_clusters)
 nbins = 30 # desired number of catagories, you might not get this many
 
-skip_clusters = FALSE
 if (skip_clusters == FALSE) {
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_parameter_PDFs_by_cluster.png",sep=""), height = 2000, width = 3000, res = 300)
-par(mfrow=c(6,6), mar = c(2,2,2,1))
+par(mfrow=c(7,7), mar = c(2,2,2,1))
 # Loop parameters
 for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Set to local variables
@@ -1002,7 +1002,7 @@ for (p in seq(1, dim(grid_output$parameters)[3]-1)) {
      # Determine the x axis range and breakpoints
      b <- min(c(tmp), na.rm=TRUE) # Set the minimum for the breakpoints
      e <- max(c(tmp), na.rm=TRUE) # Set the maximum for the breakpoints
-     b = b - (mean(b,e)*0.01) ; e = e + (mean(b,e)*0.01) # add a buffer
+     b = b - abs(mean(b,e)*0.01) ; e = e + abs(mean(b,e)*0.01) # add a buffer
      ax <- pretty(c(b,e), n = nbins) # Make a neat vector for the breakpoints
      # Reset ymax for update across clusters
      ymax = 0
@@ -2756,6 +2756,8 @@ print("===Assimilated ET overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$et_assim_data_overlap_fraction)))
 print("===Assimilate fire overlap (0-1)===")
 print(summary(as.vector(landfilter*grid_output$fire_assim_data_overlap_fraction)))
+print("===Assimilate fAPAR overlap (0-1)===")
+print(summary(as.vector(landfilter*grid_output$fapar_assim_data_overlap_fraction)))
 # Convert to raster
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$lai_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$gpp_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -2764,9 +2766,10 @@ var4 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nbe_assim_data_over
 var5 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$nee_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var6 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$et_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var7 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$fire_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t(landfilter[,dim(area)[2]:1]*grid_output$fapar_assim_data_overlap_fraction[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # Correct spatial area and mask
-var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask)
-var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask)
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask) ; var8 = crop(var8, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask) ; var8 = mask(var8, landmask)
 # legend position
 ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
@@ -2779,6 +2782,7 @@ zrange4 = c(0,1)
 zrange5 = c(0,1)
 zrange6 = c(0,1)
 zrange7 = c(0,1)
+zrange8 = c(0,1)
 # Are CARDAMOM models consistent with their assimilated observations
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_assimilated_observations_fraction_overlap.png",sep=""), height = 2600, width = 5000, res = 300)
 # Define some common plotting variables
@@ -2813,6 +2817,10 @@ plot(landmask, add=TRUE, lwd=0.5)
 plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Assimilated Fire overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Assimilated fAPAR overlap (0-1)",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -3092,7 +3100,7 @@ for (t in seq(1, length(gpp_years))) {
      if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
      # Begin regridding
 #     input_data = regrid_gdal_func(out_dir, input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # If this is the first year, define the output object
      if (t == 1) {
          obs_gpp_ensemble_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(gpp_years),length(input_source)))
@@ -3109,7 +3117,7 @@ for (t in seq(1, length(gpp_years))) {
 #     # Must go in as a 3D array, so check that is the case
 #     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
 #     # Begin regridding
-#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext,landmask)
 #     # Assign to output variable
 #     # Unit convertion (gC/m2/d -> gC/m2/yr)
 #     obs_gpp_min_gCm2yr[,,t] = input_data$var * 365.25
@@ -3119,7 +3127,7 @@ for (t in seq(1, length(gpp_years))) {
 #     # Must go in as a 3D array, so check that is the case
 #     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
 #     # Begin regridding
-#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext,landmask)
 #     # Assign to output variable
 #     # Unit convertion (gC/m2/d -> gC/m2/yr)
 #     obs_gpp_max_gCm2yr[,,t] = input_data$var * 365.25
@@ -3130,7 +3138,7 @@ for (t in seq(1, length(gpp_years))) {
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
      # Begin regridding
 #     input_data = regrid_gdal_func(out_dir,input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # Assign to output variable
      # Unit convertion (gC/m2/d -> gC/m2/yr)
      obs_gpp_ensemble_gCm2yr[,,t,] = input_data$var * 365.25
@@ -3220,7 +3228,7 @@ for (t in seq(1, length(fire_years))) {
      check_long = which(input_long > 180) 
      if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
      # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # If this is the first year, define the output object
      if (t == 1) {
          obs_fire_mean_gCm2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(fire_years)))
@@ -3237,7 +3245,7 @@ for (t in seq(1, length(fire_years))) {
      # Must go in as a 3D array, so check that is the case
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
      # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # Assign to output variable
      obs_fire_min_gCm2yr[,,t] = input_data$var
 
@@ -3248,7 +3256,7 @@ for (t in seq(1, length(fire_years))) {
      # Must go in as a 3D array, so check that is the case
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
      # Begin regridding
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # Assign to output variable
      obs_fire_max_gCm2yr[,,t] = input_data$var
 
@@ -3324,7 +3332,7 @@ for (t in seq(1, length(et_years))) {
      if (length(check_long) > 0) {input_long[check_long] = input_long[check_long] - 360}
      # Begin regridding
 #     input_data = regrid_gdal_func(out_dir, input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # If this is the first year, define the output object
      if (t == 1) {
          obs_et_ensemble_kgH2Om2yr = array(NA, dim=c(dim(input_data$var)[1:2],length(et_years),length(input_source)))
@@ -3341,7 +3349,7 @@ for (t in seq(1, length(et_years))) {
 #     # Must go in as a 3D array, so check that is the case
 #     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}      
 #     # Begin regridding
-#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext,landmask)
 #     # Assign to output variable
 #     # Unit convertion (gC/m2/d -> gC/m2/yr)
 #     obs_et_min_kgH2Om2yr[,,t] = input_data$var * 365.25
@@ -3351,7 +3359,7 @@ for (t in seq(1, length(et_years))) {
 #     # Must go in as a 3D array, so check that is the case
 #     if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
 #     # Begin regridding
-#     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext,landmask)
+#     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext,landmask)
 #     # Assign to output variable
 #     # Unit convertion (gC/m2/d -> gC/m2/yr)
 #     obs_et_max_kgH2Om2yr[,,t] = input_data$var * 365.25
@@ -3362,7 +3370,7 @@ for (t in seq(1, length(et_years))) {
      if (length(dim(input_data)) == 2) {input_data = array(input_data, dim=c(dim(input_data),1))}     
      # Begin regridding
 #     input_data = regrid_gdal_func(out_dir,input_data,input_lat,input_long,cardamom_ext,landmask)
-     input_data = regrid_func(input_data,input_lat,input_long,cardamom_ext)
+     input_data = regrid_func(input_data,PROJECT$grid_type,input_lat,input_long,cardamom_ext)
      # Assign to output variable
      # Unit convertion (gC/m2/d -> gC/m2/yr)
      obs_et_ensemble_kgH2Om2yr[,,t,] = input_data$var * 365.25
@@ -3429,10 +3437,10 @@ obs_et_max_domain_PgH2Oyr[which(is.infinite(obs_et_max_domain_PgH2Oyr))] = NA
 
 # Determine locations where we are consistent with independent evaluation
 # DALEC consistency with range described by independent estimates
-nbe_sig_latitude = 0   ; nbe_sig_longitude = 0
-gpp_sig_latitude = 0   ; gpp_sig_longitude = 0
-fire_sig_latitude = 0  ; fire_sig_longitude = 0
-et_sig_latitude = 0    ; et_sig_longitude = 0
+val_nbe_sig_latitude = 0   ; val_nbe_sig_longitude = 0
+val_gpp_sig_latitude = 0   ; val_gpp_sig_longitude = 0
+val_fire_sig_latitude = 0  ; val_fire_sig_longitude = 0
+val_et_sig_latitude = 0    ; val_et_sig_longitude = 0
 # Create objects for mean CARDAMOM observational overlap 
 grid_output$gpp_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
 grid_output$nbe_obs_overlap_fraction = array(NA, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
@@ -3481,8 +3489,8 @@ for (i in seq(1, PROJECT$long_dim)) {
               }
               # Where are we consistent with independent estimates
               if (npdf > sig_threshold) {
-                  et_sig_latitude = append(et_sig_latitude,j-0.5)
-                  et_sig_longitude = append(et_sig_longitude,i-0.5)
+                  val_et_sig_latitude = append(val_et_sig_latitude,j-0.5)
+                  val_et_sig_longitude = append(val_et_sig_longitude,i-0.5)
               } # ET
 
               ## Where are we consistent with GPP observations
@@ -3517,8 +3525,8 @@ for (i in seq(1, PROJECT$long_dim)) {
               }
               # Where are we consistent with independent estimates
               if (npdf > sig_threshold) {
-                  gpp_sig_latitude = append(gpp_sig_latitude,j-0.5)
-                  gpp_sig_longitude = append(gpp_sig_longitude,i-0.5)
+                  val_gpp_sig_latitude = append(val_gpp_sig_latitude,j-0.5)
+                  val_gpp_sig_longitude = append(val_gpp_sig_longitude,i-0.5)
               } # GPP
 
               ## Where are we consistent with NBE observations
@@ -3550,8 +3558,8 @@ for (i in seq(1, PROJECT$long_dim)) {
               }
               # Where are we consistent with independent estimates
               if (npdf > sig_threshold) {
-                  nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
-                  nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
+                  val_nbe_sig_latitude  = append(val_nbe_sig_latitude,j-0.5)
+                  val_nbe_sig_longitude = append(val_nbe_sig_longitude,i-0.5)
               } # NEE
 
               ## Where are we consistent with Fire observations
@@ -3585,8 +3593,8 @@ for (i in seq(1, PROJECT$long_dim)) {
               }
               # Where are we consistent with independent estimates
               if (npdf > sig_threshold) {
-                  fire_sig_latitude = append(fire_sig_latitude,j-0.5)
-                  fire_sig_longitude = append(fire_sig_longitude,i-0.5)
+                  val_fire_sig_latitude = append(val_fire_sig_latitude,j-0.5)
+                  val_fire_sig_longitude = append(val_fire_sig_longitude,i-0.5)
               } # fire obs
 
           } # NA
@@ -3594,67 +3602,198 @@ for (i in seq(1, PROJECT$long_dim)) {
 } # i
 ## Remove initial value
 # Uncertainy / range of independent estimate overlaps
-nbe_sig_latitude    = nbe_sig_latitude[-1]
-nbe_sig_longitude   = nbe_sig_longitude[-1]
-gpp_sig_latitude    = gpp_sig_latitude[-1]
-gpp_sig_longitude   = gpp_sig_longitude[-1]
-fire_sig_latitude   = fire_sig_latitude[-1]
-fire_sig_longitude  = fire_sig_longitude[-1]
-et_sig_latitude     = et_sig_latitude[-1]
-et_sig_longitude    = et_sig_longitude[-1]
+val_nbe_sig_latitude    = val_nbe_sig_latitude[-1]
+val_nbe_sig_longitude   = val_nbe_sig_longitude[-1]
+val_gpp_sig_latitude    = val_gpp_sig_latitude[-1]
+val_gpp_sig_longitude   = val_gpp_sig_longitude[-1]
+val_fire_sig_latitude   = val_fire_sig_latitude[-1]
+val_fire_sig_longitude  = val_fire_sig_longitude[-1]
+val_et_sig_latitude     = val_et_sig_latitude[-1]
+val_et_sig_longitude    = val_et_sig_longitude[-1]
+
+# Create the points vector for areas which we have consistency
+val_nbe_sig = data.frame(lat = grid_lat[1,ceiling(val_nbe_sig_latitude)], lon = grid_long[ceiling(val_nbe_sig_longitude),1])
+val_nbe_sig <- vect(val_nbe_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+val_gpp_sig = data.frame(lat = grid_lat[1,ceiling(val_gpp_sig_latitude)], lon = grid_long[ceiling(val_gpp_sig_longitude),1])
+val_gpp_sig <- vect(val_gpp_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+val_fire_sig = data.frame(lat = grid_lat[1,ceiling(val_fire_sig_latitude)], lon = grid_long[ceiling(val_fire_sig_longitude),1])
+val_fire_sig <- vect(val_fire_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+val_et_sig = data.frame(lat = grid_lat[1,ceiling(val_et_sig_latitude)], lon = grid_long[ceiling(val_et_sig_longitude),1])
+val_et_sig <- vect(val_et_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
 
 # Print % of pixels that are consistent
-print(paste("NBE pixel consistent  =",round(100*(length(nbe_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
-print(paste("GPP pixel consistent  =",round(100*(length(gpp_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
-print(paste("Fire pixel consistent =",round(100*(length(fire_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
-print(paste("ET pixel consistent   =",round(100*(length(et_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print("===Consistency between analysis and independent estimates")
+print(paste("NBE pixel consistent  =",round(100*(length(val_nbe_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print(paste("GPP pixel consistent  =",round(100*(length(val_gpp_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print(paste("Fire pixel consistent =",round(100*(length(val_fire_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
+print(paste("ET pixel consistent   =",round(100*(length(val_et_sig_latitude) / nos_site_inc), digits=3)," %",sep=" "))
 
 # Determine locations where we have confidence of net source / sink of C
-nbp_sig_latitude = 0    ; nbp_sig_longitude = 0
-dCwood_sig_latitude = 0 ; dCwood_sig_longitude = 0
-dCsom_sig_latitude = 0  ; dCsom_sig_longitude = 0
+nbe_sig_latitude = 0    ; nbe_sig_longitude = 0    ; nbe_sig_sink_latitude = 0    ; nbe_sig_sink_longitude = 0    ; nbe_sig_source_latitude = 0    ; nbe_sig_source_longitude = 0
+nbp_sig_latitude = 0    ; nbp_sig_longitude = 0    ; nbp_sig_sink_latitude = 0    ; nbp_sig_sink_longitude = 0    ; nbp_sig_source_latitude = 0    ; nbp_sig_source_longitude = 0
+dCwood_sig_latitude = 0 ; dCwood_sig_longitude = 0 ; dCwood_sig_sink_latitude = 0 ; dCwood_sig_sink_longitude = 0 ; dCwood_sig_source_latitude = 0 ; dCwood_sig_source_longitude = 0
+dCsom_sig_latitude = 0  ; dCsom_sig_longitude = 0  ; dCsom_sig_sink_latitude = 0  ; dCsom_sig_sink_longitude = 0  ; dCsom_sig_source_latitude = 0  ; dCsom_sig_source_longitude = 0
 # Loop through locations
 nos_site_inc = 0
 for (i in seq(1, PROJECT$long_dim)) {
      for (j in seq(1,PROJECT$lat_dim)) {
-          if (is.na(grid_output$mean_nbe_gCm2day[i,j,high_quant]) == FALSE & is.na(landfilter[i,j]) == FALSE) {
+          if (is.na(grid_output$mean_nbp_gCm2day[i,j,high_quant]) == FALSE & is.na(landfilter[i,j]) == FALSE) {
               nos_site_inc = nos_site_inc + 1
               # Is NBE confidently a source or sink?
-              if ((grid_output$mean_nbe_gCm2day[i,j,high_quant] > 0 & grid_output$mean_nbe_gCm2day[i,j,low_quant] > 0) | 
-                  (grid_output$mean_nbe_gCm2day[i,j,high_quant] < 0 & grid_output$mean_nbe_gCm2day[i,j,low_quant] < 0)) {
+              if ((grid_output$mean_nbe_gCm2day[i,j,high_quant] > 0 & grid_output$mean_nbe_gCm2day[i,j,low_quant] > 0)) {
+                  nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
+                  nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
+                  nbe_sig_sink_latitude = append(nbe_sig_sink_latitude,j-0.5)
+                  nbe_sig_sink_longitude = append(nbe_sig_sink_longitude,i-0.5)                  
+              }
+              if ((grid_output$mean_nbe_gCm2day[i,j,high_quant] < 0 & grid_output$mean_nbe_gCm2day[i,j,low_quant] < 0)) {
+                  nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
+                  nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
+                  nbe_sig_source_latitude = append(nbe_sig_source_latitude,j-0.5)
+                  nbe_sig_source_longitude = append(nbe_sig_source_longitude,i-0.5)
+              }
+              # Case for confident in being neutral (CI < 0.5 MgC/ha/yr or 0.1368925 gC/m2/day)
+              if ((grid_output$mean_nbe_gCm2day[i,j,high_quant] > 0 & grid_output$mean_nbe_gCm2day[i,j,low_quant] < 0 & 
+                   (grid_output$mean_nbe_gCm2day[i,j,high_quant] - grid_output$mean_nbe_gCm2day[i,j,low_quant]) < 0.1368925)) {
+                  nbe_sig_latitude = append(nbe_sig_latitude,j-0.5)
+                  nbe_sig_longitude = append(nbe_sig_longitude,i-0.5)
+              }                            
+              # Is NBP confidently a source or sink?
+              if ((grid_output$mean_nbp_gCm2day[i,j,high_quant] > 0 & grid_output$mean_nbp_gCm2day[i,j,low_quant] > 0)) {
                   nbp_sig_latitude = append(nbp_sig_latitude,j-0.5)
                   nbp_sig_longitude = append(nbp_sig_longitude,i-0.5)
+                  nbp_sig_sink_latitude = append(nbp_sig_sink_latitude,j-0.5)
+                  nbp_sig_sink_longitude = append(nbp_sig_sink_longitude,i-0.5)                  
               }
+              if ((grid_output$mean_nbp_gCm2day[i,j,high_quant] < 0 & grid_output$mean_nbp_gCm2day[i,j,low_quant] < 0)) {
+                  nbp_sig_latitude = append(nbp_sig_latitude,j-0.5)
+                  nbp_sig_longitude = append(nbp_sig_longitude,i-0.5)
+                  nbp_sig_source_latitude = append(nbp_sig_source_latitude,j-0.5)
+                  nbp_sig_source_longitude = append(nbp_sig_source_longitude,i-0.5)
+              } 
+              # Case for confident in being neutral (CI < 0.5 MgC/ha/yr or 0.1368925 gC/m2/day)
+              if ((grid_output$mean_nbp_gCm2day[i,j,high_quant] > 0 & grid_output$mean_nbp_gCm2day[i,j,low_quant] < 0 & 
+                   (grid_output$mean_nbp_gCm2day[i,j,high_quant] - grid_output$mean_nbp_gCm2day[i,j,low_quant]) < 0.1368925)) {
+                  nbp_sig_latitude = append(nbp_sig_latitude,j-0.5)
+                  nbp_sig_longitude = append(nbp_sig_longitude,i-0.5)
+              }                                          
               # Is wood chance confidently a source or sink?
-              if ((grid_output$final_dCwood_gCm2[i,j,high_quant] > 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] > 0) | 
-                  (grid_output$final_dCwood_gCm2[i,j,high_quant] < 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] < 0)) {
+              if ((grid_output$final_dCwood_gCm2[i,j,high_quant] > 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] > 0)) {
                   dCwood_sig_latitude = append(dCwood_sig_latitude,j-0.5)
                   dCwood_sig_longitude = append(dCwood_sig_longitude,i-0.5)
+                  dCwood_sig_sink_latitude = append(dCwood_sig_sink_latitude,j-0.5)
+                  dCwood_sig_sink_longitude = append(dCwood_sig_sink_longitude,i-0.5)
               }
+              if ((grid_output$final_dCwood_gCm2[i,j,high_quant] < 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] < 0)) {
+                  dCwood_sig_latitude = append(dCwood_sig_latitude,j-0.5)
+                  dCwood_sig_longitude = append(dCwood_sig_longitude,i-0.5)
+                  dCwood_sig_source_latitude = append(dCwood_sig_source_latitude,j-0.5)
+                  dCwood_sig_source_longitude = append(dCwood_sig_source_longitude,i-0.5)
+              }
+              # Case for confident in being neutral (CI < 0.5 MgC/ha/yr or 0.1368925 gC/m2/day)
+              if ((grid_output$final_dCwood_gCm2[i,j,high_quant] > 0 & grid_output$final_dCwood_gCm2[i,j,low_quant] < 0 & 
+                   (grid_output$final_dCwood_gCm2[i,j,high_quant] - grid_output$final_dCwood_gCm2[i,j,low_quant]) < 0.1368925)) {
+                  dCwood_sig_latitude = append(dCwood_sig_latitude,j-0.5)
+                  dCwood_sig_longitude = append(dCwood_sig_longitude,i-0.5)
+              }             
               # Is soil confidently a source or sink?
-              if ((grid_output$final_dCsom_gCm2[i,j,high_quant] > 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] > 0) | 
-                  (grid_output$final_dCsom_gCm2[i,j,high_quant] < 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] < 0)) {
+              if ((grid_output$final_dCsom_gCm2[i,j,high_quant] > 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] > 0)) {
                   dCsom_sig_latitude = append(dCsom_sig_latitude,j-0.5)
                   dCsom_sig_longitude = append(dCsom_sig_longitude,i-0.5)
+                  dCsom_sig_sink_latitude = append(dCsom_sig_sink_latitude,j-0.5)
+                  dCsom_sig_sink_longitude = append(dCsom_sig_sink_longitude,i-0.5)
               }
+              if ((grid_output$final_dCsom_gCm2[i,j,high_quant] < 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] < 0)) {
+                  dCsom_sig_latitude = append(dCsom_sig_latitude,j-0.5)
+                  dCsom_sig_longitude = append(dCsom_sig_longitude,i-0.5)
+                  dCsom_sig_source_latitude = append(dCsom_sig_source_latitude,j-0.5)
+                  dCsom_sig_source_longitude = append(dCsom_sig_source_longitude,i-0.5)
+              }
+              # Case for confident in being neutral (CI < 0.5 MgC/ha/yr or 0.1368925 gC/m2/day)
+              if ((grid_output$final_dCsom_gCm2[i,j,high_quant] > 0 & grid_output$final_dCsom_gCm2[i,j,low_quant] < 0 & 
+                   (grid_output$final_dCsom_gCm2[i,j,high_quant] - grid_output$final_dCsom_gCm2[i,j,low_quant]) < 0.1368925)) {
+                  dCsom_sig_latitude = append(dCsom_sig_latitude,j-0.5)
+                  dCsom_sig_longitude = append(dCsom_sig_longitude,i-0.5)
+              }         
           }
      } # j
 } # i
 # remove the initial value
 nbp_sig_latitude = nbp_sig_latitude[-1]
 nbp_sig_longitude = nbp_sig_longitude[-1]
+nbp_sig_sink_latitude = nbp_sig_sink_latitude[-1]
+nbp_sig_sink_longitude = nbp_sig_sink_longitude[-1]
+nbp_sig_source_latitude = nbp_sig_source_latitude[-1]
+nbp_sig_source_longitude = nbp_sig_source_longitude[-1]
+nbe_sig_latitude = nbe_sig_latitude[-1]
+nbe_sig_longitude = nbe_sig_longitude[-1]
+nbe_sig_sink_latitude = nbe_sig_sink_latitude[-1]
+nbe_sig_sink_longitude = nbe_sig_sink_longitude[-1]
+nbe_sig_source_latitude = nbe_sig_source_latitude[-1]
+nbe_sig_source_longitude = nbe_sig_source_longitude[-1]
 dCwood_sig_latitude = dCwood_sig_latitude[-1]
 dCwood_sig_longitude = dCwood_sig_longitude[-1]
+dCwood_sig_sink_latitude = dCwood_sig_sink_latitude[-1]
+dCwood_sig_sink_longitude = dCwood_sig_sink_longitude[-1]
+dCwood_sig_source_latitude = dCwood_sig_source_latitude[-1]
+dCwood_sig_source_longitude = dCwood_sig_source_longitude[-1]
 dCsom_sig_latitude = dCsom_sig_latitude[-1]
 dCsom_sig_longitude = dCsom_sig_longitude[-1]
+dCsom_sig_sink_latitude = dCsom_sig_sink_latitude[-1]
+dCsom_sig_sink_longitude = dCsom_sig_sink_longitude[-1]
+dCsom_sig_source_latitude = dCsom_sig_source_latitude[-1]
+dCsom_sig_source_longitude = dCsom_sig_source_longitude[-1]
+
+# Create a version of these which is a spatial vector of points
+# NBE
+nbe_sig = data.frame(lat = grid_lat[1,ceiling(nbe_sig_latitude)], lon = grid_long[ceiling(nbe_sig_longitude),1])
+nbe_sig <- vect(nbe_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+nbe_sig_sink = data.frame(lat = grid_lat[1,ceiling(nbe_sig_sink_latitude)], lon = grid_long[ceiling(nbe_sig_sink_longitude),1])
+nbe_sig_sink <- vect(nbe_sig_sink, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+nbe_sig_source = data.frame(lat = grid_lat[1,ceiling(nbe_sig_source_latitude)], lon = grid_long[ceiling(nbe_sig_source_longitude),1])
+nbe_sig_source <- vect(nbe_sig_source, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+# NBP
+nbp_sig = data.frame(lat = grid_lat[1,ceiling(nbp_sig_latitude)], lon = grid_long[ceiling(nbp_sig_longitude),1])
+nbp_sig <- vect(nbp_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+nbp_sig_sink = data.frame(lat = grid_lat[1,ceiling(nbp_sig_sink_latitude)], lon = grid_long[ceiling(nbp_sig_sink_longitude),1])
+nbp_sig_sink <- vect(nbp_sig_sink, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+nbp_sig_source = data.frame(lat = grid_lat[1,ceiling(nbp_sig_source_latitude)], lon = grid_long[ceiling(nbp_sig_source_longitude),1])
+nbp_sig_source <- vect(nbp_sig_source, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+# dCwood
+dCwood_sig = data.frame(lat = grid_lat[1,ceiling(dCwood_sig_latitude)], lon = grid_long[ceiling(dCwood_sig_longitude),1])
+dCwood_sig <- vect(dCwood_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+dCwood_sig_sink = data.frame(lat = grid_lat[1,ceiling(dCwood_sig_sink_latitude)], lon = grid_long[ceiling(dCwood_sig_sink_longitude),1])
+dCwood_sig_sink <- vect(dCwood_sig_sink, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+dCwood_sig_source = data.frame(lat = grid_lat[1,ceiling(dCwood_sig_source_latitude)], lon = grid_long[ceiling(dCwood_sig_source_longitude),1])
+dCwood_sig_source <- vect(dCwood_sig_source, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+# dCsom
+dCsom_sig = data.frame(lat = grid_lat[1,ceiling(dCsom_sig_latitude)], lon = grid_long[ceiling(dCsom_sig_longitude),1])
+dCsom_sig <- vect(dCsom_sig, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+dCsom_sig_sink = data.frame(lat = grid_lat[1,ceiling(dCsom_sig_sink_latitude)], lon = grid_long[ceiling(dCsom_sig_sink_longitude),1])
+dCsom_sig_sink <- vect(dCsom_sig_sink, geom=c("lon", "lat"), crs = crs(cardamom_ext))
+dCsom_sig_source = data.frame(lat = grid_lat[1,ceiling(dCsom_sig_source_latitude)], lon = grid_long[ceiling(dCsom_sig_source_longitude),1])
+dCsom_sig_source <- vect(dCsom_sig_source, geom=c("lon", "lat"), crs = crs(cardamom_ext))
 
 # Fraction of locations with significant change
-# NBE
-print(paste("NBE sig  = ",round((length(nbp_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+print("=== Over how much of the land are we >95 % confident in the sign of the analysis")
+# NBP
+print(paste("NBP significant change    = ",round((length(nbp_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 # dCwood
-print(paste("dCwood sig  = ",round((length(dCwood_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+print(paste("dCwood significant change = ",round((length(dCwood_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 # dCsom
-print(paste("dCsom sig  = ",round((length(dCsom_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+print(paste("dCsom significant change  = ",round((length(dCsom_sig_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# Fraction of locations with a significant sink
+print(paste("NBP significant sink      = ",round((length(nbp_sig_sink_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# dCwood
+print(paste("dCwood significant sink   = ",round((length(dCwood_sig_sink_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# dCsom
+print(paste("dCsom significant sink    = ",round((length(dCsom_sig_sink_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# Fraction of locations with a significant source
+print(paste("NBP significant source    = ",round((length(nbp_sig_source_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# dCwood
+print(paste("dCwood significant source = ",round((length(dCwood_sig_source_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
+# dCsom
+print(paste("dCsom significant source  = ",round((length(dCsom_sig_source_latitude) / nos_site_inc)*100, digits=3)," %",sep=""))
 
 # Statisical correlation between NBP and wood change
 print(paste("NBP ~ dCwood R2 = ",round(summary(lm(as.vector(grid_output$mean_nbp_gCm2[,,mid_quant]) ~ as.vector(grid_output$final_dCwood_gCm2[,,mid_quant])))$adj.r.squared,digits=3),sep=""))
@@ -3819,7 +3958,7 @@ mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("wSWP (MPa)",sep="")), side=2, padj=-2.05,cex=1.5)
 dev.off()
 
-# Domain wide NBE (yaxis) model (xaxis), include independent estimates
+# Domain wide wood, litter and soil stocks (yaxis) over time (xaxis)
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_litter_soil_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
 par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
 # Now plot wood stocks
@@ -3857,6 +3996,47 @@ mtext("Year", side=1, padj=2.0,cex=1.6)
 mtext(expression(paste("Soil (TgC)",sep="")), side=2, padj=-2.05,cex=1.5)
 dev.off()
                       
+# Domain wide wood, litter and soil anomalies (yaxis) over time (xaxis)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_wood_litter_soil_anomaly_timeseries_comparison_plusCI.png",sep=""), height=3800, width=2500, res=300)
+par(mfrow=c(3,1),mai=c(0.3,0.65,0.3,0.2),omi=c(0.2,0.2,0.3,0.005))
+# Now plot wood stocks
+var1 = dCwood_TgC*1e-3 ; var2 = dCwood_lower_TgC*1e-3 ; var3 = dCwood_upper_TgC*1e-3
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+abline(0,0,col="grey")
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext(expression(paste("Wood (PgC)",sep="")), side=2, padj=-2.05,cex=1.5)
+
+# Now plot foliar and fine root litter stocks
+var1 = dClitter_TgC*1e-3 ; var2 = dClitter_lower_TgC*1e-3 ; var3 = dClitter_upper_TgC*1e-3
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+abline(0,0,col="grey")
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext(expression(paste("Litter (PgC)",sep="")), side=2, padj=-2.05, cex=1.5)
+
+# Now plot soil stocks
+var1 = dCsoil_TgC*1e-3 ; var2 = dCsoil_lower_TgC*1e-3 ; var3 = dCsoil_upper_TgC*1e-3
+zrange = range(c(var1,var2,var3), na.rm=TRUE)
+plot(var1~run_years, main="", cex.lab=2, cex.main=2, cex.axis=1.8, ylim=zrange,
+      col=model_colours[1], type="l", lwd=4, ylab="", xlab="", lty=1)
+abline(0,0,col="grey")
+#plotconfidence(var2,run_years,2,obs_colours[1])
+lines(var1~run_years, col=model_colours[1], lwd=3, lty = 1) ; points(var1~run_years, col=model_colours[1], pch=16)
+lines(var2~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var2~run_years, col=model_colours[1], pch=16)
+lines(var3~run_years, col=model_colours[1], lwd=3, lty = 2) ; points(var3~run_years, col=model_colours[1], pch=16)
+mtext("Year", side=1, padj=2.0,cex=1.6)
+mtext(expression(paste("Soil (PgC)",sep="")), side=2, padj=-2.05,cex=1.5)
+dev.off()
+
 # Determine whether we have any observed wood trend information, i.e. do we have more than 1 wood stock
 if (length(which(is.na(WoodCobs_trend) == FALSE)) > 0) {
 
@@ -4037,21 +4217,21 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(0,max(values(var2), na.rm=TRUE))
-zrange3 = c(0,max(values(var3), na.rm=TRUE))
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+     background = "grey", cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+     background = "grey", cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
-           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+     background = "grey", cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
@@ -4071,26 +4251,65 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(0,max(values(var2), na.rm=TRUE))
-zrange3 = c(0,max(values(var3), na.rm=TRUE))
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
 plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_nbe_sig_longitude+0.5,1],grid_lat[1,val_nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_consistent_masked.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = mask(var1, val_nbe_sig, inverse=FALSE, updatevalue = NA) ; var2 = mask(var2, val_gpp_sig, inverse=FALSE, updatevalue = NA) ; var3 = mask(var3, val_fire_sig, inverse=FALSE, updatevalue = NA)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
+plot(var1, main="",col = rev(colour_choices_default), range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+     background = "grey" , cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_nbe_sig_longitude+0.5,1],grid_lat[1,val_nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+     background = "grey" ,cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+     background = "grey" , cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4113,25 +4332,63 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
-zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(-1,1) * max(abs(quantile(values(var2), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange3 = c(-1,1) * max(abs(quantile(values(var3), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_et_sig_longitude+0.5,1],grid_lat[1,val_et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Are CARDAMOM models consistent with the range described by CTE NBE ensemble, FC GPP ensemble and GFED / GFAS Fire products
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBE_GPP_FIRE_evaluation_bias.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,0.9,1,7.2), omi = c(0.01,0.2,0.3,0.1))
+var1 = (365.25*grid_output$mean_nbe_gCm2day[,,mid_quant]) - apply(obs_nbe_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var1[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = (365.25*grid_output$mean_gpp_gCm2day[,,mid_quant]) - apply(obs_gpp_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var2[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = (365.25*grid_output$mean_fire_gCm2day[,,mid_quant]) - apply(obs_fire_mean_gCm2yr, c(1,2), mean, na.rm=TRUE)
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*1e-2*var3[,dim(area)[2]:1]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(-1,1) * max(abs(quantile(values(var2), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange3 = c(-1,1) * max(abs(quantile(values(var3), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4154,25 +4411,25 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(-1,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(-1,1) * max(abs(range(values(var2),na.rm=TRUE)), na.rm=TRUE)
-zrange3 = c(-1,1) * max(abs(range(values(var3),na.rm=TRUE)), na.rm=TRUE)
+zrange1 = c(-1,1) * max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange2 = c(-1,1) * max(abs(quantile(values(var2), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
+zrange3 = c(-1,1) * max(abs(quantile(values(var3), prob=c(0.01,0.99),na.rm=TRUE)), na.rm=TRUE)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_sign, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("NBE (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[nbe_sig_longitude+0.5,1],grid_lat[1,nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_nbe_sig_longitude+0.5,1],grid_lat[1,val_nbe_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_sign, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_sign), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4228,9 +4485,9 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(0,max(values(var2), na.rm=TRUE))
-zrange3 = c(0,max(values(var3), na.rm=TRUE))
+zrange1 = c(0,quantile(values(var1), prob=c(0.999), na.rm=TRUE))
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
@@ -4263,25 +4520,64 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # create axis
-zrange1 = c(0,1) * max(abs(range(values(var1),na.rm=TRUE)), na.rm=TRUE)
-zrange2 = c(0,max(values(var2), na.rm=TRUE))
-zrange3 = c(0,max(values(var3), na.rm=TRUE))
+zrange1 = c(0,quantile(values(var1), prob=c(0.999), na.rm=TRUE))
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[et_sig_longitude+0.5,1],grid_lat[1,et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_et_sig_longitude+0.5,1],grid_lat[1,val_et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[gpp_sig_longitude+0.5,1],grid_lat[1,gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
-points(grid_long[fire_sig_longitude+0.5,1],grid_lat[1,fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Are CARDAMOM models consistent with the range described by ET ensemble, FC GPP ensemble and GFED / GFAS Fire products
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_ET_GPP_FIRE_evaluation_consistent_masked.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*grid_output$mean_ET_kgH2Om2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_gpp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*365.25*1e-2*grid_output$mean_fire_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = mask(var1, val_et_sig, inverse=FALSE, updatevalue = NA) ; var2 = mask(var2, val_gpp_sig, inverse=FALSE, updatevalue = NA) ; var3 = mask(var3, val_fire_sig, inverse=FALSE, updatevalue = NA)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(0,quantile(values(var1), prob=c(0.999), na.rm=TRUE))
+zrange2 = c(0,quantile(values(var2), prob=c(0.999), na.rm=TRUE))
+zrange3 = c(0,quantile(values(var3), prob=c(0.999), na.rm=TRUE))
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+     background = "grey" ,cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("ET (kgH2O ",m^-2," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_et_sig_longitude+0.5,1],grid_lat[1,val_et_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+     background = "grey" , cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("GPP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_gpp_sig_longitude+0.5,1],grid_lat[1,val_gpp_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_loss), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+     background = "grey" , cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("Fire (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+#points(grid_long[val_fire_sig_longitude+0.5,1],grid_lat[1,val_fire_sig_latitude+0.5], xlab="", ylab="", pch=16,cex=0.3, col="cyan")
 plot(landmask, add=TRUE, lwd=0.5)
 dev.off()
 
@@ -4495,13 +4791,12 @@ dev.off()
 
 ###
 ## Statistical significance / trend maps for C-budget terms
-
-# Comparison of NBE, wood and soil stock change over the analysis period by model
+# Comparison of NBP, wood and soil stock change over the analysis period by model
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom.png",sep=""), height = 750, width = 5000, res = 300)
 # Plot differences
 par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
 # Create raster
-var1 = rast(vals = t(365.25*-grid_output$mean_nbe_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 # Crop to size
@@ -4518,10 +4813,295 @@ e[3] = ee[3] ; e[4] = ee[4]
 #var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
 # Convert Units gC/m2/yr -> MgC/ha/yr
 var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
-tmp = c(range(values(var1), na.rm=TRUE),range(values(var2), na.rm=TRUE))
-tmp1 = c(range(values(var3), na.rm=TRUE))
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
 zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
-zrange1 = max(abs(c(range(tmp1, na.rm=TRUE)))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig_masked.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = mask(var1, nbp_sig, inverse=FALSE, updatevalue = NA) ; var2 = mask(var2, dCwood_sig, inverse=FALSE, updatevalue = NA) ; var3 = mask(var3, dCsom_sig, inverse=FALSE, updatevalue = NA)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig_sources_masked.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = mask(var1, nbp_sig_source, inverse=FALSE, updatevalue = NA) ; var2 = mask(var2, dCwood_sig_source, inverse=FALSE, updatevalue = NA) ; var3 = mask(var3, dCsom_sig_source, inverse=FALSE, updatevalue = NA)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig_sinks_masked.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = mask(var1, nbp_sig_sink, inverse=FALSE, updatevalue = NA) ; var2 = mask(var2, dCwood_sig_sink, inverse=FALSE, updatevalue = NA) ; var3 = mask(var3, dCsom_sig_sink, inverse=FALSE, updatevalue = NA)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1, background = "grey",
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig_sources.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[nbp_sig_source_longitude+0.5,1],grid_lat[1,nbp_sig_source_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[dCwood_sig_source_longitude+0.5,1],grid_lat[1,dCwood_sig_source_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[dCsom_sig_source_longitude+0.5,1],grid_lat[1,dCsom_sig_source_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig_sinks.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
+# Specify any common size variables
+main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# C1 Mean annual NBP, dCwood, dCsom
+plot(var1, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[nbp_sig_sink_longitude+0.5,1],grid_lat[1,nbp_sig_sink_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("NBP (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var2, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[dCwood_sig_sink_longitude+0.5,1],grid_lat[1,dCwood_sig_sink_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("Wood Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(var3, ylab="", xlab="", main="",  mar=NA, bty = "n",
+     xaxt = "n", yaxt = "n", range=zrange1,
+     col=colour_choices_sign, cex.lab=2, cex.main=2.2, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+plot(landmask, add=TRUE, lwd=0.5)
+points(grid_long[dCsom_sig_sink_longitude+0.5,1],grid_lat[1,dCsom_sig_sink_latitude+0.5], xlab="", ylab="", pch=16,cex=0.4, col="cyan")
+mtext(expression(paste("Soil Change (MgC h",a^-1," y",r^-1,")",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+dev.off()
+
+# Comparison of NBP, wood and soil stock change over the analysis period by model
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_dCwood_dCsom_sig.png",sep=""), height = 750, width = 5000, res = 300)
+# Plot differences
+par(mfrow=c(1,3), mar=c(0.05,1,0.05,6.2), omi = c(0.01,0.3,0.3,0.05))
+# Create raster
+var1 = rast(vals = t(365.25*grid_output$mean_nbp_gCm2day[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t((1/nos_years)*grid_output$final_dCwood_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t((1/nos_years)*grid_output$final_dCsom_gCm2[,dim(area)[2]:1,mid_quant]), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Crop to size
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask)
+var1 = trim(var1) ; var2 = trim(var2) ; var3 = trim(var3)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+## Restrict parameter range to +/- 800 gC/m2/yr
+#var1[var1 > 800] = 800 ; var1[var1 < -800] = -800
+#var2[var2 > 800] = 800 ; var2[var2 < -800] = -800
+#var3[var3 > 800] = 800 ; var3[var3 < -800] = -800
+# Convert Units gC/m2/yr -> MgC/ha/yr
+var1 = var1 * 1e-2   ; var2 = var2 * 1e-2 ; var3 = var3 * 1e-2 
+tmp = c(quantile(values(var1), prob=c(0.01,0.99), na.rm=TRUE),quantile(values(var2), prob=c(0.01,0.99), na.rm=TRUE))
+tmp1 = c(quantile(values(var3), prob=c(0.01,0.99), na.rm=TRUE))
+zrange = max(abs(range(tmp, na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(range(tmp1, na.rm=TRUE))) * c(-1,1)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 # C1 Mean annual NBP, dCwood, dCsom
@@ -4566,7 +5146,7 @@ e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 
 e[3] = ee[3] ; e[4] = ee[4]
 # Determine gradients
 zrange = max(abs(quantile(c(values(var1),values(var2),values(var3)), prob = c(0.001,0.999), na.rm=TRUE))) * c(-1,1)
-zrange1 = max(abs(quantile(values(var16), prob = c(0.001,0.999), na.rm=TRUE))) * c(-1,1)
+zrange1 = max(abs(quantile(values(var16), prob = c(0.005,0.995), na.rm=TRUE))) * c(-1,1)
 # Restrict to sensible bounds
 #var1[var1 < zrange[1]] = zrange[1] ; var1[var1 > zrange[2]] = zrange[2]
 #var2[var2 < zrange[1]] = zrange[1] ; var2[var2 > zrange[2]] = zrange[2]
@@ -5086,7 +5666,7 @@ zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
 # Set common plotting variables
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_mean_wood_som_stock_woodMRT_somMRT_fire_correlation_median.png",sep=""), height = 1500, width = 4800, res = 300)
-par(mfrow=c(2,3), mar=c(3.2,3.0,1.4,1.2),omi=c(0.01,0.10,0.10,0.35))
+par(mfrow=c(2,3), mar=c(3.2,3.0,1.5,1.2),omi=c(0.01,0.10,0.10,0.45))
 # Correlation between Wood MRT and fire
 plot(as.vector(grid_output$MTT_wood_years[,,mid_quant]) ~ as.vector(BurnedFraction), pch=16,
      cex.axis = 1.5, cex.lab = 1.5, cex = 1.2, xlab="", ylab="")
@@ -5128,6 +5708,9 @@ var3 = grid_output$final_dCdom_gCm2[,,mid_quant]*1e-2*(1/nos_years)
 var4 = (grid_output$final_dCtotal_gCm2[,,high_quant]-grid_output$final_dCtotal_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var5 = (grid_output$final_dCbiomass_gCm2[,,high_quant]-grid_output$final_dCbiomass_gCm2[,,low_quant])*1e-2*(1/nos_years)
 var6 = (grid_output$final_dCdom_gCm2[,,high_quant]-grid_output$final_dCdom_gCm2[,,low_quant])*1e-2*(1/nos_years)
+print("=== What proportion of total C change is found in biomass vs DOM")
+print(paste("% of change found in biomass = ",round(100*mean(var2 / var1, na.rm=TRUE), digits=2),sep=""))
+print(paste("% of change found in DOM     = ",round(100*mean(var3 / var1, na.rm=TRUE),digits=2),sep=""))
 # Apply filter
 var1[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
 var2[which(landfilter == 0 | is.na(landfilter) == TRUE)] = NA
@@ -5150,9 +5733,9 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # ranges
-zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
-zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
-zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange1 = c(-1,1)*max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)))
+zrange2 = c(-1,1)*max(abs(quantile(values(var2), prob=c(0.01,0.99),na.rm=TRUE)))
+zrange3 = c(-1,1)*max(abs(quantile(values(var3), prob=c(0.01,0.99),na.rm=TRUE)))
 zrange4 = c(0,1)*max(abs(range(c(values(var4),values(var5),values(var6)),na.rm=TRUE)))
 zrange5 = zrange4
 zrange6 = zrange4
@@ -5360,9 +5943,9 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # ranges
-zrange1 = c(-1,1)*max(abs(range(values(var1),na.rm=TRUE)))
-zrange2 = c(-1,1)*max(abs(range(values(var2),na.rm=TRUE)))
-zrange3 = c(-1,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange1 = c(-1,1)*max(abs(quantile(values(var1), prob=c(0.01,0.99),na.rm=TRUE)))
+zrange2 = c(-1,1)*max(abs(quantile(values(var2), prob=c(0.01,0.99),na.rm=TRUE)))
+zrange3 = c(-1,1)*max(abs(quantile(values(var3), prob=c(0.01,0.99),na.rm=TRUE)))
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_Final_stock_change_median.png",sep=""), height = 750, width = 5000, res = 300)
 # Specify any common size variables
 main_lab_cex = 1.6 ; main_lab_padj = -0.1 ; main_lab_adj = 0.5 ; legend_cex = 1.5
@@ -5422,12 +6005,12 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # ranges
-zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange1 = c(0,1)*max(abs(quantile(values(var1), prob=c(0.9995),na.rm=TRUE)))
 zrange2 = c(0,1)
-zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
-zrange4 = c(0,1)*max(abs(range(values(var4),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(quantile(values(var3), prob=c(0.9995),na.rm=TRUE)))
+zrange4 = c(0,1)*max(abs(quantile(values(var4), prob=c(0.9995),na.rm=TRUE)))
 zrange5 = c(0,1)
-zrange6 = c(0,1)*max(abs(range(values(var6),na.rm=TRUE)))
+zrange6 = c(0,1)*max(abs(quantile(values(var6), prob=c(0.9995),na.rm=TRUE)))
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median_CI.png",sep=""), height = 1500, width = 5000, res = 300)
 par(mfrow=c(2,3), mar=c(0.5,0.2,2.5,5),omi=c(0.01,0.3,0.01,0.01))
@@ -5489,9 +6072,9 @@ ee = ext(var1) ; e = rep(NA, 4)
 e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
 e[3] = ee[3] ; e[4] = ee[4]
 # ranges
-zrange1 = c(0,1)*max(abs(range(values(var1),na.rm=TRUE)))
+zrange1 = c(0,1)*max(abs(quantile(values(var1), prob=c(0.9995),na.rm=TRUE)))
 zrange2 = c(0,1)
-zrange3 = c(0,1)*max(abs(range(values(var3),na.rm=TRUE)))
+zrange3 = c(0,1)*max(abs(quantile(values(var3), prob=c(0.9995),na.rm=TRUE)))
 main_lab_cex = 1.6 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NPP_MRT_SS_median.png",sep=""), height = 750, width = 5000, res = 300)
 par(mfrow=c(1,3), mar=c(0.05,0.9,1.0,6.2), omi = c(0.01,0.2,0.3,0.1))
@@ -6914,6 +7497,78 @@ dev.off()
 ## Correlation maps
 
 # Convert to raster
+var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_NEE_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var4 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var5 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_wood_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var6 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_som_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var7 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var8 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+var9 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$NBP_gCm2day_to_lai_m2m2_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
+# Correct spatial area and mask
+var1 = crop(var1, landmask) ; var2 = crop(var2, landmask) ; var3 = crop(var3, landmask) ; var4 = crop(var4, landmask) ; var5 = crop(var5, landmask) ; var6 = crop(var6, landmask) ; var7 = crop(var7, landmask) ; var8 = crop(var8, landmask) ; var9 = crop(var9, landmask)
+var1 = mask(var1, landmask) ; var2 = mask(var2, landmask) ; var3 = mask(var3, landmask) ; var4 = mask(var4, landmask) ; var5 = mask(var5, landmask) ; var6 = mask(var6, landmask) ; var7 = mask(var7, landmask) ; var8 = mask(var8, landmask) ; var9 = mask(var9, landmask)
+# legend position
+ee = ext(var1) ; e = rep(NA, 4)
+e[1] = ee[2] + (abs(diff(ee[1:2]))* 0.027) ; e[2] = e[1] + (abs(diff(ee[1:2]))* 0.027)
+e[3] = ee[3] ; e[4] = ee[4]
+# create axis
+zrange1 = c(0,1)
+zrange2 = c(0,1)
+zrange3 = c(0,1)
+zrange4 = c(0,1)
+zrange5 = c(0,1)
+zrange6 = c(0,1)
+zrange7 = c(0,1)
+zrange8 = c(0,1)
+zrange9 = c(0,1)
+# Are CARDAMOM models consistent with their assimilated observations
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_various_observables_absolute_correlations.png",sep=""), height = 2600, width = 5000, res = 300)
+# Define some common plotting variables
+main_lab_cex = 1.7 ; main_lab_padj = +0.05 ; main_lab_adj = 0.5 ; legend_cex = 1.5
+# Plot differences
+par(mfrow=c(3,3), mar=c(0.6,0.4,2.9,6.2),omi=c(0.1,0.1,0.1,0.1))
+# Begin plotting
+plot(var1, main="",col = colour_choices_gain, range=zrange1, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ GPP",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var2, main="",col = colour_choices_gain, range=zrange2, xaxt = "n", yaxt = "n", mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ NEE",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var3, main="",col = (colour_choices_gain), range=zrange3, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ ",R[a],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var4, main="",col = (colour_choices_gain), range=zrange4, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ ",R[h],sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var5, main="",col = (colour_choices_gain), range=zrange5, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ Wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var6, main="",col = (colour_choices_gain), range=zrange6, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ Soil",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var7, main="",col = (colour_choices_gain), range=zrange7, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ ",Delta,"wood",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var8, main="",col = (colour_choices_gain), range=zrange8, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ ",Delta,"soil",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt = "n",  mar=NA, bty = "n",
+           cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
+mtext(expression(paste("NBP ~ LAI",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
+plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# Convert to raster
 var1 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var2 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_NPP_wood_fraction_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
 var3 = rast(vals = t(landfilter[,dim(area)[2]:1]*abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation[,dim(area)[2]:1])), ext = ext(cardamom_ext), crs = crs(cardamom_ext), res=res(cardamom_ext))
@@ -6983,6 +7638,291 @@ plot(var9, main="",col = (colour_choices_gain), range=zrange9, xaxt = "n", yaxt 
            cex.lab=2.6, cex.main=2.6, cex.axis = 2, axes = FALSE, pax=list(cex.axis=2.0,hadj=0.1), plg = list(ext=e, cex=legend_cex))
 mtext(expression(paste("MRT wood ~ LAI",sep="")), side = 3, cex = main_lab_cex, padj = main_lab_padj, adj = main_lab_adj)
 plot(landmask, add=TRUE, lwd=0.5)
+dev.off()
+
+# dCsoil uncertainty against the pixel-level uncertainties of various likely correlates
+dCsoil_ci = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+yrange = c(0,quantile(dCsoil_ci, prob=c(0.999), na.rm=TRUE))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_dCsoil_CI_vs_airt_precip_woodCI_soilCI_dCwoodCI_dCsomCI_heatmap.png",sep=""), height = 2600, width = 4500, res = 300)
+par(mfrow=c(2,3), mar=c(4,4,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Plot dCsoil uncertainty against mean annual temperature
+tmp = as.vector(grid_output$met_array_averages[,,14])
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Air temperature (Celcius)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCsoil uncertainty against mean annual precipitation
+tmp = as.vector(grid_output$met_array_averages[,,7]*86400*365.25)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Preciptation (mm/yr)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCsoil uncertainty against mean ESA CCI Biomass uncertainty
+tmp = as.vector(grid_output$obs_array_averages[,,14]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("ESA CCI Wood CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCsoil uncertainty against SoilGrids v2 soil C constraint
+tmp = as.vector(grid_output$parameter_priors_uncertainty_array[,,23]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("SoilGrids v2 Soil C CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCsoil uncertainty against dCwood uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCsoil uncertainty against dCsom uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCsoil_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+dev.off()
+
+# dCwood uncertainty against the pixel-level uncertainties of various likely correlates
+dCwood_ci = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+yrange = c(0,quantile(dCwood_ci, prob=c(0.999), na.rm=TRUE))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_dCwood_CI_vs_airt_precip_woodCI_soilCI_dCwoodCI_dCsomCI_heatmap.png",sep=""), height = 2600, width = 4500, res = 300)
+par(mfrow=c(2,3), mar=c(4,4,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Plot dCwood uncertainty against mean annual temperature
+tmp = as.vector(grid_output$met_array_averages[,,14])
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Air temperature (Celcius)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCwood uncertainty against mean annual precipitation
+tmp = as.vector(grid_output$met_array_averages[,,7]*86400*365.25)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Preciptation (mm/yr)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCwood uncertainty against mean ESA CCI Biomass uncertainty
+tmp = as.vector(grid_output$obs_array_averages[,,14]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("ESA CCI Wood CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCwood uncertainty against SoilGrids v2 soil C constraint
+tmp = as.vector(grid_output$parameter_priors_uncertainty_array[,,23]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("SoilGrids v2 Soil C CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCwood uncertainty against dCwood uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+# Plot dCwood uncertainty against dCsom uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(dCwood_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+dev.off()
+
+# NBP uncertainty against the pixel-level uncertainties of various likely correlates
+nbp_ci = as.vector(grid_output$mean_nbp_gCm2day[,,high_quant] - grid_output$mean_nbp_gCm2day[,,low_quant]) * 365.25 * 1e-2
+yrange = c(0,quantile(nbp_ci, prob=c(0.999), na.rm=TRUE))
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_CI_vs_airt_precip_woodCI_soilCI_dCwoodCI_dCsomCI_heatmap.png",sep=""), height = 2600, width = 4500, res = 300)
+par(mfrow=c(2,3), mar=c(4,4,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Plot NBP uncertainty against mean annual temperature
+tmp = as.vector(grid_output$met_array_averages[,,14])
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Air temperature (Celcius)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean annual precipitation
+tmp = as.vector(grid_output$met_array_averages[,,7]*86400*365.25)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Preciptation (mm/yr)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean ESA CCI Biomass uncertainty
+tmp = as.vector(grid_output$obs_array_averages[,,14]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("ESA CCI Wood CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against SoilGrids v2 soil C constraint
+tmp = as.vector(grid_output$parameter_priors_uncertainty_array[,,23]*1e-2)
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("SoilGrids v2 Soil C CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCwood uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCsom uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+xrange = c(0,quantile(tmp, prob=c(0.999), na.rm=TRUE))
+smoothScatter(nbp_ci~tmp, ylab = "", main = "", xlab = "", ylim=yrange, xlim=xrange,
+              pch=16, cex = 1.5, cex.main=2, cex.axis = 2.2, cex.lab=2.2,
+              transformation = function(x) (x-min(x, na.rm=TRUE)) / diff(range(x, na.rm=TRUE)), colramp=smoothScatter_colours, nrpoints = 0,
+              nbin = 1500)
+#abline(0,1,col="red", lwd=3) 
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+dev.off()
+    
+# NBP uncertainty against the pixel-level uncertainties of various likely correlates
+nbp_ci = as.vector(grid_output$mean_nbp_gCm2day[,,high_quant] - grid_output$mean_nbp_gCm2day[,,low_quant]) * 365.25 * 1e-2
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_CI_vs_airt_precip_woodCI_soilCI_dCwoodCI_dCsomCI.png",sep=""), height = 2600, width = 4500, res = 300)
+par(mfrow=c(2,3), mar=c(4,4,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Plot NBP uncertainty against mean annual temperature
+tmp = as.vector(grid_output$met_array_averages[,,14])
+plot(nbp_ci~tmp, main="", ylab="", xlab= "", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Air temperature (Celcius)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean annual precipitation
+tmp = as.vector(grid_output$met_array_averages[,,7]*86400*365.25)
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Preciptation (mm/y)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean ESA CCI Biomass uncertainty
+tmp = as.vector(grid_output$obs_array_averages[,,14]*1e-2)
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("ESA CCI Wood CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against SoilGrids v2 soil C constraint
+tmp = as.vector(grid_output$parameter_priors_uncertainty_array[,,23]*1e-2)
+plot(nbp_ci~tmp, main="", ylab="", xlab=" ", xlim = c(0,max(tmp,na.rm=TRUE)),
+     pch=16, cex=1.0, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("SoilGrids v2 Soil C CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCwood uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCsom uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+dev.off()
+
+# NBP uncertainty against the pixel-level uncertainties of various likely correlates
+nbp_ci = as.vector(grid_output$mean_nbp_gCm2day[,,high_quant] - grid_output$mean_nbp_gCm2day[,,low_quant]) * 365.25 * 1e-2
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_NBP_CI_vs_airt_precip_woodCI_fire_dCwoodCI_dCsomCI.png",sep=""), height = 2600, width = 4500, res = 300)
+par(mfrow=c(2,3), mar=c(4,4,1.4,1), omi = c(0.1,0.2,0.12,0.1))
+# Plot NBP uncertainty against mean annual temperature
+tmp = as.vector(grid_output$met_array_averages[,,14])
+plot(nbp_ci~tmp, main="", ylab="", xlab= "", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Air temperature (Celcius)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean annual precipitation
+tmp = as.vector(grid_output$met_array_averages[,,7]*86400*365.25)
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Preciptation (mm/y)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against mean ESA CCI Biomass uncertainty
+tmp = as.vector(grid_output$obs_array_averages[,,14]*1e-2)
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("ESA CCI Wood CI (MgC/ha)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against annual burned area
+tmp = as.vector(BurnedFraction)
+plot(nbp_ci~tmp, main="", ylab="", xlab=" ", xlim = c(0,max(tmp,na.rm=TRUE)),
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression("Annual burned fraction (0-1)"), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCwood uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCwood_gCm2[,,high_quant]-grid_output$final_dCwood_gCm2[,,low_quant]))
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8, cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"wood CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
+# Plot NBP uncertainty against dCsom uncertainty
+tmp = as.vector(1e-2*(1/nos_years)*(grid_output$final_dCsom_gCm2[,,high_quant]-grid_output$final_dCsom_gCm2[,,low_quant]))
+plot(nbp_ci~tmp, main="", ylab="", xlab="", 
+     pch=16, cex=1.4, cex.lab=1.8, cex.axis = 1.8,cex.main=1.8)
+mtext(expression("NBP CI (MgC/ha/yr)"), cex = 1.3, padj = -1.75, side = 2)
+mtext(expression(paste(Delta,"soil CI (MgC/ha/yr)",sep="")), cex = 1.3, padj = 1.95, side = 1)
 dev.off()
 
 # Convert to raster
@@ -7162,7 +8102,7 @@ zrange7 = c(0,1)
 zrange8 = c(0,1)
 # Common variables for labels
 main_lab_cex = 1.5 ; main_lab_padj = +0.15 ; main_lab_adj = 0.5 ; legend_cex = 1.5
-png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"MTTwood_NPPflx_wood_selected_variables_absolute_correlations.png",sep=""), height = 1200, width = 5000, res = 300)
+png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_MTTwood_NPPflx_wood_selected_variables_absolute_correlations.png",sep=""), height = 1200, width = 5000, res = 300)
 par(mfrow=c(2,4), mar=c(0.5,0.5,2.0,3.5),omi=c(0.1,0.1,0.1,0.1))
 # Mean annual median estimates
 plot(var1, range=zrange1, xaxt = "n", yaxt = "n", cex.lab=2.5, cex.main=2.5, mar=NA, bty = "n",
@@ -7212,6 +8152,27 @@ dev.off()
 tmp = length(which(is.finite(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation)))
 # How many pixels is the correlation magnitude between uncertainty with 'key' fluxes is greater than 5% of variation
 print("Proportion of pixels at which the correlation between uncertainties for the variables given has R2 > 0.1, or r = 0.3162278")
+print(paste("...NBP ~ GPP    = ",round(length(which(abs(grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NBP ~ NEE    = ",round(length(which(abs(grid_output$NBP_gCm2day_to_NEE_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NBP ~ Ra     = ",round(length(which(abs(grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NBP ~ Rhet   = ",round(length(which(abs(grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print(paste("...NBP ~ Cwood  = ",round(length(which(abs(grid_output$NBP_gCm2day_to_wood_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep=""))
+print(paste("...NBP ~ Csom   = ",round(length(which(abs(grid_output$NBP_gCm2day_to_som_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep=""))
+print(paste("...NBP ~ dCwood = ",round(length(which(abs(grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep=""))
+print(paste("...NBP ~ dCsom  = ",round(length(which(abs(grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep=""))
+print(paste("...NBP ~ LAI    = ",round(length(which(abs(grid_output$NBP_gCm2day_to_lai_m2m2_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
+print("Mean absolute correlation (presented here as R2) across pixels between uncertainties for the variables given")
+print(paste("...NBP ~ GPP    = ",round(mean(grid_output$NBP_gCm2day_to_GPP_gCm2day_correlation**2, na.rm=TRUE),digits=3),sep="")) 
+print(paste("...NBP ~ NEE    = ",round(mean(grid_output$NBP_gCm2day_to_NEE_gCm2day_correlation**2, na.rm=TRUE),digits=3),sep="")) 
+print(paste("...NBP ~ Ra     = ",round(mean(grid_output$NBP_gCm2day_to_Rauto_gCm2day_correlation**2, na.rm=TRUE),digits=3),sep="")) 
+print(paste("...NBP ~ Rhet   = ",round(mean(grid_output$NBP_gCm2day_to_Rhet_gCm2day_correlation**2, na.rm=TRUE),digits=3),sep="")) 
+print(paste("...NBP ~ Cwood  = ",round(mean(grid_output$NBP_gCm2day_to_wood_gCm2_correlation**2, na.rm=TRUE),digits=3),sep=""))
+print(paste("...NBP ~ Csom   = ",round(mean(grid_output$NBP_gCm2day_to_som_gCm2_correlation**2, na.rm=TRUE),digits=3),sep=""))
+print(paste("...NBP ~ dCwood = ",round(mean(grid_output$NBP_gCm2day_to_dCwood_gCm2_correlation**2, na.rm=TRUE),digits=3),sep=""))
+print(paste("...NBP ~ dCsom  = ",round(mean(grid_output$NBP_gCm2day_to_dCsom_gCm2_correlation**2, na.rm=TRUE),digits=3),sep=""))
+print(paste("...NBP ~ LAI    = ",round(mean(grid_output$NBP_gCm2day_to_lai_m2m2_correlation**2, na.rm=TRUE),digits=3),sep="")) 
+# How many pixels is the correlation magnitude between uncertainty with 'key' fluxes is greater than 5% of variation
+print("Proportion of pixels at which the correlation between uncertainties for the variables given has R2 > 0.1, or r = 0.3162278")
 print(paste("...MTT wood ~ GPP    = ",round(length(which(abs(grid_output$MTT_wood_years_to_GPP_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
 print(paste("...MTT wood ~ NEE    = ",round(length(which(abs(grid_output$MTT_wood_years_to_NEE_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
 print(paste("...MTT wood ~ Rhet   = ",round(length(which(abs(grid_output$MTT_wood_years_to_Rhet_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
@@ -7220,7 +8181,7 @@ print(paste("...NPPflx wood ~ GPP    = ",round(length(which(abs(grid_output$NPP_
 print(paste("...NPPflx wood ~ NEE    = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_NEE_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
 print(paste("...NPPflx wood ~ Rhet   = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_Rhet_gCm2day_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
 print(paste("...NPPflx wood ~ dCwood = ",round(length(which(abs(grid_output$NPP_wood_gCm2day_to_dCwood_gCm2_correlation) > 0.3162278))/tmp,digits=3),sep="")) 
-
+# How many pixels is the correlation magnitude between uncertainty with 'key' fluxes is greater than 5% of variation
 print("Mean absolute correlation (presented here as R2) across pixels between uncertainties for the variables given")
 print(paste("...MTT wood ~ GPP    = ",round(mean((grid_output$MTT_wood_years_to_GPP_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
 print(paste("...MTT wood ~ NEE    = ",round(mean((grid_output$MTT_wood_years_to_NEE_gCm2day_correlation**2), na.rm=TRUE),digits=3),sep=""))
@@ -7312,21 +8273,21 @@ for (i in seq(1, length(min_resilience))) {
 }
 
 # Logistic model
-logistic_model<-function(input,par_max,par_half,growth_coef) {logistic_model = par_max / (1+exp(-growth_coef*(input-par_half)))}
-chrono1 = data.frame(BA = BAbins[which(is.na(min_resilience) == FALSE)], min_resilience = min_resilience[which(is.na(min_resilience) == FALSE)])
-model1 = nls(min_resilience ~ logistic_model(BA,par_max,par_half,growth_coef), data=chrono1, 
-             start=list(par_max=max(grid_output$parameters[,,28,4],na.rm=TRUE),par_half=mean(chrono1$BA)*0.25,growth_coef=25))
-p1 = coef(model1)[1]
-p2 = coef(model1)[2]
-p3 = coef(model1)[3]
+#logistic_model<-function(input,par_max,par_half,growth_coef) {logistic_model = par_max / (1+exp(-growth_coef*(input-par_half)))}
+#chrono1 = data.frame(BA = BAbins[which(is.na(min_resilience) == FALSE)], min_resilience = min_resilience[which(is.na(min_resilience) == FALSE)])
+#model1 = nls(min_resilience ~ logistic_model(BA,par_max,par_half,growth_coef), data=chrono1, 
+#             start=list(par_max=max(grid_output$parameters[,,28,4],na.rm=TRUE),par_half=mean(chrono1$BA)*0.25,growth_coef=25))
+#p1 = coef(model1)[1]
+#p2 = coef(model1)[2]
+#p3 = coef(model1)[3]
 # Linear model reduces to Burned area only
-summary(lm(min_resilience ~ BAbins))$adj.r.squared
+summary(lm(min_resilience ~ BAbins + 0))$adj.r.squared
 # But how much better is the logistic model
-summary(lm(min_resilience ~ logistic_model(BAbins,p1,p2,p3)))$adj.r.squared
+#summary(lm(min_resilience ~ logistic_model(BAbins,p1,p2,p3)))$adj.r.squared
 
 # Create different dataset for more extensive plotting
-BA_test = seq(0,1,length.out=50)
-min_resilience_est <- logistic_model(BA_test,p1,p2,p3)
+#BA_test = seq(0,1,length.out=50)
+#min_resilience_est <- logistic_model(BA_test,p1,p2,p3)
 
 png(file = paste(out_dir,"/",gsub("%","_",PROJECT$name),"_estimating_minimum_bound_fire_resilience_parameter.png",sep=""), height = 2000, width = 3000, res = 300)
 par(mfrow=c(1,1), mar=c(4,4.5,0.3,7),omi=c(0.01,0.1,0.01,0.1))
@@ -7335,7 +8296,7 @@ plot(as.vector(grid_output$parameters[,,28,4]) ~ as.vector(BurnedFraction),
      cex = 1.2, cex.lab = 1.6, cex.axis = 1.6, pch=16, ylim=c(0,1), xlim=c(0,1))
 #points(min_resilience ~ BAbins, pch=16, col="blue")
 #lines(min_resilience_est ~ BA_test, col="red", lwd=3)
-#abline(lm(min_resilience ~ BAbins), lwd=3, col="orange")
+abline(lm(min_resilience ~ BAbins + 0), lwd=3, col="orange")
 #plot(min_resilience ~ min_resilience_est) ; abline(0,1,col="red", lwd=3)
 dev.off()
 

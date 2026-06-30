@@ -1,9 +1,33 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to create generic stock and flux plots for gridded CARDAMOM analyses
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to create generic stock and flux plots for gridded CARDAMOM analyses
+# 
+# Author: T. Luke Smallman (12/11/2024)
+#
+#########################################################################################
 
 generate_simplified_stock_and_flux_maps<-function(PROJECT) {
 
@@ -17,62 +41,51 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
   infile = paste(PROJECT$results_processedpath,PROJECT$name,"_stock_flux.RData",sep="")
   if (file.exists(infile) == FALSE) {stop("grid_outputs for 'generate_simplified_stock_and_flux_maps' missing")}
   load(paste(infile))
-
-  # work out area matrix for the pixels in meters
-  # include adjustment for g-> Tg (*1e-12)
-  if (PROJECT$grid_type == "UK") {
-      output = generate_uk_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))*1e-12
-      area = array(PROJECT$resolution**2, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else if (PROJECT$grid_type == "wgs84") {
-      # generate the lat / long grid again
-      output = generate_wgs84_grid(PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
-      grid_lat = array(output$lat, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      grid_long = array(output$long,dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      # then generate the area estimates for each pixel
-      area_with_g_Tg = calc_pixel_area(grid_long,grid_lat)*1e-12
-      area = calc_pixel_area(grid_long,grid_lat)
-      # this output is in vector form and we need matching array shapes so...
-      area = array(area, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      area_with_g_Tg = array(area_with_g_Tg, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-      rm(output)
-  } else {
-      stop("valid spatial grid option not selected (UK, or wgs84)")
-  }
+   
+  # generate the lat / long grid again
+  output = generate_grid(PROJECT$grid_type,PROJECT$latitude,PROJECT$longitude,PROJECT$resolution)
+  area = output$area ; grid_lat = output$lat ; grid_long = output$long
+  # include adjustment for g-> Tg (*1e-12)  
+  area_with_g_Tg = area*1e-12
+  rm(output)
 
   # determine the array value for the median,
-  num_quantiles = dim(grid_output$mean_labile_gCm2)[3]
-  if (num_quantiles == 7) {
+  if (length(grid_output$num_quantiles ) == 9) {
       # then we assume we are dealing with 0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975 quantiles
-      median_loc = 4 ; loc_25 = 3 ; loc_75 = 5; lower_loc = 1 ; upper_loc = 7
+      median_loc = 5 ; lower_loc = 1 ; upper_loc = 9 # if == 9
+      #median_loc = 4 ; lower_loc = 1 ; upper_loc = 7 # if == 7
   } else {
-      # otherwise we need to approximate it...
-      median_loc = round(num_quantiles / 2,digits=0)
-      lower_loc = ceiling(num_quantiles * 0.025)
-      upper_loc = floor(num_quantiles * 0.975)
-      loc_25 = ceiling(num_quantiles * 0.25)
-      loc_75 = floor(num_quantiles * 0.75)
+      # Approximate
+      median_loc = median(c(1:length(grid_output$num_quantiles)))
+      lower_loc = 1 ; upper_loc = length(grid_output$num_quantiles)
   }
 
   # calculate land mask
   landmask = array(PROJECT$landsea, dim=c(PROJECT$long_dim,PROJECT$lat_dim))
-  # load colour palette
-  colour_choices_upper = colorRampPalette(brewer.pal(11,"Spectral"))
-  # array sizes are always the same so
-  colour_choices = colour_choices_upper(length(area))
+  # Set up colour scheme
+  smoothScatter_colours  = colorRampPalette(c("white",rep(rev(brewer.pal(11,"Spectral")),each=3)))
+  colour_choices_default = colorRampPalette(brewer.pal(11,"Spectral")) 
+  colour_choices_sign    = colorRampPalette(brewer.pal(11,"PRGn"))
+  colour_choices_gain    = colorRampPalette(brewer.pal(9,"YlGnBu"))
+  colour_choices_loss    = colorRampPalette(brewer.pal(9,"YlOrRd"))
+  colour_choices_CI      = colorRampPalette(brewer.pal(9,"Purples"))
+  # Now extract out the final colours we will use
+  colour_choices_default = colour_choices_default(100)
+  colour_choices_sign    = colour_choices_sign(100)
+  colour_choices_gain    = colour_choices_gain(100)
+  colour_choices_loss    = colour_choices_loss(100)
+  colour_choices_CI      = colour_choices_CI(100)
 
   # determine correct height and widths
   fig_height = 3000*0.65 ; fig_width = ((PROJECT$long_dim/PROJECT$lat_dim)+0.25) * fig_height
+  if (grepl("27700",PROJECT$grid_type)) { fig_height = 8000*0.65 ; fig_width = 7200*0.65 }
 
   # If root depth information has been provided plot some of it up here.
   if (exists(x = "mean_RootDepth_m", where = grid_output)) {
       jpeg(file=paste("median_root_depth_maps_",gsub("%","_",PROJECT$name),".jpeg",sep=""), width=fig_width, height=fig_height, res=300, quality=100)
       par(mfrow=c(1,1), mar=c(1.2, 1.0, 2.2, 6.6), omi=c(0.2, 0.2, 0.2, 0.40))
-      z_axis=c(min(as.vector(grid_output$mean_RootDepth_m),na.rm=TRUE),max(as.vector(grid_output$mean_RootDepth_m),na.rm=TRUE))
-      image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_RootDepth_m[,,median_loc],col=colour_choices
+      z_axis = c(min(as.vector(grid_output$mean_RootDepth_m),na.rm=TRUE),max(as.vector(grid_output$mean_RootDepth_m),na.rm=TRUE))
+      image.plot(x = grid_long, y = grid_lat, z = grid_output$mean_RootDepth_m[,,median_loc],col=colour_choices_gain
                 ,main=paste("Median root depth (m)",sep=""),zlim=z_axis,axes=FALSE
                 ,cex.main=0.9,legend.width=3.0,cex=1.5,axis.args=list(cex.axis=1.8,hadj=0.1))
       map(add=TRUE, lwd = 2)
@@ -103,13 +116,18 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
            var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
            var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-           #var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
-           #var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
-           var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
+           var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) 
            info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
-           zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+           zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+           if (zrange[1] >= 0 & zrange[2] > 0) {
+               colour_choices = colour_choices_gain
+           } else if (zrange[1] < 0 & zrange[2] > 0) {
+               colour_choices = colour_choices_sign
+           } else if (zrange[1] < 0 & zrange[2] <= 0) {
+               colour_choices = rev(colour_choices_loss)
+           } else {
+               colour_choices = colour_choices_default
+           }
            image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], zlim=zrange, main=info, col = colour_choices,
                       axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
            map(add=TRUE, lwd = 2)
@@ -128,16 +146,10 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
            info = " " # assume default is no header, but sometimes we add something extra...
            var2 = grid_output[[pp]][,,upper_loc] - grid_output[[pp]][,,lower_loc]
            var1 = mean(var2, na.rm=TRUE)
-           #var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
-           #var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-           #var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
-           #var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
-           var1 = round(var1,digit=2) #; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) ; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-           #info = paste("Mean estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
+           var1 = round(var1,digit=2) 
            info = paste("Mean 95CI estimate: ",par_names[p]," = ",var1, sep="")
-           zrange=range(pretty(c(min(var2, na.rm=TRUE),max(var2,na.rm=TRUE))))
-           image.plot(x = grid_long, y = grid_lat, z = var2, zlim=zrange, main=info, col = colour_choices,
+           zrange = range(pretty(c(min(var2, na.rm=TRUE),max(var2,na.rm=TRUE))))
+           image.plot(x = grid_long, y = grid_lat, z = var2, zlim=zrange, main=info, col = colour_choices_CI,
                       axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
            map(add=TRUE, lwd = 2)
            #contour(landmask, add = TRUE, lwd = 1.0, nlevels = 1,axes = FALSE,drawlabels = FALSE,col = "black")
@@ -169,12 +181,18 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var1 = mean(grid_output[[pp]][,,median_loc], na.rm=TRUE)
        var2 = mean(grid_output[[pp]][,,upper_loc], na.rm=TRUE)
        var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
-       #var4 = mean(grid_output[[pp]][,,loc_25], na.rm=TRUE)
-       #var5 = mean(grid_output[[pp]][,,loc_75], na.rm=TRUE)
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2) #; var4 = round(var4,digit=2) ; var5 = round(var5,digit=2)
-#       info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 75 % = ",var5,"; 50 % = ",var1,"; 25 % = ",var4,"; 2.5 % = ",var3,")", sep="")
        info = paste("Final estimate: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
-       zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+       zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+       if (zrange[1] >= 0 & zrange[2] > 0) {
+           colour_choices = colour_choices_gain
+       } else if (zrange[1] < 0 & zrange[2] > 0) {
+           colour_choices = colour_choices_sign
+       } else if (zrange[1] < 0 & zrange[2] <= 0) {
+           colour_choices = rev(colour_choices_loss)
+       } else {
+           colour_choices = colour_choices_default
+       }
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], main=info, col = colour_choices, zlim=zrange,
                   axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)
@@ -202,7 +220,16 @@ generate_simplified_stock_and_flux_maps<-function(PROJECT) {
        var3 = mean(grid_output[[pp]][,,lower_loc], na.rm=TRUE)
        var1 = round(var1,digit=2) ; var2=round(var2,digit=2) ; var3=round(var3,digit=2)
        info = paste("Steady State: ",par_names[p]," (97.5 % = ",var2,"; 50 % = ",var1,"; 2.5 % = ",var3,")", sep="")
-       zrange=range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+       zrange = range(pretty(c(min(grid_output[[pp]][,,median_loc], na.rm=TRUE),max(grid_output[[pp]][,,median_loc],na.rm=TRUE))))
+       if (zrange[1] >= 0 & zrange[2] > 0) {
+           colour_choices = colour_choices_gain
+       } else if (zrange[1] < 0 & zrange[2] > 0) {
+           colour_choices = colour_choices_sign
+       } else if (zrange[1] < 0 & zrange[2] <= 0) {
+           colour_choices = rev(colour_choices_loss)
+       } else {
+           colour_choices = colour_choices_default
+       }
        image.plot(x = grid_long, y = grid_lat, z = grid_output[[pp]][,,median_loc], main=info, col = colour_choices, zlim=zrange,
                   axes=FALSE, cex.main=0.9, legend.width=3.0, cex=1.5, axis.args=list(cex.axis=1.8, hadj=0.1))
        map(add=TRUE, lwd = 2)

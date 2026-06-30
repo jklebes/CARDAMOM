@@ -1,6 +1,34 @@
-###
-## Function to run CARDAMOM parameters via the chosen model
-###
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to run CARDAMOM parameters via the chosen model
+# 
+# Author: T. Luke Smallman (12/11/2024)
+# Exceptions states below in specific functions
+#
+#########################################################################################
 
 run_each_site<-function(n,PROJECT,repair,grid_override) {
 
@@ -15,7 +43,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
   # Set dummy output variable, the value may be changes by the code below
   dummy = 0
 
-  if (file.exists(outfile_parameters) == FALSE | repair == 1) {
+  if (repair == 1 | (file.exists(outfile_stock_fluxes) == FALSE & file.exists(outfile_parameters) == FALSE)) {
 
       # Determine which parameter chains we will be using
       output = determine_parameter_chains_to_run(PROJECT,n)
@@ -25,20 +53,36 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           return(output)
       }
       # Otherwise we should assume these variables exist
-      parameters = output$parameters ; converged = output$converged ; rm(output)      
+      parameters = output$parameters ; converged = output$converged ; kept_chains = output$kept_chains 
+      # Then tidy
+      rm(output)      
 
       # load the met data for each site
       drivers = read_binary_file_format(paste(PROJECT$datapath,PROJECT$name,"_",PROJECT$sites[n],".bin",sep=""))
 ## HACK to remove CO2 effect
 #drivers$met[,5] = drivers$met[1,5]
-## HACK to create S2 simulations for GCP / Trendy v13
+# HACK to create S2 simulations for GCP / Trendy v14
 #drivers$met[,8] = 0
+# Irrigation of crops experiment, a minimum of at least 10 mm/day
+#drivers$met[,7] = pmax(drivers$met[,7],100/86400)
+#drivers$met[,7] = drivers$met[,7]*0.1
       # run parameters for full results / propogation
       soil_info = c(drivers$top_sand,drivers$bot_sand,drivers$top_clay,drivers$bot_clay)
       if (use_parallel == FALSE) {print("running model ensemble")}
       states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
                                 drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
                                 PROJECT$exepath,soil_info)
+## EDC hack to reduce the possible range of soil C changes
+#filter = which(abs((states_all$som_gCm2[,dim(states_all$som_gCm2)[2]] - states_all$som_gCm2[,1]) / PROJECT$nos_years) < 250)
+#if (length(filter) > 0) {
+#parameters = array(parameters, dim=c((PROJECT$model$nopars[n]+1),prod(dim(parameters)[2:3])))[,filter]
+#parameters = array(parameters, dim=c(dim(parameters)[1],dim(parameters)[2],2))
+#states_all = simulate_all(n,PROJECT,PROJECT$model$name,drivers$met,parameters[1:PROJECT$model$nopars[n],,],
+#                          drivers$lat,PROJECT$ctessel_pft[n],PROJECT$parameter_type,
+#                          PROJECT$exepath,soil_info)
+#} else {
+#return(-9999)
+#}
       if (use_parallel == FALSE) {print("model ensemble ran, on to post-processing")}
 
       # Avoid running with ACM basically where not all fluxes exist
@@ -54,7 +98,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
           states_all = post_process_dalec(states_all,parameters,drivers,PROJECT,n)
           # Determine how many ensemble members are within the observational uncertainties
           # of the calibration datasets
-          states_all = assess_ensemble_fit_to_calibration_data(states_all,drivers,PROJECT)
+          states_all = assess_ensemble_fit_to_calibration_data(states_all,parameters,drivers,PROJECT)
 
       } # DALEC model or not?
 
@@ -80,7 +124,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       if (any(check_list == "SS_som_gCm2") == TRUE) {SS_gCm2$SS_som_gCm2 = states_all$SS_som_gCm2}
 
       # Sanity check
-      if (any(is.na(as.vector(NPP_fraction)))) {
+      if (any(is.na(unlist(NPP_fraction)))) {
       #if (length(which(is.na(as.vector(NPP_fraction))) == TRUE) > 0) {
           print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -4 ; return(dummy)
       }
@@ -90,17 +134,20 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       if (PROJECT$spatial_type == "site" | grid_override == TRUE) {
 
           # ...if this is a site run save the full ensemble and everything else...
-          save(parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
+          save(kept_chains,parameters,drivers,states_all,site_ctessel_pft,file=outfile_site, compress="gzip", compression_level = 6)
           # store the parameters and driver information
-          save(parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
+          save(kept_chains,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,#converged,
                file=outfile_parameters, compress="gzip", compression_level = 6)
-#          save(parameter_covariance,parameters,drivers,site_ctessel_pft,NPP_fraction,MTT_years,SS_gCm2,
-#               file=outfile_parameters, compress="gzip", compression_level = 6)
           # Return
           dummy = 0 ; return(dummy)
+
       } else {
+
           # ...otherwise this is a grid and we want straight forward reduced dataset of common stocks and fluxes
-          num_quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          # The current quantiles allow for calculation of the 95 % CI (0.975-0.025) and the standard deviation equivalent (0.839-0.1607)
+          # The other quantiles provide a equal description of the distribution.
+          #num_quantiles = c(0.025,0.05,0.16,0.5,0.84,0.95,0.975) #; num_quantiles_agg = seq(0.0,1, length = 100)
+          num_quantiles = c(0.025,0.1607143,0.2964286,0.4321429,0.5,0.5678571,0.7035714,0.8392857,0.975)
           na_flag = TRUE
 
           # Run post-processing for gridded analysis

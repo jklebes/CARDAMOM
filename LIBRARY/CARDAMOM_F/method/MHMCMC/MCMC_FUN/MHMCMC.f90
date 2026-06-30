@@ -1,25 +1,48 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Module contains all subroutine and functions relevant specifically to the
+! AP-MCMC method. The choice of EDC, likelihood and model are made else where and
+! are thus contains within a seperate module
+! 
+! Relevant source references:
+! Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
+! Haario et al., (2006) Stat. Comput., 16:339–354, DOI 10.1007/s11222-006-9438-0,
+! Roberts and Rosenthal (2009), Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! J. F. Exbrayat (University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 module MHMCMC_MODULE
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
-
-  ! Module contains all subroutine and functions relevant specifically to the
-  ! AP-MCMC method. The choice of EDC, likelihood and model are made else where and
-  ! are thus contains within a seperate module
-
-  ! Relevant source references:
-  ! Haario et al., (2001) An adaptive Metropolis algorithm. Bernoulli 7.2: 223-242.
-  ! Haario et al., (2006) Stat. Comput., 16:339–354, DOI 10.1007/s11222-006-9438-0,
-  ! Roberts and Rosenthal (2009), Examples of Adaptive MCMC, J. Comp. Graph. Stat. 18:349-367
 
 implicit none
 
@@ -43,10 +66,10 @@ double precision :: N_before_mv_target, & !
                     opt_scaling ! scd = 2.381204 the optimal scaling parameter
                                 ! for MCMC search, when applied to  multivariate proposal.
                                 ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky
-                                ! factor. NOTE 2: 2.381204 ** 2 = 5.670132
+                                ! factor.
 double precision, parameter :: beta = 0.05d0 ! weighting for gaussian step in multivariate proposals
 ! Is current proposal multivariate or not?
-logical :: multivariate_proposal = .false.
+!TLS:2025logical :: multivariate_proposal = .false.
 double precision, parameter :: N_before_mv = 10d0
 
 contains
@@ -59,6 +82,7 @@ contains
     use cardamom_io, only: write_parameters,write_variances,write_covariance_matrix &
                           ,write_covariance_info,restart_flag,write_mcmc_output
     use cardamom_structures, only: DATAin
+    use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_negative_inf, ieee_support_inf
 
     implicit none
 
@@ -101,9 +125,9 @@ contains
     ! the interface allows for making the requirements of this explicit
     interface
       subroutine model_likelihood_option(param_vector, ML_obs_out, ML_prior_out)
-        use cardamom_structures, only: DATAin, emulator_pars
+        use cardamom_structures, only: DATAin
         use MCMCOPT, only: PI
-        use CARBON_MODEL_MOD, only: carbon_model
+        use carbon_model_mod, only: carbon_model
            implicit none
            ! declare input variables
            double precision, dimension(PI%npars), intent(inout) :: param_vector
@@ -114,9 +138,9 @@ contains
 
     interface
       subroutine model_likelihood_default(param_vector, ML_obs_out, ML_prior_out)
-        use cardamom_structures, only: DATAin, emulator_pars
+        use cardamom_structures, only: DATAin
         use MCMCOPT, only: PI
-        use CARBON_MODEL_MOD, only: carbon_model
+        use carbon_model_mod, only: carbon_model
            implicit none
            ! declare input variables
            double precision, dimension(PI%npars), intent(inout) :: param_vector
@@ -136,8 +160,9 @@ contains
                                             ,PARS          & ! parameter values for current proposal
                                             ,BESTPARS        ! best set of parameters so far
 
-    double precision, dimension(PI%npars,MCO%nADAPT) :: PARSALL ! All accepted normalised parameters since previous step adaption
-    double precision :: infini &
+    double precision, allocatable, dimension(:,:) :: PARSALL ! All accepted normalised parameters since previous step adaption
+    double precision :: neg_inf & ! portable -infinity sentinel (see initial values)
+                       ,u_draw  & ! holds the current uniform draw for the M-H accept test
                        ,burn_in_period & ! for how many proposals will we adapt the covariance matrix as a minimum
                        ,crit1  & ! random numbers log(0->1) used to accept / reject
                        ,AM_likelihood &
@@ -150,12 +175,22 @@ contains
 
     ! initial values
     uniform = 1
+    ! Construct a portable negative infinity used to force rejection of out-of-bounds
+    ! proposals and to flag EDC failure of the initial parameter set. Built via
+    ! ieee_arithmetic so that no log(0d0) is ever evaluated, avoiding spurious FPE
+    ! traps under -ffpe-trap (GNU) / -fpe0 (Intel). The bit value is identical to the
+    ! -infinity that log(0d0) previously produced, so all comparisons are unchanged.
+    ! Falls back to -huge() on the (non-x86) case where IEEE infinity is unsupported.
+    if (ieee_support_inf(1d0)) then
+        neg_inf = ieee_value(1d0, ieee_negative_inf)
+    else
+        neg_inf = -huge(1d0)
+    end if
     P = -1d0 ; Pprior = -1d0
-    N%ACC = 0d0 ; N%ACC_first = 0d0 ; N%ITER = 0d0
+    N%ACC = 0d0 ; N%ITER = 0d0 !TLS:2025 ; N%ACC_first = 0d0 
     N%ACCLOC = 0d0 ; N%ACCRATE = 0d0 ; N%ACCRATE_GLOBAL = 0d0
 
-    ! Determine how long we will continue to adapt our proposal covariance
-    ! matrix and use of Delayed Rejection
+    ! Determine how long we will adapt our proposal covariance matrix
     burn_in_period = MCO%fADAPT * dble(MCO%nOUT)
     N_before_mv_target = N_before_mv * dble(PI%npars)
 
@@ -163,12 +198,15 @@ contains
     ! scd = 2.381204 the optimal scaling parameter for MCMC search, when applied
     ! to multivariate proposal.
     ! NOTE 1: 2.38 / sqrt(npars) sometimes used when applied to the Cholesky factor
-    ! NOTE 2: 2.381204 ** 2 = 5.670132
-    opt_scaling = 5.670132d0 / dble(PI%npars)
+    opt_scaling = 2.381204d0 / sqrt(dble(PI%npars))
 
     ! calculate initial vector of uniform random values
     unif_length = MCO%nADAPT * 5
     allocate(uniform_random_vector(unif_length))
+    ! Allocate the accepted-parameter history on the heap rather than as a large
+    ! automatic (stack) array. Avoids stack-overflow risk for large nADAPT and is
+    ! safer if the MCMC layer is ever run under OpenMP with small per-thread stacks.
+    allocate(PARSALL(PI%npars,MCO%nADAPT))
     call random_uniform(uniform_random_vector,unif_length)
 
     ! add something here to delete previous files if wanted later
@@ -213,8 +251,7 @@ contains
     Pmax = P0 + P0prior
 
     ! checks whether the EDCs (combined with P0 not P0prior) have been met in the initial parameter set
-    infini = 0d0
-    if (P0 == log(infini)) then
+    if (P0 == neg_inf) then
         write(*,*) "WARNING! P0 = ",P0," - AP-MCMC will get stuck, if so please check initial conditions"
         stop
     endif
@@ -231,7 +268,16 @@ contains
            ! calculate the model likelihood
            call model_likelihood_option(PARS, P, Pprior)
            ! accept or reject, draw uniform distribution (0,1)
-           crit1 = log(uniform_random_vector(uniform))
+           ! NOTE: random_uniform can return exactly 0d0, so guard the log to
+           ! avoid evaluating log(0d0) (which traps under -ffpe-trap / -fpe0).
+           ! u_draw == 0d0 yields neg_inf, bit-identical to the -infinity that
+           ! log(0d0) previously produced, so the accept test is unchanged.
+           u_draw = uniform_random_vector(uniform)
+           if (u_draw > 0d0) then
+               crit1 = log(u_draw)
+           else
+               crit1 = neg_inf
+           end if
            uniform = uniform + 1
            ! if we are near to the end re-generate some more values
            if (uniform >= unif_length) then
@@ -248,11 +294,16 @@ contains
 
            ! proposal out of parameter bounds, set likelihoods to ensure
            ! rejection
-           AM_likelihood = log(infini) ; P = AM_likelihood ; Pprior = P
+           AM_likelihood = neg_inf ; P = AM_likelihood ; Pprior = P
            crit1 = 0d0
 
        end if ! in bound
 
+       ! Update the parameter history for accepted parameter sets. 
+       ! This means that the written out value remains unchanged, consistent with MCMC theory, 
+       ! but is also means that the covariance matrix does not get updated either, not consistent with MCMC theory. 
+       ! In CARDAMOM's large parameter hypervolume, this avoid the covariance matrix rapidly reducing the very 
+       ! small variances which cause the analysis to get stuck in a local minima. 
        if (AM_likelihood > crit1) then
 
            ! Store accepted parameter proposals
@@ -266,10 +317,14 @@ contains
            endif
            ! Keep count of the number of accepted proposals in this local period
            N%ACCLOC = N%ACCLOC + 1d0
-           ! Accepted first proposal from multivariate
-           if (multivariate_proposal) N%ACC_first = N%ACC_first + 1d0
-
+           ! Update the new prior likelihoods for the observations and priors
            P0 = P ; P0prior = Pprior
+
+       else 
+         
+           ! Track the current parameter vector for the covariance matrix
+           ! but do not increment the acceptance information
+           ! ===What should happen if consistent with theory but not doing so here...===
 
        endif ! accept or reject condition
 
@@ -304,18 +359,16 @@ contains
            N%ACC = N%ACC + N%ACCLOC
            ! Calculate global acceptance rate
            N%ACCRATE_GLOBAL = N%ACC / N%ITER
-
            ! Calculate local acceptance rate (i.e. since last adapt)
            N%ACCRATE = N%ACCLOC / dble(MCO%nADAPT)
 
-           ! Second, are we still in the adaption phase?
-           if (burn_in_period > N%ITER .or. (N%ACC_first / N%ITER) < 0.05d0 .or. .not.PI%use_multivariate) then
+           ! Second, are we in the adaption phase? 
+           ! Adapt if we are still within the burn in period or we still have not found a viable covariance matrix
+           if (burn_in_period > N%ITER .or. .not.PI%use_multivariate) then           
 
-               ! Once covariance matrix has been created just update based on a
-               ! single parameter set from each period.
-               if (PI%cov) then
-                   N%ACCLOC = 1d0 ; PARSALL(1:PI%npars,nint(N%ACCLOC)) = norPARS0(1:PI%npars)
-               else if (.not.PI%cov .and. N%ACCLOC > 3d0) then
+               ! Until the covariance has been first created be selective about the variables being fed 
+               ! into the matrix. Then let everything feed into the matrix for learning.
+               if (.not.PI%cov .and. N%ACCLOC > 3d0) then
                    PARSALL(1:PI%npars,2) = PARSALL(1:PI%npars,ceiling(N%ACCLOC*0.5d0))
                    PARSALL(1:PI%npars,3) = PARSALL(1:PI%npars,nint(N%ACCLOC))
                    N%ACCLOC = 3d0
@@ -362,7 +415,7 @@ contains
     ! set flag MCMC completed
     MCOUT%complete = 1
     ! tidy up
-    deallocate(uniform_random_vector)
+    deallocate(uniform_random_vector,PARSALL)
 
     ! completed AP-MCMC loop
     write(*,*)"AP-MCMC loop completed"
@@ -417,13 +470,15 @@ contains
                                         ,Nparvar_local,nint(N%ACCLOC),PI%covariance)
         ! Calculate the cholesky factor as this includes a determination of
         ! whether the covariance matrix is positive definite.
-        cholesky = PI%covariance
+        cholesky = PI%covariance 
         call cholesky_factor( PI%npars, cholesky, info )
         ! If the updated covariance matrix is not positive definite we should
         ! reject the update in favour of the existing matrix
+
         if (info == 0) then
             ! Set multivariate sampling to true
             PI%use_multivariate = .true.
+            PI%Nparvar = Nparvar_local
         else
             ! The current addition of a parameter leads to a matrix which is not
             ! positive definite. If we previously had a matrix which is positive
@@ -531,7 +586,7 @@ contains
     if ((PI%use_multivariate .and. PI%Nparvar > N_before_mv_target)) then
 
         ! Is this step a multivariate proposal or not
-        multivariate_proposal = .true.
+        !TLS:2025multivariate_proposal = .true.
 
         ! Draw from multivariate random distribution
         ! NOTE: if covariance matrix provided is not positive definite
@@ -553,7 +608,7 @@ contains
     else ! nint(PI%Nparvar) > N_before_mv*PI%npars
 
        ! is this step a multivariate proposal or not
-       multivariate_proposal = .false.
+       !TLS:2025multivariate_proposal = .false.
 
        ! Sample random normal distribution (mean = 0, sd = 1)
        do p = 1, PI%npars

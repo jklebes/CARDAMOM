@@ -1,13 +1,38 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function which allows figure generation to be spread across the cores
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
-# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to generate figures for site level analyses
+# 
+# This function is based on an original Matlab function development by A. A. Bloom 
+# (UoE, now at the Jet Propulsion Laboratory). Translation to R and subsequent 
+# modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
 # Exceptions are given within specific functions.
+#
+#########################################################################################
 
-#Function to determine rmse
+# Function to determine rmse
 rmse <- function(obs, pred) sqrt(mean((obs-pred)^2, na.rm=TRUE))
 ## Use byte compile
 rmse<-cmpfun(rmse)
@@ -35,90 +60,97 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    if (exists(x = "RootDepth_m", where = states_all)) {
        var = t(states_all$RootDepth_m)
        plot_root_depth = TRUE
-   } else if (PROJECT$model$name == "DALEC.A1.C3.H2.M1.#") {
+   } else if (PROJECT$model$name == "DALEC.A1.C3.H2.M1.015") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        var = t(states_all$roots_gCm2)
        # parameter numbers adjusted for crop model
        var = as.vector(parameters[37,,]) * (var*2) / (as.vector(parameters[36,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.#" |
-       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.#" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.#" |
-       PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P2.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P4.R2.011" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H1.P4.R2.010" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P7.R2.023" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P8.R2.024" |
+       PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P3.R1.009" | PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P10.R2.026" |
+       PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P2.018"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[29,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[40,,]) * (var*2) / (as.vector(parameters[39,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H1.P1.003"){
+       # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
+       tmp = t(states_all$wood_gCm2)*as.vector(parameters[24,,])
+       var = t(states_all$roots_gCm2) + tmp
+       # Now estimate the rooting depth based on the equation imbedded in
+       var = as.vector(parameters[26,,]) * (var*2) / (as.vector(parameters[25,,]) + (var*2))
+       plot_root_depth = TRUE
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.004"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H3.P1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H3.P1.029"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A2.C1.D2.F2.H2.P1.020"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A3.C1.D2.F2.H2.P1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A3.C1.D2.F2.H2.P1.030"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P1.R1.005"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P1.R1.006"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.#") {
+   } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R1.007") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.#") {
+   } else if (PROJECT$model$name == "DALEC.A1.C2.D2.F2.H2.P2.R3.019") {
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P5.#"){
+   } else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P5.021"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
-   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P6.#"){
+   }  else if (PROJECT$model$name == "DALEC.A1.C1.D2.F2.H2.P6.022"){
        # These models assume rooting depth is controlled by coarse root, which is a fraction of the woody pool!
        tmp = t(states_all$wood_gCm2)*as.vector(parameters[25,,])
        var = t(states_all$roots_gCm2) + tmp
-       # Now estimate the rooting depth based on the equation imbedded in DALEC.A1.C2.D2.F2.H2.P3.R1.
+       # Now estimate the rooting depth based on the equation imbedded in 
        var = as.vector(parameters[27,,]) * (var*2) / (as.vector(parameters[26,,]) + (var*2))
        plot_root_depth = TRUE
    } # model specific plotting for root depth
@@ -145,7 +177,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var = t(states_all$APAR_MJm2day)
 
-       obs = drivers$obs[,23] ; obs_unc = drivers$obs[,24]
+       obs = drivers$obs[,34] ; obs_unc = drivers$obs[,35]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        # Convert from observation (fAPAR) to model value, where 0.5 is assumed to be the fraction PAR
@@ -317,7 +349,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var = t(states_all$ET_kgH2Om2day)
 
-       obs = drivers$obs[,31] ; obs_unc = drivers$obs[,32]
+       obs = drivers$obs[,40] ; obs_unc = drivers$obs[,41]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -507,7 +539,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 		   var = t(states_all$foliage_gCm2)
 
 		   # pass observations driver
-		   obs = drivers$obs[,11] ; obs_unc = drivers$obs[,12]
+		   obs = drivers$obs[,16] ; obs_unc = drivers$obs[,17]
 		   # filter -9999 to NA
 		   filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -541,7 +573,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
         # flip it to get the right shape
         var = t(states_all$lai_m2m2)
-        obs = drivers$obs[,3] ; obs_unc = drivers$obs[,4]
+        obs = drivers$obs[,4] ; obs_unc = drivers$obs[,5]
         # filter -9999 to NA
         filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
         yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -638,7 +670,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
             width=7200, height=4000, res=280, quality=100)
        # now create the plotting area
        par(mfrow=c(1,1), mar=c(5,5,3,1))
-       plot(obs, pch=16,xaxt="n", ylim=yrange,
+       plot(rep(-9999,dim(var)[1]), pch=16,xaxt="n", ylim=yrange,
             cex=0.8,ylab="NPP (gC/m2/day)",xlab="Time (Year)", cex.lab=1.8, cex.axis=1.8, cex.main=1.8,
             main=paste(PROJECT$sites[n]," - ",PROJECT$name, sep=""))
        axis(1, at=time_vector[seq(1,length(time_vector),interval)],
@@ -660,7 +692,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    	   # flip it to get the right shape
        var = t(states_all$nbe_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,35] ; obs_unc = drivers$obs[,36]
+       obs = drivers$obs[,46] ; obs_unc = drivers$obs[,47]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -730,7 +762,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
    	   # flip it to get the right shape
        var = t(states_all$nee_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,5] ; obs_unc = drivers$obs[,6]
+       obs = drivers$obs[,7] ; obs_unc = drivers$obs[,8]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
@@ -927,7 +959,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var = t(states_all$litter_gCm2)
 
        # pass observations driver
-       obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
+       obs = drivers$obs[,25] ; obs_unc = drivers$obs[,26]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -958,16 +990,11 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    } # litter_gCm2
 
-   # Foliage + fine root litter (gCm2)
+   # Wood litter (gCm2)
    if (exists(x = "woodlitter_gCm2", where = states_all)) {
 
        # flip it to get the right shape
        var = t(states_all$woodlitter_gCm2)
-
-#       # pass observations driver
-#       obs = drivers$obs[,17] ; obs_unc = drivers$obs[,18]
-#       # filter -9999 to NA
-#       filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
 
        jpeg(file=paste(PROJECT$figpath,"timeseries_woodlitter_",PROJECT$sites[n],"_",PROJECT$name,".jpeg",sep=""),
             width=7200, height=4000, res=280, quality=100)
@@ -999,7 +1026,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var=t(states_all$roots_gCm2)
 
        # pass observations driver
-       obs=drivers$obs[,15] ; obs_unc=drivers$obs[,16]
+       obs=drivers$obs[,22] ; obs_unc=drivers$obs[,23]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1036,7 +1063,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var=t(states_all$wood_gCm2)
        # pass observations driver
-       obs=drivers$obs[,13] ; obs_unc=drivers$obs[,14]
+       obs=drivers$obs[,19] ; obs_unc=drivers$obs[,20]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1072,7 +1099,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        var = t(states_all$som_gCm2)
 
        # pass observations driver
-       obs = drivers$obs[,19] ; obs_unc = drivers$obs[,20]
+       obs = drivers$obs[,28] ; obs_unc = drivers$obs[,29]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
@@ -1128,7 +1155,7 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
 
    }  # biomass_gCm2
 
-   # Canopy growth index (CGI; 0-1)
+   # Net Canopy Carbon Export
    if (exists(x = "ncce_gCm2day", where = states_all)) {
 
        # structure needed by function is dim=c(time,iter)
@@ -1327,13 +1354,13 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
        # flip it to get the right shape
        var=t(states_all$harvest_gCm2day)
        # pass observations driver
-       obs = drivers$obs[,49] ; obs_unc = drivers$obs[,50]
+       obs = drivers$obs[,61] ; obs_unc = drivers$obs[,62]
        # filter -9999 to NA
        filter = which(obs == -9999) ; obs[filter] = NA ; obs_unc[filter] = NA
        # Plotting code below does not allow for lags != 1,
        # therefore we need to treat these as missing data for the purpose of plotting
-       obs[which(drivers$obs[,51] != 1)] = NA
-       obs_unc[which(drivers$obs[,51] != 1)] = NA
+       obs[which(drivers$obs[,63] != 1)] = NA
+       obs_unc[which(drivers$obs[,63] != 1)] = NA
        yrange = c(0,quantile(as.vector(var), prob=c(0.999), na.rm=TRUE))
        if (length(which(is.na(obs) == FALSE)) > 0) {
            yrange[2] = max(max(obs+obs_unc, na.rm=TRUE),yrange[2])
@@ -1437,9 +1464,29 @@ uncertainty_figures<-function(n,PROJECT,load_file) {
                       "GRAZINGextracted_litter_gCm2day","GRAZINGextracted_som_gCm2day",
                       "GRAZINGlitter_labile_gCm2day","GRAZINGlitter_foliage_gCm2day",
                       "GRAZINGlitter_roots_gCm2day","leaf_temperature_celcius","soil_temperature_celcius",
-                      "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day",
-                      "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction")
-                      
+                      "SurfDrainage_kgH2Om2day","SurfInfiltrated_kgH2Om2day","LWP_MPa",
+                      "Etrans_1st_root_layer_uptake_fraction","Etrans_2nd_root_layer_uptake_fraction",
+                      "LabBio_limitation","foliage_leafT_limitation","roots_leafT_limitation","wood_leafT_limitation",
+                      "foliage_wSWP_limitation","roots_wSWP_limitation","wood_wSWP_limitation",
+                      "canopy_area_scaling_wind","canopy_area_scaling_light","rgrow_gCm2day",
+                      "rmain_from_labile_gCm2day", "foliar_growth_limitation", "ncce_grow_gCgC",
+                      "ncce_loss_gCgC","foliage_feedback_turnover_limitation", 
+                      "foliage_leafT_turnover_limitation", "foliage_wSWP_turnover_limitation",
+                      "avg_whole_plant_balance_gCm2day","MTT_foliage_days",
+                      "rhet_foliarlitter_gCm2day","rhet_rootlitter_gCm2day","rhet_woodlitter_gCm2day",
+                      "rhet_fastsom_gCm2day","rhet_slowsom_gCm2day","rhet_microbial_gCm2day",
+                      "foliarlitter_to_som_gCm2day","woodlitter_to_som_gCm2day","rootlitter_to_som_gCm2day",
+                      "microbial_to_som_gCm2day","slow_to_fast_som_gCm2day","fast_som_to_microbial_gCm2day",
+                      "FIRElitter_foliarlitter_gCm2day","FIREemiss_rootlitter_gCm2day","FIRElitter_rootlitter_gCm2day",
+                      "FIREemiss_woodlitter_gCm2day","FIRElitter_woodlitter_gCm2day","FIREemiss_fastsom_gCm2day",
+                      "FIREemiss_slowsom_gCm2day","HARVESTextracted_woodlitter_gCm2day",
+                      "foliarlitter_gCm2","rootlitter_gCm2","fastsom_gCm2","slowsom_gCm2",
+                      "microbial_gCm2","microbial_death_fraction","microbial_activity_fraction","labile_to_roots_gCm2day",
+                      "labile_to_wood_gCm2day","foliar_growth_limitation_gradient","foliage_leafP_limitation","foliage_leafV_limitation",
+                      "gpp_grow_gCgC","runoff_kgH2Om2day","underflow_kgH2Om2day","ncce_gCgC_gradient","foliar_loss_limitation",
+                      "nos_foliage_cohorts","canopy_relative_NUE","canopy_age_days","canopy_profit_gCm2","nos_profitable_cohorts",
+                      "ncce_avg_cohort_gCm2day")
+
    for (p in seq(1, length(list_variables))) {
         # Check whether current variable exists
         if (exists(x = list_variables[p], where = states_all)) {

@@ -1,20 +1,44 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+!
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+!
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Code responsible for input / output operations for CARDAMOM
+! 
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! J. F. Exbrayat (University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module cardamom_io
 
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! J. F. Exbrayat (University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
-
   ! Module contains subroutines and variables needed to output parameter,
-  ! likelihood and step size information from the MHMCMC.
+  ! likelihood and step size information from the MCMC algorithms.
 
   implicit none
 
@@ -27,6 +51,10 @@ module cardamom_io
            ,write_variances                 &
            ,write_covariance_matrix         &
            ,write_covariance_info           &
+           ,update_obs_scaling_normal       &
+           ,update_obs_scaling_nsamples     &
+           ,update_obs_scaling_sqrt_nsamples&
+           ,update_obs_scaling_log_nsamples &
            ,update_for_restart_simulation   &
            ,check_for_existing_output_files &
            ,open_output_files               &
@@ -67,177 +95,233 @@ module cardamom_io
         DATAin%nopools = 2
         DATAin%nopars = 20
         DATAin%nofluxes = 4
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 1) then
-        ! ID = 1 - DALEC.D1.F2.#
+        ! ID = 1 - DALEC.D1.F2.001
         DATAin%nopools = 5
         DATAin%nopars = 22
         DATAin%nofluxes = 35
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 2) then
-        ! ID = 2 - DALEC.C1.D1.F2.P1.#
+        ! ID = 2 - DALEC.C1.D1.F2.P1.002
         DATAin%nopools = 6
         DATAin%nopars = 28
         DATAin%nofluxes = 39
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 3 ) then
-        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.#
+        ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.003
         DATAin%nopools = 6
-        DATAin%nopars = 28
-        DATAin%nofluxes = 39
+        DATAin%nopars = 31
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 4) then
-        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.#
+        ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.004
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 49
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 5) then
-        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.#
+        ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.005
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 52
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 6) then
-        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.#
+        ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.006
         DATAin%nopools = 8
         DATAin%nopars = 35
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 7) then
-        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.#
+        ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.007
         DATAin%nopools = 8
         DATAin%nopars = 36
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 8) then
-        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.#
+        ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.008
         DATAin%nopools = 7
-        DATAin%nopars = 43
-        DATAin%nofluxes = 25
+        DATAin%nopars = 39
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 9) then
-        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.#
+        ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.009
         DATAin%nopools = 8
-        DATAin%nopars = 46
-        DATAin%nofluxes = 25
+        DATAin%nopars = 40
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 10) then
-        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.#
-        DATAin%nopools = 7
-        DATAin%nopars = 48
-        DATAin%nofluxes = 25
-    else if (DATAin%ID == 11) then
-        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.#
+        ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.010
         DATAin%nopools = 8
-        DATAin%nopars = 49
-        DATAin%nofluxes = 25
+        DATAin%nopars = 43
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
+    else if (DATAin%ID == 11) then
+        ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.011
+        DATAin%nopools = 8
+        DATAin%nopars = 43
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 12) then
-        ! ID = 12 - DALEC.C4.D1.F2.#
+        ! ID = 12 - DALEC.C4.D1.F2.012
         DATAin%nopools = 3
         DATAin%nopars = 15
         DATAin%nofluxes = 28
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 13) then
-        ! ID = 13 - DALEC.C5.D1.F2.P1.#
+        ! ID = 13 - DALEC.C5.D1.F2.P1.013
         DATAin%nopools = 4
         DATAin%nopars = 21
         DATAin%nofluxes = 32
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 14) then
-        ! ID = 14 - DALEC.C3.M1.#
+        ! ID = 14 - DALEC.C3.M1.014
         DATAin%nopools = 9
         DATAin%nopars = 37
         DATAin%nofluxes = 42
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 15) then
-        ! ID = 15 - DALEC.A3.C3.H2.M1.# i.e. the CROP model
+        ! ID = 15 - DALEC.A3.C3.H2.M1.015 i.e. the CROP model
         DATAin%nopools = 10
         DATAin%nopars = 38
-        DATAin%nofluxes = 42
+        DATAin%nofluxes = 48
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 16) then
-        ! ID = 16 - DALEC.M2.#
+        ! ID = 16 - DALEC.A3.H1.M2.016
         DATAin%nopools = 5
-        DATAin%nopars = 34
-        DATAin%nofluxes = 45
+        DATAin%nopars = 34 ! to update
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 17) then
-        ! ID = 17 - DALEC.A3.H2.M2.#
+        ! ID = 17 - DALEC.A3.H2.M2.017
         DATAin%nopools = 6
-        DATAin%nopars = 37
-        DATAin%nofluxes = 51
+        DATAin%nopars = 35
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 18) then
-        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.#
+        ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.018
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 19) then
-        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.#
+        ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.019
         DATAin%nopools = 8
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 20) then
-        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.#
+        ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.020
         DATAin%nopools = 7
         DATAin%nopars = 32
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 21) then
-        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.#
+        ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.021
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 22) then
-        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.#
+        ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.022
         DATAin%nopools = 7
         DATAin%nopars = 34
-        DATAin%nofluxes = 40
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 23) then
-        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.#
+        ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.023
         DATAin%nopools = 8
         DATAin%nopars = 48
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 24) then
-        ! ID = 24 - DALEC.A1.C2.D2.F2.H2.P8.R2.#
-        DATAin%nopools = 8
-        DATAin%nopars = 51
-        DATAin%nofluxes = 45
+        ! ID = 24 - DALEC.A1.C1.D2.F2.H4.P1.024
+        DATAin%nopools = 7
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 25) then
-        ! ID = 25 - DALEC.A1.C2.D2.F2.H2.P9.R2.#
+        ! ID = 25 - DALEC...025 NOT IN USE
+        DATAin%nopools = 8
+        DATAin%nopars = 48
+        DATAin%nofluxes = 57
+        DATAin%nodiags = 23 ! Initial value, will need updating
+    else if (DATAin%ID == 26) then
+        ! ID = 26 - DALEC.A4.C6.D2.F2.H3.P10.026
         DATAin%nopools = 8
         DATAin%nopars = 49
-        DATAin%nofluxes = 45
-    else if (DATAin%ID == 26) then
-        ! ID = 26 - DALEC.A1.C2.D2.F2.H2.P10.R2.#
-        DATAin%nopools = 8
-        DATAin%nopars = 48
-        DATAin%nofluxes = 25
+        DATAin%nofluxes = 53
+        DATAin%nodiags = 35 ! Initial value, will need updating
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_1005
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 43
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 28) then
         ! ID = 28 - DALEC_1005a
         DATAin%nopools = 8
         DATAin%nopars = 38
         DATAin%nofluxes = 43
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 29) then
-        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.#
+        ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.029
         DATAin%nopools = 7
         DATAin%nopars = 33
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 30) then
-        ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.#
+        ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.030
         DATAin%nopools = 7
         DATAin%nopars = 38
-        DATAin%nofluxes = 45
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 31) then
-        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.#
+        ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.031
         DATAin%nopools = 7
-        DATAin%nopars = 40
-        DATAin%nofluxes = 46
+        DATAin%nopars = 43
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24
     else if (DATAin%ID == 32) then
-        ! ID = 32 -
+        ! ID = 32 - DALEC.A1.C1.D2.F2.H6.P1.R5.032
+        DATAin%nopools = 7
+        DATAin%nopars = 37
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 33) then
-        ! ID = 33 -
+        ! ID = 33 - DALEC.A4.C6.D2.F2.H3.P12.033
+        DATAin%nopools = 7
+        DATAin%nopars = 46
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 30       
     else if (DATAin%ID == 34) then
         ! ID = 34 -
+        print*,"Model ID 34 not currently in use"
+        stop 
     else if (DATAin%ID == 35) then
-        ! ID = 35 -
+        ! ID = 35
+        print*,"Model ID 35 not currently in use"
+        stop
     else if (DATAin%ID == 36) then
-        ! ID = 36 -
+        ! ID = 36 - DALEC.A1.C7.D2.F2.H2.P1.R4.036
+        DATAin%nopools = 11
+        DATAin%nopars = 50
+        DATAin%nofluxes = 67
+        DATAin%nodiags = 20      
     else if (DATAin%ID == 37) then
-        ! ID = 37 -
+        ! ID = 37 - DALEC.A1.C1.D2.F2.H5.P1.037
+        DATAin%nopools = 7
+        DATAin%nopars = 34
+        DATAin%nofluxes = 51
+        DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 38) then
         ! ID = 38 -
+        print*,"Model ID 38 not currently in use"
+        stop
     else if (DATAin%ID == 39) then
         ! ID = 39 -
+        print*,"Model ID 39 not currently in use"
+        stop
     else
         write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
         stop
@@ -265,10 +349,10 @@ module cardamom_io
     integer :: num_lines, status
 
     ! Check that all files exist
-    inquire(file=trim(parname),     exist=par_exists)
-    inquire(file=trim(stepname),    exist=step_exists)
-    inquire(file=trim(covname),     exist=cov_exists)
-    inquire(file=trim(covinfoname), exist=covinfo_exists)
+    inquire(file = trim(parname),     exist = par_exists)
+    inquire(file = trim(stepname),    exist = step_exists)
+    inquire(file = trim(covname),     exist = cov_exists)
+    inquire(file = trim(covinfoname), exist = covinfo_exists)
 
     ! now determine the correct response
     if (par_exists .and. step_exists .and. cov_exists .and. covinfo_exists) then
@@ -333,179 +417,6 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-!  subroutine load_emulator_parameters
-!    use cardamom_structures, only: DATAin
-!    use CARBON_MODEL_MOD, only: dim_1,dim_2,nos_trees,nos_inputs      &
-!                               ,leftDaughter,rightDaughter,nodestatus &
-!                               ,xbestsplit,nodepred,bestvar
-!
-!    ! subroutine opens and reads the PFT specific emulator information needed
-!    ! for the randomForest regression trees generated using R package
-!    ! randomForest
-!    ! 10/10/2014: TLS
-!
-!    ! TEMPLATE FOR ALL DALEC MCMC DATA files
-!    ! Static Elements: 1-100 - use as many as needed
-!
-!    !STATIC DATA
-!    ! 1) PFT
-!    ! 2) number of trees in forest
-!    ! 3) dimension 1 of response surface (same as interpolation interval)
-!    ! 4) dimension 2 of response surface
-!    ! 5) number of model inputs needed
-!
-!    implicit none
-!
-!    ! declare input variables
-!    character(350) :: infile,pft_local
-!
-!    ! declare local variables
-!    integer :: a,i,j,start,finish  &
-!              ,ifile_unit   ! unit number assigned to the input binary
-!
-!    double precision, dimension(:), allocatable :: statdat & ! static data input
-!                                                  ,temp_matrix
-!
-!
-!    ! convert PFT into character value for use in file search
-!    if (DATAin%PFT < 10) then
-!        write(pft_local,fmt='(I1)')DATAin%PFT
-!    else if (DATAin%PFT >= 10) then
-!        write(pft_local,fmt='(I2)')DATAin%PFT
-!    else
-!        print*,"Incorrect definition of PFT"
-!    endif
-!
-!    ! assume that parameter files have been copied / linked from the
-!    ! AT_DALEC/src
-!    ! directory to the execution location
-!    write(infile,fmt='(A)')"gpp_emulator_parameters_"//trim(pft_local)//".bin"
-!    write(*,*)"Reading emulator coefficients for PFT = ",DATAin%PFT
-!    write(*,*)"File path = ",trim(infile)
-!
-!    ! open the binary file, with direct access for binary (unformatted) at
-!    ! double precision (double precision = 64 bytes)
-!    open(unit=ifile_unit,file=trim(infile),form="UNFORMATTED",access="stream",status="old")
-!    rewind(ifile_unit)
-!
-!    ! allocate memory
-!    allocate(statdat(100))
-!
-!    ! now read the static elements (1-100)
-!    do i = 1, 100 ! number of static elements
-!       read(ifile_unit) statdat(i)
-!    end do
-!
-!    ! allocate the default run information
-!    nos_trees = int(statdat(2))
-!    dim_1 = int(statdat(3))
-!    dim_2 = int(statdat(4))
-!    nos_inputs = int(statdat(5))
-!
-!    ! tidy
-!    deallocate(statdat)
-!
-!    ! allocate some other variables
-!    allocate(leftDaughter(dim_1,dim_2),rightDaughter(dim_1,dim_2) &
-!            ,nodestatus(dim_1,dim_2),xbestsplit(dim_1,dim_2)      &
-!            ,nodepred(dim_1,dim_2),bestvar(dim_1,dim_2)           &
-!            ,temp_matrix(dim_1*dim_2))
-!
-!    ! read in left daughter to temp vector
-!    a = 1 ; start = 100+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure left daughter into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          leftDaughter(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in right daughter into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure right daughter into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          rightDaughter(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in nodestatus into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure nodestatus into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          nodestatus(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in xbestsplit into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure xbestsplit into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          xbestsplit(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in nodepred into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure nodepred into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          nodepred(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! read in bestvar into temp vector
-!    a = 1 ; start = finish+1 ; finish = start+(dim_1*dim_2)-1
-!    do i = start, finish
-!       read(ifile_unit) temp_matrix(a)
-!       a = a + 1
-!    end do
-!    ! restructure bestvar into matrix
-!    a = 1
-!    do j = 1, dim_2
-!       do i = 1, dim_1
-!          bestvar(i,j)=temp_matrix(a) ; a = a + 1
-!       end do
-!    end do
-!
-!    ! tidy
-!    deallocate(temp_matrix)
-!    close(ifile_unit)
-!
-!    ! inform the user
-!    write(*,*)"Have read in GPP emulator coefficients"
-!
-!  end subroutine load_emulator_parameters
-  !
-  !--------------------------------------------------------------------
-  !
   subroutine open_output_files(parname,stepname,covname,covinfoname)
 
     ! Subroutine opens the needed output files and destroys any previously
@@ -543,7 +454,7 @@ module cardamom_io
   !
   !--------------------------------------------------------------------
   !
-    subroutine read_binary_data(infile)
+  subroutine read_binary_data(infile)
       use cardamom_structures, only: DATAin
       use CARBON_MODEL_MOD, only: soil_frac_clay,soil_frac_sand &
                                  ,nos_soil_layers
@@ -565,16 +476,11 @@ module cardamom_io
 
     ! declare local variables
     integer :: nopars_dummy,subsample
-    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t,u,v,w,x,y,z,day &
-              ,aa, bb, cc &
-              ,start      &
-              ,finish     &
-              ,totcol     & ! total number of columns (met + obs)
-              ,totread      ! total number of records already read
-    double precision :: mz, subsample_fraction = 0.20 ! startd at 0.25
+    integer :: a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,day
+    double precision :: subsample_fraction = 0.20 ! startd at 0.25
     double precision, dimension(:), allocatable :: statdat & ! static data input
-                                        ,mettemp & ! met data input
-                                        ,obstemp   ! obs data input
+                                                  ,mettemp & ! met data input
+                                                  ,obstemp   ! obs data input
 
     write(*,*)"Input file to be read = ", trim(infile)
 
@@ -613,6 +519,12 @@ module cardamom_io
 
     ! allocate case specific information
     DATAin%edc_random_search=int(statdat(11))
+
+    ! Do some sanity checks
+    if (DATAin%lat > 90 .or. DATAin%lat < -90) then
+        print*,"Latitude provided is not -90/90"
+        stop
+    end if
 
     ! clean up
     deallocate(statdat)
@@ -665,60 +577,57 @@ module cardamom_io
 
     ! now we know specific information about the dimensions in the file lets use
     ! it to allocate to the module variables
-    allocate(DATAin%met(DATAin%nomet,DATAin%nodays),DATAin%GPP(DATAin%nodays)                    &
-            ,DATAin%NEE(DATAin%nodays),DATAin%LAI(DATAin%nodays)                                 &
-            ,DATAin%Reco(DATAin%nodays)                                                          &
-            ,DATAin%Cfol_stock(DATAin%nodays),DATAin%Cwood_stock(DATAin%nodays)                  &
-            ,DATAin%Croots_stock(DATAin%nodays),DATAin%Clit_stock(DATAin%nodays)                 &
-            ,DATAin%Csom_stock(DATAin%nodays),DATAin%Cagb_stock(DATAin%nodays)                   &
-            ,DATAin%GPP_unc(DATAin%nodays)                                                       &
-            ,DATAin%NEE_unc(DATAin%nodays),DATAin%LAI_unc(DATAin%nodays)                         &
-            ,DATAin%Reco_unc(DATAin%nodays)                                                      &
-            ,DATAin%Cfol_stock_unc(DATAin%nodays),DATAin%Cwood_stock_unc(DATAin%nodays)          &
-            ,DATAin%Croots_stock_unc(DATAin%nodays),DATAin%Clit_stock_unc(DATAin%nodays)         &
-            ,DATAin%Csom_stock_unc(DATAin%nodays),DATAin%Cagb_stock_unc(DATAin%nodays)           &
-            ,DATAin%Ccoarseroot_stock(DATAin%nodays),DATAin%Ccoarseroot_stock_unc(DATAin%nodays) &
-            ,DATAin%Cfolmax_stock(DATAin%nodays),DATAin%Cfolmax_stock_unc(DATAin%nodays)         &
-            ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays)                           &
-            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays)                             &
-            ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays)                             &
-            ,DATAin%Fire(DATAin%nodays),DATAin%Fire_unc(DATAin%nodays)                           &
-            ,DATAin%fAPAR(DATAin%nodays),DATAin%fAPAR_unc(DATAin%nodays)                         &
-            ,DATAin%Cwood_inc(DATAin%nodays),DATAin%Cwood_mortality(DATAin%nodays)               &
-            ,DATAin%Cwood_inc_unc(DATAin%nodays),DATAin%Cwood_mortality_unc(DATAin%nodays)       &
-            ,DATAin%Cwood_inc_lag(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
-            ,DATAin%harvest(DATAin%nodays),DATAin%harvest_unc(DATAin%nodays)                     &
-            ,DATAin%harvest_lag(DATAin%nodays)                                                   &
-            ,DATAin%foliage_to_litter(DATAin%nodays),DATAin%foliage_to_litter_unc(DATAin%nodays) &
-            ,DATAin%foliage_to_litter_lag(DATAin%nodays)                                         &
-            ,mettemp(DATAin%nomet),obstemp(DATAin%noobs))
+    allocate(mettemp(DATAin%nomet),obstemp(DATAin%noobs) &
+            ,DATAin%met(DATAin%nomet,DATAin%nodays)      &
+            ,DATAin%GPP(DATAin%nodays),DATAin%GPP_unc(DATAin%nodays),DATAin%GPP_lag(DATAin%nodays)                            & 
+            ,DATAin%NEE(DATAin%nodays),DATAin%NEE_unc(DATAin%nodays),DATAin%NEE_lag(DATAin%nodays)                            & 
+            ,DATAin%LAI(DATAin%nodays),DATAin%LAI_unc(DATAin%nodays),DATAin%LAI_lag(DATAin%nodays)                            &
+            ,DATAin%Reco(DATAin%nodays),DATAin%Reco_unc(DATAin%nodays),DATAin%Reco_lag(DATAin%nodays)                         &
+            ,DATAin%Cfol_stock(DATAin%nodays),DATAin%Cfol_stock_unc(DATAin%nodays),DATAin%Cfol_stock_lag(DATAin%nodays)       & 
+            ,DATAin%Cwood_stock(DATAin%nodays),DATAin%Cwood_stock_unc(DATAin%nodays),DATAin%Cwood_stock_lag(DATAin%nodays)    &
+            ,DATAin%Croots_stock(DATAin%nodays),DATAin%Croots_stock_unc(DATAin%nodays),DATAin%Croots_stock_lag(DATAin%nodays) &
+            ,DATAin%Clit_stock(DATAin%nodays),DATAin%Clit_stock_unc(DATAin%nodays),DATAin%Clit_stock_lag(DATAin%nodays)       &
+            ,DATAin%Csom_stock(DATAin%nodays),DATAin%Csom_stock_unc(DATAin%nodays),DATAin%Csom_stock_lag(DATAin%nodays)       &
+            ,DATAin%Cagb_stock(DATAin%nodays),DATAin%Cagb_stock_unc(DATAin%nodays),DATAin%Cagb_stock_lag(DATAin%nodays)       &
+            ,DATAin%Ccoarseroot_stock(DATAin%nodays),DATAin%Ccoarseroot_stock_unc(DATAin%nodays),DATAin%Ccoarseroot_stock_lag(DATAin%nodays) &
+            ,DATAin%Evap(DATAin%nodays),DATAin%Evap_unc(DATAin%nodays),DATAin%Evap_lag(DATAin%nodays)                         &
+            ,DATAin%SWE(DATAin%nodays),DATAin%SWE_unc(DATAin%nodays),DATAin%SWE_lag(DATAin%nodays)                            &
+            ,DATAin%NBE(DATAin%nodays),DATAin%NBE_unc(DATAin%nodays),DATAin%NBE_lag(DATAin%nodays)                            &
+            ,DATAin%Fire(DATAin%nodays),DATAin%Fire_unc(DATAin%nodays),DATAin%Fire_lag(DATAin%nodays)                         &
+            ,DATAin%fAPAR(DATAin%nodays),DATAin%fAPAR_unc(DATAin%nodays),DATAin%fAPAR_lag(DATAin%nodays)                      &
+            ,DATAin%Cwood_inc(DATAin%nodays),DATAin%Cwood_inc_unc(DATAin%nodays),DATAin%Cwood_inc_lag(DATAin%nodays)          &
+            ,DATAin%Cwood_growth(DATAin%nodays),DATAin%Cwood_growth_unc(DATAin%nodays),DATAin%Cwood_growth_lag(DATAin%nodays)                &
+            ,DATAin%Cwood_mortality(DATAin%nodays),DATAin%Cwood_mortality_unc(DATAin%nodays),DATAin%Cwood_mortality_lag(DATAin%nodays)       &
+            ,DATAin%harvest(DATAin%nodays),DATAin%harvest_unc(DATAin%nodays),DATAin%harvest_lag(DATAin%nodays)                &
+            ,DATAin%foliage_to_litter(DATAin%nodays),DATAin%foliage_to_litter_unc(DATAin%nodays),DATAin%foliage_to_litter_lag(DATAin%nodays) &
+            ,DATAin%soilwater(DATAin%nodays),DATAin%soilwater_unc(DATAin%nodays),DATAin%soilwater_lag(DATAin%nodays) )
 
     !! Zero all variables
     ! Drivers
     DATAin%met = 0d0
-    ! Observations which have implicit lag of 1, i.e. they are relevant for the loaded time step
-    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0
-    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0
-    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0
-    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0
-    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0
-    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0
-    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0
-    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0
-    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0
-    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0
-    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0
-    DATAin%Cfolmax_stock = 0d0     ; DATAin%Cfolmax_stock_unc = 0d0
-    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0
-    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0
-    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0
-    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0
-    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0
-    ! Observations which have an explicit lag, i.e. they represent the average of a to be specified period
-    DATAin%Cwood_inc = 0d0 ; DATAin%Cwood_inc_unc = 0d0 ; DATAin%Cwood_inc_lag = 0
-    DATAin%Cwood_mortality = 0d0 ; DATAin%Cwood_mortality_unc = 0d0 ; DATAin%Cwood_mortality_lag = 0
-    DATAin%harvest = 0d0 ; DATAin%harvest_unc = 0d0 ; DATAin%harvest_lag = 0
+    ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
+    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0
+    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0
+    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0
+    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0
+    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0
+    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0
+    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0
+    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0
+    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0
+    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0
+    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0
+    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0
+    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0
+    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0
+    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0
+    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0
+    DATAin%Cwood_inc = 0d0         ; DATAin%Cwood_inc_unc = 0d0         ; DATAin%Cwood_inc_lag = 0
+    DATAin%Cwood_growth = 0d0      ; DATAin%Cwood_growth_unc = 0d0      ; DATAin%Cwood_growth_lag = 0
+    DATAin%Cwood_mortality = 0d0   ; DATAin%Cwood_mortality_unc = 0d0   ; DATAin%Cwood_mortality_lag = 0
+    DATAin%harvest = 0d0           ; DATAin%harvest_unc = 0d0           ; DATAin%harvest_lag = 0
     DATAin%foliage_to_litter = 0d0 ; DATAin%foliage_to_litter_unc = 0d0 ; DATAin%foliage_to_litter_lag = 0
+    DATAin%soilwater = 0d0         ; DATAin%soilwater_unc = 0d0         ; DATAin%soilwater_lag = 0
     ! Temorary arrays
     mettemp = 0d0 ; obstemp = 0d0
 
@@ -728,6 +637,7 @@ module cardamom_io
     DATAin%nlai = 0
     DATAin%nnee = 0
     DATAin%nCwood_inc = 0
+    DATAin%nCwood_growth = 0
     DATAin%nCwood_mortality = 0
     DATAin%nfoliage_to_litter = 0
     DATAin%nreco = 0
@@ -738,161 +648,171 @@ module cardamom_io
     DATAin%nClit_stock = 0
     DATAin%nCagb_stock = 0
     DATAin%nCcoarseroot_stock = 0
-    DATAin%nCfolmax_stock = 0
     DATAin%nEvap = 0
     DATAin%nSWE = 0
     DATAin%nNBE = 0
     DATAin%nFire = 0
     DATAin%nfAPAR = 0
     DATAin%nharvest = 0
-
-    ! work out some key variables
-    ! DATAin%noobs corresponds to observations and uncertainties
-    totcol = DATAin%nomet*DATAin%noobs
-    totread = 500+1
+    DATAin%nsoilwater = 0
 
     ! start looping through days and allocate the correct met drivers / obs into
-    ! the correct arrays
+    ! the correct arrays.
+    ! NOTE: the file is opened with access="stream" and no read uses a pos=
+    ! specifier, so every read advances sequentially from the current position.
+    ! Reading each whole array in one statement therefore consumes the met
+    ! (DATAin%nomet) then obs (DATAin%noobs) records for the day in order -
+    ! byte-identical to the former per-element loops, in two reads per day
+    ! instead of nomet+noobs.
     do day = 1, DATAin%nodays
-       start = ((day-1)*(totcol))+totread
-       finish = start+DATAin%nomet-1
-       b = 1
-       do i = start,finish
-          read(ifile_unit) mettemp(b) ; b=b+1
-       end do ! met bit
-       start = ((day-1)*(totcol))+totread+finish+1
-       finish = start+DATAin%noobs-1
-       b = 1
-       do i = start,finish
-          read(ifile_unit) obstemp(b) ; b=b+1
-       end do ! obs bit
+       read(ifile_unit) mettemp ! reads DATAin%nomet values
+       read(ifile_unit) obstemp ! reads DATAin%noobs values
 
        ! assign the extracted met / obs to their type and keep count of how many
        ! of these are actually contain data
        DATAin%met(1:DATAin%nomet,day) = mettemp
 
+       ! Reset counter for extracting observations
+       a = 1 
+
        ! Gross Primary Productivity (GPP, gC/m2/day)
-       DATAin%GPP(day) = obstemp(1)
-       if (obstemp(1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1
-       DATAin%GPP_unc(day) = obstemp(2)
+       DATAin%GPP(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%ngpp = DATAin%ngpp+1
+       DATAin%GPP_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%GPP_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Leaf Area Index (LAI, m2/m2)
-       DATAin%LAI(day) = obstemp(3)
-       if (obstemp(3) > -9998d0) DATAin%nlai = DATAin%nlai+1
-       DATAin%LAI_unc(day) = obstemp(4)
+       DATAin%LAI(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nlai = DATAin%nlai+1
+       DATAin%LAI_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%LAI_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Net Ecosystem Exchange (NEE) of CO2 (gC/m2/day)
-       DATAin%NEE(day) = obstemp(5)
-       if (obstemp(5) > -9998d0) DATAin%nnee = DATAin%nnee+1
-       DATAin%NEE_unc(day) = obstemp(6)
+       DATAin%NEE(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nnee = DATAin%nnee+1
+       DATAin%NEE_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%NEE_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Fire emissions of C (gC/m2day)
-       DATAin%Fire(day) = obstemp(7)
-       if (obstemp(7) > -9998d0) DATAin%nFire = DATAin%nFire+1
-       DATAin%Fire_unc(day) = obstemp(8)
+       DATAin%Fire(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1)> -9998d0) DATAin%nFire = DATAin%nFire+1
+       DATAin%Fire_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Fire_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Ecosystem respiration (Reco, gC/m2/day)
-       DATAin%Reco(day) = obstemp(9)
-       if (obstemp(9) > -9998d0) DATAin%nreco = DATAin%nreco+1
-       DATAin%Reco_unc(day) = obstemp(10)
+       DATAin%Reco(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nreco = DATAin%nreco+1
+       DATAin%Reco_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Reco_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in foliage (gC/m2)
-       DATAin%Cfol_stock(day) = obstemp(11)
-       if (obstemp(11) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock+1
-       DATAin%Cfol_stock_unc(day) = obstemp(12)
+       DATAin%Cfol_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCfol_stock = DATAin%nCfol_stock+1
+       DATAin%Cfol_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cfol_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in wood (above + below) (gC/m2)
-       DATAin%Cwood_stock(day) = obstemp(13)
-       if (obstemp(13) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock+1
-       DATAin%Cwood_stock_unc(day) = obstemp(14)
+       DATAin%Cwood_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCwood_stock = DATAin%nCwood_stock+1
+       DATAin%Cwood_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cwood_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in fine roots (gC/m2)
-       DATAin%Croots_stock(day) = obstemp(15)
-       if (obstemp(15) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock+1
-       DATAin%Croots_stock_unc(day) = obstemp(16)
+       DATAin%Croots_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCroots_stock = DATAin%nCroots_stock+1
+       DATAin%Croots_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Croots_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in fine litter (foliar + fine root, gC/m2)
-       DATAin%Clit_stock(day) = obstemp(17)
-       if (obstemp(17) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock+1
-       DATAin%Clit_stock_unc(day) = obstemp(18)
+       DATAin%Clit_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nClit_stock = DATAin%nClit_stock+1
+       DATAin%Clit_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Clit_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in soil organic matter (gC/m2)
-       DATAin%Csom_stock(day) = obstemp(19)
-       if (obstemp(19) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock+1
-       DATAin%Csom_stock_unc(day) = obstemp(20)
+       DATAin%Csom_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCsom_stock = DATAin%nCsom_stock+1
+       DATAin%Csom_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Csom_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in above gound woody biomass (gC/m2)
-       DATAin%Cagb_stock(day) = obstemp(21)
-       if (obstemp(21) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
-       DATAin%Cagb_stock_unc(day) = obstemp(22)
+       DATAin%Cagb_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCagb_stock = DATAin%nCagb_stock+1
+       DATAin%Cagb_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cagb_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Fraction of absorbed photosynthetically active radiation
        ! by green vegetation (0-1)
-       DATAin%fAPAR(day) = obstemp(23)
-       if (obstemp(23) > -9998d0) DATAin%nfAPAR = DATAin%nfAPAR+1
-       DATAin%fAPAR_unc(day) = obstemp(24)
-! POSITION 25-26 no longer have matching points in code.
-! These can be re-allocated at a future point
-! TLS: 27/11/2019
-!       DATAin%Cbranch_stock(day) = obstemp(25)
-!       if (obstemp(25) > -9998d0) DATAin%nCbranch_stock = DATAin%nCbranch_stock+1
-!       DATAin%Cbranch_stock_unc(day) = obstemp(26)
+       DATAin%fAPAR(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nfAPAR = DATAin%nfAPAR+1
+       DATAin%fAPAR_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%fAPAR_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C storage in coarse root, i.e. below ground wood (gC/m2)
-       DATAin%Ccoarseroot_stock(day) = obstemp(27)
-       if (obstemp(27) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
-       DATAin%Ccoarseroot_stock_unc(day) = obstemp(28)
-
-       ! Annual maximum C storage in foliage (gC/m2)
-       DATAin%Cfolmax_stock(day) = obstemp(29)
-       if (obstemp(29) > -9998d0) DATAin%nCfolmax_stock = DATAin%nCfolmax_stock+1
-       DATAin%Cfolmax_stock_unc(day) = obstemp(30)
+       DATAin%Ccoarseroot_stock(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCcoarseroot_stock = DATAin%nCcoarseroot_stock+1
+       DATAin%Ccoarseroot_stock_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Ccoarseroot_stock_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Evapotranspiration (kgH2O/m2/day)
-       DATAin%Evap(day) = obstemp(31)
-       if (obstemp(31) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
-       DATAin%Evap_unc(day) = obstemp(32)
-
+       DATAin%Evap(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nEvap = DATAin%nEvap+1
+       DATAin%Evap_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Evap_lag(day) = nint(obstemp(a)) ; a = a + 1
+    
        ! Snow water equivalent - added for future use, not currently coded
-       DATAin%SWE(day) = obstemp(33)
-       if (obstemp(33) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
-       DATAin%SWE_unc(day) = obstemp(34)
+       DATAin%SWE(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nSWE = DATAin%nSWE+1
+       DATAin%SWE_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%SWE_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Net Biome Exchange (NBE, gC/m2/day)
        ! NBE = Reco + Fire - GPP
-       DATAin%NBE(day) = obstemp(35)
-       if (obstemp(35) > -9998d0) DATAin%nNBE = DATAin%nNBE+1
-       DATAin%NBE_unc(day) = obstemp(36)
+       DATAin%NBE(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nNBE = DATAin%nNBE+1
+       DATAin%NBE_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%NBE_lag(day) = nint(obstemp(a)) ; a = a + 1
 
-       ! Woody production / increment (gC/m2/day)
+       ! Woody gross increment (gC/m2/day)
        ! Represents the average across the lagged period
-       DATAin%Cwood_inc(day) = obstemp(37)
-       if (obstemp(37) > -9998d0) DATAin%nCwood_inc = DATAin%nCwood_inc+1
-       DATAin%Cwood_inc_unc(day) = obstemp(38)
-       DATAin%Cwood_inc_lag(day) = obstemp(39)
+       DATAin%Cwood_growth(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCwood_growth = DATAin%nCwood_growth+1
+       DATAin%Cwood_growth_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cwood_growth_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Woody natural mortality (gC/m2/day)
        ! Represents the average across the lagged period
-       DATAin%Cwood_mortality(day) = obstemp(40)
-       if (obstemp(40) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
-       DATAin%Cwood_mortality_unc(day) = obstemp(41)
-       DATAin%Cwood_mortality_lag(day) = obstemp(42)
+       DATAin%Cwood_mortality(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCwood_mortality = DATAin%nCwood_mortality+1
+       DATAin%Cwood_mortality_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cwood_mortality_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! Flux from foliage to litter (gC/m2/day)
        ! Represents the average across the lagged period
-       DATAin%foliage_to_litter(day) = obstemp(43)
-       if (obstemp(43) > -9998d0) DATAin%nfoliage_to_litter = DATAin%nfoliage_to_litter+1
-       DATAin%foliage_to_litter_unc(day) = obstemp(44)
-       DATAin%foliage_to_litter_lag(day) = obstemp(45)
+       DATAin%foliage_to_litter(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nfoliage_to_litter = DATAin%nfoliage_to_litter+1
+       DATAin%foliage_to_litter_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%foliage_to_litter_lag(day) = nint(obstemp(a)) ; a = a + 1
 
-       ! Spaces 46-48 reserved for net wood increment information
+       ! Woody net increment (gC/m2/day)
+       ! i.e growth-mortality
+       DATAin%Cwood_inc(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nCwood_inc = DATAin%nCwood_inc+1
+       DATAin%Cwood_inc_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%Cwood_inc_lag(day) = nint(obstemp(a)) ; a = a + 1
 
        ! C extracted due to harvest (gC/m2/day)
        ! Represents the average across the lagged period
-       DATAin%harvest(day) = obstemp(49)
-       if (obstemp(49) > -9998d0) DATAin%nharvest = DATAin%nharvest+1
-       DATAin%harvest_unc(day) = obstemp(50)
-       DATAin%harvest_lag(day) = obstemp(51)
+       DATAin%harvest(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nharvest = DATAin%nharvest+1
+       DATAin%harvest_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%harvest_lag(day) = nint(obstemp(a)) ; a = a + 1
+
+       ! Soil surface water content (m3/m3)
+       DATAin%soilwater(day) = obstemp(a) ; a = a + 1
+       if (obstemp(a-1) > -9998d0) DATAin%nsoilwater = DATAin%nsoilwater+1
+       DATAin%soilwater_unc(day) = obstemp(a) ; a = a + 1
+       DATAin%soilwater_lag(day) = nint(obstemp(a)) ; a = a + 1
 
     end do ! day loop
 
@@ -902,9 +822,9 @@ module cardamom_io
                      + DATAin%nCwood_inc + DATAin%nreco + DATAin%nCfol_stock &
                      + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
                      + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
-                     + DATAin%nCfolmax_stock + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
+                     + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
                      + DATAin%nCwood_mortality + DATAin%nfoliage_to_litter + DATAin%nFire &
-                     + DATAin%nfAPAR + DATAin%nharvest
+                     + DATAin%nfAPAR + DATAin%nharvest + DATAin%nsoilwater + DATAin%nCwood_growth
 
     ! allocate to time step
     allocate(DATAin%deltat(DATAin%nodays)) ; DATAin%deltat = 0d0
@@ -938,88 +858,93 @@ module cardamom_io
     if (DATAin%nCsom_stock > 0) allocate(DATAin%Csom_stockpts(DATAin%nCsom_stock))
     if (DATAin%nCagb_stock > 0) allocate(DATAin%Cagb_stockpts(DATAin%nCagb_stock))
     if (DATAin%nCcoarseroot_stock > 0) allocate(DATAin%Ccoarseroot_stockpts(DATAin%nCcoarseroot_stock))
-    if (DATAin%nCfolmax_stock > 0) allocate(DATAin%Cfolmax_stockpts(DATAin%nCfolmax_stock))
     if (DATAin%nEvap > 0) allocate(DATAin%Evappts(DATAin%nEvap))
     if (DATAin%nSWE > 0) allocate(DATAin%SWEpts(DATAin%nSWE))
     if (DATAin%nNBE > 0) allocate(DATAin%NBEpts(DATAin%nNBE))
+    if (DATAin%nCwood_growth > 0) allocate(DATAin%Cwood_growthpts(DATAin%nCwood_growth))
     if (DATAin%nCwood_inc > 0) allocate(DATAin%Cwood_incpts(DATAin%nCwood_inc))
     if (DATAin%nCwood_mortality > 0) allocate(DATAin%Cwood_mortalitypts(DATAin%nCwood_mortality))
     if (DATAin%nfoliage_to_litter > 0) allocate(DATAin%foliage_to_litterpts(DATAin%nfoliage_to_litter))
     if (DATAin%nFire > 0) allocate(DATAin%Firepts(DATAin%nFire))
     if (DATAin%nfAPAR > 0) allocate(DATAin%fAPARpts(DATAin%nfAPAR))
     if (DATAin%nharvest > 0) allocate(DATAin%harvestpts(DATAin%nharvest))
+    if (DATAin%nsoilwater > 0) allocate(DATAin%soilwaterpts(DATAin%nsoilwater))
 
     ! we know how many observations we have and what they are, but now lets work
     ! out where they are in the data sets
-    x = 1 ; y = 1 ; z = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1
-    f = 1 ; g = 1 ; h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1
-    m = 1 ; o = 1 ; q = 1 ; s = 1 ; t = 1 ; u = 1 ; v = 1 
-    w = 1 ; aa = 1
+    a = 1 ; b = 1 ; c = 1 ; d = 1 ; e = 1 ; f = 1 ; g = 1
+    h = 1 ; i = 1 ; j = 1 ; k = 1 ; l = 1 ; m = 1 ; n = 1
+    o = 1 ; p = 1 ; q = 1 ; r = 1 ; s = 1 ; t = 1 ; u = 1
+    v = 1
 
+    ! Read through each timestep to extract any available assimilatable observations
     do day = 1, DATAin%nodays
        if (DATAin%GPP(day) > -9998d0) then
-          DATAin%gpppts(b) = day ; b = b+1
+          DATAin%gpppts(a) = day ; a = a + 1
        endif
        if (DATAin%LAI(day) > -9998d0) then
-          DATAin%laipts(x) = day ; x = x+1
+          DATAin%laipts(b) = day ; b = b + 1
        endif
        if (DATAin%NEE(day) > -9998d0) then
-          DATAin%neepts(y) = day ; y = y+1
+          DATAin%neepts(c) = day ; c = c + 1
        endif
        if (DATAin%Cwood_inc(day) > -9998d0) then
-           DATAin%Cwood_incpts(z) = day ; z = z+1
+           DATAin%Cwood_incpts(d) = day ; d = d + 1
        endif ! data present condition
        if (DATAin%Cwood_mortality(day) > -9998d0) then
-           DATAin%Cwood_mortalitypts(w) = day ; w = w+1
+           DATAin%Cwood_mortalitypts(e) = day ; e = e + 1
        endif ! data present condition
        if (DATAin%foliage_to_litter(day) > -9998d0) then
-           DATAin%foliage_to_litterpts(aa) = day ; aa = aa+1
+           DATAin%foliage_to_litterpts(f) = day ; f = f + 1
        endif ! data present condition
        if (DATAin%Reco(day) > -9998d0) then
-           DATAin%recopts(c) = day ; c = c+1
+           DATAin%recopts(g) = day ; g = g + 1
        endif ! data present condition
        if (DATAin%Cfol_stock(day) > -9998d0) then
-           DATAin%Cfol_stockpts(d) = day ; d = d+1
+           DATAin%Cfol_stockpts(h) = day ; h = h + 1
        endif ! data present condition
        if (DATAin%Cwood_stock(day) > -9998d0) then
-           DATAin%Cwood_stockpts(e) = day ; e = e+1
+           DATAin%Cwood_stockpts(i) = day ; i = i + 1
        endif ! data present condition
        if (DATAin%Croots_stock(day) > -9998d0) then
-           DATAin%Croots_stockpts(f) = day ; f = f+1
+           DATAin%Croots_stockpts(j) = day ; j = j + 1
        endif ! data present condition
        if (DATAin%Clit_stock(day) > -9998d0) then
-           DATAin%Clit_stockpts(j) = day ; j = j+1
+           DATAin%Clit_stockpts(k) = day ; k = k + 1
        endif ! data present condition
        if (DATAin%Csom_stock(day) > -9998d0) then
-           DATAin%Csom_stockpts(k) = day ; k = k+1
+           DATAin%Csom_stockpts(l) = day ; l = l + 1
        endif ! data present condition
        if (DATAin%Ccoarseroot_stock(day) > -9998d0) then
-           DATAin%Ccoarseroot_stockpts(i) = day ; i = i+1
-       endif ! data present condition
-       if (DATAin%Cfolmax_stock(day) > -9998d0) then
-           DATAin%Cfolmax_stockpts(l) = day ; l = l+1
+           DATAin%Ccoarseroot_stockpts(m) = day ; m = m + 1
        endif ! data present condition
        if (DATAin%Cagb_stock(day) > -9998d0) then
-           DATAin%Cagb_stockpts(l) = day ; l = l+1
+           DATAin%Cagb_stockpts(n) = day ; n = n + 1
        endif ! data present condition
        if (DATAin%Evap(day) > -9998d0) then
-           DATAin%Evappts(o) = day ; o = o+1
+           DATAin%Evappts(o) = day ; o = o + 1
        endif ! data present condition
        if (DATAin%SWE(day) > -9998d0) then
-           DATAin%SWEpts(s) = day ; s = s+1
+           DATAin%SWEpts(p) = day ; p = p + 1
        endif ! data present condition
        if (DATAin%NBE(day) > -9998d0) then
-           DATAin%NBEpts(t) = day ; t = t + 1
+           DATAin%NBEpts(q) = day ; q = q + 1
        endif
        if (DATAin%Fire(day) > -9998d0) then
-           DATAin%Firepts(v) = day ; v = v+1
+           DATAin%Firepts(r) = day ; r = r + 1
        endif ! data present condition
        if (DATAin%fAPAR(day) > -9998d0) then
-           DATAin%fAPARpts(u) = day ; u = u+1
+           DATAin%fAPARpts(s) = day ; s = s + 1
        endif ! data present condition
        if (DATAin%harvest(day) > -9998d0) then
-        DATAin%harvestpts(q) = day ; q = q+1
+           DATAin%harvestpts(t) = day ; t = t + 1
        endif ! data present condition
+       if (DATAin%Cwood_growth(day) > -9998d0) then
+           DATAin%Cwood_growthpts(u) = day ; u = u + 1
+       endif ! data present condition
+       if (DATAin%soilwater(day) > -9998d0) then
+           DATAin%soilwaterpts(v) = day ; v = v + 1
+       endif ! data present condition              
     end do ! day loop
 
     ! timestep mean temperature (oC)
@@ -1029,7 +954,7 @@ module cardamom_io
     ! mean atmospheric CO2 (ppm)
     DATAin%meanco2 = sum(DATAin%met(5,:)) / dble(DATAin%nodays)
     ! mean precipitation (mm/yr)
-    DATAin%meanprecip = sum(DATAin%met(7,:)*84600d0*365.25d0) / dble(DATAin%nodays)
+    DATAin%meanprecip = sum(DATAin%met(7,:)*86400d0*365.25d0) / dble(DATAin%nodays)
 
     ! print the mean temperature and radiation variables
     write(*,*) "Mean Rad (MJ/m2/day) = ", DATAin%meanrad
@@ -1070,13 +995,11 @@ module cardamom_io
     call read_binary_data(infile)
 
     ! need to allocate memory to the model output variables
-    allocate(DATAin%M_LAI(DATAin%nodays),DATAin%M_GPP(DATAin%nodays) &
-            ,DATAin%M_NEE(DATAin%nodays),DATAin%M_FLUXES(DATAin%nodays,DATAin%nofluxes)&
-            ,DATAin%M_POOLS((DATAin%nodays+1),DATAin%nopools))
+    allocate(DATAin%M_FLUXES(DATAin%nodays,DATAin%nofluxes)&
+            ,DATAin%M_POOLS((DATAin%nodays+1),DATAin%nopools),DATAin%M_DIAGS(DATAin%nodays,DATAin%nodiags))
 
     ! force zero in states and fluxes
-    DATAin%M_LAI(:) = 0d0 ; DATAin%M_GPP(:) = 0d0 ; DATAin%M_NEE(:) = 0d0
-    DATAin%M_FLUXES(:,:) = 0d0 ; DATAin%M_POOLS(:,:) = 0d0
+    DATAin%M_FLUXES(:,:) = 0d0 ; DATAin%M_POOLS(:,:) = 0d0 ; DATAin%M_DIAGS(:,:) = 0d0
 
     ! alert the user
     write(*,*)"Created fields for model output"
@@ -1139,7 +1062,7 @@ module cardamom_io
 
     ! defining hardcoded MCMC options
     MCO%append = 1
-    MCO%nADAPT = 1000 ! TLS: 500 -> 1000 -> 5000 -> 10000
+    MCO%nADAPT = 1000 
     MCO%fADAPT = 0.5d0
     MCO%randparini = .false.
     MCO%returnpars = .false.
@@ -1366,6 +1289,154 @@ module cardamom_io
     return
 
   end subroutine update_for_restart_simulation
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_normal
+    use cardamom_structures, only: DATAin 
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case set all to one where the weight of each 
+    ! observation is equal 
+ 
+    DATAin%GPP_scaling               = 1d0
+    DATAin%NEE_scaling               = 1d0
+    DATAin%Fire_scaling              = 1d0
+    DATAin%LAI_scaling               = 1d0
+    DATAin%Cwood_inc_scaling         = 1d0
+    DATAin%Cwood_growth_scaling      = 1d0
+    DATAin%Cwood_mortality_scaling   = 1d0
+    DATAin%foliage_to_litter_scaling = 1d0
+    DATAin%Reco_scaling              = 1d0
+    DATAin%Cfol_stock_scaling        = 1d0
+    DATAin%Cwood_stock_scaling       = 1d0
+    DATAin%Croots_stock_scaling      = 1d0
+    DATAin%Csom_stock_scaling        = 1d0
+    DATAin%Cagb_stock_scaling        = 1d0
+    DATAin%Clit_stock_scaling        = 1d0
+    DATAin%Ccoarseroot_stock_scaling = 1d0
+    DATAin%Evap_scaling              = 1d0
+    DATAin%SWE_scaling               = 1d0
+    DATAin%NBE_scaling               = 1d0
+    DATAin%fAPAR_scaling             = 1d0
+    DATAin%harvest_scaling           = 1d0
+    DATAin%soilwater_scaling         = 1d0
+
+    return
+
+  end subroutine update_obs_scaling_normal    
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_nsamples
+    use cardamom_structures, only: DATAin 
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sample size
+    ! giving equal weight to each datastream
+ 
+    DATAin%GPP_scaling               = 1d0 / dble(DATAin%ngpp)
+    DATAin%NEE_scaling               = 1d0 / dble(DATAin%nnee)
+    DATAin%Fire_scaling              = 1d0 / dble(DATAin%nfire)
+    DATAin%LAI_scaling               = 1d0 / dble(DATAin%nlai)
+    DATAin%Cwood_inc_scaling         = 1d0 / dble(DATAin%nCwood_inc)
+    DATAin%Cwood_growth_scaling      = 1d0 / dble(DATAin%nCwood_growth)
+    DATAin%Cwood_mortality_scaling   = 1d0 / dble(DATAin%nCwood_mortality)
+    DATAin%foliage_to_litter_scaling = 1d0 / dble(DATAin%nfoliage_to_litter)
+    DATAin%Reco_scaling              = 1d0 / dble(DATAin%nreco)
+    DATAin%Cfol_stock_scaling        = 1d0 / dble(DATAin%nCfol_stock)
+    DATAin%Cwood_stock_scaling       = 1d0 / dble(DATAin%nCwood_stock)
+    DATAin%Croots_stock_scaling      = 1d0 / dble(DATAin%nCroots_stock)
+    DATAin%Csom_stock_scaling        = 1d0 / dble(DATAin%nCsom_stock)
+    DATAin%Cagb_stock_scaling        = 1d0 / dble(DATAin%nCagb_stock)
+    DATAin%Clit_stock_scaling        = 1d0 / dble(DATAin%nClit_stock)
+    DATAin%Ccoarseroot_stock_scaling = 1d0 / dble(DATAin%nCcoarseroot_stock)
+    DATAin%Evap_scaling              = 1d0 / dble(DATAin%nEvap)
+    DATAin%SWE_scaling               = 1d0 / dble(DATAin%nSWE)
+    DATAin%NBE_scaling               = 1d0 / dble(DATAin%nnbe)
+    DATAin%fAPAR_scaling             = 1d0 / dble(DATAin%nfAPAR)
+    DATAin%harvest_scaling           = 1d0 / dble(DATAin%nharvest)
+    DATAin%soilwater_scaling         = 1d0 / dble(DATAin%nsoilwater)
+
+    return
+
+  end subroutine update_obs_scaling_nsamples      
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_sqrt_nsamples
+    use cardamom_structures, only: DATAin 
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sqrt of the 
+    ! sample size. This allows datastreams with more observations 
+    ! to contribute more to the lost function but penalised to reduce 
+    ! bias' introduced by unbalanced observations
+ 
+    DATAin%GPP_scaling               = 1d0 / sqrt(dble(DATAin%ngpp))
+    DATAin%NEE_scaling               = 1d0 / sqrt(dble(DATAin%nnee))
+    DATAin%Fire_scaling              = 1d0 / sqrt(dble(DATAin%nfire))
+    DATAin%LAI_scaling               = 1d0 / sqrt(dble(DATAin%nlai))
+    DATAin%Cwood_inc_scaling         = 1d0 / sqrt(dble(DATAin%nCwood_inc))
+    DATAin%Cwood_growth_scaling      = 1d0 / sqrt(dble(DATAin%nCwood_growth))
+    DATAin%Cwood_mortality_scaling   = 1d0 / sqrt(dble(DATAin%nCwood_mortality))
+    DATAin%foliage_to_litter_scaling = 1d0 / sqrt(dble(DATAin%nfoliage_to_litter))
+    DATAin%Reco_scaling              = 1d0 / sqrt(dble(DATAin%nreco))
+    DATAin%Cfol_stock_scaling        = 1d0 / sqrt(dble(DATAin%nCfol_stock))
+    DATAin%Cwood_stock_scaling       = 1d0 / sqrt(dble(DATAin%nCwood_stock))
+    DATAin%Croots_stock_scaling      = 1d0 / sqrt(dble(DATAin%nCroots_stock))
+    DATAin%Csom_stock_scaling        = 1d0 / sqrt(dble(DATAin%nCsom_stock))
+    DATAin%Cagb_stock_scaling        = 1d0 / sqrt(dble(DATAin%nCagb_stock))
+    DATAin%Clit_stock_scaling        = 1d0 / sqrt(dble(DATAin%nClit_stock))
+    DATAin%Ccoarseroot_stock_scaling = 1d0 / sqrt(dble(DATAin%nCcoarseroot_stock))
+    DATAin%Evap_scaling              = 1d0 / sqrt(dble(DATAin%nEvap))
+    DATAin%SWE_scaling               = 1d0 / sqrt(dble(DATAin%nSWE))
+    DATAin%NBE_scaling               = 1d0 / sqrt(dble(DATAin%nnbe))
+    DATAin%fAPAR_scaling             = 1d0 / sqrt(dble(DATAin%nfAPAR))
+    DATAin%harvest_scaling           = 1d0 / sqrt(dble(DATAin%nharvest))
+    DATAin%soilwater_scaling         = 1d0 / sqrt(dble(DATAin%nsoilwater))
+
+    return
+
+  end subroutine update_obs_scaling_sqrt_nsamples     
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine update_obs_scaling_log_nsamples
+    use cardamom_structures, only: DATAin 
+
+    ! Subroutine sets the data specific scaling factors
+    ! in this case are all normalised by the sqrt of the 
+    ! sample size. This allows datastreams with more observations 
+    ! to contribute more to the lost function but penalised to reduce 
+    ! bias' introduced by unbalanced observations
+ 
+    DATAin%GPP_scaling               = 1d0 / (1d0+log(dble(DATAin%ngpp)))
+    DATAin%NEE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnee)))
+    DATAin%Fire_scaling              = 1d0 / (1d0+log(dble(DATAin%nfire)))
+    DATAin%LAI_scaling               = 1d0 / (1d0+log(dble(DATAin%nlai)))
+    DATAin%Cwood_inc_scaling         = 1d0 / (1d0+log(dble(DATAin%nCwood_inc)))
+    DATAin%Cwood_growth_scaling      = 1d0 / (1d0+log(dble(DATAin%nCwood_growth)))
+    DATAin%Cwood_mortality_scaling   = 1d0 / (1d0+log(dble(DATAin%nCwood_mortality)))
+    DATAin%foliage_to_litter_scaling = 1d0 / (1d0+log(dble(DATAin%nfoliage_to_litter)))
+    DATAin%Reco_scaling              = 1d0 / (1d0+log(dble(DATAin%nreco)))
+    DATAin%Cfol_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCfol_stock)))
+    DATAin%Cwood_stock_scaling       = 1d0 / (1d0+log(dble(DATAin%nCwood_stock)))
+    DATAin%Croots_stock_scaling      = 1d0 / (1d0+log(dble(DATAin%nCroots_stock)))
+    DATAin%Csom_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCsom_stock)))
+    DATAin%Cagb_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nCagb_stock)))
+    DATAin%Clit_stock_scaling        = 1d0 / (1d0+log(dble(DATAin%nClit_stock)))
+    DATAin%Ccoarseroot_stock_scaling = 1d0 / (1d0+log(dble(DATAin%nCcoarseroot_stock)))
+    DATAin%Evap_scaling              = 1d0 / (1d0+log(dble(DATAin%nEvap)))
+    DATAin%SWE_scaling               = 1d0 / (1d0+log(dble(DATAin%nSWE)))
+    DATAin%NBE_scaling               = 1d0 / (1d0+log(dble(DATAin%nnbe)))
+    DATAin%fAPAR_scaling             = 1d0 / (1d0+log(dble(DATAin%nfAPAR)))
+    DATAin%harvest_scaling           = 1d0 / (1d0+log(dble(DATAin%nharvest)))
+    DATAin%soilwater_scaling         = 1d0 / (1d0+log(dble(DATAin%nsoilwater)))
+
+    return
+
+  end subroutine update_obs_scaling_log_nsamples     
   !
   !------------------------------------------------------------------
   !

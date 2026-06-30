@@ -1,20 +1,43 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Module contains a number of diagnostic tests used to ensure that the MCMC
+! is able to retrieve a known distribution of parameters for simple models.
+! 
+! Created: 12/05/2021, T. L. Smallman (UoE, t.l.smallman@ed.ac.uk)
+! Subsequent contributions by:
+! T. L. Smallman (UoE)
+! A. A. Bloom (JPL, USA)
+! Version history:
+! Version 1.0: A single parameter retrieval with known PDF.
+!              Estimating pi and radius from a circle with multiple 'observation'
+!              Estimating pi and radii from 9 circles, a single observtion per circle
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MHMCMC_StressTests
-
-  ! Module contains a number of diagnostic tests used to ensure that the MCMC
-  ! is able to retrieve a known distribution of parameters for simple models.
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! Created: 12/05/2021, T. L. Smallman (UoE, t.l.smallman@ed.ac.uk)
-  ! Subsequent contributions by:
-  ! T. L. Smallman (UoE)
-  ! A. A. Bloom (JPL, USA)
-  ! Version history:
-  ! Version 1.0: A single parameter retrieval with known PDF.
-  !              Estimating pi and radius from a circle with multiple 'observation'
-  !              Estimating pi and radii from 9 circles, a single observtion per circle
 
   implicit none
 
@@ -27,7 +50,7 @@ module MHMCMC_StressTests
   ! Declare any module level variables
 
   ! Stress Test 1 - estimate parameters for multiple circle
-  ! Parameter 1 = pi, parameter 2:10 = radi
+  ! Parameter 1 = pi, parameter 2:14 = radi
   ! DO NOT USE SOME REFINEMENT NEEDED
   double precision, parameter :: circle_par_1 = 3.141d0, &
                                  circle_par_2 = 1.2d0, &
@@ -39,8 +62,12 @@ module MHMCMC_StressTests
                                  circle_par_8 = 193d0, &
                                  circle_par_9 = 88d0, &
                                  circle_par_10 = 291d0, &
-                                 circle_obs_unc = 1d0
-  double precision, dimension(9) :: circle_obs
+                                 circle_par_11 = 19d0, &                                 
+                                 circle_par_12 = 29d0, &                                 
+                                 circle_par_13 = 91d0, &                                 
+                                 circle_par_14 = 1d0, &                                 
+                                 circle_obs_unc = 0.1d0 ! 1d0
+  double precision, dimension(13) :: circle_obs
 
   ! Stress Test 2 - estimate known PDF for single parameter
   double precision, parameter :: single_obs_mean = 0d0, &
@@ -75,10 +102,12 @@ module MHMCMC_StressTests
 
     ! Determine the area of the circle for the current parameters
     do i = 2, nopars
-       area(i-1) = pars(1) * pars(i) ** 2d0
+       area(i-1) = pars(1) * pars(i) ** 2
     end do
     ! Convert into log-likelihood
-    output = sum(-0.5d0 * (((area - circle_obs) / circle_obs_unc) ** 2))
+    !output = sum(-0.5d0 * (((area - circle_obs) / circle_obs_unc) ** 2))
+    ! Convert into log-likelihood, assuming proportional uncertainty
+    output = sum(-0.5d0 * (((area - circle_obs) / (circle_obs*circle_obs_unc)) ** 2))
 
   end subroutine circle
   !
@@ -92,7 +121,7 @@ module MHMCMC_StressTests
     implicit none
 
     ! Pi
-    PI%parmin(1) =-10d0
+    PI%parmin(1) =  0d0
     PI%parmax(1) = 10d0
 
     ! Radius - 1
@@ -131,16 +160,36 @@ module MHMCMC_StressTests
     PI%parmin(10) =  1d0
     PI%parmax(10) = 300.0d0
 
+    ! Radius - 10
+    PI%parmin(11) =  1d0
+    PI%parmax(11) = 300.0d0
+
+    ! Radius - 11
+    PI%parmin(12) =  1d0
+    PI%parmax(12) = 300.0d0
+
+    ! Radius - 12
+    PI%parmin(13) =  1d0
+    PI%parmax(13) = 300.0d0
+
+    ! Radius - 13
+    PI%parmin(14) =  1d0
+    PI%parmax(14) = 300.0d0
+
     ! Assign observations values
-    circle_obs(1) = circle_par_1 * circle_par_2 ** 2d0
-    circle_obs(2) = circle_par_1 * circle_par_3 ** 2d0
-    circle_obs(3) = circle_par_1 * circle_par_4 ** 2d0
-    circle_obs(4) = circle_par_1 * circle_par_5 ** 2d0
-    circle_obs(5) = circle_par_1 * circle_par_6 ** 2d0
-    circle_obs(6) = circle_par_1 * circle_par_7 ** 2d0
-    circle_obs(7) = circle_par_1 * circle_par_8 ** 2d0
-    circle_obs(8) = circle_par_1 * circle_par_9 ** 2d0
-    circle_obs(9) = circle_par_1 * circle_par_10 ** 2d0
+    circle_obs(1)  = circle_par_1 * circle_par_2 ** 2
+    circle_obs(2)  = circle_par_1 * circle_par_3 ** 2
+    circle_obs(3)  = circle_par_1 * circle_par_4 ** 2
+    circle_obs(4)  = circle_par_1 * circle_par_5 ** 2
+    circle_obs(5)  = circle_par_1 * circle_par_6 ** 2
+    circle_obs(6)  = circle_par_1 * circle_par_7 ** 2
+    circle_obs(7)  = circle_par_1 * circle_par_8 ** 2
+    circle_obs(8)  = circle_par_1 * circle_par_9 ** 2
+    circle_obs(9)  = circle_par_1 * circle_par_10 ** 2
+    circle_obs(10) = circle_par_1 * circle_par_11 ** 2
+    circle_obs(11) = circle_par_1 * circle_par_12 ** 2
+    circle_obs(12) = circle_par_1 * circle_par_13 ** 2
+    circle_obs(13) = circle_par_1 * circle_par_14 ** 2          
 
   end subroutine circle_parameter_prior_ranges
   !
@@ -176,7 +225,7 @@ module MHMCMC_StressTests
     implicit none
 
     ! Pi
-    PI%parmin(1) =-10d0
+    PI%parmin(1) =  0d0
     PI%parmax(1) = 10d0
 
     ! Radius - 1
@@ -260,9 +309,9 @@ module MHMCMC_StressTests
         DATAin%ID = -1
         DATAin%nodays = 1
         DATAin%nomet = 1
-        DATAin%noobs = 9
+        DATAin%noobs = 13
         DATAin%nopools = 1
-        DATAin%nopars = 10
+        DATAin%nopars = 14
         DATAin%nofluxes = 1
     else if (outfile == "Single") then
         ! ID = -2 StressTest - Single parameter

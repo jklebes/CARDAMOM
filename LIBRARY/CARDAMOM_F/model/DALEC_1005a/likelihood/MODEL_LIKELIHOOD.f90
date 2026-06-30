@@ -1,17 +1,42 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Module contains all subroutine and functions relevant to determining the log-likelihood
+! of DALEC_1005a as a function of observations and ecological dynamical constraints.
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module model_likelihood_module
   implicit none
-
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
 
   ! make all private
   private
@@ -24,7 +49,7 @@ module model_likelihood_module
   type EDCDIAGNOSTICS
     integer :: EDC
     integer :: DIAG
-    integer :: PASSFAIL(100) ! allow space for 100 possible checks
+    integer :: PASSFAIL(150) ! allow space for 150 possible checks
     integer :: nedc ! number of edcs being assessed
   end type
   type (EDCDIAGNOSTICS), save :: EDCD
@@ -528,7 +553,7 @@ module model_likelihood_module
     torfol = 1d0/(pars(5)*365.25d0)
 
     ! set all EDCs to 1 (pass)
-    EDCD%nedc = 100
+    EDCD%nedc = 150
     EDCD%PASSFAIL(1:EDCD%nedc) = 1
 
     !
@@ -937,7 +962,7 @@ module model_likelihood_module
     endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
-    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday)
+    cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
 
     ! ensure function returns
     return

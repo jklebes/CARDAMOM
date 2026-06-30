@@ -1,3 +1,43 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! This is the main subroutine for the CARDAMOM framework. The specific model
+! method combinations are achieved through case specific compilation of the
+! case while maintaining strict consistent io formats to allow for these
+! combinations
+! 
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! J. F. Exbrayat (University of Edinburgh)
+! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
+! See function / subroutine specific comments for exceptions and contributors
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 program cardamom_framework
 
@@ -7,25 +47,14 @@ program cardamom_framework
  use cardamom_io, only: read_pari_data, read_options, open_output_files, &
                         check_for_existing_output_files,restart_flag,   &
                         update_for_restart_simulation, write_covariance_matrix, &
-                        close_output_files, write_covariance_info
+                        close_output_files, write_covariance_info, &
+                        update_obs_scaling_normal, update_obs_scaling_nsamples, &
+                        update_obs_scaling_sqrt_nsamples, update_obs_scaling_log_nsamples
  use MHMCMC_module, only: MHMCMC, par_minstepsize, par_initstepsize, N_before_mv
  use MHMCMC_StressTests, only: StressTest_likelihood, StressTest_sublikelihood, prepare_for_stress_test
  use model_likelihood_module, only: model_likelihood, &
-                                    find_edc_initial_values, &
-                                    sub_model_likelihood, sqrt_model_likelihood, log_model_likelihood!, log_model_likelihood_dtm
-
- !!!!!!!!!!!
- ! Authorship contributions
- !
- ! This code is based on the original C verion of the University of Edinburgh
- ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
- ! All code translation into Fortran, integration into the University of
- ! Edinburgh CARDAMOM code and subsequent modifications by:
- ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
- ! J. F. Exbrayat (University of Edinburgh)
- ! D. T. Milodowski (d.t.milodowski@ed.ac.uk, University of Edinburgh)                                   
- ! See function / subroutine specific comments for exceptions and contributors
- !!!!!!!!!!!
+                                    scaled_model_likelihood, &
+                                    find_edc_initial_values
 
  ! Created: Anthony A. Bloom
  ! Major modification history:
@@ -37,6 +66,7 @@ program cardamom_framework
  ! Version 1.4: Pre-APMCMC phase using normalised likelihoods added by T. L. Smallman
  !            : Pre-APMCMC allows for rapidly moving towards observations from very bad starting points.
  ! Version 1.5: Added options for varied scaling approaches for the cost function (e.g. division by sample size (i.e. n), sqrt(n), 1+log(n))
+ ! Version 1.6: Created a more harmonized workflow of model likelihood calculations where the scaling is calculated in main and just used.
  ! Specific citations for developments included in the code.
 
  ! This is the main subroutine for the CARDAMOM framework. The specific model
@@ -51,7 +81,7 @@ program cardamom_framework
  ! 4) print-to-screen frequency
  ! 5) write-to-file frequency
  ! 6) 0 / 1 flag to use normalised log-likelihood pre-mcmc
- ! 7) Flag to select the cost function normalisation approach
+ ! 7) Flag to select the cost function normalisation approachs
 
  implicit none
 
@@ -162,6 +192,13 @@ program cardamom_framework
      write(*,*)"Carrying out a stress test analysis"
      write(*,*)"Any existing files will be ignored"
 
+     ! Template for calling a StressTest
+     ! ./<PROJECT name>.exe StressTest <StressTestType> NoProposals 0 SampleRate 0 0
+     ! Current StressTest options are:
+     ! 1) Single
+     ! 2) SingleCircle
+     ! 3) Circle
+
      ! Reset interations counter
      MCOUT%nos_iterations = 0
      ! Ensure that we use a random starting point
@@ -250,10 +287,11 @@ program cardamom_framework
      ! Reset the MCMC parameters for the next stage
      call read_options(solution_wanted,freq_print,freq_write,outfile)
 
-     ! Reset stepsize and covariance for main DRAM-MCMC
+     ! Reset stepsize and covariance variables
      PI%Nparvar = 0d0 ; PI%parvar = 0d0
      PI%covariance = 0d0 ; PI%mean_par = 0d0
      PI%cov = .false. ; PI%use_multivariate = .false.
+     ! Initialise the covariance matrix diagnal
      do n = 1, PI%npars
         PI%covariance(n,n) = 1d0
      end do
@@ -300,7 +338,8 @@ program cardamom_framework
          MCO%nOUT = nint(dble(nOUT_save) * MCO%sub_fraction) - MCOUT%nos_iterations
          write(*,*)"Nos iterations to be proposed = ",MCO%nOUT
          MCO%fADAPT = 1d0 !; MCO%nADAPT = 1000
-         call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
+         call update_obs_scaling_nsamples
+         call MHMCMC(1d0,model_likelihood,scaled_model_likelihood)
          ! Use the best parameter set as the starting point for the next stage
          PI%parini(1:PI%npars) = MCOUT%best_pars(1:PI%npars)
          MCO%fixedpars  = .true.
@@ -338,17 +377,17 @@ program cardamom_framework
      ! out that the cost_function_scaling has not been set correctly, 
      ! ensure code after the command line read (above) has been correctly maintained
      if (cost_func_scaling_dble == 0) then
-         call MHMCMC(1d0,model_likelihood,model_likelihood)
+         call update_obs_scaling_normal
      else if (cost_func_scaling_dble == 1) then
-         call MHMCMC(1d0,model_likelihood,sub_model_likelihood)
+         call update_obs_scaling_nsamples
      else if (cost_func_scaling_dble == 2) then
-         call MHMCMC(1d0,model_likelihood,sqrt_model_likelihood)
-     else if (cost_func_scaling_dble == 3) then
-         call MHMCMC(1d0,model_likelihood,log_model_likelihood)
-     !else if (cost_func_scaling_dble == 4) then
-     !    call MHMCMC(1d0,model_likelihood,log_model_likelihood_dtm)
+         call update_obs_scaling_sqrt_nsamples
+     else if (cost_func_scaling_dble == 3) then        
+         call update_obs_scaling_log_nsamples
      end if ! cost_func_scaling_dble == 
-     
+     ! Run the mcmc analysis
+     call MHMCMC(1d0,model_likelihood,scaled_model_likelihood)
+
      ! Let the user know we are done
      write(*,*)"AP-MCMC done now, moving on ..."
 
@@ -362,6 +401,6 @@ program cardamom_framework
  write(*,*)"==== CARDAMOM analysis for the current chain completed ===="
  write(*,*)"==========================================================="
  write(*,*)"=========================Honestly=========================="
-
+ write(*,*)"=========================================================="
 
 end program cardamom_framework

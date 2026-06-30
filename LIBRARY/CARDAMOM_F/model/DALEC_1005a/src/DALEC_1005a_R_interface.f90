@@ -1,4 +1,35 @@
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+! assimilate observations and ecological theory to retrieve parameters for the 
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently. 
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk), 
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!!!! File specific description !!!!!!!!!!
+! Subroutine to allow direct interface between DALEC_1005a and the R code
+!
+! Author: T. Luke Smallman (02/05/2024)
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine rdalec1005a(output_dim,MTT_dim,SS_dim &
                       ,met,pars &
                       ,out_var1,out_var2,out_var3,out_var4,out_var5 &
@@ -12,17 +43,9 @@ subroutine rdalec1005a(output_dim,MTT_dim,SS_dim &
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
 
-  !!!!!!!!!!!
-  ! Authorship contributions
-  !
-  ! This code is by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function / subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
-
   implicit none
   ! declare input variables
-  integer, intent(in) :: nopars         & ! number of paremeters in vector
+  integer, intent(in) :: nopars         & ! number of parameters in vector
                         ,output_dim     & !
                         ,MTT_dim        & ! number of pools mean transit time estimates
                         ,SS_dim         & ! number of pools the steady state will be output for
@@ -67,7 +90,7 @@ subroutine rdalec1005a(output_dim,MTT_dim,SS_dim &
      deltat(i) = met(1,i)-met(1,(i-1))
   end do
   ! number of time steps per year
-  steps_per_year = nodays/nos_years
+  steps_per_year = nint(dble(nodays)/dble(nos_years))
 
   ! begin iterations
   do i = 1, nos_iter
@@ -158,6 +181,7 @@ subroutine rdalec1005a(output_dim,MTT_dim,SS_dim &
      ! Calculate mean annual
      s = 1 ; e = steps_per_year
      do a = 1, nos_years
+        e = min(e, nodays)
         do v = 1, output_dim
            out_var5(i,a,v) = sum(out_var1(i,s:e,v)) / dble(steps_per_year)
         end do

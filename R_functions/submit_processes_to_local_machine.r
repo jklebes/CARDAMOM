@@ -1,10 +1,36 @@
+#########################################################################################
+# CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+# CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to 
+# assimilate observations and ecological theory to retrieve parameters for the 
+# DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+# used as a fully integrated component of CARDAMOM or independently. 
+# Copyright (C) 2024  University of Edinburgh,
+#                     Mathew Williams (mat.williams@ed.ac.uk), 
+#                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+# UoE = University of Edinburgh
 
-###
-## Function to submit processes to eddie
-###
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-# This function is based on an original Matlab function development by A. A. Bloom (UoE, now at the Jet Propulsion Laboratory).
-# Translation to R and subsequent modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE) & J. F. Exbrayat (UoE).
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ########## File specific description ##########
+# Function to write commands need to run and submit processes to local interactive machine
+# 
+# This function is based on an original Matlab function development by A. A. Bloom 
+# (UoE, now at the Jet Propulsion Laboratory). Translation to R and subsequent 
+# modifications by T. L Smallman (t.l.smallman@ed.ac.uk, UoE).
+# Exceptions are given within specific functions.
+#
+#########################################################################################
 
 submit_processes_to_local_machine<-function (PROJECT_in) {
 
@@ -39,10 +65,10 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
         pre_mcmc = 0
     }
 
-    # Check presence of PROJECT_in$cost_function_scaling
-    if (exists(x = "cost_function_scaling", where = PROJECT_in) == FALSE) {
+    # Check presence of PROJECT_in$request_cost_function_scaling
+    if (exists(x = "request_cost_function_scaling", where = PROJECT_in) == FALSE) {
         # If not, assume default cost function
-        PROJECT_in$cost_function_scaling = 0
+        PROJECT_in$request_cost_function_scaling = 0
     }
 
     # begin submitting the different tasks
@@ -64,7 +90,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
                                " 0 ",
                                as.integer(PROJECT_in$samplerate)," ",
                                as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$cost_function_scaling)," & ",sep=""))
+                               as.integer(PROJECT_in$request_cost_function_scaling)," & ",sep=""))
               } else {
                   system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
                                infile," ",
@@ -73,7 +99,7 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
                                " 0 ",
                                as.integer(PROJECT_in$samplerate)," ",
                                as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$cost_function_scaling),sep=""))
+                               as.integer(PROJECT_in$request_cost_function_scaling),sep=""))
               }
               # To ensure that each chain is submitted at a unique time we want to delay the code - this impacts the seed value used in the random number generator
               Sys.sleep(1) # wait for 1 seconds
