@@ -50,7 +50,8 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
-           ,mVs , initialize_mv
+           ,mVs , initialize_mv, &
+           model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -316,26 +317,35 @@ module CARBON_MODEL_MOD
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
         use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
+        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days !argument for r_interface
+        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
+          !! Needed as arguments from r_interface , otherwise taken from DATAin
 
         ! copy these arrays from global, read-only DATAin struct :
-        double precision:: deltat(nodays)     ! time step in decimal days
         double precision:: met(nomet, nodays)  ! met drivers
         double precision:: lat
 
         integer:: n
 
-        deltat = DATAin%deltat
         met = DATAin%met
         lat = DATAin%lat
-        mV%soil_frac_sand = DATAin%soil_frac_sand
-        mV%soil_frac_clay = DATAin%soil_frac_clay
+        if (present(soil_frac_sand)) then
+          mV%soil_frac_sand = soil_frac_sand 
+        else
+          mV%soil_frac_sand = DATAin%soil_frac_sand 
+        endif
+        if (present(soil_frac_clay)) then
+          mV%soil_frac_clay = soil_frac_clay
+        else
+          mV%soil_frac_clay = DATAin%soil_frac_clay
+        endif
 
         ! allocate variables dimension which are fixed per site only the once
         allocate(mV%deltat_1(nodays),  &
@@ -346,7 +356,7 @@ module CARBON_MODEL_MOD
         ! Timing variables which are needed first
         !
 
-        mV%deltat_1 = deltat**(-1d0)
+        mV%deltat_1 = deltat**(-1d0) 
 
         !
         ! Iteration independent variables using functions and thus need to be in a loop
@@ -386,6 +396,8 @@ module CARBON_MODEL_MOD
         !call update_soil_initial_conditions(pars(24), mV) 
         ! can't be done here because of dependence on PARS
         ! that's ok because it's done in every carbon_model() call at else block
+        ! does not affect field_capacity or porosity, or anything used before
+        ! the call in CARBON_MODEL else block
 
         ! save the initial conditions for later
         mV%field_capacity_initial = mV%field_capacity
