@@ -15,7 +15,7 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
    - ``do mV%soil_layer = 1, nos_soil_layers`` - here a loop counter `soil_layers` happened to have the same name as a variable in `mV` and was wrongly editted .  Change to a different loop counter variable name.
    - Errors related to `find_gs_iWUE` function:
 	- *Inside* subroutine `calculate_stomatal_conductance`, insert a function definition
-				  ```fortran
+```fortran
 				   subroutine calculate_stomatal_conductance (mV)
 				  ...
 				   contains
@@ -24,15 +24,17 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 				      find_gs_iWUE_ = find_gs_iWUE(x, mV)
 				    
 				  end function
-				  ```
-				- and use this variant name when passing the function to `zbrent` *only* (all other references to `find_gs_iWUE` in `calculate_stomatal_conductance` unchanged)
-					  ```fortran
+```
+
+  - and use this variant name when passing the function to `zbrent` *only* (all other references to `find_gs_iWUE` in `calculate_stomatal_conductance` unchanged)
+```fortran
 					                  mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
 					                                                find_gs_iWUE_, mV%minimum_conductance, mV%potential_conductance, tol_gs*mV%lai, mV%iWUE_step*0.10d0)
-					  ```
-				- All other calls to `find_gs_iWUE` should have the second argument `mV`, may need to add this
-			- Errors related to ``water_retention_saxton_eqns`` : Do the same for `water_retention_saxton_eqns` inside `calculate_field_capacity`
-				  ```fortran
+```
+   
+   - All other calls to `find_gs_iWUE` should have the second argument `mV`, may need to add this
+   - Errors related to ``water_retention_saxton_eqns`` : Do the same for `water_retention_saxton_eqns` inside `calculate_field_capacity`
+```fortran
 				    subroutine calculate_field_capacity (mV)
 				  
 				      use brent_zero, only: zbrent
@@ -62,8 +64,8 @@ Edit `src/<model>.f90` file , assited by `cardamom_model_type.py` .  See model 0
 				        end function
 				  
 				    end subroutine calculate_field_capacity
-				  ```
-			- Same for any other functions passed to `zbrent` : only single-argument functions can be passed to zbrent, so we have to define a single-argument function as a wrapper around the functions with `mV` argument.
+```
+  - Same for any other functions passed to `zbrent` : only single-argument functions can be passed to zbrent, so we have to define a single-argument function as a wrapper around the functions with `mV` argument.
 9. After `end type`, devlare an array of `model_working_variables` structs :
 		  ```fortran
 		  type(model_working_variables), allocatable, dimension(:):: mVs
