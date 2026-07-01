@@ -988,7 +988,7 @@ contains
       implicit none(type, external)
 
       ! declare input variables
-      character(350), intent(in):: outfile
+      character(350), intent(inout):: outfile
       integer, intent(in):: solutions_wanted, freq_print, freq_write
       class(MCMC_OPTIONS), intent(out):: MCO
 
@@ -1030,6 +1030,10 @@ contains
       ! MCO%nOUT = max(1, MCO%nOUT-MCOUT%nos_iterations)
 
       ! construct file names
+      ! ensure that the separator is _ , whether the user put it in the stem or not
+      if (outfile(len_trim(outfile):len_trim(outfile)) /= "_" ) then
+          outfile = trim(outfile)//"_"
+      endif
       write (MCO%outfile, fmt='(A)') trim(outfile)//"PARS"
       write (MCO%stepfile, fmt='(A)') trim(outfile)//"STEP"
       write (MCO%covfile, fmt='(A)') trim(outfile)//"COV"
