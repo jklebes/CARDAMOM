@@ -193,15 +193,30 @@ contains
    subroutine number_filenames(outfile, stepfile, covfile, covifile, chainid)
       character(len=*), intent(inout):: outfile, stepfile, covfile, covifile
       integer, intent(in):: chainid
+      
+      call number_filename(outfile, chainid)
+      call number_filename(stepfile, chainid)
+      call number_filename(covfile, chainid)
+      call number_filename(covifile, chainid)
+   end subroutine number_filenames
+
+   subroutine number_filename(filename, chainid) 
+      !! inserts thread id into filename,  STEM_FILETYPE -> STEM_NUMBER_FILETYPE
+      character(len=*), intent(inout):: filename 
+         !! expected format STEM_FILETYPE eg "UK_baseline_sites_AliceHolt_COV" 
+      integer, intent(in):: chainid
+
+      integer :: index_split
       character(4):: chainid_str
-      !! internal char version of chainid number, for filenames
+         !! internal char version of chainid number, for filenames
       ! internal write to convert int -> str
       write (chainid_str, '(i0)') chainid
-      ! append number to file names
-      outfile = trim(outfile)//"_"//trim(chainid_str)
-      stepfile = trim(stepfile)//"_"//trim(chainid_str)
-      covfile = trim(covfile)//"_"//trim(chainid_str)
-      covifile = trim(covifile)//"_"//trim(chainid_str)
-   end subroutine number_filenames
+
+      ! separate filename into stem and suffix again at last _
+      index_split = scan(filename, '_', back=.true.) !location of last _
+      
+      ! assemble new filename
+      filename =  trim(filename(1:index_split))//trim(chainid_str)//"_"//trim(filename((index_split+1):))
+   end subroutine number_filename
 
 end module samplers_shared

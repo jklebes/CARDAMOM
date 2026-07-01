@@ -147,7 +147,7 @@ contains
       ! each do a complete independent run.  The parallelization structure of this module is
       ! trivial.  It exists mainly as template for samplers with more crossover and more complex
       ! structure.
-      !$OMP parallel do
+      !$OMP parallel do 
       do i = 1, MCO%nchains
          ! saves latest, best loglikelihood and associated parameters to MCOUT_list(i)
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i)
