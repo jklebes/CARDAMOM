@@ -58,7 +58,8 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
-           ,mVs , initialize_mv
+           ,mVs , initialize_mv, &
+           model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -391,22 +392,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
-  subroutine initialize_mv(mV, nodays, nomet, nopars)
+
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
         use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
+        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days !argument for r_interface
+        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
+          !! Needed as arguments from r_interface , otherwise taken from DATAin
 
         ! copy these arrays from global, read-only DATAin struct :
-        double precision:: deltat(nodays)     ! time step in decimal days
         double precision:: met(nomet, nodays)  ! met drivers
         double precision:: lat
 
         integer:: n
 
-        deltat = DATAin%deltat
         met = DATAin%met
         lat = DATAin%lat
         mV%soil_frac_sand = DATAin%soil_frac_sand
