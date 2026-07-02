@@ -729,7 +729,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
                                 pars(15),pars(45), &
-                                pars(46),pars(48),pars(49))
+                                pars(46),pars(48),pars(49), &
+                                pars(13),pars(5))
 
     else ! deltat_1 allocated?
 
@@ -754,12 +755,13 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Re-initialise leaf cohort age structure
         call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
                                 pars(15),pars(45), &
-                                pars(46),pars(48),pars(49))
+                                pars(46),pars(48),pars(49), &
+                                pars(13),pars(5))
 
     endif ! deltat_1 allocated
 
     ! Assign initial canopy NCCE values
-    ncce_lag_history = pars(5)
+    ncce_lag_history = 0d0
 
     ! now load the hardcoded forest management parameters into their scenario locations
 
@@ -1180,6 +1182,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                              pars(34),pars(35),pars(36),pars(37),   & ! temperature limitations
                              pars(39),pars(40),pars(41),pars(42),   & ! water limitations
                              pars(33),pars(15),pars(45),            & ! labile:biomass limitations
+                             FLUXES(n,5),                           & ! 
                              available_labile,sum(POOLS(n,2:4)),    & ! C pools
                              POOLS(n,2),DIAGS(n,27),                & !
                              FLUXES(n,4),FLUXES(n,6),FLUXES(n,7),   & ! tissue specific allocated C
@@ -1197,7 +1200,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                    sum(POOLS(n,2:4)), POOLS(n,2),         & ! C pools
                                    POOLS(n,4), POOLS(n,3),                & !
                                    pars(17), DIAGS(:,22),                 & ! LCA / foliar net carbon export
-                                   pars(16), pars(14), pars(13),          & ! potential foliar loss for NCCE trend
+                                   pars(16), pars(14),                    & ! potential foliar loss for NCCE trend
                                    pars(6),pars(7),                       & ! wood and fine root turnovers
                                    FLUXES(n,10),FLUXES(n,12),FLUXES(n,11),& ! Natural litter fluxes (fol, root, wood)
                                    DIAGS(n,26),DIAGS(n,27))                 ! combined index of NCCE and gradient, dNCCE_loss, NCCE_gradient
@@ -1243,8 +1246,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
        call update_and_shed_cohorts(days_per_step, FLUXES(n,1), POOLS(n,2), &
                                     pars(45), pars(46), pars(47), pars(17), &
-                                    pars(15), FLUXES(n,10), cohort_litter_flux, &
-                                    resorb_flux, env_litter_out)
+                                    pars(14), pars(15), pars(16), FLUXES(n,10), &
+                                    cohort_litter_flux, resorb_flux, env_litter_out)
 
        ! cohort_litter_flux contains both environmental and economic litter.
        ! Replaces FLUXES(n,10) directly  environmental loss has been explicitly
@@ -1705,10 +1708,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! determine the terms for quadratic solution to the assumption that light limited,
     ! i.e. electron transport, matches diffusion.
     aa = 4d0*gc
-    bb = -4d0*(gc_co2 - dark_respiration) + (8d0*co2_comp_point*gc) + &
+    bb = -4d0*(gc_co2 + dark_respiration) + (8d0*co2_comp_point*gc) + &
          light_limited_photosynthesis
-    cc = -8d0*(gc_co2*co2_comp_point + dark_respiration) - &
-         light_limited_photosynthesis*co2_comp_point
+    cc = co2_comp_point &
+       * ((-8d0*gc_co2) + (8d0*gc) - (8d0*dark_respiration) - light_limited_photosynthesis)
     ! Calculate internal CO2 concentration (ppm or umol/mol)
     ci_pl = (-bb+sqrt((bb*bb)-(4d0*aa*cc))) / (2d0*aa)
 
@@ -4211,6 +4214,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                               leafT_coef,woodT_coef,leafT_min,woodT_min, & ! temperature limitations
                               woodW_min,woodW_max,leafW_min,leafW_max,   & ! water limitations
                               LabBio_coef,leaf_ncce_coef,MTT_leaf,       & ! labile:biomass limitation
+                              alloc_labile_gCm2day,                      & ! GPP-Rm 
                               available_labile,biomass,foliage,          & ! C pools
                               ncce_gradient,                             & ! NCCE gradient
                               alloc_leaf,alloc_root,alloc_wood,          & ! tissue specific allocated C
@@ -4250,6 +4254,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     foliage, & ! Current foliage pool
                                     biomass, & ! foliage, fine root and wood pool (gC/m2)
                                ncce_gCm2day, & ! Net Canopy Carbon export (gC/m2/day)
+                       alloc_labile_gCm2day, & ! GPP-Rm (gC/m2/day)
                               ncce_gradient    ! ncce gradient over time  
        double precision, intent(out) :: &
                             delta_ncce_gCgC, & ! change in net canopy carbon export (gC/gCinvested)
@@ -4277,7 +4282,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        leafW_limit = 0d0  ; woodW_limit = 0d0 ; foliar_limit = 0d0
 
        ! We can only allocate if we have labile to spend
-       if (available_labile > 0d0 .and. ncce_gradient > 0d0) then
+       if (available_labile > 0d0) then
 
            ! Estimate the labile:biomass ratio.
            ! Limits / restricts labile use when supply is low
@@ -4332,7 +4337,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            alloc_leaf = pot_fol*foliar_limit ! f(lab:bio,leafT,wSWP)
            ! Labile to root rate (gC.m-2.day-1)
            alloc_root = pot_root*LabBio_limit*rootT_limit  ! f(lab:bio,leafT)
-           ! Labile to wood rate
+           ! Labile to wood rate (gC.m-2.day-1)
            alloc_wood = pot_wood*LabBio_limit*woodT_limit*woodW_limit  ! f(lab:bio,leafT,wSWP)
 
            ! Convert into fractional daily draws equivalents
@@ -4346,7 +4351,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            !
 
            ! Finally quantify the impact of increasing LAI on GPP, less Rd(24)
-           if (alloc_leaf > 0d0) then
+           if (alloc_leaf > 0d0 .and. ncce_gradient > 0d0) then
                ! Store the existing LAI and canopy_scaling
                lai_orig = lai ; scaling_orig = leaf_canopy_light_scaling
                gs_orig = stomatal_conductance ; NUE_rel_orig = canopy_NUE_rel
@@ -4382,6 +4387,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                call calculate_shortwave_balance
                ! Update acm_gpp_stage_1
                call acm_gpp_stage_1
+           else 
+               ! Declining gradient, we won't grow leaves
+               alloc_leaf = 0d0
            end if ! alloc_leaf > 0
 
            !
@@ -4400,6 +4408,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
            alloc_leaf = available_labile * (1d0-(1d0-alloc_leaf)**time)/time
            alloc_root = available_labile * (1d0-(1d0-alloc_root)**time)/time
            alloc_wood = available_labile * (1d0-(1d0-alloc_wood)**time)/time
+           ! Wood growth is not essential and should be bound by the maximum rate of GPP-less maintenance respiration.
+           alloc_wood = min(alloc_labile_gCm2day,alloc_wood)
 
        end if ! available_labile > 0
 
@@ -4502,7 +4512,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                     biomass, foliage, wood, root,           & ! C pools
                                     lca, ncce_gCgCday,                      & ! LCA / net canopy carbon export per gC leaf
                                     pot_foliar_fall_fraction,               & ! reference foliar fall rate for current NCCE and gradient
-                                    cmi_ncce_k50, cmi_ncce_gradient_k50,    & ! MM function of NCCE and NCCE trend driven leaf fall
+                                    cmi_ncce_k50,                           & ! MM function of NCCE driven leaf fall
                                     wood_turn, root_turn,                   & ! wood and fine root turnovers
                                     foliage_litter,root_litter,wood_litter, & ! Natural litter fluxes (fol, root, wood)
                                     cmi,ncce_gradient)                        ! CMI, NCCE change for canopy loss, NCCE gradient
@@ -4523,7 +4533,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                         lca, & ! leaf carbon per unit leaf area (gC/m2)
                    pot_foliar_fall_fraction, & ! Initial proposed rate of leaf fall for NCCE dynamics limits (fraction/day)
                                cmi_ncce_k50, & ! ncce_gCgC at which cmi is at half saturation
-                      cmi_ncce_gradient_k50, & ! ncce gradient, at which function is half saturation
                                   wood_turn, & ! wood turnover rate (fraction / day)
                                   root_turn, & ! fine root turnover rate (fraction / day)
                               ncce_gradient    ! NCCE gradient over the lag period (gC/gCleaf/day / day)
@@ -4562,36 +4571,20 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                C_starvation_loss = 0d0
            end if
 
-           ! Estimate canopy mortality, a function of the net canopy carbon export (NCCE) and
-           ! the gradient (trend over time) of the NCCE. These are:
-           ! 1) A Michaelis-Menten function of the gradient of NCCE
-           ! 2) A Michaelis-Menten function of NCCE gCgCleaf set to add to turnover once NCCE is negative.
-           ! 3) Testing whether a smaller canopy will improve the NCCE per gC/m2/day
-
-           !! Determine loss based on the ncce_gCgCday trajectory
-
-           ! MM function where negative NCCE trend adds to a higher canopy mortality
-           if (ncce_gradient < 0d0) then
-               tmp1 = ncce_gradient / (ncce_gradient + cmi_ncce_gradient_k50)
-           else
-               ! Postive ncce, we will assume the contribution here is zero
-               tmp1 = 0d0
-           end if
+           ! Estimate canopy level mortality, a function of the net canopy carbon export (NCCE). 
+           ! These are:
+           ! 1) A Michaelis-Menten function of NCCE gCgCleaf set to add to turnover once NCCE is negative.
+           ! 2) Testing whether a smaller canopy will improve the NCCE per gC/m2/day
 
            !! Determine loss based on the current NCCE_gCgC
 
            ! MM function add additinal impact of NCCE if negative
            if (ncce_gCgCday(step) < 0d0) then
-               tmp2 = ncce_gCgCday(step) / (ncce_gCgCday(step) + cmi_ncce_k50)
+               cmi = ncce_gCgCday(step) / (ncce_gCgCday(step) + cmi_ncce_k50)
            else
                ! Positive ncce, we will assume the contribution here is zero
-               tmp2 = 0d0
+               cmi = 0d0
            end if
-
-           !! Determine most limiting factor on current and historical NCCE impacts
-
-           ! Combine assuming maximum of the two factors
-           cmi = (tmp1+tmp2)*0.5d0
 
            ! Calculate loss fraction
            !foliage_litter = pot_foliar_fall_fraction * cmi
@@ -4867,7 +4860,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !------------------------------------------------------------------
   !
   subroutine initialise_cohorts(foliage, start_doy, r_opp, leaf_age_ref, &
-                                k_N_decline, mean_leaf_doy, sigma_leaf_doy)
+                                k_N_decline, mean_leaf_doy, sigma_leaf_doy, &
+                                C_accumulation_rate, C_accumulation_amp)
 
     ! Initialise the leaf cohort array using a Von Mises multi-year age-structure
     ! distribution (Kikuzawa 1991; Givnish 2002).
@@ -4901,7 +4895,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                                leaf_age_ref, & ! reference leaf lifespan (days)
                                 k_N_decline, & ! leaf N decline rate (month-1)
                               mean_leaf_doy, & ! peak leaf-out DOY for Von Mises PDF (1-365)
-                             sigma_leaf_doy    ! seasonal spread of leaf production (days)
+                             sigma_leaf_doy, & ! seasonal spread of leaf production (days)
+                        C_accumulation_rate, & ! Linear cohort profit accumulation rate (day-1) 
+                         C_accumulation_amp    ! Amplitude of the profit accumulation rate
     integer, intent(in) :: start_doy ! day-of-year at simulation start (integer)
 
     ! Local variables
@@ -5003,7 +4999,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             leaf_cohorts(k)%ncce_average  = 0d0
             leaf_cohorts(k)%age_days      = age_d
             leaf_cohorts(k)%age_months    = age_mo
-            leaf_cohorts(k)%cum_profit    = 0d0 ! TLS: May need to initialise this also with a real value. Appear to be largely linear over time on annual time scales
+            leaf_cohorts(k)%cum_profit    = trend_seasonal(dble(age_d), leaf_cohorts(k)%Cc, & 
+                                                           C_accumulation_rate, C_accumulation_amp, &
+                                                           mean_leaf_doy, 365.25d0)
             leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
             leaf_cohorts(k)%is_alive      = .true.
             n_live_cohorts = n_live_cohorts + 1
@@ -5151,9 +5149,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   subroutine update_and_shed_cohorts(time, gpp_gCm2day, foliage, &
                                      leaf_age_ref, k_N_decline, f_resorb, lca, &
-                                     r_opp, env_litter_flux_gCm2day, &
-                                     cohort_litter_flux, resorb_flux, &
-                                     env_litter_out)
+                                     cmi_ncce_k50, r_opp, pot_foliar_fall_fraction, &
+                                     env_litter_flux_gCm2day, cohort_litter_flux, &
+                                     resorb_flux, env_litter_out)
 
     ! Advance cohort ages, update relative N content, apply environmental leaf
     ! loss to oldest cohorts, evaluate the economic shedding criterion
@@ -5217,6 +5215,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                               k_N_decline, & ! NUE decline coefficient (month)
                                  f_resorb, & ! Fraction of foliar loss reabsorbed to labile
                                       lca, & ! leaf carbon per unit area (gC/m2)
+                             cmi_ncce_k50, & ! Cohort NCCE at which turnover is 50 % of potential turnover rate
+                 pot_foliar_fall_fraction, & ! Potential foliar turnover fraction (/day)
                   env_litter_flux_gCm2day    ! Current litter fall estimate (gC/m2/day)
     double precision, intent(out) :: cohort_litter_flux, & ! total cohort litter (env + economic) (gC/m2/day)
                                             resorb_flux, & ! labile resorption from economic shedding (gC/m2/day)
@@ -5362,7 +5362,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
           ! Determine approximate cohort share of total GPP
           if (gpp_norm > vsmall) then
                gpp_k = gpp_gCm2day * ((leaf_cohorts(k)%Cf * leaf_cohorts(k)%NUE_rel) / gpp_norm)
-!print*,foliage,gpp_gCm2day,gpp_k,   leaf_cohorts(k)%Cf,leaf_cohorts(k)%NUE_rel,gpp_norm
             else
                gpp_k = 0d0
             end if
@@ -5389,14 +5388,25 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! Î”N_rel(t) = NUE_rel(t+1) âˆ’ N_rel(t) = N_rel(t) Â· [exp(âˆ’k) âˆ’ 1]
         leaf_cohorts(k)%NUE_rel = exp(-k_N_decline * dble(leaf_cohorts(k)%age_months))
         leaf_cohorts(k)%NUE_rel = max(0d0, min(1d0, leaf_cohorts(k)%NUE_rel))
-        ! Update the average ncce_k, 1/365.25 = 0.002737851
-        ! What is the right length-scale for this descision making or should the ncce_average be scaled relative to some mean environment?
-        leaf_cohorts(k)%ncce_average = ((leaf_cohorts(k)%ncce_average * (365.25d0-time)) + (ncce_k * time)) * 0.002737851d0
         ! --- Cumulative NCCE accumulation ---
         leaf_cohorts(k)%cum_profit = leaf_cohorts(k)%cum_profit + (ncce_k * time)
         ! Track the number of cohorts which have paid for themselves
         if (leaf_cohorts(k)%cum_profit > 0d0) n_profitable_cohorts = n_profitable_cohorts + 1
-!if (k == 1) print*,leaf_cohorts(k)%Cf,ncce_k,gpp_k,Rm_k,gpp_gCm2day,foliage
+
+        ! Update the average ncce_k, 1/365.25 = 0.002737851
+        ! What is the right length-scale for this descision making or should the ncce_average be scaled relative to some mean environment?
+        leaf_cohorts(k)%ncce_average = ((leaf_cohorts(k)%ncce_average * (365.25d0-time)) + (ncce_k * time)) * 0.002737851d0
+        ! Estimate canopy mortality, a function of the net canopy carbon export (NCCE). 
+        ! 1) A Michaelis-Menten function of NCCE gCgCleaf set to add to turnover once NCCE is negative.
+        ! 2) Loss permitted to occur if the current cohort ncce is negative and the rolling annual average (i.e. sustained losses)
+        !   or the cohort has exceeded its target profit. Thus we are either losing significantly and sustained, or prioritising removal
+        !   of older less relatively profiable cohorts.
+        if (ncce_k < 0d0 .and. & 
+           (leaf_cohorts(k)%ncce_average < 0d0 .or. leaf_cohorts(k)%cum_profit > leaf_cohorts(k)%profit_target)) then
+            remaining_env_loss = remaining_env_loss &
+                               + (time * leaf_cohorts(k)%Cf * pot_foliar_fall_fraction * (ncce_k / (ncce_k + cmi_ncce_k50)))
+        end if            
+
     end do ! k = 1, max_leaf_cohorts
 
     ! =========================================================================
@@ -5551,23 +5561,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Accumulate environmental litter into total cohort litter output
     cohort_litter_flux = cohort_litter_flux + env_litter_flux
     env_litter_out     = env_litter_flux
-!print*,leaf_cohorts(1)%is_alive,leaf_cohorts(1)%ncce_threshold,leaf_cohorts(1)%ncce_average,leaf_cohorts(1)%cum_profit,
+
     ! --- Step 2c: assess remaining living cohorts for economic shedding ---
     do k = 1, max_leaf_cohorts
         if (.not. leaf_cohorts(k)%is_alive) cycle
 
         ! If the cohort is too old, or not meeting its NCCE requirements AND has made a profit kill
         ! ncce_threshold should be some average performance or set against the mean climate, or a target NUE or target cum_profit?
+        if (leaf_cohorts(k)%age_months >= max_age_months) then
 !        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
 !            (ncce_k < leaf_cohorts(k)%ncce_threshold .and. leaf_cohorts(k)%cum_profit > 0d0) ) then
 !        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
 !            (leaf_cohorts(k)%ncce_average < leaf_cohorts(k)%ncce_threshold .and. &
 !             leaf_cohorts(k)%cum_profit > leaf_cohorts(k)%profit_target) ) then
-        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
-            (leaf_cohorts(k)%ncce_average < 0d0 .and. &
-             leaf_cohorts(k)%cum_profit > 0d0) .or. &
-            (ncce_k < 0d0 .and. &
-             leaf_cohorts(k)%cum_profit > leaf_cohorts(k)%profit_target) ) then
             ! Estimate reabsorption and litter loss
             cohort_litter_flux = cohort_litter_flux + leaf_cohorts(k)%Cf * dt_1
             resorb_k = f_resorb * leaf_cohorts(k)%Cf
@@ -5759,6 +5765,37 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     Return
 
   end subroutine new_leaf_update_canopy_NUE_rel
+  !
+  !------------------------------------------------------------------ 
+  !
+  pure function trend_seasonal(t, c0, c1, amp, peak_doy, period) result(y)
+
+    implicit none
+
+    ! Linear trend + single annual harmonic, additive coupling.
+    !
+    !  y(t) = c0 + c1*t + amp*cos( 2*pi*(t - (peak_doy-1)) / period )
+    !
+    ! Arguments:
+    double precision, intent(in) :: t, & ! Number of days since intercept value
+                                   c0, & ! Intercept value for linear trend
+                                   c1, & ! Gradient (per day)
+                                  amp, & ! seasonal amplitude (half the peak-to-trough range)
+                             peak_doy, & ! peak day of year (1-365)
+                               period    ! Period of the seasonal cycle (e.g. 365.25)
+    ! Local variables and result
+    double precision :: y, theta, p_safe
+
+    ! Sanity heck on the period
+    p_safe = max(period, vsmall)
+    ! Estimate the seasonal period
+    theta  = two_pi * (t - (peak_doy - 1d0)) / p_safe
+    ! Combine linear and seasonal component
+    y = c0 + c1 * t + amp * cos(theta)
+
+    return
+
+  end function trend_seasonal  
   !
   !------------------------------------------------------------------
   !

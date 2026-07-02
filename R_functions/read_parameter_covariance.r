@@ -46,7 +46,7 @@ read_parameter_covariance<- function(PROJECT_in,n) {
   is_it = file.size(cfile) ; is_it = which(is_it > 0) ; cfile = cfile[is_it]
 
   # just in case
-  if (length(cfile) <= 1) {return(list(parameter_covariance = -9999, info = "file not present"))}
+  if (length(cfile) == 0) {return(list(parameter_covariance = -9999, info = "file not present"))}
 
   # calculate the number of chains
   chains = seq(1,length(cfile))

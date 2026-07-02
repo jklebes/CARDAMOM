@@ -11586,7 +11586,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11605,7 +11605,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE))) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11618,7 +11618,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11631,7 +11631,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11644,7 +11644,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11682,7 +11682,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_daily_max_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11701,7 +11701,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11714,7 +11714,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_daily_max_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11727,7 +11727,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11740,7 +11740,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_daily_max_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_daily_max_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11778,7 +11778,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11797,7 +11797,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11810,7 +11810,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11823,7 +11823,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11836,7 +11836,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_sw_radiation_MJm2day), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_sw_radiation_MJm2day[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11874,7 +11874,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11893,7 +11893,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11906,7 +11906,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11919,7 +11919,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-        if (any(is.infinite(yrange))) { 
+        if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11932,7 +11932,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_precipitation_kgH2Om2s*86400), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_precipitation_kgH2Om2s[,1]*86400, type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11970,7 +11970,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_biomass_removal_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -11989,7 +11989,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12002,7 +12002,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_biomass_removal_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12015,7 +12015,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12028,7 +12028,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_biomass_removal_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_biomass_removal_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12066,7 +12066,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_burned_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12085,7 +12085,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_burned_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12098,7 +12098,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_burned_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12111,7 +12111,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_burned_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12124,7 +12124,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_burned_fraction), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_burned_fraction[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12162,7 +12162,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_mean_vpd_Pa), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12181,7 +12181,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12194,7 +12194,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_mean_vpd_Pa), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12207,7 +12207,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12220,7 +12220,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_mean_vpd_Pa), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_mean_vpd_Pa[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12258,7 +12258,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12277,7 +12277,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12290,7 +12290,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12303,7 +12303,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12316,7 +12316,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_gpp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_gpp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12354,7 +12354,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_reco_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12367,7 +12367,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12380,7 +12380,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_reco_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12393,7 +12393,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12406,7 +12406,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_reco_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_reco_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12444,7 +12444,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12457,7 +12457,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12470,7 +12470,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12483,7 +12483,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12496,7 +12496,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_rhet_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_rhet_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12536,7 +12536,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12551,7 +12551,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12566,7 +12566,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12581,7 +12581,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12596,7 +12596,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_nbp_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_nbp_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12636,7 +12636,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_fire_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12649,7 +12649,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12662,7 +12662,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_fire_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12675,7 +12675,7 @@ summary_plots<-function() {
     ## South temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_temperate_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12688,7 +12688,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_fire_PgCday[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_south_fire_PgCday[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12726,9 +12726,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_boreal_lai_m2m2[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_lai_m2m2[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12741,9 +12739,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_lai_m2m2[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) {
-            # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_lai_m2m2[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12756,9 +12752,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_tropics_lai_m2m2[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_lai_m2m2[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12782,9 +12776,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_south_lai_m2m2[2,,]), na.rm=TRUE)
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_south_lai_m2m2[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12821,9 +12813,7 @@ summary_plots<-function() {
     ## Boreal
     # Determine axes size
     yrange = c(min(-0.1,min(as.vector(grid_output$agg_seasonal_boreal_wSWP_MPa[2,,]), na.rm=TRUE)),0)    
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_boreal_wSWP_MPa[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12836,9 +12826,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = c(min(-0.1,min(as.vector(grid_output$agg_seasonal_north_temperate_wSWP_MPa[2,,]), na.rm=TRUE)),0)        
-    if (any(is.infinite(yrange))) {
-            # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_wSWP_MPa[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12851,9 +12839,7 @@ summary_plots<-function() {
     ## Tropics
     # Determine axes size
     yrange = c(min(-0.1,min(as.vector(grid_output$agg_seasonal_tropics_wSWP_MPa[2,,]), na.rm=TRUE)),0)            
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_tropics_wSWP_MPa[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,
@@ -12877,9 +12863,7 @@ summary_plots<-function() {
     ## South
     # Determine axes size
     yrange = c(min(-0.1,min(as.vector(grid_output$agg_seasonal_south_wSWP_MPa[2,,]), na.rm=TRUE)),0)                    
-    if (any(is.infinite(yrange))) {
-        # Do nothing, not data in this domain to work with
-    } else {
+    if (any(is.infinite(yrange) == FALSE)) {
         # Create initial plot
         plot(grid_output$agg_seasonal_south_wSWP_MPa[2,,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,

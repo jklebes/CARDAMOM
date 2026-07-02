@@ -45,6 +45,8 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   if (any(check_list == "rhet_gCm2day") == FALSE) {
       if (any(check_list == "rhet_dom_gCm2day")) {
           states_all$rhet_gCm2day = states_all$rhet_dom_gCm2day
+          states_all$mean_rhet_gCm2day = states_all$mean_rhet_dom_gCm2day
+          states_all$mean_annual_rhet_gCm2day = states_all$mean_annual_rhet_dom_gCm2day
       } else {
           # Calculate the combined ecosystem heterotrophic respiration.
           # All models have a som pool, so start with that
@@ -215,7 +217,7 @@ post_process_dalec<-function(states_all,parameters,drivers,PROJECT,n) {
   if (any(check_list == "MTT_wood_years") && (any(check_list == "alloc_wood_gCm2day") || any(check_list == "labile_to_wood_gCm2day"))) {
       
       # Determine where the carbon inputs are coming from
-      if (any(check_list == "alloc_wood_gCm2day") & any(check_list == "alloc_wolabile_to_wood_gCm2dayod_gCm2day")) {
+      if (any(check_list == "alloc_wood_gCm2day") & any(check_list == "labile_to_wood_gCm2day")) {
           # Multi-use variable
           ensAwood = rowMeans(states_all$alloc_wood_gCm2day+states_all$labile_to_wood_gCm2day)
       } else if (any(check_list == "alloc_wood_gCm2day")) {
