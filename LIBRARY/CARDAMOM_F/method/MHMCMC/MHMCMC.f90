@@ -43,7 +43,7 @@ module MHMCMC
    !  Call subroutine DEMCz(fct, parinfo, mcopt, mcmcout)
    !-
 
-   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, number_filenames, neg_inf
+   use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, filenames_insert_threadid, neg_inf
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
 
@@ -269,7 +269,7 @@ contains
       covfile = MCO%covfile
       covifile = MCO%covifile
       if (MCO%nchains > 1 .and. present(chainid)) then
-         call number_filenames(outfile, stepfile, covfile, covifile, chainid_)
+         call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid_)
       end if
 
     !!! prepare file writing

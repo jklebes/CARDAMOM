@@ -2,6 +2,8 @@ module samplers_shared
    implicit none(type, external)
    public
 
+   private filename_insert_threadid_single
+
 !> A collection of info about the model's parameters
 !> npars and min, max bounds as two arrays
 !> Closely related to model fct; model fct must take this number
@@ -190,18 +192,21 @@ contains
 
    end function bounds_check
 
-   subroutine number_filenames(outfile, stepfile, covfile, covifile, chainid)
+   subroutine filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
+      !! Amends the given 4 filenames by inserting chainid in the appropriate place
+      !! e.g. stem_COV -> stem_1_COV
       character(len=*), intent(inout):: outfile, stepfile, covfile, covifile
       integer, intent(in):: chainid
       
-      call number_filename(outfile, chainid)
-      call number_filename(stepfile, chainid)
-      call number_filename(covfile, chainid)
-      call number_filename(covifile, chainid)
-   end subroutine number_filenames
+      call filename_insert_threadid_single(outfile, chainid)
+      call filename_insert_threadid_single(stepfile, chainid)
+      call filename_insert_threadid_single(covfile, chainid)
+      call filename_insert_threadid_single(covifile, chainid)
+   end subroutine filenames_insert_threadid
 
-   subroutine number_filename(filename, chainid) 
-      !! inserts thread id into filename,  STEM_FILETYPE -> STEM_NUMBER_FILETYPE
+   subroutine filename_insert_threadid_single(filename, chainid) 
+      !! inserts thread id into a single filename,
+      !! STEM_FILETYPE -> STEM_NUMBER_FILETYPE
       character(len=*), intent(inout):: filename 
          !! expected format STEM_FILETYPE eg "UK_baseline_sites_AliceHolt_COV" 
       integer, intent(in):: chainid
@@ -217,6 +222,6 @@ contains
       
       ! assemble new filename
       filename =  trim(filename(1:index_split))//trim(chainid_str)//"_"//trim(filename((index_split+1):))
-   end subroutine number_filename
+   end subroutine filename_insert_threadid_single
 
 end module samplers_shared

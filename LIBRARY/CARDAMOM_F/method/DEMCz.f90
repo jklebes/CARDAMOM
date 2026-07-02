@@ -22,7 +22,7 @@ module DEMCz
    !  (not implemented yet) Optionally set OMP_NUM_THREADS
    !  Call subroutine run_DEMCz(fct, parinfo, demczopt, mcmcout)
    !-
-   use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, number_filenames
+   use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, filenames_insert_threadid
    use random_uniform, only: UNIF_VECTOR
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
    use OMP_LIB
@@ -200,7 +200,7 @@ contains
             stepfile = MCO%stepfile
             covfile = MCO%covfile
             covifile = MCO%covifile
-            call number_filenames(outfile, stepfile, covfile, covifile, j)
+            call filenames_insert_threadid(outfile, stepfile, covfile, covifile, j)
 
             ! allocate buffers io_space (different one for each chain)
             call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
