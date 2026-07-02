@@ -52,20 +52,9 @@ module CARBON_MODEL_MOD
   ! explicit publics
   public :: CARBON_MODEL     &
            ,top_soil_depth   &
-           ,sw_par_fraction  &
-           ,minlwp           &
-           ,soil_frac_clay   &
-           ,soil_frac_sand   &
            ,nos_soil_layers  &
-           ,dim_1,dim_2      &
-           ,nos_trees        &
-           ,nos_inputs       &
-           ,leftDaughter     &
-           ,rightDaughter    &
-           ,nodestatus       &
-           ,xbestsplit       &
-           ,nodepred         &
-           ,bestvar
+           ,sw_par_fraction  &
+           ,mVs , initialize_mv
 
   !!!!!!!!!
   ! Parameters

@@ -1167,7 +1167,7 @@ module model_likelihood_module
   !
   !------------------------------------------------------------------
   !
-  subroutine calc_obs_likelihoods(ML_obs_out)
+  subroutine calc_obs_likelihoods(ML_obs_out, M_POOLS, M_FLUXES, M_DIAGS)
     use cardamom_structures, only: DATAin
     use carbon_model_mod, only: sw_par_fraction, top_soil_depth 
 
@@ -1176,6 +1176,9 @@ module model_likelihood_module
 
     ! Arguements
     double precision, intent(inout) :: ML_obs_out
+    double precision, dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    double precision, dimension(datain%nodays, datain%nodiags)::  M_DIAGS
     ! local variable
     double precision, dimension(DATAin%nodays) :: mod
 

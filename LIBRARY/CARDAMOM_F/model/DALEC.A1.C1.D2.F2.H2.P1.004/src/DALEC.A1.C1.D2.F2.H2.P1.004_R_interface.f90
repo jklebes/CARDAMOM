@@ -85,7 +85,6 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays) :: tmp
   type(model_working_variables) :: mv
 
-
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
@@ -102,7 +101,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   steps_per_yr_1 = 1d0 / dble(steps_per_year)
 
 
-  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in)
+  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
 
 
   ! begin iterations

@@ -64,7 +64,7 @@ contains
    !------------------------------------------------------------------
    !
    subroutine check_for_existing_output_files(npars, MCO, sub_fraction, chainid, restart)
-      use samplers_shared, only: MCMC_OPTIONS, number_filenames
+      use samplers_shared, only: MCMC_OPTIONS, filenames_insert_threadid
 
       ! subroutine checks whether both the parameter and step files exist for this
       ! job. If they do we will assume that this is a restart job that we want to
@@ -95,7 +95,7 @@ contains
       covfile = MCO%covfile
       covifile = MCO%covifile
       if (MCO%nchains > 1) then
-         call number_filenames(outfile, stepfile, covfile, covifile, chainid)
+         call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
       end if
 
       ! Check that all files exist

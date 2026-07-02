@@ -36,8 +36,8 @@ subroutine rdalec10(output_dim,MTT_dim,SS_dim &
                    ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, &
-                              soil_frac_clay, soil_frac_sand, nos_soil_layers
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, &
+                              nos_soil_layers
                              
 
   ! subroutine specificially deals with the calling of the fortran code model by
@@ -83,14 +83,11 @@ subroutine rdalec10(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays,nodiags) :: DIAGS
   double precision, dimension(nodays) :: tmp, tmp1
   double precision, dimension(nos_iter) :: woodlitter_to_som_frac
+  type(model_working_variables) :: mv
 
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
-
-  ! update soil parameters
-  soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
-  soil_frac_sand(1:nos_soil_layers) = soil_frac_sand_in(1:nos_soil_layers)
 
   ! generate deltat step from input data
   deltat(1) = met(1,1)
@@ -100,13 +97,16 @@ subroutine rdalec10(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in)
+
+
   ! begin iterations
   do i = 1, nos_iter
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
                       ,lat,FLUXES,POOLS,DIAGS &
-                      ,nopars,nomet,nopools,nofluxes,nodiags)
+                      ,nopars,nomet,nopools,nofluxes,nodiags, mV)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
