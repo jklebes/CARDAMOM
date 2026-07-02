@@ -104,7 +104,7 @@ find_pft<- function (lat,long) {
         if (use_lcm == "ECMWF") {
             # search for nearest matches
             output=lapply(1:length(lat),FUN=closest2d_1,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
-            output_i=unlist(output)[1]
+            output_i=unlist(output)
         } else {
             output=lapply(1:length(lat),FUN=closest2d_2,lat=lat_lcm,long=long_lcm,lat_in=lat,long_in=long)
             # extract the i,j values seperately
