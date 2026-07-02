@@ -312,8 +312,7 @@ program cardamom_framework
    else if (cost_func_scaling_dble == 3) then
       call update_obs_scaling_log_nsamples
    end if  ! cost_func_scaling_dble ==
-   do i = 1, nchains
-   end do
+
    call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
 
    ! Let the user know we are done

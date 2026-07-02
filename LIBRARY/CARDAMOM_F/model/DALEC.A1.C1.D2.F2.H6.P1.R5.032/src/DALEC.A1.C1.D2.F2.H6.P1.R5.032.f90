@@ -48,6 +48,7 @@ module CARBON_MODEL_MOD
   ! explicit publics
   public :: CARBON_MODEL     &
            ,top_soil_depth   &
+           ,nos_soil_layers  &
            ,sw_par_fraction  &
            ,mVs , initialize_mv, &
            model_working_variables
@@ -387,9 +388,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! zero variables not done elsewhere
         mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
-        ! initialise the soil
-        call initialise_soils(pars(33), pars(34), pars(35), & !TODO problem
-                              pars(36), pars(37), pars(24), mV)        
+        ! initialise the soil - depends on PARS - ok to skip this here - the variables it sets 
+        ! are not used until after next call to initialise_soils
+        !call initialise_soils(pars(33), pars(34), pars(35), &
+        !                      pars(36), pars(37), pars(24), mV)        
   end subroutine
 
 
@@ -3485,7 +3487,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Estimation of parameter m. This parameter is related to the pore size distribution (pore_size_dist)
     ! parameter from the VGM Model. This parameter simplifies the calculation of hydraulic conductivity
     ! Units: (-)
-	mV%m_pore_size_dist = 1d0 - (1d0 / mV%pore_size_dist)
+    mV%m_pore_size_dist = 1d0 - (1d0 / mV%pore_size_dist)
 
     ! calculate field capacity (m3/m3)
     call calculate_field_capacity(mV)

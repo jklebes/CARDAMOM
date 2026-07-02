@@ -392,8 +392,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! zero variables not done elsewhere
         mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
         ! initialise the soil
-        call initialise_soils(pars(33), pars(34), pars(35), &
-                              pars(36), pars(37), pars(24), mV)        
+        !call initialise_soils(pars(33), pars(34), pars(35), &
+        !                      pars(36), pars(37), pars(24), mV)        
 
   end subroutine
 
