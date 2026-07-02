@@ -79,6 +79,14 @@ module model_likelihood_module
     ! declare local variables
     integer ::  n
     double precision :: tot_exp, ML, EDC1, EDC2, infini
+    
+    integer, intent(in), optional:: thread_id
+
+    type (EDCDIAGNOSTICS) :: EDCD
+
+    double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
+    double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
+    double precision,dimension(datain%nodays, datain%nodiags)::  M_DIAGS
 
     ! if == 0 EDCs are checked only until the first failure occurs
     ! if == 1 then all EDCs are checked irrespective of whether or not one has failed
