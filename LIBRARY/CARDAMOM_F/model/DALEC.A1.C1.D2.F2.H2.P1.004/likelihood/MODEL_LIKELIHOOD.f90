@@ -220,14 +220,14 @@ module model_likelihood_module
 
 !    ! Commented out to limit error messages, but useful for diagnosis
 !    do t = 1, DATAin%nodays
-!       if (sum(abs(DATAin%M_FLUXES(t,:) - local_fluxes(t,:))) > (tiny(0d0)*(DATAin%nofluxes))) then
+!       if (sum(abs(M_FLUXES(t,:) - local_fluxes(t,:))) > (tiny(0d0)*(DATAin%nofluxes))) then
 !           print*,"Time step of mismatch = ",i
 !           do i = 1, DATAin%nofluxes
 !               print*,"Flux counter = ",i
 !               print*,"Original run"
 !               print*,local_fluxes(t,i)
 !               print*,"Second run"
-!               print*,DATAin%M_FLUXES(t,i)
+!               print*,M_FLUXES(t,i)
 !           end do
 !       end if
 !       stop
