@@ -536,10 +536,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ! Other initial values for ACM_GPP_ET
 
     ! Estimate time invarient N response for maintenance respiration
-    ! Include scalings from nmolC/g/s -> gC/m2/day
+    ! Include scalings from nmolC/g/s -> gC/gCleaf/day
     ! Note that the mean temperature Q10 will be estimates in loop below where
     ! meant_time calculated
-    Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(41),pars(42)) * umol_to_gC * seconds_per_day * 2d-3
+    Rm_leaf_baseline = Rm_reich_N(pars(17)/avN,pars(41),pars(42)) * umol_to_gC * seconds_per_day * 2d-3 
     ! set initial leaf lifespan
     leaf_life = pars(43)
 
