@@ -141,7 +141,7 @@ M = Managed Grassland / arable crops (Table 10)
 | R2         | Leaf maintenance respiration estimated by the Reich et al., 2008 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Published (Famiglietti et al., 2021)  |
 | R3         | Leaf maintenance respiration estimated by the Heskel et al., 2016 model. Wood and fine root maintenance respiration estimated as a parameterisable fixed fraction of photosynthesis, growth respiration is a hardcoded fraction of NPP. Heterotrophic respiration follows 1st order kinetics with exponential temperature modification | Unpublished |
 | R4         | Autotrophic respiration as R0. Heterotrophic respiration following an implementation of microbial decomposition | Xenakis & Williams (2014) |
-| R5         | Heterotrophic respiration now modified by water table depth                | Unpublished |
+| R5         | Heterotrophic respiration modified by water table depth                    | Unpublished |
 #### TABLE 10. Managed agricultural ecosystem sub-models
 
 | Model Name | Short Description                                                          | Details                   |

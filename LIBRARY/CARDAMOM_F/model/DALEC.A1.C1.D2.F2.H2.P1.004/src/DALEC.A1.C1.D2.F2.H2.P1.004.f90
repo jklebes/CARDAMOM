@@ -843,6 +843,8 @@ module CARBON_MODEL_MOD
     mV%seconds_per_step = deltat(1) * seconds_per_day
     mV%days_per_step =  deltat(1)
     mV%days_per_step_1 =  mV%deltat_1(1)
+    mV%dayl_seconds = mV%daylength_seconds(1)
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1)
 
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(mV%leafT,mV%leafT+freeze,mV%vpd_kPa, mV)
@@ -1259,7 +1261,8 @@ module CARBON_MODEL_MOD
                POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * mV%days_per_step ! roots
                POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * mV%days_per_step ! wood
                ! update pools - add litter transfer
-               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * mV%days_per_step
+               POOLS(n+1,5) = POOLS(n+1,5) & 
+                            + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * mV%days_per_step
                POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * mV%days_per_step
 
                ! calculate ecosystem emissions (gC/m2/day)
