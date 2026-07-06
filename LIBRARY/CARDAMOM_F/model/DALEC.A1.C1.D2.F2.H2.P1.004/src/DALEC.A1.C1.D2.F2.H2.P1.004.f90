@@ -405,7 +405,6 @@ module CARBON_MODEL_MOD
     !! deallocate arrays in mV
     type(model_working_variables):: mV
     integer:: n
-        ! allocate variables dimension which are fixed per site only the once
         deallocate(mV%deltat_1, &
                      mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
                      mV%rainfall_time, mV%airt_zero_fraction_time)
@@ -636,7 +635,7 @@ module CARBON_MODEL_MOD
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
-       ! Some time consuming variables we only want to set once
+
     if (.not.allocated(mV%deltat_1)) then !never used - initialize_model() is always called before carbon_model()
       write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
       STOP 1
@@ -844,6 +843,8 @@ module CARBON_MODEL_MOD
     mV%seconds_per_step = deltat(1) * seconds_per_day
     mV%days_per_step =  deltat(1)
     mV%days_per_step_1 =  mV%deltat_1(1)
+    mV%dayl_seconds = mV%daylength_seconds(1)
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1)
 
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(mV%leafT,mV%leafT+freeze,mV%vpd_kPa, mV)
@@ -1260,7 +1261,8 @@ module CARBON_MODEL_MOD
                POOLS(n+1,3) = POOLS(n+1,3) - (FLUXES(n,20) + FLUXES(n,26)) * mV%days_per_step ! roots
                POOLS(n+1,4) = POOLS(n+1,4) - (FLUXES(n,21) + FLUXES(n,27)) * mV%days_per_step ! wood
                ! update pools - add litter transfer
-               POOLS(n+1,5) = POOLS(n+1,5) + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * mV%days_per_step
+               POOLS(n+1,5) = POOLS(n+1,5) & 
+                            + (FLUXES(n,24) + FLUXES(n,25) + FLUXES(n,26) - FLUXES(n,22) - FLUXES(n,28)) * mV%days_per_step
                POOLS(n+1,6) = POOLS(n+1,6) + (FLUXES(n,27) + FLUXES(n,28) - FLUXES(n,23)) * mV%days_per_step
 
                ! calculate ecosystem emissions (gC/m2/day)
@@ -1486,7 +1488,7 @@ module CARBON_MODEL_MOD
 
         ! Determine the appropriate canopy scaled gs increment and return threshold
         mV%delta_gs = 1d0 * mV%leaf_canopy_light_scaling ! mmolH2O/m2leaf/s
-        mV%iWUE_step = iWUE * mV%leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s
+        mV%iWUE_step = iWUE * mV%leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s !TODO note this is const parameter iWUE
 
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
@@ -1956,9 +1958,9 @@ module CARBON_MODEL_MOD
 
     contains
       double precision function water_retention_saxton_eqns_(x)
-      double precision, intent(in):: x
-      water_retention_saxton_eqns_ = water_retention_saxton_eqns(x, mV)
-    end function
+        double precision, intent(in):: x
+        water_retention_saxton_eqns_ = water_retention_saxton_eqns(x, mV)
+      end function
 
   end subroutine calculate_field_capacity
   !

@@ -57,18 +57,22 @@ read_src_model_priors<- function(PROJECT) {
            if (grepl("^!", cur_line) == FALSE) {
               # This isn't a comment line, ok so now check to see if this is line contains parameter bounds information
               # Check whether min parameter bound can be found
-              if (grepl(pattern = paste("parmin(*)",sep=""), x = cur_line, fixed=FALSE)) {
+              if (grepl(pattern = "parmin(", x = cur_line, fixed=TRUE)) {
                   # Determine what is the parmeter number we are dealing with
                   mn_search = FALSE ; mn = 0
-                  while (mn_search == FALSE) {
+                  while (mn_search == FALSE & mn < length(p_index)) {
                      mn = mn + 1
                      mn_search = grepl(pattern = paste("parmin(",p_index[mn],")",sep=""), x = cur_line, fixed=TRUE)
+                  }
+                  if (mn_search == FALSE) {
+                      close(src_par)
+                      stop(paste("read_src_model_priors: unmatched parameter index on line: ",cur_line,sep=""))
                   }
                   # Now extract the information
                   tmp = unlist(strsplit(cur_line,"="))
                   tmp = tmp[length(tmp)]
                   # Swap double precision definition (fortran) to R compatible
-                  tmp = gsub("d","e",tmp)
+                  tmp = gsub("[dD]([+-]?[0-9]+)", "e\\1", tmp)
                   # Check for further comments
                   if (grepl(pattern = "!", x = tmp)) {
                       tmp = unlist(strsplit(tmp,"!"))
@@ -78,18 +82,22 @@ read_src_model_priors<- function(PROJECT) {
                   # Increment counter
                   mn_done = mn_done + 1
               } # is parmin?
-              if (grepl(pattern = paste("parmax(*)",sep=""), x = cur_line, fixed=FALSE)) {
+              if (grepl(pattern = "parmax(", x = cur_line, fixed=TRUE)) {
                   # Determine what is the parmeter number we are dealing with
                   mx_search = FALSE ; mx = 0
-                  while (mx_search == FALSE) {
+                  while (mx_search == FALSE & mx < length(p_index)) {
                      mx = mx + 1
                      mx_search = grepl(pattern = paste("parmax(",p_index[mx],")",sep=""), x = cur_line, fixed=TRUE)
+                  }
+                  if (mx_search == FALSE) {
+                      close(src_par)
+                      stop(paste("read_src_model_priors: unmatched parameter index on line: ",cur_line,sep=""))
                   }
                   # Now extract the information
                   tmp = unlist(strsplit(cur_line,"="))
                   tmp = tmp[length(tmp)]
                   # Swap double precision definition (fortran) to R compatible
-                  tmp = gsub("d","e",tmp)
+                  tmp = gsub("[dD]([+-]?[0-9]+)", "e\\1", tmp)
                   # Check for further comments
                   if (grepl(pattern = "!", x = tmp)) {
                       tmp = unlist(strsplit(tmp,"!"))

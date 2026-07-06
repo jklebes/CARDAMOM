@@ -305,25 +305,23 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
         use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days !argument for r_interface
+        double precision, intent(in) :: met(nomet, nodays)     
+        double precision, intent(in) :: deltat(nodays)
+        double precision, intent(in) :: lat
         double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
           !! Needed as arguments from r_interface , otherwise taken from DATAin
 
-        ! copy these arrays from global, read-only DATAin struct :
-        double precision:: met(nomet, nodays)  ! met drivers
-        double precision:: lat
 
         integer:: n
 
-        met = DATAin%met
-        lat = DATAin%lat
+
         if (present(soil_frac_sand)) then
           mV%soil_frac_sand = soil_frac_sand 
         else
@@ -633,10 +631,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
                          ! Other initial values for ACM_GPP_ET
 
     ! Estimate time invarient N response for maintenance respiration
-    ! Include scalings from nmolC/g/s -> gC/m2/day
+    ! Include scalings from nmolC/g/s -> gC/gCleaf/day
     ! Note that the mean temperature Q10 will be estimates in loop below where
     ! meant_time calculated
-    Rm_leaf_baseline = Rm_reich_N(pars(17)/mV%avN,pars(41),pars(42)) * umol_to_gC * seconds_per_day * 2d-3
+    Rm_leaf_baseline = Rm_reich_N(pars(17)/mV%avN,pars(41),pars(42)) * umol_to_gC * seconds_per_day * 2d-3 
     ! set initial leaf lifespan
     leaf_life = pars(43)
 

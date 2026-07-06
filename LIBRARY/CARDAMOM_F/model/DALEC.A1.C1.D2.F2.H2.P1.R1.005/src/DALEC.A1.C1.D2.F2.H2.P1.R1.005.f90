@@ -306,25 +306,21 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
         use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days !argument for r_interface
+        double precision, intent(in) :: met(nomet, nodays)     
+        double precision, intent(in) :: deltat(nodays)
+        double precision, intent(in) :: lat
         double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
           !! Needed as arguments from r_interface , otherwise taken from DATAin
 
-        ! copy these arrays from global, read-only DATAin struct :
-        double precision:: met(nomet, nodays)  ! met drivers
-        double precision:: lat
-
         integer:: n
 
-        met = DATAin%met
-        lat = DATAin%lat
         if (present(soil_frac_sand)) then
           mV%soil_frac_sand = soil_frac_sand 
         else
@@ -833,7 +829,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(mV)
-    ! TODO there will be problems because mV%dayl_seconds_1 is not set yet, used in call below
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29), mV) ! assume no evap or rainfall
 

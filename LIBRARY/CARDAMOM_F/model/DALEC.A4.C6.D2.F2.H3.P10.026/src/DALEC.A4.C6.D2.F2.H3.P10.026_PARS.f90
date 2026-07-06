@@ -87,9 +87,9 @@ use samplers_shared, only: PARINFO
     PI%parmin(4) = 1d0
     PI%parmax(4) = 20d0
 
-    ! Initial NCCE (gC/gCleaf/day) reference value for gradient calculations
-    PI%parmin(5) = -0.10d0
-    PI%parmax(5) =  0.10d0
+    ! Seasonal amplitude of the cohort profit initialisation
+    PI%parmin(5) = 0.10d0
+    PI%parmax(5) = 10.0d0
 
     ! Turnover of wood (fraction / day)
     PI%parmin(6) = 0.000009d0 ! 304  years
@@ -122,14 +122,12 @@ use samplers_shared, only: PARINFO
     PI%parmin(12) = -8d0
     PI%parmax(12) = -0.5d0
 
+    ! Linear trend component for initialising cohort profit (day-1)
+    PI%parmin(13) = 0d0
+    PI%parmax(13) = 1d0
     ! Parameters linking the NCCE to the CMI
     ! via a Michaelis-Menten function. 
     ! This is the NCCE at which the CMI is at 50 %
-    PI%parmin(13) = -0.5d0
-    PI%parmax(13) = -0.00005d0
-    ! Parameters linking the NCCE gradient to the CMI
-    ! via a Michaelis-Menten function. This is the NCCE gradient 
-    ! 50 % value
     PI%parmin(14) = -0.5d0
     PI%parmax(14) = -0.00005d0
        
