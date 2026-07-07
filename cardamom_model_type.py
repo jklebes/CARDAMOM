@@ -33,7 +33,6 @@ for i,line in enumerate(lines):
         var_list_end = i
         started = False
         break
-var_lines = lines[var_list_start+1:var_list_end]
 
 # drop comments
 def drop_comment(s):
@@ -48,6 +47,8 @@ def drop_comment(s):
         except:
             pass
     return result
+
+var_lines = lines[var_list_start+1:var_list_end]
 var_lines = [drop_comment(s) for s in var_lines]
 
 # split at whitespace and flatten into one list of words
