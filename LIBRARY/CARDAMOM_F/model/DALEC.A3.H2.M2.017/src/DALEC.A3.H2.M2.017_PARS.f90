@@ -67,7 +67,7 @@ use samplers_shared, only: PARINFO
 
     type(PARINFO), intent(inout):: PI
 
-    PI%npars = 34
+    PI%npars = 35
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
     if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 

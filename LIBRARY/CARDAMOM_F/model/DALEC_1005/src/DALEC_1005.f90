@@ -47,22 +47,16 @@ implicit none
 ! make all private
 private
 
-! explicit publics
-public :: CARBON_MODEL     &
-         ,soil_frac_clay   &
-         ,soil_frac_sand   &
-         ,nos_soil_layers  &
-         ,CiCa_time        &
-         ,dim_1,dim_2      &
-         ,nos_trees        &
-         ,nos_inputs       &
-         ,leftDaughter     &
-         ,rightDaughter    &
-         ,nodestatus       &
-         ,xbestsplit       &
-         ,nodepred         &
-         ,bestvar
+  ! explicit publics
+  public :: CARBON_MODEL     &
+           ,nos_soil_layers  &
+           ,mVs , initialize_mv, &
+           model_working_variables
+! Multiple soil layer variables, these are not used in DALEC2 (1005),
+! but declarations are needed to here ensure compilation compatability with more complex verison of DALEC
+integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
 
+type model_working_variables 
 ! Biomass removal (e.g. due to forest harvest)
 double precision, allocatable, dimension(:) :: CiCa_time
 
@@ -79,13 +73,14 @@ double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daug
                                                          nodepred, & ! prediction value for each tree
                                                           bestvar    ! for randomForests
 
-! Multiple soil layer variables, these are not used in DALEC2 (1005),
-! but declarations are needed to here ensure compilation compatability with more complex verison of DALEC
-integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
+
 double precision :: ci
 double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
 
-contains
+end type
+  type(model_working_variables), allocatable, dimension(:):: mVs
+  contains
+
 !
 !--------------------------------------------------------------------
 !

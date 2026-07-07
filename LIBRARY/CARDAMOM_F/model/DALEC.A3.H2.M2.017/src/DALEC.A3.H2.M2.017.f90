@@ -541,8 +541,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         mV%gsi_lag_steps = max(2,nint(21d0/mV%mean_days_per_step))
         allocate(mV%gsi_lag_days(mV%gsi_lag_steps),mV%gsi_lag_history(mV%gsi_lag_steps))
         call initialise_gsi(mV%mean_days_per_step,mV%gsi_lag_steps,mV%gsi_lag_days)
-
-      
+     
   end subroutine initialize_mv
 
 
@@ -1467,7 +1466,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Calculate the dynamic viscosity of air (kg.m-2.s-1)
     dynamic_viscosity = ((input_temperature_K**1.5d0)/(input_temperature_K+120d0))*1.4963d-6
     ! and kinematic viscosity (m2.s-1)
-    mV%kinematic_viscosity = mV%dynamic_viscosity/mV%air_density_kg
+    mV%kinematic_viscosity = dynamic_viscosity/mV%air_density_kg
 
   end subroutine meteorological_constants  
   !

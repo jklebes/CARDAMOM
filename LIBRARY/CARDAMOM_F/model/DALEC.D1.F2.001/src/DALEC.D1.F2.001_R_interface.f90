@@ -36,7 +36,9 @@ subroutine rdalec1(output_dim,MTT_dim,SS_dim &
                   ,nofluxes,nopools,nodiags,nodays,nos_years,deltat &
                   ,nos_iter)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, &
+                              nos_soil_layers
+                             
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -79,6 +81,8 @@ subroutine rdalec1(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays,nodiags) :: DIAGS
   double precision, dimension(nodays) :: tmp
 
+  type(model_working_variables) :: mv
+
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
@@ -91,13 +95,17 @@ subroutine rdalec1(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
+
+  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat)
+
+
   ! begin iterations
   do i = 1, nos_iter
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
                       ,lat,FLUXES,POOLS,DIAGS &
-                      ,nopars,nomet,nopools,nofluxes,nodiags)
+                      ,nopars,nomet,nopools,nofluxes,nodiags, mV)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
