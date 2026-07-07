@@ -194,11 +194,11 @@ module model_likelihood_module
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
         end do
         do i = 1, DATAin%nodiags
            print*,"Sum abs error over time: diags = ",i
-           print*,sum(abs(DATAin%M_DIAGS(:,i) - local_diags(:,i)))
+           print*,sum(abs(M_DIAGS(:,i) - local_diags(:,i)))
         end do
         print*,"First time step for all fluxes in run 1"
         print*,local_fluxes(1,:)
@@ -1031,7 +1031,7 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
-        mod = DATAin%M_DIAGS(1:DATAin%nodays,3) & ! APAR
+        mod = M_DIAGS(1:DATAin%nodays,3) & ! APAR
             / (DATAin%met(4,1:DATAin%nodays)*sw_par_fraction)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag, &
                                              1d0,mod)
@@ -1039,7 +1039,7 @@ module model_likelihood_module
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
-                                             1d0,DATAin%M_DIAGS(1:DATAin%nodays,1))
+                                             1d0,M_DIAGS(1:DATAin%nodays,1))
     end if
 
     !
@@ -1050,19 +1050,19 @@ module model_likelihood_module
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
                                              DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
-                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,2))
+                                             1d0,M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
                                              DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
-                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,3))
+                                             1d0,M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for total wood stocks
     if (DATAin%nCwood_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_stock,DATAin%Cwood_stockpts, &
                                              DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag, &
-                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,4))
+                                             1d0,M_POOLS(1:DATAin%nodays,4))
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
@@ -1078,11 +1078,11 @@ module model_likelihood_module
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,6))
+                                             1d0,M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
                                              DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              1d0,mod)
@@ -1186,7 +1186,7 @@ module model_likelihood_module
 
     ! Calculate log-likelihood for fraction of absorbed radiation
     if (DATAin%nfAPAR > 0) then
-        mod = DATAin%M_DIAGS(1:DATAin%nodays,3) & ! APAR
+        mod = M_DIAGS(1:DATAin%nodays,3) & ! APAR
             / (DATAin%met(4,1:DATAin%nodays)*sw_par_fraction)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nfAPAR,DATAin%fAPARpts,DATAin%fAPAR,DATAin%fAPAR_unc,DATAin%fAPAR_lag, &
                                              DATAin%fAPAR_scaling,mod)
@@ -1194,7 +1194,7 @@ module model_likelihood_module
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
-                                             DATAin%LAI_scaling,DATAin%M_DIAGS(1:DATAin%nodays,1))
+                                             DATAin%LAI_scaling,M_DIAGS(1:DATAin%nodays,1))
     end if ! nlai > 0
 
     !
@@ -1205,19 +1205,19 @@ module model_likelihood_module
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
                                              DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
-                                             DATAin%Cfol_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,2))
+                                             DATAin%Cfol_stock_scaling,M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
                                              DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
-                                             DATAin%Croots_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,3))
+                                             DATAin%Croots_stock_scaling,M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for total wood stocks
     if (DATAin%nCwood_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_stock,DATAin%Cwood_stockpts, &
                                              DATAin%Cwood_stock,DATAin%Cwood_stock_unc,DATAin%Cwood_stock_lag, &
-                                             DATAin%Cwood_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,4))
+                                             DATAin%Cwood_stock_scaling,M_POOLS(1:DATAin%nodays,4))
     endif ! nCwood_stock > 0
     ! Calculate log-likelihood for foliage litter stocks
     if (DATAin%nClit_stock > 0) then
@@ -1233,11 +1233,11 @@ module model_likelihood_module
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             DATAin%Csom_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,6))
+                                             DATAin%Csom_stock_scaling,M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
     ! Calculate log-likelihood for surface soil water
     if (DATAin%nsoilwater > 0) then
-        mod = (DATAin%M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
                                              DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
                                              DATAin%soilwater_scaling,mod)
@@ -1344,7 +1344,7 @@ module model_likelihood_module
     if (DATAin%otherpriors(1) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = (DATAin%M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if

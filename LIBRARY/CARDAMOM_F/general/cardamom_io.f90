@@ -904,7 +904,6 @@ contains
 
       call initialize_parinfo()  ! TODO not really a file reading thing
       call read_check_binary_data(infile, DATAin)
-      call initialize_model(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin_original
       call set_datain_original(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
@@ -957,26 +956,6 @@ contains
 
    end subroutine read_check_binary_data
 
-   subroutine initialize_model(DATAin)
-  !! split from read_pari_data
-  !! TODO not io, belongs in a differnt file
-  !! depends on having called read_binary_data or read_check_binary_data first
-  !! for DATAin%nodays and nopools
-      use cardamom_structures, only: DATA_type
-
-      implicit none(type, external)
-
-      type(DATA_type), intent(inout):: DATAin
-      ! need to allocate memory to the model output variables
-      allocate (DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes) &
-                , DATAin%M_POOLS((DATAin%nodays + 1), DATAin%nopools), DATAin%M_DIAGS(DATAin%nodays, DATAin%nodiags))
-
-      ! force zero in states and fluxes
-      !DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0; DATAin%M_DIAGS(:,:) = 0d0
-
-      ! alert the user
-      write (*, *) "Created fields for model output"
-   end subroutine initialize_model
    !------------------------------------------------------------------
    !
    subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)

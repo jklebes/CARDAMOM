@@ -350,7 +350,7 @@ contains
          loglikelihood_previous = MCOUT%ll
       end if
 
-      if (loglikelihood_previous == neg_inf) then
+      if (loglikelihood_previous < -999999) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
          & AP-MCMC will get stuck, if so please check initial conditions"
          error stop 1

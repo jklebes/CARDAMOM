@@ -80,7 +80,7 @@ for word in var_lines:
     if word_count > 1 :
         var_section = False
     if var_section :
-        if ',' not in word and '&' not in word:
+        if ',' not in word and '&' not in word and word !="double":
             var_names.append(word)
             word_count  += 1
     if word == '::':
