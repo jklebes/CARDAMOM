@@ -62,8 +62,9 @@ use samplers_shared, only: PARINFO
 
     !
     ! declare parameters
-    type(PARINFO), intent(inout):: PI
     !
+
+    type(PARINFO), intent(inout):: PI
 
     PI%npars = 43
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))

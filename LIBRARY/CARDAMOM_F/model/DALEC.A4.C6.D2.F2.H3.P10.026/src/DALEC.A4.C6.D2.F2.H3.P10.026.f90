@@ -164,7 +164,6 @@ module CARBON_MODEL_MOD
                                                  ! (i.e. 0.28 .eq. xNPP)
               one_Rg_fraction = 1d0 - Rg_fraction
 
-  ! Canopy scale minimum leaf water potential default assignment
 
   ! Maximum simultaneous live cohorts.
   ! 96 = 8 years of monthly cohorts
@@ -212,6 +211,7 @@ module CARBON_MODEL_MOD
 
 
   type model_working_variables
+  ! Canopy scale minimum leaf water potential default assignment
   double precision :: minlwp = minlwp_default
 
   ! arrays for the emulator, just so we load them once and that is it cos they be
@@ -391,38 +391,45 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   end type
 
   type(model_working_variables), allocatable, dimension(:):: mVs
+
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
         use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days !argument for r_interface
+        double precision, intent(in) :: met(nomet, nodays)     
+        double precision, intent(in) :: deltat(nodays)
+        double precision, intent(in) :: lat
         double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
           !! Needed as arguments from r_interface , otherwise taken from DATAin
 
-        ! copy these arrays from global, read-only DATAin struct :
-        double precision:: met(nomet, nodays)  ! met drivers
-        double precision:: lat
 
         integer:: n
 
-        met = DATAin%met
-        lat = DATAin%lat
-        mV%soil_frac_sand = DATAin%soil_frac_sand
-        mV%soil_frac_clay = DATAin%soil_frac_clay
+        if (present(soil_frac_sand)) then
+          mV%soil_frac_sand = soil_frac_sand 
+        else
+          mV%soil_frac_sand = DATAin%soil_frac_sand 
+        endif
+        if (present(soil_frac_clay)) then
+          mV%soil_frac_clay = soil_frac_clay
+        else
+          mV%soil_frac_clay = DATAin%soil_frac_clay
+        endif
+
         ! allocate variables dimension which are fixed per site only the once
-        allocate(deltat_1(nodays),daylength_hours(nodays),daylength_seconds(nodays), &
-                 daylength_seconds_1(nodays),rainfall_time(nodays),airt_zero_fraction_time(nodays))
+        allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
+                 mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
 
         !
         ! Timing variables which are needed first
         !
 
-        deltat_1 = deltat**(-1d0)
+        mV%deltat_1 = deltat**(-1d0)
 
         !
         ! Iteration independent variables using functions and thus need to be in a loop
@@ -431,58 +438,59 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
         ! first those linked to the time period of the analysis
         do n = 1, nodays
            ! check positive values only for rainfall input
-           rainfall_time(n) = max(0d0,met(7,n))
+           mV%rainfall_time(n) = max(0d0,met(7,n))
            ! Calculate declination for the day of year
-           declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
+           mV%declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
            ! calculate daylength in hours and seconds
-           call calculate_daylength
-           daylength_hours(n) = dayl_hours ; daylength_seconds(n) = dayl_seconds
+           call calculate_daylength(mV)
+           mV%daylength_hours(n) = mV%dayl_hours ; mV%daylength_seconds(n) = mV%dayl_seconds
         end do
 
         ! fraction of temperture period above freezing
-        airt_zero_fraction_time = 0d0
-        where (met(2,:) > 0d0) airt_zero_fraction_time = 1d0
-        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
-
-        ! calculate inverse for each time step in seconds
-        daylength_seconds_1 = 1d0 / daylength_seconds
+        mV%airt_zero_fraction_time = 0d0
+        where (met(2,:) > 0d0) mV%airt_zero_fraction_time = 1d0
+        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) mV%airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+	! calculate inverse for each time step in seconds
+        mV%daylength_seconds_1 = 1d0 / mV%daylength_seconds
 
         ! number of time steps per year
-        steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
+        mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
         ! mean days per step
-        mean_days_per_step = sum(deltat) / dble(nodays)
+        mV%mean_days_per_step = sum(deltat) / dble(nodays)
 
         !
         ! Initialise the water model
         !
 
         ! zero variables not done elsewhere
-        total_water_flux = 0d0 ; water_flux_mmolH2Om2s = 0d0
+        mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
         ! initialise some time invarient parameters
-        call saxton_parameters(soil_frac_clay,soil_frac_sand)
-        call initialise_soils(soil_frac_clay,soil_frac_sand)
-        call update_soil_initial_conditions(pars(24))
+        call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+        call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+        ! call update_soil_initial_conditions(pars(24), mV)
         ! save the initial conditions for later
-        field_capacity_initial = field_capacity
-        porosity_initial = porosity
+        mV%field_capacity_initial = mV%field_capacity
+        mV%porosity_initial = mV%porosity
 
         ! Initialise the ncce gradiant calculation for canopy phenology model
 
         ! Determine the number of model time steps over which NCCE will be lagged
         ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
-        ncce_lag_step = max(2,nint(21d0/mean_days_per_step))
-        allocate(ncce_lag_days(ncce_lag_step),ncce_lag_history(ncce_lag_step))
-        call initialise_ncce(mean_days_per_step,ncce_lag_step,ncce_lag_days)
+        mV%ncce_lag_step = max(2,nint(21d0/mV%mean_days_per_step))
+        allocate(mV%ncce_lag_days(mV%ncce_lag_step),mV%ncce_lag_history(mV%ncce_lag_step))
+        call initialise_ncce(mV%mean_days_per_step,mV%ncce_lag_step,mV%ncce_lag_days)
 
         ! Initialise the leaf cohort age structure
         ! pars(15) = r_opp, pars(45) = leaf_age_ref_days,
         ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
-        call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
-                                pars(15),pars(45), &
-                                pars(46),pars(48),pars(49), &
-                                pars(13),pars(5))
 
-  end subroutine
+	! TODO confirm it's safe to leave this until later CARBON_MODEL `else` block
+        !call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
+        !                        pars(15),pars(45), &
+        !                        pars(46),pars(48),pars(49), &
+        !                        pars(13),pars(5))
+
+  end subroutine initialize_mv
 
 
   subroutine destroy_mv(mV)
@@ -767,7 +775,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
     if (.not.allocated(mV%deltat_1)) then 
-      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
+      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
       STOP 1
     else ! deltat_1 allocated?
 
@@ -1543,8 +1551,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
 !print*,"Begin printing cohort status"
 !do n = 1, max_leaf_cohorts
-!   if (.not. leaf_cohorts(n)%is_alive) cycle
-!   print*,leaf_cohorts(n)%Cf,",",leaf_cohorts(n)%age_months,",",leaf_cohorts(n)%cum_profit,",",leaf_cohorts(n)%NUE_rel,","       
+!   if (.not. mV%leaf_cohorts(n)%is_alive) cycle
+!   print*,mV%leaf_cohorts(n)%Cf,",",mV%leaf_cohorts(n)%age_months,",",mV%leaf_cohorts(n)%cum_profit,",",mV%leaf_cohorts(n)%NUE_rel,","       
 ! 
 !end do ! n = 1, max_leaf_cohorts
 !print*,"Finish printing cohort status"
@@ -1752,7 +1760,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     bb = -4d0*(gc_co2 - mV%dark_respiration) + (8d0*mV%co2_comp_point*gc) + &
          mV%light_limited_photosynthesis
     cc = mV%co2_comp_point &
-       * ((-8d0*gc_co2) + (8d0*gc) - (8d0*mV%dark_respiration) - mVlight_limited_photosynthesis)
+       * ((-8d0*gc_co2) + (8d0*gc) - (8d0*mV%dark_respiration) - mV%light_limited_photosynthesis)
     ! Calculate internal CO2 concentration (ppm or umol/mol)
     ci_pl = (-bb+sqrt((bb*bb)-(4d0*aa*cc))) / (2d0*aa)
 
@@ -1928,7 +1936,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! Determine the appropriate canopy scaled gs increment and return threshold
         mV%delta_gs = 1d0 * mV%leaf_canopy_light_scaling ! mmolH2O/m2leaf/s
-        mV%iWUE_step = mV%iWUE * mV%leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s
+        mV%iWUE_step = mV%iWUE * mV%leaf_canopy_light_scaling ! umolC/mmolH2Ogs/s !variable mv%iwue 
         ! Calculate stage one acm, temperature and light limitation which
         ! are independent of stomatal conductance effects
         !call acm_gpp_stage_1
@@ -2409,7 +2417,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_daylength (mV)
+  subroutine calculate_daylength(mV)
 
     ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
     ! combined with trigonomic functions to calculate day length in hours and seconds
@@ -5123,19 +5131,19 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             ! Cf  = cohort_mass (post-Rg carbon already in pool)
             ! Cc  = cohort_mass / one_Rg_fraction (implied pre-Rg total investment,
             !       consistent with create_cohort and add_foliage_to_cohort)
-            leaf_cohorts(k)%Cf            = cohort_mass
-            leaf_cohorts(k)%Cc            = cohort_mass / one_Rg_fraction
-            leaf_cohorts(k)%profit_target = mV%leaf_cohorts(k)%Cc * r_opp
-            leaf_cohorts(k)%ncce_threshold= mV%(leaf_cohorts(k)%Cc + (mV%leaf_cohorts(k)%profit_target)) / max(leaf_age_ref, 1d0)
-            leaf_cohorts(k)%ncce_average  = 0d0
-            leaf_cohorts(k)%age_days      = age_d
-            leaf_cohorts(k)%age_months    = age_mo
-            leaf_cohorts(k)%cum_profit    = trend_seasonal(dble(age_d), leaf_cohorts(k)%Cc, & 
+            mV%leaf_cohorts(k)%Cf            = cohort_mass
+            mV%leaf_cohorts(k)%Cc            = cohort_mass / one_Rg_fraction
+            mV%leaf_cohorts(k)%profit_target = mV%leaf_cohorts(k)%Cc * r_opp
+            mV%leaf_cohorts(k)%ncce_threshold= (mV%leaf_cohorts(k)%Cc + (mV%leaf_cohorts(k)%profit_target)) / max(leaf_age_ref, 1d0)
+            mV%leaf_cohorts(k)%ncce_average  = 0d0
+            mV%leaf_cohorts(k)%age_days      = age_d
+            mV%leaf_cohorts(k)%age_months    = age_mo
+            mV%leaf_cohorts(k)%cum_profit    = trend_seasonal(dble(age_d), mV%leaf_cohorts(k)%Cc, & 
                                                            C_accumulation_rate, C_accumulation_amp, &
                                                            mean_leaf_doy, 365.25d0)
-            leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
-            leaf_cohorts(k)%is_alive      = .true.
-            n_live_cohorts = mV%n_live_cohorts + 1
+            mV%leaf_cohorts(k)%NUE_rel       = exp(-k_N_decline * dble(age_mo))
+            mV%leaf_cohorts(k)%is_alive      = .true.
+            mV%n_live_cohorts = mV%n_live_cohorts + 1
             ! Track the youngest allocated
             mV%newest_cohort_slot = k
 
@@ -5705,7 +5713,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
         ! If the cohort is too old, or not meeting its NCCE requirements AND has made a profit kill
         ! ncce_threshold should be some average performance or set against the mean climate, or a target NUE or target cum_profit?
-        if (leaf_cohorts(k)%age_months >= max_age_months) then
+        if (mV%leaf_cohorts(k)%age_months >= max_age_months) then
 !        if (leaf_cohorts(k)%age_months >= max_age_months .or. &
 !            (ncce_k < leaf_cohorts(k)%ncce_threshold .and. leaf_cohorts(k)%cum_profit > 0d0) ) then
 !        if (leaf_cohorts(k)%age_months >= max_age_months .or. &

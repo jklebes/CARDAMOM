@@ -37,37 +37,15 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                    ,pathlength)
 
-  use carbon_model_mod, only: carbon_model, soil_frac_clay, &
-                              soil_frac_sand, nos_soil_layers
-                              
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, &
+                              nos_soil_layers
+  use cardamom_structures, only: crop_development_parameters, CI
+                             
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
 
   implicit none
-  interface
-    subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                          ,exepath)
-      implicit none
-      ! declare inputs
-      ! crop specific variables
-      character(350),intent(in) :: exepath
-      double precision :: stock_seed_labile
-      double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                      DS_root, & !
-                                                     fol_frac, & !
-                                                    stem_frac, & !
-                                                    root_frac, & !
-                                                      DS_LRLV, & !
-                                                         LRLV, & !
-                                                      DS_LRRT, & !
-                                                         LRRT
-      ! local variables..
-      integer :: columns, i, rows, input_crops_unit, ios
-      character(225) :: variables,filename
-    end subroutine crop_development_parameters
-  end interface
 
   ! declare input variables
   integer, intent(in) :: pathlength
@@ -111,6 +89,8 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays,nodiags) :: DIAGS
   double precision, dimension(nodays) :: tmp
 
+  type(model_working_variables) :: mv
+
   ! crop development parameters declared here. These are also found in
   ! MHMCMC_STRUCTURES PI%
   ! crop specific variables
@@ -129,10 +109,6 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0
 
-  ! update soil parameters
-  soil_frac_clay(1:nos_soil_layers) = soil_frac_clay_in(1:nos_soil_layers)
-  soil_frac_sand(1:nos_soil_layers) = soil_frac_sand_in(1:nos_soil_layers)
-
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
@@ -150,21 +126,21 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
       stop
   end if 
 
+
+  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
+
   ! Load crop development parameters here
   ! TLS: should the exepath and pathlength be made hardcoded in the assumption that 
   ! the needed file always has the same name (i.e. copy and rename to EXE to match specific crop types)
   ! and that the file is in the working directory of the PROJECT
-  call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                  ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                  ,exepath)
+  call crop_development_parameters() ! reads from file to CI in model_shared
 
   ! begin iterations
   do i = 1, nos_iter
      ! call the model
      call carbon_model(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
                       ,FLUXES,POOLS,DIAGS,nopars,nomet,nopools,nofluxes &
-                      ,nodiags,stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                      ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
+                      ,nodiags,mV)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
@@ -394,91 +370,4 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
   return
 
 end subroutine rdalec15
-!
-!------------------------------------------------------------------
-!
-  subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                        ,exepath)
 
-    ! subroutine reads in the fixed crop development files which are linked the
-    ! the development state of the crops. The development model varies between
-    ! which species. e.g. winter wheat and barley, spring wheat and barley
-    ! NOTE: duplicate function in the *_PARS.f90
-
-    implicit none
-
-    ! declare inputs
-    ! crop specific variables
-    !integer,intent(in) :: pathlength
-    character(350),intent(in) :: exepath
-    double precision :: stock_seed_labile
-    double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                    DS_root, & !
-                                                   fol_frac, & !
-                                                  stem_frac, & !
-                                                  root_frac, & !
-                                                    DS_LRLV, & !
-                                                       LRLV, & !
-                                                    DS_LRRT, & !
-                                                       LRRT
-
-    ! local variables..
-    integer :: columns, i, rows, input_crops_unit, ios
-    character(225) :: variables,filename
-
-    ! file info needed
-    input_crops_unit = 20 ; ios = 0
-
-    ! crop development file passed in from the R code (this is different from
-    ! *_PARS.f90 where this subroutine is hardcoded)
-    open(unit = input_crops_unit, file=trim(exepath),iostat=ios, status='old', action='read')
-
-    ! ensure we are definitely at the beginning
-    rewind(input_crops_unit)
-
-    ! read in the amount of carbon available (as labile) in each seed..
-    read(unit=input_crops_unit,fmt=*)variables,stock_seed_labile,variables,variables
-
-    ! read in C partitioning/fraction data and corresponding developmental
-    ! stages (DS)
-    ! shoot
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_shoot(rows) , fol_frac(rows) , stem_frac(rows)  )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_shoot(i), fol_frac(i), stem_frac(i)
-    enddo
-
-    ! root
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_root(rows) , root_frac(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_root(i), root_frac(i)
-    enddo
-
-    ! loss rates of leaves and roots
-    ! leaves
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRLV(rows) , LRLV(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRLV(i), LRLV(i)
-    enddo
-
-    ! roots
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRRT(rows) , LRRT(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRRT(i), LRRT(i)
-    enddo
-
-    ! rewind and close
-    rewind(input_crops_unit) ; close(input_crops_unit)
-
-  end subroutine crop_development_parameters
-  !
-  !------------------------------------------------------------------
-  !

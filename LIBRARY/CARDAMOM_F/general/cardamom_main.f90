@@ -114,7 +114,7 @@ program cardamom_framework
    logical:: restart
 
    ! TODO not to hardcode, from command line argument
-   integer:: nchains = 3
+   integer:: nchains = 4
    integer:: i
 
    call init_infinity()

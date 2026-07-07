@@ -35,6 +35,8 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
+use cardamom_structures, only: CI, crop_development_parameters
 
   implicit none
 
@@ -49,8 +51,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -65,6 +67,11 @@ module MODEL_PARAMETERS
     !
     ! declare parameters
     !
+    type(PARINFO), intent(inout):: PI
+
+    PI%npars = 38
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Decomposition rate (frac/day)
     PI%parmin(1) = 0.0001141d0 ! 24   years at 0oC
@@ -232,95 +239,9 @@ module MODEL_PARAMETERS
     PI%parmax(38) = 1.00d0
 
     ! Read in the crop type specific development file
-    call crop_development_parameters(PI%stock_seed_labile,PI%DS_shoot &
-                                    ,PI%DS_root,PI%fol_frac,PI%stem_frac &
-                                    ,PI%root_frac,PI%DS_LRLV,PI%LRLV &
-                                    ,PI%DS_LRRT,PI%LRRT)
+    call crop_development_parameters()
 
   end subroutine pars_info
-  !
-  !------------------------------------------------------------------
-  !
-  subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                        ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
-
-    ! subroutine reads in the fixed crop development files which are linked the
-    ! the development state of the crops. The development model varies between
-    ! which species. e.g. winter wheat and barley, spring wheat and barley
-    ! NOTE: duplicate function in the R_interface.f90
-
-    implicit none
-
-    ! declare inputs
-    ! crop specific variables
-    double precision,intent(inout) :: stock_seed_labile
-    double precision, allocatable, dimension(:),intent(inout)  :: DS_shoot, & !
-                                                                   DS_root, & !
-                                                                  fol_frac, & !
-                                                                 stem_frac, & !
-                                                                 root_frac, & !
-                                                                   DS_LRLV, & !
-                                                                      LRLV, & !
-                                                                   DS_LRRT, & !
-                                                                      LRRT
-
-    ! local variables..
-    integer        :: columns, i, rows, input_crops_unit, ios
-    character(100) :: variables,filename
-
-    ! for the moment hard code the file name
-    filename="winter_wheat_development.csv"
-    input_crops_unit = 20 ; ios = 0
-
-    ! crop development file
-    open(unit = input_crops_unit, file=trim(filename),iostat=ios, status='old', action='read')
-
-    ! ensure we are definitely at the beginning
-    rewind(input_crops_unit)
-
-    ! read in the amount of carbon available (as labile) in each seed..
-    read(unit=input_crops_unit,fmt=*)variables,stock_seed_labile,variables,variables
-
-    ! read in C partitioning/fraction data and corresponding developmental
-    ! stages (DS)
-    ! shoot
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_shoot(rows) , fol_frac(rows) , stem_frac(rows)  )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_shoot(i), fol_frac(i), stem_frac(i)
-    enddo
-
-    ! root
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_root(rows) , root_frac(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_root(i), root_frac(i)
-    enddo
-
-    ! loss rates of leaves and roots
-    ! leaves
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRLV(rows) , LRLV(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRLV(i), LRLV(i)
-    enddo
-
-    ! roots
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( DS_LRRT(rows) , LRRT(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) DS_LRRT(i), LRRT(i)
-    enddo
-
-    ! rewind and close
-    rewind(input_crops_unit) ; close(input_crops_unit)
-
-  end subroutine crop_development_parameters
-  !
   !------------------------------------------------------------------
   !
 end module MODEL_PARAMETERS

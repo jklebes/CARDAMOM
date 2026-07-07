@@ -3,9 +3,14 @@ module model_shared
   use cardamom_structures, only: DATA_TYPE
 
 
+  public
+
+
   type(PARINFO)  :: PI  ! should not be writted to except by pars_info() !  
+                                ! type definition differs by model and lines in _PARS.f90 file
                                 ! If we want parallel runs 
                                 ! now Contains read-only description of the model parameters only
+
 
   contains
 
@@ -88,6 +93,5 @@ module model_shared
     integer:: n_chains_
     if (allocated(mVs)) deallocate(mVs)
     end subroutine
-
   
 end module
