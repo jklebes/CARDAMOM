@@ -280,7 +280,7 @@ module cardamom_structures
                                                                          LRRT
    end type
 
-   ! Only filled from file in case of model 15
+   ! Only filled from file in case of model 15 & 14
    type(crop_info), protected, save :: CI  ! protected: to be set from file by routine here, otherwise read-only 
 
 contains

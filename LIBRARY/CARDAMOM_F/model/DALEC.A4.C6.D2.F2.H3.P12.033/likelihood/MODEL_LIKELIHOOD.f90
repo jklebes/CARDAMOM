@@ -1442,8 +1442,8 @@ module model_likelihood_module
     ! DIAGS(:,4) = CiCa ; DIAGS(:,7) = gs_demand_supply_ratio
     obs = 0.7d0 ; unc = 0.1d0 ; tmp = 0d0 
     ! Identify time steps which fit the criteria
-    where M_DIAGS(:,7) > 0d0 .and. M_DIAGS(:,7) < 1d0) tmp = 1d0
-    mod = sum(DM_DIAGS(:,4) * tmp) / sum(tmp)
+    where (M_DIAGS(:,7) > 0d0 .and. M_DIAGS(:,7) < 1d0) tmp = 1d0
+    mod = sum(M_DIAGS(:,4) * tmp) / sum(tmp)
     ML_obs_out = ML_obs_out + (DATAin%nos_years*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                                            obs,unc,dummy_lag,dummy_scaling,mod))
 

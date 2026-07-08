@@ -43,20 +43,11 @@ implicit none
 ! make all private
 private
 
-! explicit publics
-public :: CARBON_MODEL     &
-         ,soil_frac_clay   &
-         ,soil_frac_sand   &
-         ,nos_soil_layers  &
-         ,dim_1,dim_2      &
-         ,nos_trees        &
-         ,nos_inputs       &
-         ,leftDaughter     &
-         ,rightDaughter    &
-         ,nodestatus       &
-         ,xbestsplit       &
-         ,nodepred         &
-         ,bestvar
+  ! explicit publics
+  public :: CARBON_MODEL     &
+           ,nos_soil_layers  &
+           ,mVs , initialize_mv, &
+           model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -78,7 +69,7 @@ public :: CARBON_MODEL     &
   !!!!!!!!!
   ! Module variables
   !!!!!!!!!
-
+type model_working_variables 
   ! Variables needed incase of using random forest functions.
   ! None are currently implemented but variables remain for legacy reasons
   integer ::    dim_1, & ! dimension 1 of response surface
@@ -92,15 +83,53 @@ public :: CARBON_MODEL     &
                                                            nodepred, & ! prediction value for each tree
                                                             bestvar    ! for randomForests
   ! Modile level ACM-GPP-ET variables
-  double precision :: ci
-  double precision, dimension(nos_soil_layers) :: soil_frac_clay,soil_frac_sand
-
+  double precision :: ci 
+  double precision, dimension(nos_soil_layers) :: soil_frac_clay, soil_frac_sand
+end type
+  type(model_working_variables), allocatable, dimension(:):: mVs
   contains
+
+  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
+      !! For a single chain's model_working_varibles type object mV, allocate arrays
+        !! and calculate initial values.
+        use cardamom_structures, only: DATAin
+        implicit none
+        type(model_working_variables), intent(out):: mV
+        integer, intent(in):: nodays, nomet, nopars
+        double precision, intent(in) :: met(nomet, nodays)     
+        double precision, intent(in) :: deltat(nodays)
+        double precision, intent(in) :: lat
+        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
+          !! Needed as arguments from r_interface , otherwise taken from DATAin
+
+        integer:: n
+
+        if (present(soil_frac_sand)) then
+          mV%soil_frac_sand = soil_frac_sand 
+        else
+          mV%soil_frac_sand = DATAin%soil_frac_sand 
+        endif
+        if (present(soil_frac_clay)) then
+          mV%soil_frac_clay = soil_frac_clay
+        else
+          mV%soil_frac_clay = DATAin%soil_frac_clay
+        endif
+       
+  end subroutine initialize_mv
+
+
+  subroutine destroy_mv(mV)
+    !! deallocate arrays in mV
+    type(model_working_variables):: mV
+    ! nothing to do here, but we keep the method because it's 
+    ! called from general parts of the code for all models
+    end subroutine
+
   !
   !--------------------------------------------------------------------
   !
   subroutine CARBON_MODEL(start,finish,met,pars,deltat,nodays,lat,FLUXES,POOLS,DIAGS &
-                         ,nopars,nomet,nopools,nofluxes,nodiags)
+                         ,nopars,nomet,nopools,nofluxes,nodiags, mV)
 
     ! The Data Assimilation Linked Ecosystem Carbon - Combined Deciduous
     ! Evergreen Analytical (DALEC_CDEA; C1; DALEC2) model.
@@ -115,6 +144,8 @@ public :: CARBON_MODEL     &
     ! possibility to remove a fraction of biomass to simulate deforestation.
 
     implicit none
+
+      type(model_working_variables) :: mV
 
     ! declare input variables
     integer, intent(in) :: start    &
@@ -478,7 +509,7 @@ public :: CARBON_MODEL     &
       gpppars(8) = met(4,n) ! radiation
 
       ! GPP (gC.m-2.day-1)
-      FLUXES(n,1) = acm(gpppars,constants) ; DIAGS(n,2) = ci / met(5,n)
+      FLUXES(n,1) = acm(gpppars,constants, mV%ci) ; DIAGS(n,2) = mV%ci / met(5,n)
       ! Exponential temperature modified rate of metabolic activity
       FLUXES(n,2) = exp(pars(10)*0.5d0*(met(3,n)+met(2,n)))
       ! Autotrophic respiration (gC.m-2.day-1)
@@ -689,7 +720,7 @@ public :: CARBON_MODEL     &
   !
   !------------------------------------------------------------------
   !
-  double precision function acm(drivers,constants)
+  double precision function acm(drivers,constants, ci)
 
     ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
     ! Photosyntheis) emulator which operates at a daily time step. ACM can be
@@ -697,9 +728,11 @@ public :: CARBON_MODEL     &
 
     implicit none
 
+
     ! declare input variables
     double precision, intent(in) :: drivers(10) & ! acm input requirements
                          ,constants(10) ! ACM parameters
+    double precision, intent(inout) :: ci 
 
     ! declare local variables
     double precision :: gc, pn, pd, pp, qq, e0, dayl, cps, dec, nit &

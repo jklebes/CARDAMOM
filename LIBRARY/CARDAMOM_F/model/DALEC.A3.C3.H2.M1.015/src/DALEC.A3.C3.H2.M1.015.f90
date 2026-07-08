@@ -527,8 +527,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
     type(model_working_variables):: mV
-    integer:: n
-        ! allocate variables dimension which are fixed per site only the once
         deallocate(mV%deltat_1)
     end subroutine
 
