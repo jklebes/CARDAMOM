@@ -272,10 +272,7 @@ program cardamom_framework
          ! sub-sample-but reset the number of samples used in the update
          ! weighting
          if (MCOUT_list(i)%cov .and. MCOUT_list(i)%use_multivariate) then
-            ! TODO check this branch is happening
-            write (*, *) "in this branch"
             MCOUT_list(i)%Nparvar = MCO%N_before_mv*PI%npars + 1
-            write (*, *) "Set Nparvar to", MCOUT_list(i)%Nparvar
          else
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)
@@ -296,7 +293,7 @@ program cardamom_framework
 
    ! Update the user
    write (*, *) "Beginning parameter search in real likelihoods"
-   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT - MCOUT_list(1)%nos_iterations
+   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
 
    ! Call the main MCMC
    ! The specific normalisation of the cost function is determined here.
