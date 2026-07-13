@@ -838,6 +838,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     previous_depth = sum(layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29)) ! assume no evap or rainfall
 
