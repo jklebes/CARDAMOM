@@ -394,7 +394,7 @@ module CARBON_MODEL_MOD
     mV%field_capacity_initial = mV%field_capacity
     mV%porosity_initial = mV%porosity
 
-  end subroutine
+  end subroutine initialize_mv
   !
   !--------------------------------------------------------------------
   !

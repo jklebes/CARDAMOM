@@ -101,7 +101,7 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   nodays_1       = 1d0 / dble(nodays)
   steps_per_yr_1 = 1d0 / dble(steps_per_year)
 
-
+  ! Initialise any shared memory objects for thread-safe activity
   call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
 

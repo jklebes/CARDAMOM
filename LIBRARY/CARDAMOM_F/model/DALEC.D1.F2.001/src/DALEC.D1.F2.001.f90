@@ -61,66 +61,63 @@ private
   !!!!!!!!!
   ! Module variables
   !!!!!!!!!
-type model_working_variables 
 
-  double precision, dimension(nos_soil_layers) :: soil_frac_clay, soil_frac_sand
+  type model_working_variables 
 
-  ! arrays for the emulator, just so we load them once and that is it cos they be
-  ! massive
-  integer ::    dim_1, & ! dimension 1 of response surface
-                dim_2, & ! dimension 2 of response surface
-            nos_trees, & ! number of trees in randomForest
-           nos_inputs    ! number of driver inputs
+    double precision, dimension(nos_soil_layers) :: soil_frac_clay, soil_frac_sand
 
-  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                      rightDaughter, & ! right daughter for forets
-                                                         nodestatus, & ! nodestatus for forests
-                                                         xbestsplit, & ! for forest
-                                                           nodepred, & ! prediction value for each tree
-                                                            bestvar    ! for randomForests
-  ! Module level variables for ACM
-  double precision :: ci ! Internal CO2 concentration (ppm)
+    ! arrays for the emulator, just so we load them once and that is it cos they be
+    ! massive
+    integer ::    dim_1, & ! dimension 1 of response surface
+                  dim_2, & ! dimension 2 of response surface
+              nos_trees, & ! number of trees in randomForest
+             nos_inputs    ! number of driver inputs
 
- end type
+    double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                        rightDaughter, & ! right daughter for forets
+                                                           nodestatus, & ! nodestatus for forests
+                                                           xbestsplit, & ! for forest
+                                                             nodepred, & ! prediction value for each tree
+                                                              bestvar    ! for randomForests
+    ! Module level variables for ACM
+    double precision :: ci ! Internal CO2 concentration (ppm)
+
+  end type
   type(model_working_variables), allocatable, dimension(:):: mVs
+
   contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
-      !! For a single chain's model_working_varibles type object mV, allocate arrays
-        !! and calculate initial values.
-        use cardamom_structures, only: DATAin
-        implicit none
-        type(model_working_variables), intent(out):: mV
-        integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: met(nomet, nodays)     
-        double precision, intent(in) :: deltat(nodays)
-        double precision, intent(in) :: lat
-        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
-          !! Needed as arguments from r_interface , otherwise taken from DATAin
+    !! For a single chain's model_working_varibles type object mV, allocate arrays
+    !! and calculate initial values.
+    implicit none
 
-        integer:: n
+    type(model_working_variables), intent(out):: mV
+    integer, intent(in):: nodays, nomet, nopars
+    double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
+    double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
+    double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+    double precision, intent(in) :: lat
 
-        if (present(soil_frac_sand)) then
-          mV%soil_frac_sand = soil_frac_sand 
-        else
-          mV%soil_frac_sand = DATAin%soil_frac_sand 
-        endif
-        if (present(soil_frac_clay)) then
-          mV%soil_frac_clay = soil_frac_clay
-        else
-          mV%soil_frac_clay = DATAin%soil_frac_clay
-        endif
-       
+    integer:: n
+
+    ! Set some initial values. Not used in the code, but required for code consistency.
+    mV%soil_frac_sand = soil_frac_sand 
+    mV%soil_frac_clay = soil_frac_clay
+
   end subroutine initialize_mv
-
-
+  !
+  !--------------------------------------------------------------------
+  !
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
     type(model_working_variables):: mV
     ! nothing to do here, but we keep the method because it's 
     ! called from general parts of the code for all models
-    end subroutine
-
+  end subroutine
   !
   !--------------------------------------------------------------------
   !
