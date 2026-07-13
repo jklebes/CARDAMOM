@@ -43,8 +43,7 @@ module cardamom_structures
 
    private
 
-   public:: data_type, DATAin, DATAin_original, set_datain, set_datain_original, emulator_parameters, emulator_pars,&
-   crop_development_parameters, CI
+   public:: data_type, DATAin, DATAin_original, set_datain, set_datain_original, emulator_parameters, emulator_pars
 
    type DATA_type
 
@@ -54,151 +53,151 @@ module cardamom_structures
 
       ! OBS: more can obviously be added
       double precision, allocatable, dimension(:):: GPP               & ! GPP (gC/m2day)
-                                                    ,NEE               & ! NEE (gC/m2/day)
-                                                    ,Fire              & ! Fire (gC/m2/day)
-                                                    ,LAI               & ! LAI (m2/m2)
-                                                    ,Cwood_growth      & ! Wood gross increment observations (gC/m2/day)
-                                                    ,Cwood_inc         & ! Wood net increment observations (gC/m2/day)
-                                                    ,Cwood_mortality   & ! Natural wood mortality observations (gC/m2/day)
-                                                    ,foliage_to_litter & ! Flux from foliage to leaf litter (e.g. litter trap collections) (gC/m2/day)
-                                                    ,Reco              & ! Ecosystem respiration (gC/m2/day)
-                                                    ,Cfol_stock        & ! time specific estimate of foliage carbon (gC/m2)
-                                                    ,Cwood_stock       & ! time specific estimate of wood carbon (gC/m2)
-                                                    ,Croots_stock      & ! time specific estimate of roots carbon (gC/m2)
-                                                    ,Csom_stock        & ! time specific estimate if som carbon (gC/m22)
-                                                    ,Cagb_stock        & ! time specific agb woody estimate (gC/m2)
-                                                    ,Clit_stock        & ! time specific estimate of litter carbon (gC/m2)
-                                                    ,Ccoarseroot_stock & ! time specific estimate of coarse root carbon (gC/m2)
-                                                    ,Evap              & ! Evapotranspiration (kgH2O/m2/day)
-                                                    ,SWE               & ! Snow Water Equivalent (mm/day)
-                                                    ,NBE               & ! Net Biome Exchange (gC/m2/day)
-                                                    ,fAPAR             & ! Fraction of absorbed PAR by green vegetation
-                                                    ,soilwater         & ! Soil surface water content (m3/m3)
-                                                    ,harvest             ! C extracted due to harvest activities (gC/m2/day)
+                                                   ,NEE               & ! NEE (gC/m2/day)
+                                                   ,Fire              & ! Fire (gC/m2/day)
+                                                   ,LAI               & ! LAI (m2/m2)
+                                                   ,Cwood_growth      & ! Wood gross increment observations (gC/m2/day)
+                                                   ,Cwood_inc         & ! Wood net increment observations (gC/m2/day)
+                                                   ,Cwood_mortality   & ! Natural wood mortality observations (gC/m2/day)
+                                                   ,foliage_to_litter & ! Flux from foliage to leaf litter (e.g. litter trap collections) (gC/m2/day)
+                                                   ,Reco              & ! Ecosystem respiration (gC/m2/day)
+                                                   ,Cfol_stock        & ! time specific estimate of foliage carbon (gC/m2)
+                                                   ,Cwood_stock       & ! time specific estimate of wood carbon (gC/m2)
+                                                   ,Croots_stock      & ! time specific estimate of roots carbon (gC/m2)
+                                                   ,Csom_stock        & ! time specific estimate if som carbon (gC/m22)
+                                                   ,Cagb_stock        & ! time specific agb woody estimate (gC/m2)
+                                                   ,Clit_stock        & ! time specific estimate of litter carbon (gC/m2)
+                                                   ,Ccoarseroot_stock & ! time specific estimate of coarse root carbon (gC/m2)
+                                                   ,Evap              & ! Evapotranspiration (kgH2O/m2/day)
+                                                   ,SWE               & ! Snow Water Equivalent (mm/day)
+                                                   ,NBE               & ! Net Biome Exchange (gC/m2/day)
+                                                   ,fAPAR             & ! Fraction of absorbed PAR by green vegetation
+                                                   ,soilwater         & ! Soil surface water content (m3/m3)
+                                                   ,harvest             ! C extracted due to harvest activities (gC/m2/day)
 
 
       ! OBS uncertainties: obv these must be paired with OBS above
       double precision, allocatable, dimension(:):: GPP_unc               & ! gC/m2/day
-                                                    ,NEE_unc               & ! gC/m2/day
-                                                    ,Fire_unc              & ! gC/m2/day
-                                                    ,LAI_unc               & ! m2/m2
-                                                    ,Cwood_growth_unc      & ! gC/m2/day
-                                                    ,Cwood_inc_unc         & ! gC/m2/day
-                                                    ,Cwood_mortality_unc   & ! gC/m2/day
-                                                    ,foliage_to_litter_unc & ! gC/m2/day
-                                                    ,Reco_unc              & ! gC/m2/day
-                                                    ,Cfol_stock_unc        & ! gC/m2
-                                                    ,Cwood_stock_unc       & ! gC/m2
-                                                    ,Croots_stock_unc      & ! gC/m2
-                                                    ,Csom_stock_unc        & ! gC/m2
-                                                    ,Cagb_stock_unc        & ! gC/m2
-                                                    ,Clit_stock_unc        & ! gC/m2
-                                                    ,Ccoarseroot_stock_unc & ! gC/m2
-                                                    ,Evap_unc              & ! kgH2O/m2/day
-                                                    ,SWE_unc               & ! mm/day
-                                                    ,NBE_unc               & ! gC/m2/day
-                                                    ,fAPAR_unc             & ! (0-1)
-                                                    ,soilwater_unc         & ! (m3/m3)
-                                                    ,harvest_unc             ! gC/m2/day
+                                                   ,NEE_unc               & ! gC/m2/day
+                                                   ,Fire_unc              & ! gC/m2/day
+                                                   ,LAI_unc               & ! m2/m2
+                                                   ,Cwood_growth_unc      & ! gC/m2/day
+                                                   ,Cwood_inc_unc         & ! gC/m2/day
+                                                   ,Cwood_mortality_unc   & ! gC/m2/day
+                                                   ,foliage_to_litter_unc & ! gC/m2/day
+                                                   ,Reco_unc              & ! gC/m2/day
+                                                   ,Cfol_stock_unc        & ! gC/m2
+                                                   ,Cwood_stock_unc       & ! gC/m2
+                                                   ,Croots_stock_unc      & ! gC/m2
+                                                   ,Csom_stock_unc        & ! gC/m2
+                                                   ,Cagb_stock_unc        & ! gC/m2
+                                                   ,Clit_stock_unc        & ! gC/m2
+                                                   ,Ccoarseroot_stock_unc & ! gC/m2
+                                                   ,Evap_unc              & ! kgH2O/m2/day
+                                                   ,SWE_unc               & ! mm/day
+                                                   ,NBE_unc               & ! gC/m2/day
+                                                   ,fAPAR_unc             & ! (0-1)
+                                                   ,soilwater_unc         & ! (m3/m3)
+                                                   ,harvest_unc             ! gC/m2/day
 
       ! OBS lagged period (model timestep): obs these must be paired with OBS and their uncertainties above
       integer, allocatable, dimension(:):: GPP_lag               &
-                                           ,NEE_lag               &
-                                           ,Fire_lag              &
-                                           ,LAI_lag               &
-                                           ,Cwood_growth_lag      &
-                                           ,Cwood_inc_lag         &
-                                           ,Cwood_mortality_lag   &
-                                           ,foliage_to_litter_lag &
-                                           ,Reco_lag              &
-                                           ,Cfol_stock_lag        &
-                                           ,Cwood_stock_lag       &
-                                           ,Croots_stock_lag      &
-                                           ,Csom_stock_lag        &
-                                           ,Cagb_stock_lag        &
-                                           ,Clit_stock_lag        &
-                                           ,Ccoarseroot_stock_lag &
-                                           ,Evap_lag              &
-                                           ,SWE_lag               &
-                                           ,NBE_lag               &
-                                           ,fAPAR_lag             &
-                                           ,soilwater_lag         &
-                                           ,harvest_lag
+                                          ,NEE_lag               &
+                                          ,Fire_lag              &
+                                          ,LAI_lag               &
+                                          ,Cwood_growth_lag      &
+                                          ,Cwood_inc_lag         &
+                                          ,Cwood_mortality_lag   &
+                                          ,foliage_to_litter_lag &
+                                          ,Reco_lag              &
+                                          ,Cfol_stock_lag        &
+                                          ,Cwood_stock_lag       &
+                                          ,Croots_stock_lag      &
+                                          ,Csom_stock_lag        &
+                                          ,Cagb_stock_lag        &
+                                          ,Clit_stock_lag        &
+                                          ,Ccoarseroot_stock_lag &
+                                          ,Evap_lag              &
+                                          ,SWE_lag               &
+                                          ,NBE_lag               &
+                                          ,fAPAR_lag             &
+                                          ,soilwater_lag         &
+                                          ,harvest_lag
 
       ! location of observations in the data stream, these must be paired with the above
       integer, allocatable, dimension(:):: gpppts                   & ! gpppts vector used in deriving ngpp
-                                           ,neepts                   & ! same for nee
-                                           ,Firepts                  & ! same for Fire
-                                           ,Cwood_growthpts          & ! same for wood gross increment
-                                           ,Cwood_incpts             & ! same for wood net increment
-                                           ,Cwood_mortalitypts       & ! same for natural wood mortality
-                                           ,foliage_to_litterpts     & ! same for foliage to litter
-                                           ,laipts                   & ! same for lai
-                                           ,recopts                  & ! same for ecosystem respiration
-                                           ,Cfol_stockpts            & ! same for Cfoliage
-                                           ,Cwood_stockpts           & ! same for Cwood
-                                           ,Croots_stockpts          & ! same for Croots
-                                           ,Csom_stockpts            & ! same for Csom
-                                           ,Cagb_stockpts            & ! same for above ground biomass
-                                           ,Clit_stockpts            & ! same for Clitter
-                                           ,Ccoarseroot_stockpts     & ! same for coarse root
-                                           ,Evappts                  & ! same for ecosystem evaportion
-                                           ,SWEpts                   & ! same for snow water equivalent
-                                           ,NBEpts                   & ! same for net biome exchange of CO2
-                                           ,fAPARpts                 & ! same for fraction absorbed PAR
-                                           ,soilwaterpts             & ! same for surface soil water content
-                                           ,harvestpts                 ! same for C extracted due to harvest
+                                          ,neepts                   & ! same for nee
+                                          ,Firepts                  & ! same for Fire
+                                          ,Cwood_growthpts          & ! same for wood gross increment
+                                          ,Cwood_incpts             & ! same for wood net increment
+                                          ,Cwood_mortalitypts       & ! same for natural wood mortality
+                                          ,foliage_to_litterpts     & ! same for foliage to litter
+                                          ,laipts                   & ! same for lai
+                                          ,recopts                  & ! same for ecosystem respiration
+                                          ,Cfol_stockpts            & ! same for Cfoliage
+                                          ,Cwood_stockpts           & ! same for Cwood
+                                          ,Croots_stockpts          & ! same for Croots
+                                          ,Csom_stockpts            & ! same for Csom
+                                          ,Cagb_stockpts            & ! same for above ground biomass
+                                          ,Clit_stockpts            & ! same for Clitter
+                                          ,Ccoarseroot_stockpts     & ! same for coarse root
+                                          ,Evappts                  & ! same for ecosystem evaportion
+                                          ,SWEpts                   & ! same for snow water equivalent
+                                          ,NBEpts                   & ! same for net biome exchange of CO2
+                                          ,fAPARpts                 & ! same for fraction absorbed PAR
+                                          ,soilwaterpts             & ! same for surface soil water content
+                                          ,harvestpts                 ! same for C extracted due to harvest
 
       double precision:: nobs_scaler
 
       ! OBS scaling coefficients declared but calculated later
       double precision:: GPP_scaling               &
-                         ,NEE_scaling               &
-                         ,Fire_scaling              &
-                         ,LAI_scaling               &
-                         ,Cwood_growth_scaling      &
-                         ,Cwood_inc_scaling         &
-                         ,Cwood_mortality_scaling   &
-                         ,foliage_to_litter_scaling &
-                         ,Reco_scaling              &
-                         ,Cfol_stock_scaling        &
-                         ,Cwood_stock_scaling       &
-                         ,Croots_stock_scaling      &
-                         ,Csom_stock_scaling        &
-                         ,Cagb_stock_scaling        &
-                         ,Clit_stock_scaling        &
-                         ,Ccoarseroot_stock_scaling &
-                         ,Evap_scaling              &
-                         ,SWE_scaling               &
-                         ,NBE_scaling               &
-                         ,fAPAR_scaling             &
-                         ,soilwater_scaling         &
-                         ,harvest_scaling
+                        ,NEE_scaling               &
+                        ,Fire_scaling              &
+                        ,LAI_scaling               &
+                        ,Cwood_growth_scaling      &
+                        ,Cwood_inc_scaling         &
+                        ,Cwood_mortality_scaling   &
+                        ,foliage_to_litter_scaling &
+                        ,Reco_scaling              &
+                        ,Cfol_stock_scaling        &
+                        ,Cwood_stock_scaling       &
+                        ,Croots_stock_scaling      &
+                        ,Csom_stock_scaling        &
+                        ,Cagb_stock_scaling        &
+                        ,Clit_stock_scaling        &
+                        ,Ccoarseroot_stock_scaling &
+                        ,Evap_scaling              &
+                        ,SWE_scaling               &
+                        ,NBE_scaling               &
+                        ,fAPAR_scaling             &
+                        ,soilwater_scaling         &
+                        ,harvest_scaling
 
       ! counters for the number of observations per data stream
       integer:: total_obs              & ! total number of obervations
-                ,ngpp                   & ! number of GPP observations
-                ,nnee                   & ! number of NEE observations
-                ,nFire                  & ! number of Fire observations
-                ,nlai                   & ! number of LAI observations
-                ,nCwood_growth          & ! number of wood gross increment obervations
-                ,nCwood_inc             & ! number of wood net increment obervations
-                ,nCwood_mortality       & ! number of wood mortality obervations
-                ,nfoliage_to_litter     & ! number of foliage to litter obervations
-                ,nreco                  & ! number of Reco observations
-                ,nCfol_stock            & ! number of Cfol observations
-                ,nCwood_stock           & ! number of Cwood observations
-                ,nCroots_stock          & ! number of Croot observations
-                ,nCsom_stock            & ! number of Csom obervations
-                ,nCagb_stock            & ! number of above ground biomass
-                ,nClit_stock            & ! number of Clitter observations
-                ,nCcoarseroot_stock     & ! number of coarse root
-                ,nEvap                  & ! number of ecosystem evaporation observations
-                ,nSWE                   & ! number of snow water equivalent
-                ,nNBE                   & ! number of net biome exchange of CO2
-                ,nfAPAR                 & ! number of fAPAR by green vegetation
-                ,nsoilwater             & ! number of surface soil water observations
-                ,nharvest                 ! number of harvest observations
+               ,ngpp                   & ! number of GPP observations
+               ,nnee                   & ! number of NEE observations
+               ,nFire                  & ! number of Fire observations
+               ,nlai                   & ! number of LAI observations
+               ,nCwood_growth          & ! number of wood gross increment obervations
+               ,nCwood_inc             & ! number of wood net increment obervations
+               ,nCwood_mortality       & ! number of wood mortality obervations
+               ,nfoliage_to_litter     & ! number of foliage to litter obervations
+               ,nreco                  & ! number of Reco observations
+               ,nCfol_stock            & ! number of Cfol observations
+               ,nCwood_stock           & ! number of Cwood observations
+               ,nCroots_stock          & ! number of Croot observations
+               ,nCsom_stock            & ! number of Csom obervations
+               ,nCagb_stock            & ! number of above ground biomass
+               ,nClit_stock            & ! number of Clitter observations
+               ,nCcoarseroot_stock     & ! number of coarse root
+               ,nEvap                  & ! number of ecosystem evaporation observations
+               ,nSWE                   & ! number of snow water equivalent
+               ,nNBE                   & ! number of net biome exchange of CO2
+               ,nfAPAR                 & ! number of fAPAR by green vegetation
+               ,nsoilwater             & ! number of surface soil water observations
+               ,nharvest                 ! number of harvest observations
 
       double precision, dimension(:), allocatable:: soil_frac_clay, soil_frac_sand  ! clay and soil fractions of soil-
       ! initial value as read from input file.
@@ -207,22 +206,22 @@ module cardamom_structures
       integer:: nos_years, steps_per_year
       double precision, allocatable, dimension(:):: deltat  ! time step (decimal day)
 
-!      double precision, allocatable, dimension(:,:):: M_FLUXES & ! All fluxes
-!                                                      ,M_POOLS  & ! All POOLS
-!                                                      ,M_DIAGS    ! All diagnostic variables
+      double precision, allocatable, dimension(:,:):: M_FLUXES & ! All fluxes
+                                                     ,M_POOLS  & ! All POOLS
+                                                     ,M_DIAGS    ! All diagnostic variables
       ! static data
       integer:: nodays   & ! number of days in simulation
-                ,ID       & ! model ID
-                ,noobs    & ! number of obs fields
-                ,nomet    & ! number met drivers
-                ,nofluxes & ! number of fluxes
-                ,nopools  & ! number of pools
-                ,nopars   & ! number of parameters
-                ,nodiags  & ! number of diagnostic variables
-                ,EDC      & ! Ecological and dynamical contraints on (1) or off (0)
-                ,yield    & ! yield class for ecosystem (forest only)
-                ,age      & ! time in years since ecosystem established (forest only)
-                ,pft        ! plant functional type information used to select appropriate DALEC submodel/ACM
+               ,ID       & ! model ID
+               ,noobs    & ! number of obs fields
+               ,nomet    & ! number met drivers
+               ,nofluxes & ! number of fluxes
+               ,nopools  & ! number of pools
+               ,nopars   & ! number of parameters
+               ,nodiags  & ! number of diagnostic variables
+               ,EDC      & ! Ecological and dynamical contraints on (1) or off (0)
+               ,yield    & ! yield class for ecosystem (forest only)
+               ,age      & ! time in years since ecosystem established (forest only)
+               ,pft        ! plant functional type information used to select appropriate DALEC submodel/ACM
 
       double precision:: LAT  ! site latitude
 
@@ -232,12 +231,12 @@ module cardamom_structures
 
       ! priors
       double precision, dimension(100):: parpriors       & ! prior values
-                                         ,parpriorunc     & ! prior uncertainties
-                                         ,parpriorweight   ! prior weighting
+                                        ,parpriorunc     & ! prior uncertainties
+                                        ,parpriorweight    ! prior weighting
       ! other priors
-      double precision, dimension(50):: otherpriors & ! other prior values
-         , otherpriorunc & ! other prior uncertainties
-         , otherpriorweight   ! other prior weighting
+      double precision, dimension(50):: otherpriors     & ! other prior values
+                                       ,otherpriorunc   & ! other prior uncertainties
+                                       ,otherpriorweight  ! other prior weighting
 
    end type DATA_type  ! DATA_type
 
@@ -253,121 +252,46 @@ module cardamom_structures
    type emulator_parameters
 
       integer ::    dim_1, & ! dimension 1 of response surface
-                 dim_2, & ! dimension 2 of response surface
-                 nos_trees, & ! number of trees in randomForest
-                 nos_inputs    ! number of driver inputs
+                    dim_2, & ! dimension 2 of response surface
+                nos_trees, & ! number of trees in randomForest
+               nos_inputs    ! number of driver inputs
 
       double precision, allocatable, dimension(:, :) ::     leftDaughter, & ! left daughter for forest
-         rightDaughter, & ! right daughter for forets
-         nodestatus, & ! nodestatus for forests
-         xbestsplit, & ! for forest
-         nodepred, & ! prediction value for each tree
-         bestvar    ! for randomForests
+                                                           rightDaughter, & ! right daughter for forets
+                                                              nodestatus, & ! nodestatus for forests
+                                                              xbestsplit, & ! for forest
+                                                                nodepred, & ! prediction value for each tree
+                                                                 bestvar    ! for randomForests
 
    end type emulator_parameters  ! emulator parameters
-   type(emulator_parameters), protected, save:: emulator_pars 
-
-   type crop_info
-       double precision  :: stock_seed_labile
-       double precision, allocatable, dimension(:)                :: DS_shoot, & !
-                                                                      DS_root, & !
-                                                                     fol_frac, & !
-                                                                    stem_frac, & !
-                                                                    root_frac, & !
-                                                                      DS_LRLV, & !
-                                                                         LRLV, & !
-                                                                      DS_LRRT, & !
-                                                                         LRRT
-   end type
-
-   ! Only filled from file in case of model 15 & 14
-   type(crop_info), protected, save :: CI  ! protected: to be set from file by routine here, otherwise read-only 
+   type(emulator_parameters), protected, save:: emulator_pars  ! TODO make sure not shared, or read-only
 
 contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine set_datain_original(datain_source)
 
-   subroutine set_datain_original(datain_source)
-      !! A setter, copying the argument to cardamom_structures:: DATAin_original
-      !! The central DATAin in module cardamom_structures can ONLY be set by the constructor,
-      !! this ensures that no model calculations are writing to its elements from different parallel threads
-      type(DATA_type), intent(in):: datain_source
-      DATAin_original = datain_source
-   end subroutine set_datain_original
+    !! A setter, copying the argument to cardamom_structures:: DATAin_original
+    !! The central DATAin in module cardamom_structures can ONLY be set by the constructor,
+    !! this ensures that no model calculations are writing to its elements from different parallel threads
+    type(DATA_type), intent(in):: datain_source
+    DATAin_original = datain_source
 
-   subroutine set_datain(datain_source)
-      !! A setter, copying the argument to cardamom_structures:: DATAin
-      !! The central DATAin in module cardamom_structures can ONLY be set by the constructor,
-      !! this ensures that no model calculations are writing to its elements from different parallel threads
-      type(DATA_type), intent(in):: datain_source
-      DATAin = datain_source
-   end subroutine set_datain
+  end subroutine set_datain_original
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine set_datain(datain_source)
 
-  subroutine crop_development_parameters()
+    !! A setter, copying the argument to cardamom_structures:: DATAin
+    !! The central DATAin in module cardamom_structures can ONLY be set by the constructor,
+    !! this ensures that no model calculations are writing to its elements from different parallel threads
+    type(DATA_type), intent(in):: datain_source
+    DATAin = datain_source
 
-    ! subroutine reads in the fixed crop development files which are linked the
-    ! the development state of the crops. The development model varies between
-    ! which species. e.g. winter wheat and barley, spring wheat and barley
-    ! NOTE: duplicate function in the R_interface.f90
-
-    implicit none
-
-    ! declare inputs
-    ! crop specific variables
-
-    ! local variables..
-    integer        :: columns, i, rows, input_crops_unit, ios
-    character(100) :: variables,filename
-
-    ! for the moment hard code the file name
-    filename="winter_wheat_development.csv"
-    input_crops_unit = 20 ; ios = 0
-
-    ! crop development file
-    open(unit = input_crops_unit, file=trim(filename),iostat=ios, status='old', action='read')
-
-    ! ensure we are definitely at the beginning
-    rewind(input_crops_unit)
-
-    ! read in the amount of carbon available (as labile) in each seed..
-    read(unit=input_crops_unit,fmt=*)variables,ci%stock_seed_labile,variables,variables
-
-    ! read in C partitioning/fraction data and corresponding developmental
-    ! stages (DS)
-    ! shoot
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( ci%DS_shoot(rows) , ci%fol_frac(rows) , ci%stem_frac(rows)  )
-    do i = 1 , rows
-          read(unit=input_crops_unit,fmt=*) ci%DS_shoot(i), ci%fol_frac(i), ci%stem_frac(i)
-    enddo
-
-    ! root
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( ci%DS_root(rows) , ci%root_frac(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) ci%DS_root(i), ci%root_frac(i)
-    enddo
-
-    ! loss rates of leaves and roots
-    ! leaves
-    read(unit=input_crops_unit,fmt=*) variables
-
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( ci%DS_LRLV(rows) , ci%LRLV(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) ci%DS_LRLV(i), ci%LRLV(i)
-    enddo
-
-    ! roots
-    read(unit=input_crops_unit,fmt=*) variables
-    read(unit=input_crops_unit,fmt=*) rows , columns
-    allocate( ci%DS_LRRT(rows) , ci%LRRT(rows) )
-    do i = 1 , rows
-      read(unit=input_crops_unit,fmt=*) ci%DS_LRRT(i), ci%LRRT(i)
-    enddo
-
-    ! rewind and close
-    rewind(input_crops_unit) ; close(input_crops_unit)
-end subroutine
-
+  end subroutine set_datain
+  !
+  !--------------------------------------------------------------------
+  !
 end module cardamom_structures

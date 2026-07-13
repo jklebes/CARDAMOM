@@ -12,16 +12,11 @@ module random_uniform
 
    type UNIF_VECTOR
       !! Type holding an array of pre-generate random uniform numbers [0, 1]
-      integer:: seed
-        !! random seed, set from initialize
-      integer:: length = 5000
-        !! length of the array
-      integer, dimension(kk):: ranx
-        !! internal array of CARDAMOM-native random number generation
-      double precision, dimension(:), allocatable:: u
-        !! array of random uniform numbers [0, 1] !TODO doc : bounds inclusive/exclusive?
-      integer:: index
-        !! current position in getting numbers from the array
+      integer:: seed ! random seed, set from initialize
+      integer:: length = 5000 ! length of the array
+      integer, dimension(kk):: ranx ! internal array of CARDAMOM-native random number generation
+      double precision, dimension(:), allocatable:: u ! array of random uniform numbers [0, 1] !TODO doc : bounds inclusive/exclusive?
+      integer:: index ! current position in getting numbers from the array
    contains
       procedure:: initialize_random
       procedure:: get_random_uniform
@@ -253,4 +248,5 @@ contains
 
       return
    end subroutine rnstrt
+   
 end module random_uniform

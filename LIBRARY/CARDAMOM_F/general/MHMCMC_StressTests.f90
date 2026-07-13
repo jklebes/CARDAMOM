@@ -257,8 +257,6 @@ contains
       integer:: i
       type(MCMC_OUTPUT):: MCOUT  ! TODO no effect
       type(MCMC_OPTIONS):: MCO  ! TODO no effect
-      double precision,dimension(:,:), allocatable::  M_FLUXES
-      double precision, dimension(:, :), allocatable:: M_POOLS
 
       ! Set internal parameters in the absence of an input file
       ! allocate the default run information
@@ -302,8 +300,8 @@ contains
 
       ! need to allocate memory to the model output variables
       ! ->They are now local variables of model likelihood fcts
-      if (.not. allocated(M_FLUXES)) allocate (M_FLUXES(DATAin%nodays, DATAin%nofluxes))
-      if (.not. allocated(M_POOLS)) allocate (M_POOLS(DATAin%nodays + 1, DATAin%nopools))
+      if (.not. allocated(DATAin%M_FLUXES)) allocate (DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes))
+      if (.not. allocated(DATAin%M_POOLS)) allocate (DATAin%M_POOLS(DATAin%nodays + 1, DATAin%nopools))
 
       ! alert the user
       write (*, *) "Created fields for model output"

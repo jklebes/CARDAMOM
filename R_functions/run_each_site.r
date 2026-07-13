@@ -124,7 +124,7 @@ run_each_site<-function(n,PROJECT,repair,grid_override) {
       if (any(check_list == "SS_som_gCm2") == TRUE) {SS_gCm2$SS_som_gCm2 = states_all$SS_som_gCm2}
 
       # Sanity check
-      if (any(is.na(unlist(NPP_fraction)))) {
+      if (any(is.na(as.vector(NPP_fraction)))) {
       #if (length(which(is.na(as.vector(NPP_fraction))) == TRUE) > 0) {
           print(paste("NA value found in NPP for site ",PROJECT$site[n],sep="")) ; dummy = -4 ; return(dummy)
       }

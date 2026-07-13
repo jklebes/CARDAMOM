@@ -145,7 +145,7 @@ corine2006_to_ctessel<- function(input_pft) {
     #43) "Estaries"                        = 20
 
     # vector of corresponding C/D-TESSEL PFTs in order of the Corine2006 types
-    tessel_types=c(0,19,0,0,0,0,0,0,0,19,0,1,10,10,17,18,18,2,1,1,1,3,5,3,18,2,2,17,19,20,8,11,0,12,13,13,20,20,20,14,14,14,20)
+    tessel_types=c(0,19,0,0,0,0,0,0,0,19,0,1,10,10,17,18,18,2,1,1,1,3,5,3,18,2,2,17,19,20,8,11,0,152,13,13,20,20,20,14,14,14,20)
     # use input Corine2006 cover type to select and return the ctessel PFT
     corine2006_to_ctessel=tessel_types[input_pft]
     # if location does not have a pft in the corine make 0 and this will use default values from ECMWF

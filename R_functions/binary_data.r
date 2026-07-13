@@ -325,7 +325,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       OBSMAT[,36] = OBS$fAPAR_lag             # Fraction absorbed PAR lag (steps)
       OBSMAT[,37] = OBS$Ccoarseroot_stock     # Coarse root stock (gC/m2)
       OBSMAT[,38] = OBS$Ccoarseroot_stock_unc # Coarse root stock variance
-      OBSMAT[,39] = OBS$Ccoarseroot_stock_lag # Coarse root stock lag (steps)
+      OBSMAT[,39] = OBS$Ccoarseroot_stock_unc # Coarse root stock lag (steps)
       OBSMAT[,40] = OBS$ET                    # Evapotranspiration (kgH2O/m2/day)
       OBSMAT[,41] = OBS$ET_unc                # Evapotranspiration variance
       OBSMAT[,42] = OBS$ET_lag                # Evapotranspiration lag (steps)

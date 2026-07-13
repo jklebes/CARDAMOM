@@ -1,3 +1,38 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
+! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
+! assimilate observations and ecological theory to retrieve parameters for the
+! DALEC suite of intermediate complexity terrestrial ecosystem models. DALEC can be
+! used as a fully integrated component of CARDAMOM or independently.
+! Copyright (C) 2024  University of Edinburgh,
+!                     Mathew Williams (mat.williams@ed.ac.uk),
+!                     T. Luke Smallman (t.l.smallman@ed.ac.uk)
+! UoE = University of Edinburgh
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+!!!!!!!!!! File specific description !!!!!!!!!!
+! Main program for the CARDAMOM Differential Evolution MCMC (DEMCz) sampler.
+!
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory);
+! translation to Fortran, integration and subsequent modifications by T. L. Smallman,
+! J. F. Exbrayat and colleagues (University of Edinburgh). Sampler-layer development
+! (DEMCz, parallel samplers, wrappers) by J. Klebes (University of Edinburgh), 2024-2025.
+! See function/subroutine specific comments for exceptions and contributors.
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 program cardamom_DEMCz
    use DEMCz, only: demczOPT, run_demcz
    use cardamom_MHMCMC, only: MCMC_OUTPUT, mcmc_options
@@ -25,27 +60,27 @@ program cardamom_DEMCz
    ! 5) write-to-file frequency
    ! 6) 0/1 flag to use normalised log-likelihood pre-mcmc
    ! 7) Flag to select the cost function normalisation approach
+   ! 8) integer number of chains (optional; defaults to 3 if absent)
 
    implicit none(type, external)
 
    ! declare local variables
-   character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
-                    freq_write_char, do_inflate_char, cost_func_scaling_char
-   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, &
-             do_inflate_dble, cost_func_scaling_dble
-   logical:: do_inflate = .false.
-   type(MCMC_OUTPUT):: MCOUT
-   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list  ! for parallel-could keep single here and make interface
-   type(mcmc_options):: edc_MCO
-   type(DEMCZOPT):: MCO
+   character(350) :: infile, outfile, solution_wanted_char, freq_print_char, &
+                    freq_write_char, do_inflate_char, cost_func_scaling_char, &
+                    nchains_char
+   integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, &
+             do_inflate_dble, cost_func_scaling_dble, idum
+   logical :: do_inflate = .false.
+   type(MCMC_OUTPUT) :: MCOUT
+   type(MCMC_OUTPUT), dimension(:), allocatable :: MCOUT_list  ! for parallel-could keep single here and make interface
+   type(mcmc_options) :: edc_MCO
+   type(DEMCZOPT) :: MCO
 
-   ! TODO not to hardcode, from command line argument
-   integer:: nchains = 16
-   integer:: i
+   ! Number of chains. Default value, may be overridden by command line argument 8.
+   integer :: nchains = 3
+   integer :: i
 
    call init_infinity()
-
-   allocate (MCOUT_list(nchains))
 
    ! user update
    write (*, *) "Beginning read of the command line"
@@ -58,6 +93,11 @@ program cardamom_DEMCz
    call get_command_argument(5, freq_write_char)
    call get_command_argument(6, do_inflate_char)
    call get_command_argument(7, cost_func_scaling_char)
+   ! argument 8 (number of chains) is optional; default retained if absent
+   if (command_argument_count() >= 8) then
+      call get_command_argument(8, nchains_char)
+      read (nchains_char, '(I10)') nchains
+   end if
 
    ! now convert relevant ones to integeter
    ! Note: that I10 is the maximum allowed with the default integer kind (kind = 4).
@@ -91,31 +131,40 @@ program cardamom_DEMCz
       print *, "  1 = scaling by sample size (n)"
       print *, "  2 = scaling by sqrt(n)"
       print *, "  3 = scaling by log(n)"
+      print *, "8) Number of chains (optional, integer >= 3; defaults to 3)."
       stop
    end if
 
-   ! user update
-   write (*, *) "Command line options read, moving on now"
+   ! Sanity check the number of chains. The DEMCz method requires at least 3 chains.
+   if (nchains < 3) then
+      print *, "ERROR: number of chains (command line argument 8) must be >= 3 for DEMCz."
+      print *, "Value supplied = ", nchains
+      stop
+   end if
 
-   ! TODO get n seeds, here or smoewhere else
-   ! TODO make sure seeds are saved
+   ! Now the number of chains is known, allocate the per-chain output array
+   allocate (MCOUT_list(nchains))
+
+   ! user update
+   write (*,*) "Command line options read, moving on now"
+   write (*,*) "Number of chains = ", nchains
+
    ! seed the random number generator
    ! determine unique (sort of) seed value; based on system time
    call system_clock(time1, time2, time3)
    ! set seed value outside of the function, idum must be a negative number
-   !idum = dble(time1+time2+time3)
-   !call rnstrt(nint(idum))
+   idum = time1+time2+time3
 
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
       ! call special functions to prepare for stress test
       !call run_stresstest()
-      write (*, *) "Stresstest currently not implemented, moving to tests"
-      return
-      !call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+      write (*,*) "Stresstest currently not implemented, moving to tests"
+      stop
+      !call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures :: DATAin
    end if
 
-   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures:: DATAin
+   call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model  ! sets cardamom_structures :: DATAin
    call initialize_carbon_model(nchains)
    do i = 1, nchains
       call initialize_stats(MCOUT_list(i), PI%npars)
@@ -138,12 +187,12 @@ program cardamom_DEMCz
    !call open_output_files(MCO%outfile, MCO%stepfile, MCO%covfile, MCO%covifile)
 
    ! Report which model ID we are using
-   write (*, *) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
+   write (*,*) "Running model version ", DATAin%ID  ! TODO where does DATAin live and where did it get filled
 
    ! Begin search for initial conditions
-   write (*, *) "Beginning search for initial parameter conditions"
+   write (*,*) "Beginning search for initial parameter conditions"
    ! Determine initial values, this requires using the AP-MCMC
-   call find_edc_initial_values(edc_MCO, MCOUT_list, nchains)
+   call find_edc_initial_values(edc_MCO, MCOUT_list, nchains, idum)
 
    ! Reset the iterations counter-if not then the wrong number of iterations will be attempted
    mco%mcmc_options = edc_mco
@@ -169,7 +218,7 @@ program cardamom_DEMCz
          !if (MCO%nWRITE > 0) then %TODO problem because files not opened yet?
          !call write_covariance_matrix(mcout_list(i)%covariance, PI%npars, .true., i)
          !call write_covariance_info(mcout_list(i)%meanpar, mcout_list(i)%Nparvar, PI%npars, i)
-         !endif
+         !end if
          !...so the reset for nos_iterations must only occur when not a restart run
          MCOUT_list(i)%nos_iterations = 0
       end if  ! restart run or not
@@ -183,8 +232,9 @@ program cardamom_DEMCz
    ! were same length  ! TODO
 
    ! Update the user
-   write (*, *) "Beginning parameter search in real likelihoods"
-   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT, MCOUT_list(i)%nos_iterations
+   write (*,*) "Beginning parameter search in real likelihoods"
+   write (*,*) "Nos iterations to be proposed = ", MCO%nOUT-MCOUT_list(1)%nos_iterations   
+print*, MCO%nOUT,MCOUT_list(1)%nos_iterations
    MCO%restart = .true.
 
    ! Call the main MCMC
@@ -202,10 +252,10 @@ program cardamom_DEMCz
       call update_obs_scaling_log_nsamples
    end if  ! cost_func_scaling_dble ==
    ! TODO scaled model likelihood fct
-   call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+   call run_demcz(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains, seed = idum)
 
    ! Let the user know we are done
-   write (*, *) "AP-MCMC done now, moving on ..."
+   write (*, *) "DEMCMCz done now, moving on ..."
 
    ! tidy up by closing all files
    do i = 1, nchains
@@ -214,12 +264,11 @@ program cardamom_DEMCz
 
    ! Final message to the user
    write (*, *) "==========================================================="
-   write (*, *) "==== CARDAMOM analysis for the current chain completed ===="
+   write (*, *) "==== CARDAMOM analysis for the current site completed ====="
    write (*, *) "==========================================================="
    write (*, *) "=========================Honestly=========================="
-contains
+   write (*, *) "==========================================================="
 
-   !
-   !------------------------------------------------------------------
+contains
 
 end program cardamom_DEMCz

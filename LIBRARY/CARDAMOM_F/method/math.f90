@@ -43,11 +43,11 @@ module samplers_math
 
    ! make explicit bits we want others to see
    public::  std, idum, covariance_matrix, &
-            random_normal, &
-            random_multivariate, increment_covariance_matrix, &
-            par2nor, nor2par, log_par2nor, log_nor2par, &
-            cholesky_factor, inverse_matrix, matrix_vector_func, &
-            calculate_variance, increment_variance
+             random_normal, &
+             random_multivariate, increment_covariance_matrix, &
+             par2nor, nor2par, log_par2nor, log_nor2par, &
+             cholesky_factor, inverse_matrix, matrix_vector_func, &
+             calculate_variance, increment_variance
 
    double precision:: idum
   !! randn() related seed value  ! TODO

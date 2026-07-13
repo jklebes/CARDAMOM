@@ -35,6 +35,7 @@ extract_acm_met_drivers<-function(PROJECT,latlon_wanted,site_name) {
 #  infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater.csv",sep="")
 #  infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_copy.csv",sep="")
 #  infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4.csv",sep="")
+  infile=paste(path_to_site_obs,site_name,"_timeseries_obs_iWUE_trunk_nowater_avgNlessthan4_subsample.csv.csv",sep="")
 	# extract the drivers currently in use
 	maxt_out=read_site_specific_obs("sat_max",infile)
 	mint_out=read_site_specific_obs("sat_min",infile)

@@ -1,7 +1,7 @@
 
 module samplers_io
 
-  !!!!!!!!!!!
+   !!!!!!!!!!!
    !
    ! Samplers_io functions split from cardamom_io.f90
    !
@@ -14,7 +14,7 @@ module samplers_io
    ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
    ! J. F. Exbrayat (University of Edinburgh)
    ! See function/subroutine specific comments for exceptions and contributors
-  !!!!!!!!!!!
+   !!!!!!!!!!!
 
    ! Module contains subroutines and variables needed to output parameter,
    ! likelihood and step size information from the MHMCMC.
@@ -26,15 +26,15 @@ module samplers_io
 
    ! allow access to specific functions
    public:: write_mcmc_output &
-            , write_parameters &
-            , write_variances &
-            , write_covariance_matrix &
-            , write_covariance_info &
-            , check_for_existing_output_files &
-            , update_for_restart_simulation &
-            , initialize_buffers &
-            , open_output_files &
-            , close_output_files
+           ,write_parameters &
+           ,write_variances &
+           ,write_covariance_matrix &
+           ,write_covariance_info &
+           ,check_for_existing_output_files &
+           ,update_for_restart_simulation &
+           ,initialize_buffers &
+           ,open_output_files &
+           ,close_output_files
 
    integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13
 
@@ -59,7 +59,6 @@ module samplers_io
    save
 
 contains
-
    !
    !------------------------------------------------------------------
    !
@@ -71,6 +70,7 @@ contains
       ! finish off. Important for large jobs or running on machines with may crash
       ! / have runtime limits
       implicit none(type, external)
+
       ! declare input variables
       integer, intent(in):: npars
       integer:: nOUT, nWRITE
@@ -80,13 +80,13 @@ contains
       character(350):: outfile, stepfile, covfile, covifile
       integer, intent(in):: chainid
       logical, intent(out):: restart
+
       ! local variables
       logical:: par_exists, step_exists, cov_exists, covinfo_exists
       double precision:: dummy
       integer:: num_lines, status
 
-      nOUT = MCO%nOUT
-      nWRITE = MCO%nWRITE
+      nOUT = MCO%nOUT ; nWRITE = MCO%nWRITE
 
       ! process file names-numbered file names as they would be written by
       ! a simulation recieving the same MCO object
@@ -95,7 +95,7 @@ contains
       covfile = MCO%covfile
       covifile = MCO%covifile
       if (MCO%nchains > 1) then
-         call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
+          call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
       end if
 
       ! Check that all files exist
@@ -151,18 +151,20 @@ contains
    !------------------------------------------------------------------
    !
    subroutine update_for_restart_simulation(MCO, MCOUT, npars)
-    !! subroutine is responsible for loading previous parameter and step size
-    !! information into the current
-    !! modifies: arg MCOUT%pars. To be used as starting point for next run.
+      !! subroutine is responsible for loading previous parameter and step size
+      !! information into the current
+      !! modifies: arg MCOUT%pars. To be used as starting point for next run.
       use samplers_shared, only: MCMC_OUTPUT, MCMC_OPTIONS
       use samplers_math, only: std, covariance_matrix, inverse_matrix, par2nor
 
       implicit none(type, external)
 
-      ! local variables
+      ! Arguments
       class(MCMC_OPTIONS), intent(inout):: MCO
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       integer, intent(in):: npars
+
+      ! local variables
       integer:: a, b, c, i, j, num_lines, status
       double precision:: dummy
       double precision, dimension(:, :), allocatable:: tmp
@@ -171,7 +173,7 @@ contains
       ! read the parameter and step files to get to the end
 
       ! rewind to the beginning
-      rewind (pfile_unit); rewind (sfile_unit); rewind (cifile_unit)
+      rewind(pfile_unit); rewind(sfile_unit); rewind(cifile_unit)
 
       !
       ! As this subroutine will only be called once reading each file will occur
@@ -332,7 +334,9 @@ contains
       return
 
    end subroutine update_for_restart_simulation
-
+   !
+   !------------------------------------------------------------------
+   !
    subroutine close_output_files(chainid)
 
       ! where you open a file you've got to make sure that you close them too. It
@@ -350,7 +354,9 @@ contains
       close (cifile_unit + offset)
 
    end subroutine close_output_files
-
+   !
+   !------------------------------------------------------------------
+   !
    subroutine open_output_files(parname, stepname, covname, covinfoname, chainid)
 
       ! Subroutine opens the needed output files and destroys any previously
@@ -389,7 +395,9 @@ contains
       if (ios /= 0) print *, "error ", ios, " opening file", trim(covname)
 
    end subroutine open_output_files
-
+   !
+   !------------------------------------------------------------------
+   !
    subroutine initialize_buffers(npars, nwrite_events, io_space)
       integer, intent(in):: npars, nwrite_events
       type(io_buffer_space), intent(inout):: io_space
