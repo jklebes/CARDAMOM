@@ -52,7 +52,6 @@ use samplers_shared, only: PARINFO
   !
   subroutine pars_info(PI)
     
-
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
     ! This may improve the usability when it comes to reading these information

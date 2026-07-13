@@ -36,7 +36,6 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -51,8 +50,8 @@ use samplers_shared, only: PARINFO
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -64,13 +63,6 @@ use samplers_shared, only: PARINFO
     !
     ! declare parameters
     !
-
-    type(PARINFO), intent(inout):: PI
-
-    PI%npars = 34
-    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
-    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
-
 
     ! Decomposition rate [1e-5, 0.01]
     PI%parmin(1) = 0.001d0 

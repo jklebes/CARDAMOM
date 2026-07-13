@@ -35,8 +35,6 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
-use cardamom_structures, only: CI, crop_development_parameters
 
   implicit none
 
@@ -51,8 +49,8 @@ use cardamom_structures, only: CI, crop_development_parameters
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info
+    use MCMCOPT, only: PI
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or
@@ -69,11 +67,6 @@ use cardamom_structures, only: CI, crop_development_parameters
     !
     ! declare parameters
     !
-    type(PARINFO), intent(inout):: PI
-
-    PI%npars = 15
-    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
-    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Fraction of GPP respired as autotrophic
     PI%parmin(1) = 0.20d0

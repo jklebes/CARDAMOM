@@ -80,16 +80,14 @@ module model_likelihood_module
 
     implicit none
 
-    ! declare inputs
+    ! Arguments
+    integer, intent(in) :: thread_id    
     double precision, dimension(PI%npars), intent(inout) :: PARS
-    ! output
     double precision, intent(inout) :: ML_obs_out, ML_prior_out
 
     ! declare local variables
     integer ::  n
     double precision :: tot_exp, ML, EDC1, EDC2, infini
-    
-    integer, intent(in), optional:: thread_id
 
     type (EDCDIAGNOSTICS) :: EDCD
 
@@ -545,8 +543,7 @@ module model_likelihood_module
         end if
     end if ! nos_years > 1
 
-    ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
-    ! the empirical phenology but mechanistic hydrology / photosynthesis
+    ! Maximum LAI value should not exceed 10 m2/m2
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
     end if
@@ -911,16 +908,16 @@ module model_likelihood_module
 
     implicit none
 
-    ! declare inputs
-    double precision, dimension(PI%npars), intent(inout) :: PARS ! current parameter vector
-    ! output
-    double precision, intent(inout) :: ML_obs_out, &  ! observation + EDC log-likelihood
-                                       ML_prior_out   ! prior log-likelihood
+    ! Arguments
+    integer, intent(in) :: thread_id    
+    double precision, dimension(PI%npars), intent(inout) :: PARS
+    double precision, intent(inout) :: ML_obs_out, ML_prior_out
+
     ! declare local variables
     double precision :: EDC1, EDC2
 
     type(EDCDIAGNOSTICS) :: EDCD
-    integer, intent(in), optional:: thread_id
+
     double precision,dimension(datain%nodays, datain%nofluxes)::  M_FLUXES
     double precision, dimension((DATAin%nodays+1), DATAin%nopools):: M_POOLS
     double precision,dimension(datain%nodays, datain%nodiags)::  M_DIAGS
@@ -967,6 +964,7 @@ module model_likelihood_module
     ! Calculate log-likelihood associated with priors
     ! We always want this
     ML_prior_out = likelihood_p(PI%npars,DATAin%parpriors,DATAin%parpriorunc,DATAin%parpriorweight,PARS)
+    ! Calculate log-likelihood of model compared to obs
     call calc_obs_likelihoods(ML_obs_out, M_POOLS, M_FLUXES, M_DIAGS)
     ! Calculate log-likelihood of 'other priors'
     call calc_other_likelihoods(ML_obs_out, M_POOLS, M_FLUXES, M_DIAGS)

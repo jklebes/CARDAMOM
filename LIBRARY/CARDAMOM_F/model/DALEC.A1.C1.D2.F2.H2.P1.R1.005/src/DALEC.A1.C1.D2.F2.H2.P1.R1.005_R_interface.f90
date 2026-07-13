@@ -1,4 +1,4 @@
-﻿!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! CARbon DAta MOdel fraMework (CARDAMOM) and DALEC terrestrial ecosystem model suite
 ! CARDAMOM is a Bayesian model-data fusion software framework. CARDAMOM is used to
 ! assimilate observations and ecological theory to retrieve parameters for the
@@ -38,7 +38,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
 
   use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, &
                               nos_soil_layers
-                             
+
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
@@ -82,8 +82,7 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
   ! array of ecosystem diagnositcs
   double precision, dimension(nodays,nodiags) :: DIAGS
   double precision, dimension(nodays) :: tmp
-  type(model_working_variables) :: mv
-
+  type(model_working_variables) :: mV
 
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
@@ -97,9 +96,9 @@ subroutine rdalec5(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-
-  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
-
+  ! initialise this chain's working variables; soil fractions are passed
+  ! explicitly here (R interface) and deltat is now required by initialize_mv
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
   ! begin iterations
   do i = 1, nos_iter

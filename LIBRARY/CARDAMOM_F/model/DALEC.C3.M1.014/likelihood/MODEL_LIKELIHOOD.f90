@@ -204,7 +204,7 @@ module model_likelihood_module
     ! next need to run the model itself
     call CARBON_MODEL(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,M_FLUXES,M_POOLS,M_DIAGS &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools     &
                      ,DATAin%nofluxes,DATAin%nodiags                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root   &
@@ -215,7 +215,7 @@ module model_likelihood_module
     call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                     ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                     ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
-                    ,M_POOLS,M_FLUXES,M_DIAGS         &
+                    ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
                     ,DATAin%meantemp,EDC2)
 
     ! calculate the likelihood
@@ -264,7 +264,7 @@ module model_likelihood_module
     ! next need to run the model itself
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT &
-                     ,M_FLUXES,M_POOLS,M_DIAGS &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools     &
                      ,DATAin%nofluxes,DATAin%nodiags                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root   &
@@ -281,9 +281,9 @@ module model_likelihood_module
                      ,PI%LRLV,PI%DS_LRRT,PI%LRRT)
 
     ! Compare outputs
-    flux_error = sum(abs(M_FLUXES - local_fluxes))
-    pool_error = sum(abs(M_POOLS - local_pools))
-    diags_error = sum(abs(M_DIAGS - local_diags))
+    flux_error = sum(abs(DATAin%M_FLUXES - local_fluxes))
+    pool_error = sum(abs(DATAin%M_POOLS - local_pools))
+    diags_error = sum(abs(DATAin%M_DIAGS - local_diags))
     ! If error between runs exceeds precision error then we have a problem
     if (diags_error > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
         pool_error  > (tiny(0d0)*(DATAin%nopools*DATAin%nodays)) .or. &
@@ -295,11 +295,11 @@ module model_likelihood_module
         print*,"Cumulative FLUX error = ",flux_error
         do i = 1,DATAin%nofluxes
            print*,"Sum abs error over time: flux = ",i
-           print*,sum(abs(M_FLUXES(:,i) - local_fluxes(:,i)))
+           print*,sum(abs(DATAin%M_FLUXES(:,i) - local_fluxes(:,i)))
         end do
         do i = 1, DATAin%nopools
            print*,"Sum abs error over time: pool = ",i
-           print*,sum(abs(M_POOLS(:,i) - local_pools(:,i)))
+           print*,sum(abs(DATAin%M_POOLS(:,i) - local_pools(:,i)))
         end do
         stop
     end if
@@ -747,7 +747,7 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT                      &
-                     ,M_FLUXES,M_POOLS,M_DIAGS &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools     &
                      ,DATAin%nofluxes,DATAin%nodiags                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root   &
@@ -760,7 +760,7 @@ module model_likelihood_module
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
-                        ,M_POOLS,M_FLUXES,M_DIAGS         &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
                         ,DATAin%meantemp,EDC2)                        
 
         ! Add EDC2 log-likelihood to absolute accept reject...
@@ -818,7 +818,7 @@ module model_likelihood_module
     ! run the dalec model
     call carbon_model(1,DATAin%nodays,DATAin%MET,PARS,DATAin%deltat &
                      ,DATAin%nodays,DATAin%LAT                      &
-                     ,M_FLUXES,M_POOLS,M_DIAGS &
+                     ,DATAin%M_FLUXES,DATAin%M_POOLS,DATAin%M_DIAGS &
                      ,DATAin%nopars,DATAin%nomet,DATAin%nopools     &
                      ,DATAin%nofluxes,DATAin%nodiags                &
                      ,PI%stock_seed_labile,PI%DS_shoot,PI%DS_root   &
@@ -832,7 +832,7 @@ module model_likelihood_module
         call assess_EDC2(PI%npars,DATAin%nomet,DATAin%nofluxes,DATAin%nopools  &
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
-                        ,M_POOLS,M_FLUXES,M_DIAGS         &
+                        ,DATAin%M_POOLS,DATAin%M_FLUXES,DATAin%M_DIAGS         &
                         ,DATAin%meantemp,EDC2)      
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -902,7 +902,7 @@ module model_likelihood_module
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
-                                             1d0,M_DIAGS(1:DATAin%nodays,1))
+                                             1d0,DATAin%M_DIAGS(1:DATAin%nodays,1))
     end if
 
     !
@@ -913,19 +913,19 @@ module model_likelihood_module
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
                                              DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
-                                             1d0,M_POOLS(1:DATAin%nodays,2))
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
                                              DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
-                                             1d0,M_POOLS(1:DATAin%nodays,3))
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             1d0,M_POOLS(1:DATAin%nodays,6))
+                                             1d0,DATAin%M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
 
     !
@@ -935,27 +935,27 @@ module model_likelihood_module
     ! Calculate log-likelihood for gross primary production
     if (DATAin%ngpp > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag, &
-                                             1d0,M_FLUXES(1:DATAin%nodays,1))
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,1))
     endif ! ngpp > 0
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
-                                             1d0,M_FLUXES(1:DATAin%nodays,21))
+                                             1d0,DATAin%M_FLUXES(1:DATAin%nodays,21))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
-        mod = M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
-            - M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              1d0,mod)    
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
-        mod = M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              1d0,mod)
     endif ! nreco > 0
@@ -984,7 +984,7 @@ module model_likelihood_module
     ! Calculate log-likelihood for leaf area index
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
-                                             DATAin%LAI_scaling,M_DIAGS(1:DATAin%nodays,1))
+                                             DATAin%LAI_scaling,DATAin%M_DIAGS(1:DATAin%nodays,1))
     end if ! nlai > 0
 
     !
@@ -995,19 +995,19 @@ module model_likelihood_module
     if (DATAin%nCfol_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCfol_stock,DATAin%Cfol_stockpts, &
                                              DATAin%Cfol_stock,DATAin%Cfol_stock_unc,DATAin%Cfol_stock_lag, &
-                                             DATAin%Cfol_stock_scaling,M_POOLS(1:DATAin%nodays,2))
+                                             DATAin%Cfol_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,2))
     endif ! nCfol_stock > 0
     ! Calculate log-likelihood for fine root stocks
     if (DATAin%nCroots_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCroots_stock,DATAin%Croots_stockpts, &
                                              DATAin%Croots_stock,DATAin%Croots_stock_unc,DATAin%Croots_stock_lag, &
-                                             DATAin%Croots_stock_scaling,M_POOLS(1:DATAin%nodays,3))
+                                             DATAin%Croots_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,3))
     endif ! nCroots_stock > 0
     ! Calculate log-likelihood for soil organic matter stocks
     if (DATAin%nCsom_stock > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCsom_stock,DATAin%Csom_stockpts, &
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
-                                             DATAin%Csom_stock_scaling,M_POOLS(1:DATAin%nodays,6))
+                                             DATAin%Csom_stock_scaling,DATAin%M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
 
     !
@@ -1017,27 +1017,27 @@ module model_likelihood_module
     ! Calculate log-likelihood for gross primary production
     if (DATAin%ngpp > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%ngpp,DATAin%gpppts,DATAin%GPP,DATAin%GPP_unc,DATAin%GPP_lag, &
-                                             DATAin%GPP_scaling,M_FLUXES(1:DATAin%nodays,1))
+                                             DATAin%GPP_scaling,DATAin%M_FLUXES(1:DATAin%nodays,1))
     endif ! ngpp > 0
     ! Calculate log-likelihood for harvest
     if (DATAin%nharvest > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
-                                             DATAin%harvest_scaling,M_FLUXES(1:DATAin%nodays,21))
+                                             DATAin%harvest_scaling,DATAin%M_FLUXES(1:DATAin%nodays,21))
     endif ! nharvest > 0
     ! Calculate log-likelihood for net ecosystem exchange of CO2
     if (DATAin%nnee > 0) then
-        mod = M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
-            + M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
-            - M_FLUXES(1:DATAin%nodays,1)    ! GPP
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14) & ! Rhet som
+            - DATAin%M_FLUXES(1:DATAin%nodays,1)    ! GPP
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nnee,DATAin%neepts,DATAin%NEE,DATAin%NEE_unc,DATAin%NEE_lag, &
                                              DATAin%NEE_scaling,mod)    
     endif ! nnee > 0
     ! Calculate log-likelihood for ecosystem respiration
     if (DATAin%nreco > 0) then
-        mod = M_FLUXES(1:DATAin%nodays,3)  & ! Rauto
-            + M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
-            + M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
+        mod = DATAin%M_FLUXES(1:DATAin%nodays,3)  & ! Rauto
+            + DATAin%M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
+            + DATAin%M_FLUXES(1:DATAin%nodays,14)   ! Rhet som
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              DATAin%Reco_scaling,mod)
     endif ! nreco > 0
@@ -1068,7 +1068,7 @@ module model_likelihood_module
     if (DATAin%otherpriors(1) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
-        mod = sum(M_FLUXES(1:DATAin%nodays,3)) / sum(M_FLUXES(1:DATAin%nodays,1)) ! sum(Rauto) / sum(GPP)
+        mod = sum(DATAin%M_FLUXES(1:DATAin%nodays,3)) / sum(DATAin%M_FLUXES(1:DATAin%nodays,1)) ! sum(Rauto) / sum(GPP)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if
@@ -1081,8 +1081,8 @@ module model_likelihood_module
         ! This code assumes that the DS_time = DS occurs after DS is incremented and 
         ! not after the management activities had reset DS to -1. If so this code will not work.
         if (allocated(tmp1)) deallocate(tmp1)
-        allocate(tmp1(DATAin%nodays)) ; tmp1 = 0d0 ; where(M_DIAGS(1:DATAin%nodays,3) >= 0d0) tmp1 = 1d0
-        mod = sum(M_FLUXES(:,21)*tmp1) / sum(M_FLUXES(:,1)*tmp1)
+        allocate(tmp1(DATAin%nodays)) ; tmp1 = 0d0 ; where(DATAin%M_DIAGS(1:DATAin%nodays,3) >= 0d0) tmp1 = 1d0
+        mod = sum(DATAin%M_FLUXES(:,21)*tmp1) / sum(DATAin%M_FLUXES(:,1)*tmp1)
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(8)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(8),DATAin%otherpriorunc(8),dummy_lag,dummy_scaling,mod))
         deallocate(tmp1)

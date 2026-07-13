@@ -46,16 +46,59 @@ module CARBON_MODEL_MOD
   private
 
   ! explicit publics
-  public :: CARBON_MODEL     &
-           ,nos_soil_layers  &
-           ,mVs , initialize_mv, &
-           model_working_variables
+  public :: CARBON_MODEL          &
+           ,vsmall                &
+           ,arrhenious            &
+           ,acm                   &
+           ,calculate_daylength   &
+           ,opt_max_scaling       &
+           ,freeze                &
+           ,linear_model_gradient &
+           ,seconds_per_day       &
+           ,deltat_1              &
+           ,doy                   &
+           ,lai                   &
+           ,days_per_step         &
+           ,days_per_step_1       &
+           ,dayl_hours            &
+           ,resp_rate_temp_coeff  &
+           ,nos_soil_layers       &
+           ,soil_frac_clay        &
+           ,soil_frac_sand        &
+           ,dim_1,dim_2           &
+           ,nos_trees             &
+           ,nos_inputs            &
+           ,leftDaughter          &
+           ,rightDaughter         &
+           ,nodestatus            &
+           ,xbestsplit            &
+           ,nodepred              &
+           ,bestvar
+
+  !!!!!!!!!!
+  ! Random Forest GPP emulator
+  !!!!!!!!!!
+
+  ! arrays for the emulator, just so we load them once and that is it cos they be
+  ! massive
+  integer ::    dim_1, & ! dimension 1 of response surface
+                dim_2, & ! dimension 2 of response surface
+            nos_trees, & ! number of trees in randomForest
+           nos_inputs    ! number of driver inputs
+
+  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                      rightDaughter, & ! right daughter for forets
+                                                         nodestatus, & ! nodestatus for forests
+                                                         xbestsplit, & ! for forest
+                                                           nodepred, & ! prediction value for each tree
+                                                            bestvar    ! for randomForests
 
   !!!!!!!!!
   ! Parameters
   !!!!!!!!!
 
   ! useful technical parameters
+  logical :: do_iWUE = .true. ! Use iWUE or WUE for stomatal optimisation
   double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
                                 ,vlarge = huge(0d0)
 
@@ -81,19 +124,9 @@ module CARBON_MODEL_MOD
                     seconds_per_day = 86400d0,        & ! Number of seconds per day
                   seconds_per_day_1 = 1.157407d-05      ! Inverse of seconds per day
 
-  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0,& ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
-                                               lv_res = 0.1d0,      & ! residue fraction of leaves left post harvest
-                                               st_res = 0.1d0,      & ! residue fraction of stem left post harvest 
-                                                LAICR = 4d0,        & ! LAI above which self shading turnover occurs
-                                          rel_gso_max = 0.35d0,     & ! allocation to storage organ relative to GPP
-                               resp_cost_labile_trans = 0.21875d0     ! labile lost to respiration per gC labile to GPP
-
-
   !!!!!!!!!
   ! Module level variables
   !!!!!!!!!
-type model_working_variables
-  logical :: do_iWUE = .true. ! Use iWUE or WUE for stomatal optimisation
 
   ! hydraulic model variables
   integer :: water_retention_pass, soil_layer
@@ -104,7 +137,7 @@ type model_working_variables
                              avN, & ! average foliar N (gN/m2)
                              NUE, & ! Photosynthetic nitrogen use efficiency at optimum temperature (oC)
                                     ! ,unlimited by CO2, light and photoperiod (gC/gN/m2leaf/day
-                              ci    ! Internal CO2 concentration (ppm) 
+                              ci    ! Internal CO2 concentration (ppm)
 
   ! Module level variables for step specific met drivers
   double precision :: mint, & ! minimum temperature (oC)
@@ -248,50 +281,16 @@ type model_working_variables
   ! some hardcoded crop parameters
   !
 
+  double precision, parameter :: resp_rate_temp_coeff = 0.0334798d0,& ! exponential temperature response for heterotrophic respiration (0.0334798 = Q10 of 1.4, 0.0693d0 = Q10 of 2)
+                                               lv_res = 0.1d0,      & ! residue fraction of leaves left post harvest
+                                               st_res = 0.1d0,      & ! residue fraction of stem left post harvest 
+                                                LAICR = 4d0,        & ! LAI above which self shading turnover occurs
+                                          rel_gso_max = 0.35d0,     & ! allocation to storage organ relative to GPP
+                               resp_cost_labile_trans = 0.21875d0     ! labile lost to respiration per gC labile to GPP
 
-  end type
+  save
 
-  type(model_working_variables), allocatable, dimension(:):: mVs
-
-    contains
-
-  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
-      !! For a single chain's model_working_varibles type object mV, allocate arrays
-        !! and calculate initial values.
-        use cardamom_structures, only: DATAin
-        implicit none
-        type(model_working_variables), intent(out):: mV
-        integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: met(nomet, nodays)     
-        double precision, intent(in) :: deltat(nodays)
-        double precision, intent(in) :: lat
-        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
-          !! Needed as arguments from r_interface , otherwise taken from DATAin
-        integer:: n
-
-        if (present(soil_frac_sand)) then
-          mV%soil_frac_sand = soil_frac_sand 
-        else
-          mV%soil_frac_sand = DATAin%soil_frac_sand 
-        endif
-        if (present(soil_frac_clay)) then
-          mV%soil_frac_clay = soil_frac_clay
-        else
-          mV%soil_frac_clay = DATAin%soil_frac_clay
-        endif
-
-        allocate(mV%deltat_1(nodays))
-        mV%deltat_1 = deltat**(-1d0)      
-
-  end subroutine initialize_mv
-
-
-  subroutine destroy_mv(mV)
-    !! deallocate arrays in mV
-    type(model_working_variables):: mV
-        deallocate(mV%deltat_1)
-    end subroutine
-
+  contains
   !
   !--------------------------------------------------------------------
   !
@@ -299,7 +298,7 @@ type model_working_variables
                          ,FLUXES,POOLS,DIAGS & 
                          ,nopars,nomet,nopools,nofluxes,nodiags &
                          ,stock_seed_labile,DS_shoot,DS_root,fol_frac    &
-                         ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT, mV)
+                         ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
 
     !
     ! The Data Assimilation Linked Ecosystem Carbon - CROP - BUCKET (DALEC.C3.M1.014) model.
@@ -311,12 +310,7 @@ type model_working_variables
     ! Version 1.0: 15/07/2014
     ! Version 2.0: 25/04/2024 - Integrated into CARDAMOM as substraction of BUCKET model
 
-    use cardamom_structures, only: CI ! get former arguments: stock_seed_labile,DS_shoot,DS_root,fol_frac    &
-                         ! ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT, from here (read-only) 
-
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! declare input variables
     integer, intent(in) :: start    &
@@ -458,107 +452,107 @@ type model_working_variables
 
     ! load some values
     acm_forcings(7) = pars(11) ! Canopy nitrogen use efficency (gC/gNleaf/day)
-    mV%avN = pars(36)       ! foliar N, initial value                         
-    mV%latitude_radians = lat * deg_to_rad
-    mV%sin_latitude_radians = sin(mV%latitude_radians)
-    mV%cos_latitude_radians = cos(mV%latitude_radians)
+    avN = pars(36)       ! foliar N, initial value                         
+    latitude_radians = lat * deg_to_rad
+    sin_latitude_radians = sin(latitude_radians)
+    cos_latitude_radians = cos(latitude_radians)
 
     ! parameters from file
-    mV%decomposition_rate                = pars(1)  ! decomposition rate (day)
-    mV%frac_GPP_resp_auto                = pars(2)  ! fraction of GPP allocated to autotrophic carbon pool
-    mV%DR_pre                            = pars(3)  ! development rate coefficient DS (0->1)
-    mV%DR_post                           = pars(4)  ! development rate coefficient DS (1->2)
-    mV%turnover_rate_foliage             = pars(5)  ! turnover_rate of foliage (day)
-    mV%turnover_rate_stem                = pars(6)  ! turnover rate of stem (day)
-    mV%RDRSHMAX                          = pars(7)  ! maximum rate of foliar turnover due to self shading (day)
-    mV%VDh                               = pars(8)  ! effective vernalisation days when plants are 50 % vernalised
-    mV%mineralisation_rate_litter        = pars(9)  ! mineralisation rate litter (day)
-    mV%mineralisation_rate_soilOrgMatter = pars(10) ! mineralisation rate som (day)
-    mV%sow_day                           = nint(mod(pars(12),365.25d0)) ! sow day (doy)
-    mV%PHUem                             = pars(13) ! phenological heat units required for emergence
-    mV%harvest_day                       = nint(mod(mV%sow_day + pars(14),365.25d0)) ! harvest day (doy)
-    mV%plough_day                        = nint(mod(pars(12)-2d0,365.25d0)) ! plough day (doy)
-    mV%LCA                               = pars(17) ! leaf mass area (gC.m-2)
-    mV%tmin                              = pars(26)-273.15d0 ! min temperature for development
-    mV%tmax                              = pars(27)-273.15d0 ! max temperature for development
-    mV%topt                              = pars(28)-273.15d0 ! optimum temperature for development
-    mV%tmin_v                            = pars(29)-273.15d0 ! min temperature for vernalisation
-    mV%tmax_v                            = pars(30)-273.15d0 ! max temperature for vernalisation
-    mV%topt_v                            = pars(31)-273.15d0 ! optimim temperature for vernalisation
-    mV%doptmin   = mV%topt   - mV%tmin     ! difference between optimum and minimum cardinal temperatures
-    mV%dmaxmin   = mV%tmax   - mV%tmin     ! difference between maximum and minimum cardinal temperatures
-    mV%doptmin_v = mV%topt_v - mV%tmin_v   ! difference between optimum and minimum vernalisation temperatures
-    mV%dmaxmin_v = mV%tmax_v - mV%tmin_v   ! difference between maximum and minimum vernalisation temperatures
-    mV%PHCR                              = pars(32) ! critical value of photoperiod for development
-    mV%PHSC                              = pars(33) ! photoperiod sensitivity
-    mV%turnover_rate_labile              = pars(34) ! turnover rate labile C (day)
-    mV%turnover_rate_resp_auto           = pars(35) ! turnover rate of autotrophic carbon for respiration (day)
+    decomposition_rate                = pars(1)  ! decomposition rate (day)
+    frac_GPP_resp_auto                = pars(2)  ! fraction of GPP allocated to autotrophic carbon pool
+    DR_pre                            = pars(3)  ! development rate coefficient DS (0->1)
+    DR_post                           = pars(4)  ! development rate coefficient DS (1->2)
+    turnover_rate_foliage             = pars(5)  ! turnover_rate of foliage (day)
+    turnover_rate_stem                = pars(6)  ! turnover rate of stem (day)
+    RDRSHMAX                          = pars(7)  ! maximum rate of foliar turnover due to self shading (day)
+    VDh                               = pars(8)  ! effective vernalisation days when plants are 50 % vernalised
+    mineralisation_rate_litter        = pars(9)  ! mineralisation rate litter (day)
+    mineralisation_rate_soilOrgMatter = pars(10) ! mineralisation rate som (day)
+    sow_day                           = nint(mod(pars(12),365.25d0)) ! sow day (doy)
+    PHUem                             = pars(13) ! phenological heat units required for emergence
+    harvest_day                       = nint(mod(sow_day + pars(14),365.25d0)) ! harvest day (doy)
+    plough_day                        = nint(mod(pars(12)-2d0,365.25d0)) ! plough day (doy)
+    LCA                               = pars(17) ! leaf mass area (gC.m-2)
+    tmin                              = pars(26)-273.15d0 ! min temperature for development
+    tmax                              = pars(27)-273.15d0 ! max temperature for development
+    topt                              = pars(28)-273.15d0 ! optimum temperature for development
+    tmin_v                            = pars(29)-273.15d0 ! min temperature for vernalisation
+    tmax_v                            = pars(30)-273.15d0 ! max temperature for vernalisation
+    topt_v                            = pars(31)-273.15d0 ! optimim temperature for vernalisation
+    doptmin   = topt   - tmin     ! difference between optimum and minimum cardinal temperatures
+    dmaxmin   = tmax   - tmin     ! difference between maximum and minimum cardinal temperatures
+    doptmin_v = topt_v - tmin_v   ! difference between optimum and minimum vernalisation temperatures
+    dmaxmin_v = tmax_v - tmin_v   ! difference between maximum and minimum vernalisation temperatures
+    PHCR                              = pars(32) ! critical value of photoperiod for development
+    PHSC                              = pars(33) ! photoperiod sensitivity
+    turnover_rate_labile              = pars(34) ! turnover rate labile C (day)
+    turnover_rate_resp_auto           = pars(35) ! turnover rate of autotrophic carbon for respiration (day)
 
     ! load stocks in first time step
-    mV%stock_labile                      = pars(18) ! labile C
-    mV%stock_foliage                     = pars(19) ! foliar C
-    mV%stock_roots                       = pars(20) ! root C
-    mV%stock_stem                        = pars(21) ! stem / wood C
-    mV%stock_litter                      = pars(22) ! litter C
-    mV%stock_soilOrgMatter               = pars(23) ! som C
-    mV%stock_resp_auto                   = pars(24) ! autotrophic resp pool
-    mV%stock_storage_organ               = pars(25) ! storage organ (i.e. desired crop)
-    mV%stock_dead_foliage                = 0d0      ! dead but still standing foliage
+    stock_labile                      = pars(18) ! labile C
+    stock_foliage                     = pars(19) ! foliar C
+    stock_roots                       = pars(20) ! root C
+    stock_stem                        = pars(21) ! stem / wood C
+    stock_litter                      = pars(22) ! litter C
+    stock_soilOrgMatter               = pars(23) ! som C
+    stock_resp_auto                   = pars(24) ! autotrophic resp pool
+    stock_storage_organ               = pars(25) ! storage organ (i.e. desired crop)
+    stock_dead_foliage                = 0d0      ! dead but still standing foliage
 
     ! assigning initial conditions
-    POOLS(1,1) = mV%stock_labile
-    POOLS(1,2) = mV%stock_foliage
-    POOLS(1,3) = mV%stock_roots
-    POOLS(1,4) = mV%stock_stem
-    POOLS(1,5) = mV%stock_litter
-    POOLS(1,6) = mV%stock_soilOrgMatter
-    POOLS(1,7) = mV%stock_resp_auto
-    POOLS(1,8) = mV%stock_storage_organ
-    POOLS(1,9) = mV%stock_dead_foliage
+    POOLS(1,1) = stock_labile
+    POOLS(1,2) = stock_foliage
+    POOLS(1,3) = stock_roots
+    POOLS(1,4) = stock_stem
+    POOLS(1,5) = stock_litter
+    POOLS(1,6) = stock_soilOrgMatter
+    POOLS(1,7) = stock_resp_auto
+    POOLS(1,8) = stock_storage_organ
+    POOLS(1,9) = stock_dead_foliage
 
     ! logical switches
-    mV%vernal_calcs    = .true.
-    mV%ploughed        = .false.
-    mV%sown            = .false.
-    mV%use_seed_labile = .true.
-    mV%emerged         = .false.
+    vernal_calcs    = .true.
+    ploughed        = .false.
+    sown            = .false.
+    use_seed_labile = .true.
+    emerged         = .false.
 
     ! pair incoming variables to local module levels
     ! finally set some initial conditions
-    mV%yield = 0d0
-    mV%DS = -1d0
-    mV%DR = 0d0
+    yield = 0d0
+    DS = -1d0
+    DR = 0d0
     fV = 0d0 ; fT = 0d0 ; fP = 0d0
-    mV%alloc_to_storage_organ_old = 0d0
-    mV%PHU = 0d0 ; mV%VD = 0d0
-    mV%BM_EX = 0d0 ; mV%HI = 0d0
-    mV%stock_dead_foliage = 0d0
-    mV%alloc_to_labile = 0d0
-    mV%stmob = 0
-    mV%max_raso = 0d0
-    mV%raso = 0d0
-    mV%RDRDV = 0d0
-    mV%max_raso_old = 0d0
-    mV%raso_old  = 0d0
-    mV%fol_frac_intpol = 0d0
-    mV%stem_frac_intpol = 0d0
-    mV%root_frac_intpol = 0d0
+    alloc_to_storage_organ_old = 0d0
+    PHU = 0d0 ; VD = 0d0
+    BM_EX = 0d0 ; HI = 0d0
+    stock_dead_foliage = 0d0
+    alloc_to_labile = 0d0
+    stmob = 0
+    max_raso = 0d0
+    raso = 0d0
+    RDRDV = 0d0
+    max_raso_old = 0d0
+    raso_old  = 0d0
+    fol_frac_intpol = 0d0
+    stem_frac_intpol = 0d0
+    root_frac_intpol = 0d0
 
     ! SHOULD TURN THIS INTO A SUBROUTINE CALL AS COMMON TO BOTH DEFAULT AND CROPS
-    if (.not.allocated(mV%deltat_1)) then 
-      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
-      STOP 1
+    if (.not.allocated(deltat_1)) then
+        allocate(deltat_1(nodays))
+        deltat_1 = deltat**(-1d0)      
     endif
 
     ! load some needed module level values
-    mV%lai = POOLS(1,2)/mV%LCA
-    mV%mint = met(2,1)  ! minimum temperature (oC)
-    mV%maxt = met(3,1)  ! maximum temperature (oC)
-    leafT = (mV%maxt*0.75d0) + (mV%mint*0.25d0) ! initial canopy temperature (oC)
-    mV%swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
-    mV%co2 = met(5,1)   ! CO2 (ppm)
-    mV%doy = ceiling(met(6,1)-(deltat(1)*0.5d0))   ! Day of year
-    meant = (mV%maxt+mV%mint) * 0.5d0   ! mean air temperature (oC) !TODO no such variable in this module
+    lai = POOLS(1,2)/LCA
+    mint = met(2,1)  ! minimum temperature (oC)
+    maxt = met(3,1)  ! maximum temperature (oC)
+    leafT = (maxt*0.75d0) + (mint*0.25d0) ! initial canopy temperature (oC)
+    swrad = met(4,1) ! incoming short wave radiation (MJ/m2/day)
+    co2 = met(5,1)   ! CO2 (ppm)
+    doy = ceiling(met(6,1)-(deltat(1)*0.5d0))   ! Day of year
+    meant = (maxt+mint) * 0.5d0   ! mean air temperature (oC)
 
     !
     ! Begin looping through each time step
@@ -571,23 +565,23 @@ type model_working_variables
       !!!!!!!!!!
 
       ! Incoming drivers
-      mV%mint = met(2,n)  ! minimum temperature (oC)
-      mV%maxt = met(3,n)  ! maximum temperature (oC)
-      leafT = (mV%maxt*0.75d0) + (mV%mint*0.25d0)     ! initial canopy temperature (oC)
-      mV%swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
-      mV%co2 = met(5,n)   ! CO2 (ppm)
-      mV%days_per_step = deltat(n) ; mV%days_per_step_1 = mV%deltat_1(n)
-      mV%doy = ceiling(met(6,n)-(mV%days_per_step*0.5d0))   ! Day of year
+      mint = met(2,n)  ! minimum temperature (oC)
+      maxt = met(3,n)  ! maximum temperature (oC)
+      leafT = (maxt*0.75d0) + (mint*0.25d0)     ! initial canopy temperature (oC)
+      swrad = met(4,n) ! incoming short wave radiation (MJ/m2/day)
+      co2 = met(5,n)   ! CO2 (ppm)
+      days_per_step = deltat(n) ; days_per_step_1 = deltat_1(n)
+      doy = ceiling(met(6,n)-(days_per_step*0.5d0))   ! Day of year
       meant = met(14,n)   ! mean air temperature (oC)
 
       ! Calculate current days leaf area index
-      mV%lai = POOLS(n,2)/mV%LCA
-      DIAGS(n,1) = mV%lai
+      lai = POOLS(n,2)/LCA
+      DIAGS(n,1) = lai
 
       ! Calculate solar declination for the current time step
-      mV%declination = calculate_declination(mV%doy)
+      declination = calculate_declination(doy)
       ! calculate daylength in hours and seconds
-      call calculate_daylength(mV)
+      call calculate_daylength
       ! extract timing related values
 
       ! Note that soil mass balance will be calculated after phenology
@@ -595,8 +589,8 @@ type model_working_variables
 
       ! DS < 0.15 corresponds to the growth stage at beginning of the UK recommended period of      
       ! N fertiliser application for winter wheat (Zodocks growth stage 20) - the early tillering stage (typically mid-march to April)
-      if (mV%DS < 0.469d0) then                          
-          mV%avN = pars(36)                     
+      if (DS < 0.469d0) then                          
+          avN = pars(36)                     
       else! if (DS >= 0.469d0 .and. DS <= 1.293d0) then
           ! NOTE: The slope_n parameter can be included in the MDF optimisation. 
           !       The value for this parameter has also been observed to be around -0.02.
@@ -605,34 +599,33 @@ type model_working_variables
           !       during senescence which is unrealistic. 
           ! NOTE: Dead foliage removed as only the remaining live foliage is photosynthetically active.
           !avN = max(0.1d0,min(avN,(pars(37)*(POOLS(n,2)+POOLS(n,9))) + pars(36)))
-          mV%avN = max(0.1d0,min(mV%avN,(pars(37)*POOLS(n,2)) + pars(36)))          
+          avN = max(0.1d0,min(avN,(pars(37)*POOLS(n,2)) + pars(36)))          
 !      else
 !          ! Set LNA to 0.1 after anthesis (Zodocks growth stage 75)  
 !          Non-applicable as we are explicitly tracking the continued live leaf area and the dead
 !          avN = 0.1d0                              
       end if
-      DIAGS(n,2) = mV%avN
+      DIAGS(n,2) = avN
 
       ! GPP and direct allocation of GPP can only occur 
       ! if sufficient LAI to prevent numerical error
-      if (mV%lai > 1d-5) then 
+      if (lai > 1d-5) then 
 
           ! load next met / lai values for ACM
-          acm_forcings(1) = mV%lai      ! LAI
-          acm_forcings(2) = mV%maxt ! maximum temperature (oC)
-          acm_forcings(3) = mV%mint ! minimum temperature (oC)
-          acm_forcings(4) = mV%avN
-          acm_forcings(5) = mV%co2 ! CO2 (ppm)
-          acm_forcings(6) = mV%swrad ! incoming short wave radiation (MJ/m2/day)
+          acm_forcings(1) = lai      ! LAI
+          acm_forcings(2) = maxt ! maximum temperature (oC)
+          acm_forcings(3) = mint ! minimum temperature (oC)
+          acm_forcings(4) = avN
+          acm_forcings(5) = co2 ! CO2 (ppm)
+          acm_forcings(6) = swrad ! incoming short wave radiation (MJ/m2/day)
 
           ! GPP (gC.m-2.day-1)
           FLUXES(n,1) = acm(acm_forcings)
-          DIAGS(n,4) = mV%ci / mV%co2
+          DIAGS(n,4) = ci / co2
           
       end if
-      ! Pass GPP estimate to modul
-e variable for use in crop development model
-      mV%gpp_acm = FLUXES(n,1) 
+      ! Pass GPP estimate to module variable for use in crop development model
+      gpp_acm = FLUXES(n,1) 
 
       ! calculate weighted air temperature value based on daily minimum, maximum
       ! and means. This minimises the error introduced when scaling between
@@ -647,107 +640,107 @@ e variable for use in crop development model
       !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(3,n) )) * airt_weighting(1))
       !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * meant   )) * airt_weighting(2))
       !resp_rate = resp_rate + ((0.5d0 * exp( resp_rate_temp_coeff * met(2,n) )) * airt_weighting(3))
-      mV%resp_rate = 0.5d0 * exp( resp_rate_temp_coeff * meant )
+      resp_rate = 0.5d0 * exp( resp_rate_temp_coeff * meant )
 
       ! reallocate day of year to the end of the time step for use in
       ! crop development model
-      mV%doy = met(6,n)
+      doy = met(6,n)
       ! determine development stage (DS)
       ! Note that DS must be updated here and not after management_dates. Otherwise, 
       ! there will be problems using DS_time for calculating yield:GPP calculations in MODEL_LIKELIHOOD.f90
-      call development_stage(mV%days_per_step) ; DIAGS(n,3, mV) = mV%DS 
+      call development_stage(days_per_step) ; DIAGS(n,3) = DS 
       ! determine the carbon partitioning based on development stage
-      call carbon_alloc_fractions(CI%DS_shoot,CI%DS_root,CI%fol_frac,CI%stem_frac,CI%root_frac, mV)
+      call carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
       ! begin carbon allocation for crops
-      call calc_pools_crops(CI%DS_LRRT,CI%LRRT, mV)
+      call calc_pools_crops(DS_LRRT,LRRT)
       ! conduct management updates at the end of the day
-      call management_dates(CI%stock_seed_labile,mV%days_per_step, mV)
+      call management_dates(stock_seed_labile,days_per_step)
 
       ! temprate (i.e. temperature modified rate of metabolic activity)
-      FLUXES(n,2) = mV%resp_rate
+      FLUXES(n,2) = resp_rate
       ! autotrophic respiration (gC.m-2.d-1)
-      FLUXES(n,3) = mV%resp_auto + mV%resp_cost_labile_to_npp + &
-                    mV%resp_cost_npp_to_labile + mV%resp_cost_foliage_to_labile + &
-                    mV%resp_cost_stem_to_labile
+      FLUXES(n,3) = resp_auto + resp_cost_labile_to_npp + &
+                    resp_cost_npp_to_labile + resp_cost_foliage_to_labile + &
+                    resp_cost_stem_to_labile
       ! leaf production rate (gC.m-2.d-1)
-      FLUXES(n,4) = mV%alloc_to_foliage
+      FLUXES(n,4) = alloc_to_foliage
       ! labile production (gC.m-2.d-1)
-      FLUXES(n,5) = mV%alloc_to_labile + mV%foliage_to_labile + mV%stem_to_labile
+      FLUXES(n,5) = alloc_to_labile + foliage_to_labile + stem_to_labile
       ! root production (gC.m-2.d-1)
-      FLUXES(n,6) = mV%alloc_to_roots
+      FLUXES(n,6) = alloc_to_roots
       ! stem production (gC.m-2.d-1)
-      FLUXES(n,7) = mV%alloc_to_stem
+      FLUXES(n,7) = alloc_to_stem
       ! labile from NPP (gC.m-2.d-1)
-      FLUXES(n,8) = mV%alloc_from_labile
+      FLUXES(n,8) = alloc_from_labile
       ! alloc to storage organ (gC.m-2.d-1)
-      FLUXES(n,9) = mV%alloc_to_storage_organ
+      FLUXES(n,9) = alloc_to_storage_organ
       ! total leaf litter production (gC.m-2.d-1)
-      FLUXES(n,10) = mV%litterfall_foliage
+      FLUXES(n,10) = litterfall_foliage
       ! total stem litter production (gC.m-2.d-1)
-      FLUXES(n,11) = mV%litterfall_stem
+      FLUXES(n,11) = litterfall_stem
       ! total root litter production (gC.m-2.d-1)
-      FLUXES(n,12) = mV%litterfall_roots
+      FLUXES(n,12) = litterfall_roots
       ! respiration heterotrophic litter (gC.m-2.d-1)
-      FLUXES(n,13) = mV%resp_h_litter
+      FLUXES(n,13) = resp_h_litter
       ! respiration heterotrophic som (gC.m-2.d-1)
-      FLUXES(n,14) = mV%resp_h_soilOrgMatter
+      FLUXES(n,14) = resp_h_soilOrgMatter
       ! litter to som (gC.m-2.d-1)
-      FLUXES(n,15) = mV%decomposition
+      FLUXES(n,15) = decomposition
       ! alloc to autotrophic pool (gC.m-2.d-1)
-      FLUXES(n,16) = mV%alloc_to_resp_auto
+      FLUXES(n,16) = alloc_to_resp_auto
       ! harvest yield (gC.m-2.d-1)
-      FLUXES(n,21) = mV%yield
+      FLUXES(n,21) = yield
       ! C extracted in addition to yield due to harvest activity (gC.m-2.d-1)
-      FLUXES(n,22) = mV%BM_EX
+      FLUXES(n,22) = BM_EX
       ! Respiration from autotrophic allocation (gC.m-2.d-1)
-      FLUXES(n,23) = mV%resp_auto
+      FLUXES(n,23) = resp_auto
       ! Respiration from labile to foliage translocation (gC.m-2.d-1)
-      FLUXES(n,24) = mV%resp_cost_labile_to_npp
+      FLUXES(n,24) = resp_cost_labile_to_npp
       ! Respiration from foliage to litter translocation (gC.m-2.d-1)
-      FLUXES(n,25) = mV%resp_cost_npp_to_labile
+      FLUXES(n,25) = resp_cost_npp_to_labile
       ! Respiration from foliage remobilisation (gC.m-2.d-1)
-      FLUXES(n,26) = mV%resp_cost_foliage_to_labile
+      FLUXES(n,26) = resp_cost_foliage_to_labile
       ! Respiration from stem remobilisation (gC.m-2.d-1)
-      FLUXES(n,27) = mV%resp_cost_stem_to_labile
+      FLUXES(n,27) = resp_cost_stem_to_labile
       ! Foliage extracted from harvest (gC.m-2.d-1)
-      FLUXES(n,28) = mV%HARVESTextracted_foliage
+      FLUXES(n,28) = HARVESTextracted_foliage
       ! Stem extracted from harvest (gC.m-2.d-1)
-      FLUXES(n,29) = mV%HARVESTextracted_stem
+      FLUXES(n,29) = HARVESTextracted_stem
       ! Dead still standing foliage extracted from harvest (gC.m-2.d-1)
-      FLUXES(n,30) = mV%HARVESTextracted_dead_foliage
+      FLUXES(n,30) = HARVESTextracted_dead_foliage
       ! Labile extracted from harvest (gC.m-2.d-1)
-      FLUXES(n,31) = mV%HARVESTextracted_labile
+      FLUXES(n,31) = HARVESTextracted_labile
       ! Foliage added to litter due to harvest (gC.m-2.d-1)
-      FLUXES(n,32) = mV%HARVESTlitter_foliage
+      FLUXES(n,32) = HARVESTlitter_foliage
       ! Stem added to litter due to harvest (gC.m-2.d-1)
-      FLUXES(n,33) = mV%HARVESTlitter_stem
+      FLUXES(n,33) = HARVESTlitter_stem
       ! Dead still standing foliage added to litter due to harvest (gC.m-2.d-1)
-      FLUXES(n,34) = mV%HARVESTlitter_dead_foliage
+      FLUXES(n,34) = HARVESTlitter_dead_foliage
       ! Autotrophic pool added to litter due to harvest (gC.m-2.d-1)
-      FLUXES(n,35) = mV%HARVESTlitter_resp_auto
+      FLUXES(n,35) = HARVESTlitter_resp_auto
       ! Labile added to litter due to harvest (gC.m-2.d-1)
-      FLUXES(n,36) = mV%HARVESTlitter_labile
+      FLUXES(n,36) = HARVESTlitter_labile
       ! Roots pool added to litter due to plough (gC.m-2.d-1)
-      FLUXES(n,37) = mV%PLOUGHlitter_roots
+      FLUXES(n,37) = PLOUGHlitter_roots
 
       ! labile pool
-      POOLS(n+1,1) = mV%stock_labile
+      POOLS(n+1,1) = stock_labile
       ! foliar pool
-      POOLS(n+1,2) = mV%stock_foliage
+      POOLS(n+1,2) = stock_foliage
       ! root pool
-      POOLS(n+1,3) = mV%stock_roots
+      POOLS(n+1,3) = stock_roots
       ! wood pool
-      POOLS(n+1,4) = mV%stock_stem
+      POOLS(n+1,4) = stock_stem
       ! litter pool
-      POOLS(n+1,5) = mV%stock_litter
+      POOLS(n+1,5) = stock_litter
       ! som pool
-      POOLS(n+1,6) = mV%stock_soilOrgMatter
+      POOLS(n+1,6) = stock_soilOrgMatter
       ! autotrophic pool
-      POOLS(n+1,7) = mV%stock_resp_auto
+      POOLS(n+1,7) = stock_resp_auto
       ! storage organ pool
-      POOLS(n+1,8) = mV%stock_storage_organ
+      POOLS(n+1,8) = stock_storage_organ
       ! dead but still standing foliage
-      POOLS(n+1,9) = mV%stock_dead_foliage
+      POOLS(n+1,9) = stock_dead_foliage
 
 !      do nxp = 1, nopools
 !         if (POOLS(n+1,nxp) /= POOLS(n+1,nxp) .or. POOLS(n+1,nxp) < 0d0) then
@@ -845,15 +838,13 @@ e variable for use in crop development model
   !
   !------------------------------------------------------------------
   !
-  double precision function acm(acm_forcings, mV)
+  double precision function acm(acm_forcings)
 
     ! the Aggregated Canopy Model, is a Gross Primary Productivity (i.e.
     ! Photosyntheis) emulator which operates at a daily time step. ACM can be
     ! paramaterised to provide reasonable results for most ecosystems.
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! declare input variables
     double precision, intent(in) :: acm_forcings(7) ! acm input requirements
@@ -874,7 +865,7 @@ e variable for use in crop development model
                        ,trange,mint,maxt,radiation,co2,lai,doy
 
     ! initial values
-    gc = 0d0 ; pp = 0d0 ; qq = 0d0 ; mV%ci = 0d0 ; e0 = 0d0 ; cps = 0d0 
+    gc = 0d0 ; pp = 0d0 ; qq = 0d0 ; ci = 0d0 ; e0 = 0d0 ; cps = 0d0 
 
     ! load driver values to correct local vars
     lai  = acm_forcings(1) ! leaf area index m2/m2
@@ -895,16 +886,16 @@ e variable for use in crop development model
     pp = pn/gc 
     qq = co2_comp_point-co2_half_sat
     ! calculate internal CO2 concentration (ppm)
-    mV%ci = 0.5*(co2+qq-pp+sqrt(((co2+qq-pp)*(co2+qq-pp))-4d0*(co2*qq-pp*co2_comp_point)))
+    ci = 0.5*(co2+qq-pp+sqrt(((co2+qq-pp)*(co2+qq-pp))-4d0*(co2*qq-pp*co2_comp_point)))
     ! limit maximum quantium efficiency by leaf area, hyperbola
     e0 = lai_coef*(lai*lai)/((lai*lai)+lai_const)
 
     ! calculate CO2 limited rate of photosynthesis
-    pd = gc*(co2-mV%ci)
+    pd = gc*(co2-ci)
     ! calculate combined light and CO2 limited photosynthesis
     cps = e0*radiation*pd/(e0*radiation+pd)
     ! correct for day length variation
-    acm = cps*(dayl_coef*mV%dayl_hours+dayl_const)
+    acm = cps*(dayl_coef*dayl_hours+dayl_const)
 
     return
 
@@ -912,11 +903,9 @@ e variable for use in crop development model
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_cosine_solar_zenith_angle (mV)
+  subroutine calculate_cosine_solar_zenith_angle
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! Calculate some common variables needed for the Sellers (1985)
     ! parameteric appoximation
@@ -937,22 +926,20 @@ e variable for use in crop development model
     ! and from that the solar flux.
     ! eqn 2.15 in Hartmann's Global Physical Climatology...
     ! Minimum allowed value constraint from SIB3 implementation of Sellers (1985)
-    mV%cosine_solar_zenith_angle = max(0.01747d0, mV%sin_latitude_radians * sin(mV%declination) + &
-                                               mV%cos_latitude_radians * cos(mV%declination) * &
+    cosine_solar_zenith_angle = max(0.01747d0, sin_latitude_radians * sin(declination) + &
+                                               cos_latitude_radians * cos(declination) * &
                                                cos_hour_angle)
     
   end subroutine calculate_cosine_solar_zenith_angle
   !
   !-----------------------------------------------------------------
   !
-  subroutine calculate_daylength (mV)
+  subroutine calculate_daylength
 
     ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
     ! combined with trigonomic functions to calculate day length in hours and seconds
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! local variables
     double precision :: dec, sinld, cosld, aob
@@ -962,12 +949,12 @@ e variable for use in crop development model
     !
 
     ! day length is estimated as the ratio of sin and cos of the product of declination an latitude in radiation
-    sinld = mV%sin_latitude_radians * sin( mV%declination )
-    cosld = mV%cos_latitude_radians * cos( mV%declination )
+    sinld = sin_latitude_radians * sin( declination )
+    cosld = cos_latitude_radians * cos( declination )
     aob = max(-1d0,min(1d0,sinld / cosld))
 
     ! estimate day length in hours and seconds and upload to module variables
-    mV%dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
+    dayl_hours = 12d0 * ( 1d0 + 2d0 * asin( aob ) * pi_1 )
     !dayl_seconds = dayl_hours * seconds_per_hour
 
     ! return to user
@@ -984,7 +971,7 @@ e variable for use in crop development model
   !
   !------------------------------------------------------------------
   !
-  subroutine calc_pools_crops(DS_LRRT,LRRT, mV)
+  subroutine calc_pools_crops(DS_LRRT,LRRT)
 
     ! Allocated GPP to NPP and various carbon pools. Based  !
     ! this on physiological responses to temperature        !
@@ -993,8 +980,6 @@ e variable for use in crop development model
     ! rather SPAcrop which operated on a hourly time step.  !
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! arguments
     double precision, dimension(:), intent(inout) :: DS_LRRT, & ! Development stage corresponding to loss rate of roots
@@ -1006,94 +991,94 @@ e variable for use in crop development model
     ! turnover rate of fine roots is now equal to the
     ! loss rate of roots as a function of development stage
     ! (Penning de Vries, 1989).
-    mV%turnover_rate_roots = interpolate( mV%DS , DS_LRRT , LRRT , 5 )
+    turnover_rate_roots = interpolate( DS , DS_LRRT , LRRT , 5 )
 
     ! if sown turn on labile / seed turnover for growth
-    if ( mV%sown ) then
+    if ( sown ) then
         ! turnover on
-        mV%turnover_labile_switch = 1
+        turnover_labile_switch = 1
     else
         ! turnover off
-        mV%turnover_labile_switch = 0
+        turnover_labile_switch = 0
     endif
 
     ! Initialise / reset
-    mV%yield = 0d0 ; mV%BM_EX = 0d0
-    mV%HARVESTextracted_foliage = 0d0
-    mV%HARVESTextracted_stem = 0d0
-    mV%HARVESTextracted_dead_foliage = 0d0
-    mV%HARVESTextracted_labile = 0d0
-    mV%HARVESTlitter_labile = 0d0
-    mV%HARVESTlitter_foliage = 0d0
-    mV%HARVESTlitter_stem = 0d0
-    mV%HARVESTlitter_dead_foliage = 0d0
-    mV%HARVESTlitter_resp_auto = 0d0
-    mV%PLOUGHlitter_roots = 0d0
+    yield = 0d0 ; BM_EX = 0d0
+    HARVESTextracted_foliage = 0d0
+    HARVESTextracted_stem = 0d0
+    HARVESTextracted_dead_foliage = 0d0
+    HARVESTextracted_labile = 0d0
+    HARVESTlitter_labile = 0d0
+    HARVESTlitter_foliage = 0d0
+    HARVESTlitter_stem = 0d0
+    HARVESTlitter_dead_foliage = 0d0
+    HARVESTlitter_resp_auto = 0d0
+    PLOUGHlitter_roots = 0d0
 
     ! Determine total allocation of labile C to NPP or Ra (gC.m-2.d-1)
-    mV%alloc_from_labile = mV%turnover_rate_labile * mV%resp_rate * dble(mV%turnover_labile_switch)
-    mV%alloc_from_labile = mV%stock_labile * (1d0-(1d0-mV%alloc_from_labile) ** mV%days_per_step) * mV%days_per_step_1
+    alloc_from_labile = turnover_rate_labile * resp_rate * dble(turnover_labile_switch)
+    alloc_from_labile = stock_labile * (1d0-(1d0-alloc_from_labile) ** days_per_step) * days_per_step_1
     ! Determine the respiratory cost of C transfer from labile pool to NPP (gC.m-2.d-1)
-    mV%resp_cost_labile_to_npp = mV%alloc_from_labile * resp_cost_labile_trans
+    resp_cost_labile_to_npp = alloc_from_labile * resp_cost_labile_trans
     ! Determine the remaining allocation of labile C to NPP (gC.m-2.d-1)
-    mV%alloc_from_labile = mV%alloc_from_labile - mV%resp_cost_labile_to_npp
+    alloc_from_labile = alloc_from_labile - resp_cost_labile_to_npp
 
     ! Estimate allocation (gC/m2/day) of GPP to autotrophic respiration pool
-    mV%alloc_to_resp_auto = mV%gpp_acm * mV%frac_GPP_resp_auto
+    alloc_to_resp_auto = gpp_acm * frac_GPP_resp_auto
     ! NPP as a fraction of GPP (1-.32=.68 or 68%) + allocation from labile
-    mV%npp = mV%gpp_acm + mV%alloc_from_labile - mV%alloc_to_resp_auto
+    npp = gpp_acm + alloc_from_labile - alloc_to_resp_auto
 
     ! Dertermine partitioning of NPP to biomass pools
-    mV%alloc_to_roots    = mV%root_frac_intpol * mV%npp
+    alloc_to_roots    = root_frac_intpol * npp
     ! Calculate how much NPP is left after allocation to roots
-    mV%npp_shoot         = mV%npp - mV%alloc_to_roots
+    npp_shoot         = npp - alloc_to_roots
     ! Partition the remaining NPP to foliage and stem (gC/m2/day)
-    mV%alloc_to_foliage  = mV%fol_frac_intpol  * mV%npp_shoot
-    mV%alloc_to_stem     = mV%stem_frac_intpol * mV%npp_shoot
+    alloc_to_foliage  = fol_frac_intpol  * npp_shoot
+    alloc_to_stem     = stem_frac_intpol * npp_shoot
     ! Remaining NPP is then allocated to storage organ
-    mV%alloc_to_storage_organ = max(0d0,mV%npp_shoot - mV%alloc_to_foliage - mV%alloc_to_stem)
+    alloc_to_storage_organ = max(0d0,npp_shoot - alloc_to_foliage - alloc_to_stem)
 
     ! Assuming allocation to storage organ is > 0 ensure flux is limited by
     ! maximum growth rate potential, i.e. growth potential increases with size
     ! existing yield
-    mV%alloc_to_labile = 0d0 ; mV%resp_cost_npp_to_labile = 0d0
-    if ( mV%alloc_to_storage_organ > 0d0 ) then
-        mV%gso_max  = ( mV%stock_storage_organ + 0.5d0 ) * rel_gso_max
+    alloc_to_labile = 0d0 ; resp_cost_npp_to_labile = 0d0
+    if ( alloc_to_storage_organ > 0d0 ) then
+        gso_max  = ( stock_storage_organ + 0.5d0 ) * rel_gso_max
         ! Restrict allocation to storage organ based on available C and potential
         ! Where does any excess go?
-        mV%alloc_to_storage_organ = min( mV%alloc_to_storage_organ , mV%gso_max )
-        if ( mV%sown .and. mV%emerged) then
+        alloc_to_storage_organ = min( alloc_to_storage_organ , gso_max )
+        if ( sown .and. emerged) then
             ! Assuming we shown and emerged, the remainder is now allocated to labile,
             ! less the cost of transfer
-            mV%alloc_to_labile = ( mV%npp_shoot - mV%alloc_to_foliage - mV%alloc_to_stem - mV%alloc_to_storage_organ )
+            alloc_to_labile = ( npp_shoot - alloc_to_foliage - alloc_to_stem - alloc_to_storage_organ )
             ! Having worked out the total available C, update based on cost of respiratory transfer
-            mV%resp_cost_npp_to_labile =  mV%alloc_to_labile * resp_cost_labile_trans
-            mV%alloc_to_labile = mV%alloc_to_labile - mV%resp_cost_npp_to_labile
+            resp_cost_npp_to_labile =  alloc_to_labile * resp_cost_labile_trans
+            alloc_to_labile = alloc_to_labile - resp_cost_npp_to_labile
         endif
     endif
 
     ! set switches to (de)activate leaf, root and stem remobliization
-    mV%raso_old = mV%raso
+    raso_old = raso
     ! Running Average of growth rate of Storage Organ..
-    mV%raso = ( mV%alloc_to_storage_organ + mV%alloc_to_storage_organ_old ) * 0.5d0
-    mV%max_raso_old = mV%max_raso
-    mV%max_raso = max( mV%raso , mV%max_raso_old )
+    raso = ( alloc_to_storage_organ + alloc_to_storage_organ_old ) * 0.5d0
+    max_raso_old = max_raso
+    max_raso = max( raso , max_raso_old )
     ! Stem remobilisation triggered once running average of storage organ growth declines
     ! Second part prevents premature remobilisation
-    if ( ( mV%raso < mV%raso_old ) .and. &
-         ( mV%alloc_to_storage_organ > ( mV%alloc_to_storage_organ_old + 0.5d0 ) ) ) then
-        mV%stmob = 1
+    if ( ( raso < raso_old ) .and. &
+         ( alloc_to_storage_organ > ( alloc_to_storage_organ_old + 0.5d0 ) ) ) then
+        stmob = 1
     else
-        mV%stmob = 0
+        stmob = 0
     endif
 
     ! Code for calculating relative death rate of leaves (RDR) as a
     !  function of shading (RDRSH) or developmental stage (RDRT).
 
     ! GT 0 if LAI GT 4; 0. < RDRSH < RDRSHMAX (usually ~0.03)
-    mV%RDRSH = min( mV%RDRSHMAX , max( 0d0 , mV%RDRSHMAX * ( mV%lai - LAICR ) / LAICR ) )
-    if ( mV%DS < 1d0 ) then
-       mV%RDRDV = 0d0
+    RDRSH = min( RDRSHMAX , max( 0d0 , RDRSHMAX * ( lai - LAICR ) / LAICR ) )
+    if ( DS < 1d0 ) then
+       RDRDV = 0d0
     else
        ! RDRDV dependant on DR and DS, values range typically between 0.02 <
        ! RDRDV < 0.25
@@ -1101,71 +1086,71 @@ e variable for use in crop development model
 !!$      RDRDV = DR /( max( 0.1 , 2. - DS ) )
 !!$      RDRDV = RDRDV / 24. ! to get hourly senescence rate
        ! TLS: think the source of this equation needs to be found
-       mV%RDRDV = mV%turnover_rate_foliage * min(1d0, ( 1d0 / ( ( max( 2d0 - mV%DS , 0.1d0 ) ) * 8d0 ) ) ** 2)
+       RDRDV = turnover_rate_foliage * min(1d0, ( 1d0 / ( ( max( 2d0 - DS , 0.1d0 ) ) * 8d0 ) ) ** 2)
     ENDIF
 
     ! Relative leaf death rate is the maximum value of the arguments RDRSH and
     ! RDRDV
-    mV%RDR = max( mV%RDRSH , mV%RDRDV )
+    RDR = max( RDRSH , RDRDV )
 
     ! remobilization of foliar C and allocation to dead leaves pool (gC.m-2.d-1)
-    mV%litterfall_foliage = mV%stock_foliage * (1d0-(1d0-mV%RDR) ** mV%days_per_step) * mV%days_per_step_1
+    litterfall_foliage = stock_foliage * (1d0-(1d0-RDR) ** days_per_step) * days_per_step_1
     ! remobilization of stem C (gC.m-2.d-1)
-    mV%litterfall_stem    = mV%stock_stem    * (1d0-(1d0-(mV%DR*mV%turnover_rate_stem*dble(mV%stmob))) ** mV%days_per_step) * mV%days_per_step_1
+    litterfall_stem    = stock_stem    * (1d0-(1d0-(DR*turnover_rate_stem*dble(stmob))) ** days_per_step) * days_per_step_1
     ! remobilization of fine roots C (gC.m-2.d-1)
-    mV%litterfall_roots   = mV%stock_roots   * (1d0-(1d0-mV%turnover_rate_roots) ** mV%days_per_step) * mV%days_per_step_1
+    litterfall_roots   = stock_roots   * (1d0-(1d0-turnover_rate_roots) ** days_per_step) * days_per_step_1
 
     ! remobilized C to NPP (from both leaves and stems) (gC.m-2.d-1)
     ! Assume that half the foliage litter C is available for remobilisation
-    mV%foliage_to_labile   = ( mV%litterfall_foliage * 0.5d0) * ( 1d0 - resp_cost_labile_trans )
-    mV%stem_to_labile      = ( mV%litterfall_stem ) * ( 1d0 - resp_cost_labile_trans )
+    foliage_to_labile   = ( litterfall_foliage * 0.5d0) * ( 1d0 - resp_cost_labile_trans )
+    stem_to_labile      = ( litterfall_stem ) * ( 1d0 - resp_cost_labile_trans )
     ! respiratory cost of C transfer (conversion from starch to photosynthates) (gC.m-2.d-1)
-    mV%resp_cost_foliage_to_labile   = ( mV%litterfall_foliage * 0.5d0) * resp_cost_labile_trans
-    mV%resp_cost_stem_to_labile      = mV%litterfall_stem * resp_cost_labile_trans
+    resp_cost_foliage_to_labile   = ( litterfall_foliage * 0.5d0) * resp_cost_labile_trans
+    resp_cost_stem_to_labile      = litterfall_stem * resp_cost_labile_trans
 
     ! litter decomposition to soil organic matter
-    mV%decomposition = mV%stock_litter &
-                  * (1d0-(1d0-(mV%decomposition_rate*mV%resp_rate)) ** mV%days_per_step) &
-                  * mV%days_per_step_1
+    decomposition = stock_litter &
+                  * (1d0-(1d0-(decomposition_rate*resp_rate)) ** days_per_step) &
+                  * days_per_step_1
 
     ! heterotrophic respiration component 1: mineralisation of litter C pool (gC.m-2.d-1)
-    mV%resp_h_litter = mV%stock_litter &
-                  * (1d0-(1d0-(mV%mineralisation_rate_litter*mV%resp_rate)) ** mV%days_per_step) &
-                  * mV%days_per_step_1
+    resp_h_litter = stock_litter &
+                  * (1d0-(1d0-(mineralisation_rate_litter*resp_rate)) ** days_per_step) &
+                  * days_per_step_1
     ! heterotrophic respiration component 2:  mineralisation of organic matter C pool (gC.m-2.d-1)
-    mV%resp_h_soilOrgMatter = mV%stock_soilOrgMatter &
-                         * (1d0-(1d0-(mV%mineralisation_rate_soilOrgMatter * mV%resp_rate)) ** mV%days_per_step) &
-                         * mV%days_per_step_1
+    resp_h_soilOrgMatter = stock_soilOrgMatter &
+                         * (1d0-(1d0-(mineralisation_rate_soilOrgMatter * resp_rate)) ** days_per_step) &
+                         * days_per_step_1
                   
     ! Autotrophic respiration allocated pool is a special case, where the total
     ! available for the time step is accumulated first then losses are determined.
     ! Add photosynthate allocated to autotrophic respiration (gC.m-2.d-1)
-    mV%stock_resp_auto = mV%stock_resp_auto + (mV%alloc_to_resp_auto * mV%days_per_step)
+    stock_resp_auto = stock_resp_auto + (alloc_to_resp_auto * days_per_step)
     ! Determine autotrophic costs as loss term. This should probably have a temperature sensitivity
     ! or be removed to work as applied in other DALEC models? (gC.m-2.d-1)
     ! NOTE: that autotrophic respiration from other sources added below
-    mV%resp_auto = mV%stock_resp_auto * (1d0-(1d0-mV%turnover_rate_resp_auto) ** mV%days_per_step) * mV%days_per_step_1
+    resp_auto = stock_resp_auto * (1d0-(1d0-turnover_rate_resp_auto) ** days_per_step) * days_per_step_1
     ! Update stock
-    mV%stock_resp_auto = max(0d0, mV%stock_resp_auto - (mV%resp_auto * mV%days_per_step))
+    stock_resp_auto = max(0d0, stock_resp_auto - (resp_auto * days_per_step))
 
     ! nee (gC.m-2.d-1)
-    mV%nee_dalec = (mV%resp_auto + mV%resp_cost_labile_to_npp + mV%resp_cost_npp_to_labile + &
-                 mV%resp_cost_foliage_to_labile + mV%resp_cost_stem_to_labile + &
-                 mV%resp_h_litter + mV%resp_h_soilOrgMatter) - mV%gpp_acm
+    nee_dalec = (resp_auto + resp_cost_labile_to_npp + resp_cost_npp_to_labile + &
+                 resp_cost_foliage_to_labile + resp_cost_stem_to_labile + &
+                 resp_h_litter + resp_h_soilOrgMatter) - gpp_acm
 
     ! Recalculate Physical Carbon Pools...
     ! TLS: Note that while max(0d0,... conditions have been applied to all pools, I hypothese that the critical
     ! restriction is applied to stock_resp_auto
-    mV%stock_foliage       = max(0d0, mV%stock_foliage       + ((mV%alloc_to_foliage - mV%litterfall_foliage) * mV%days_per_step))
-    mV%stock_stem          = max(0d0, mV%stock_stem          + ((mV%alloc_to_stem - mV%litterfall_stem) * mV%days_per_step))
-    mV%stock_storage_organ = max(0d0, mV%stock_storage_organ + ((mV%alloc_to_storage_organ) * mV%days_per_step))
-    mV%stock_roots         = max(0d0, mV%stock_roots         + ((mV%alloc_to_roots   - mV%litterfall_roots) * mV%days_per_step))
-    mV%stock_litter        = max(0d0, mV%stock_litter        + ((mV%litterfall_roots - mV%resp_h_litter - mV%decomposition) * mV%days_per_step))
-    mV%stock_soilOrgMatter = max(0d0, mV%stock_soilOrgMatter + ((mV%decomposition    - mV%resp_h_soilOrgMatter) * mV%days_per_step))
-    mV%stock_dead_foliage  = max(0d0, mV%stock_dead_foliage  + ((mV%litterfall_foliage * 0.5d0) * mV%days_per_step))
-    mV%stock_labile        = max(0d0, mV%stock_labile        + ((mV%alloc_to_labile  - mV%alloc_from_labile - &
-                                                           mV%resp_cost_labile_to_npp + mV%foliage_to_labile + &
-                                                           mV%stem_to_labile) * mV%days_per_step) )
+    stock_foliage       = max(0d0, stock_foliage       + ((alloc_to_foliage - litterfall_foliage) * days_per_step))
+    stock_stem          = max(0d0, stock_stem          + ((alloc_to_stem - litterfall_stem) * days_per_step))
+    stock_storage_organ = max(0d0, stock_storage_organ + ((alloc_to_storage_organ) * days_per_step))
+    stock_roots         = max(0d0, stock_roots         + ((alloc_to_roots   - litterfall_roots) * days_per_step))
+    stock_litter        = max(0d0, stock_litter        + ((litterfall_roots - resp_h_litter - decomposition) * days_per_step))
+    stock_soilOrgMatter = max(0d0, stock_soilOrgMatter + ((decomposition    - resp_h_soilOrgMatter) * days_per_step))
+    stock_dead_foliage  = max(0d0, stock_dead_foliage  + ((litterfall_foliage * 0.5d0) * days_per_step))
+    stock_labile        = max(0d0, stock_labile        + ((alloc_to_labile  - alloc_from_labile - &
+                                                           resp_cost_labile_to_npp + foliage_to_labile + &
+                                                           stem_to_labile) * days_per_step) )
 
     ! When GPP is higher than seed C content, remaining seed carbon enters litter
     ! C pool, as seedlings do not fully exhaust their seed (P. de Vries p 48)
@@ -1173,17 +1158,17 @@ e variable for use in crop development model
     ! are already concurrently occuring. In this codes previous position further
     ! up the code, resulted in C being both dumped to litter and the same carbon
     ! being allocated to respiration and NPP.
-    if ( ( mV%gpp_acm > mV%alloc_from_labile ) .and. ( mV%use_seed_labile ) ) then
-        mV%stock_litter = mV%stock_litter + mV%stock_labile
-        mV%stock_labile = 0d0
-        mV%use_seed_labile = .false.
+    if ( ( gpp_acm > alloc_from_labile ) .and. ( use_seed_labile ) ) then
+        stock_litter = stock_litter + stock_labile
+        stock_labile = 0d0
+        use_seed_labile = .false.
     endif
 
   end subroutine calc_pools_crops
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac, mV)
+  subroutine carbon_alloc_fractions(DS_shoot,DS_root,fol_frac,stem_frac,root_frac)
 
     ! Determines carbon allocation fractions as a function !
     ! of developmental stage (DS).  Allocation fractions   !
@@ -1191,9 +1176,7 @@ e variable for use in crop development model
 
     implicit none
 
-      type(model_working_variables) :: mV
-
-    double precision, dimension(:), intent(in) ::   DS_shoot, & !
+    double precision, dimension(:), intent(inout) ::   DS_shoot, & !
                                                         DS_root, & !
                                                        fol_frac, & !
                                                       stem_frac, & !
@@ -1202,7 +1185,7 @@ e variable for use in crop development model
     ! local variables..
     double precision,dimension(:),allocatable :: frac_shoot, frac_root
 
-    if ( mV%sown ) then ! after sowing
+    if ( sown ) then ! after sowing
 
        ! loop over three crop "organs": 1) foliage 2) stems 3) root
        ! not necessary for storage organs, as all remaining C is allocated to
@@ -1216,11 +1199,11 @@ e variable for use in crop development model
 
        ! interpolate between PdV allocation values with reference to
        ! developmental stage (DS)..
-       mV%fol_frac_intpol = min(1d0,max(0d0,interpolate( mV%DS , DS_shoot , fol_frac , size(DS_shoot) )))
+       fol_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_shoot , fol_frac , size(DS_shoot) )))
        ! stem DS and fracs..
-       mV%stem_frac_intpol = min(1d0,max(0d0,interpolate( mV%DS , DS_shoot , stem_frac , size(DS_shoot) )))
+       stem_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_shoot , stem_frac , size(DS_shoot) )))
        ! root DS and fracs..
-       mV%root_frac_intpol = min(1d0,max(0d0,interpolate( mV%DS , DS_root , root_frac , size(DS_root) )))
+       root_frac_intpol = min(1d0,max(0d0,interpolate( DS , DS_root , root_frac , size(DS_root) )))
 
     endif ! after crop has been sown
 
@@ -1228,15 +1211,13 @@ e variable for use in crop development model
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine development_stage(days_in_step, mV)
+  subroutine development_stage(days_in_step)
 
     ! Based on modified Wang & Engel model (Streck et al., 2003), !
     ! but with only 2 sub-phases, vegetative and reproductive     !
     ! (i.e. only two different DRmax).   O. Sus, May 2010.        !
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! agruments
     double precision :: days_in_step
@@ -1245,8 +1226,8 @@ e variable for use in crop development model
     double precision ::  dttmin,  & ! Difference between daily average and minimum temperatures
                          dttmin_v   ! Difference between daily average and minimum vernalization temperatures
 
-    dttmin   = meant - mV%tmin    ! difference between daily average and minimum cardinal temperatures
-    dttmin_v = meant - mV%tmin_v  ! difference between daily average and minimum vernalization temperatures
+    dttmin   = meant - tmin    ! difference between daily average and minimum cardinal temperatures
+    dttmin_v = meant - tmin_v  ! difference between daily average and minimum vernalization temperatures
 
     ! Calculation of developmental function values: vernalization (fV),
     ! temperature (fT) and
@@ -1257,34 +1238,34 @@ e variable for use in crop development model
 
     ! Summation of vernalization days (VD), not before sowing and only if
     ! average temperature is within min and max cardinal temperatures..
-    if ( ( meant > mV%tmin_v ) .and. ( meant < mV%tmax_v ) .and. mV%sown ) then
-        fV = vernalization( mV%doptmin_v , mV%dmaxmin_v , dttmin_v , days_in_step )
+    if ( ( meant > tmin_v ) .and. ( meant < tmax_v ) .and. sown ) then
+        fV = vernalization( doptmin_v , dmaxmin_v , dttmin_v , days_in_step )
     endif
 
     ! Only calculate temperature coefficient if meant lies within (tmin,tmax)
     ! range. NOTE: (doptmin+1d0) < dmaxmin added to allow for EDC search period when "not
     ! allowed" parameter sets will be tried anyway
-    if ( meant > mV%tmin .and. meant < mV%tmax .and. (mV%doptmin+1d0) < mV%dmaxmin ) then
-        fT = temperature_impact( mV%doptmin , mV%dmaxmin , dttmin )
+    if ( meant > tmin .and. meant < tmax .and. (doptmin+1d0) < dmaxmin ) then
+        fT = temperature_impact( doptmin , dmaxmin , dttmin )
     else
         fT = 0d0
     endif
 
     ! calculation of photoperiod coefficient
-    fP = photoperiod_impact( mV%PHCR , mV%PHSC )
+    fP = photoperiod_impact( PHCR , PHSC )
 
-    if ( mV%emerged .and. ( mV%DS < 2d0 ) ) then   ! sum up daily DR values between emergence and maturity (DS=2)
+    if ( emerged .and. ( DS < 2d0 ) ) then   ! sum up daily DR values between emergence and maturity (DS=2)
 
-       if ( mV%DS < 1d0 ) then  ! in the vegetative phase (before flowering):
+       if ( DS < 1d0 ) then  ! in the vegetative phase (before flowering):
 
-          mV%DR = mV%DR_pre * fT * fP   ! DR is affected by temperature, photoperiod...
-          if ( mV%vernal_calcs ) mV%DR = mV%DR * fV ! ...and vernalization (for winter cereals)
-          mV%DS = mV%DS + (mV%DR * days_in_step)    ! developmental stage (DS), calculated as the sum of daily developmental rates
+          DR = DR_pre * fT * fP   ! DR is affected by temperature, photoperiod...
+          if ( vernal_calcs ) DR = DR * fV ! ...and vernalization (for winter cereals)
+          DS = DS + (DR * days_in_step)    ! developmental stage (DS), calculated as the sum of daily developmental rates
 
        else    ! in the reproductive phase (after flowering):
 
-          mV%DR = mV%DR_post * fT   ! DR is affected only by temperature
-          mV%DS = mV%DS + (mV%DR * days_in_step)
+          DR = DR_post * fT   ! DR is affected only by temperature
+          DS = DS + (DR * days_in_step)
 
        endif ! vegetative or reproductive phase
 
@@ -1294,7 +1275,7 @@ e variable for use in crop development model
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine management_dates (stock_seed_labile,days_in_step, mV)
+  subroutine management_dates (stock_seed_labile,days_in_step)
 
     ! This routine should be called at the end of each day of a crops  !
     ! simulation.  It checks whether we should plough/sow/harvest, and !
@@ -1302,8 +1283,6 @@ e variable for use in crop development model
     ! sowing, based on heat accumulation (Phenological Heat Units).    !
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! arguments
     double precision, intent(in) :: stock_seed_labile,days_in_step
@@ -1316,33 +1295,33 @@ e variable for use in crop development model
     !plough_sanity = .true. ; sow_sanity = .true. ; harvest_sanity = .true.
 
     ! spring crop
-    if (mV%sow_day < mV%harvest_day .and. nint(mV%doy) < mV%harvest_day) sow_sanity = .true.
-    if (mV%plough_day < mV%harvest_day .and. nint(mV%doy) < mV%harvest_day) plough_sanity = .true.
-    if (mV%harvest_day > mV%sow_day) harvest_sanity = .true.
+    if (sow_day < harvest_day .and. nint(doy) < harvest_day) sow_sanity = .true.
+    if (plough_day < harvest_day .and. nint(doy) < harvest_day) plough_sanity = .true.
+    if (harvest_day > sow_day) harvest_sanity = .true.
     ! winter crops
-    if (mV%sow_day > mV%harvest_day) sow_sanity = .true.
-    if (mV%plough_day > mV%harvest_day) plough_sanity = .true.
-    if (mV%harvest_day < mV%plough_day .and. nint(mV%doy) < mV%plough_day) harvest_sanity = .true.
+    if (sow_day > harvest_day) sow_sanity = .true.
+    if (plough_day > harvest_day) plough_sanity = .true.
+    if (harvest_day < plough_day .and. nint(doy) < plough_day) harvest_sanity = .true.
 
-    if ( .not. mV%sown ) then
+    if ( .not. sown ) then
 
         ! fresh field...
 
-        if ( plough_sanity .and. .not.mV%ploughed .and. nint(mV%doy) >= mV%plough_day ) then
+        if ( plough_sanity .and. .not.ploughed .and. nint(doy) >= plough_day ) then
             ! the field needs ploughing..
-            call plough(mV)
+            call plough
 
-        else if ( sow_sanity .and. nint(mV%doy) >= mV%sow_day ) then
+        else if ( sow_sanity .and. nint(doy) >= sow_day ) then
 
             ! ensure that the field has indeed been ploughed
-            if (.not.mV%ploughed) call plough(mV)
+            if (.not.ploughed) call plough
             ! the field needs sowing..
-            mV%sown = .true.
+            sown = .true.
 
             ! this switch controls whether the labile carbon within the seed is used
             ! for growth
-            mV%use_seed_labile = .true.
-            mV%stock_labile = stock_seed_labile
+            use_seed_labile = .true.
+            stock_labile = stock_seed_labile
 
         endif ! plough or sow?
 
@@ -1351,30 +1330,30 @@ e variable for use in crop development model
         ! crop in field..
 
         ! calculate when crop emerges..
-        if ( .not. mV%emerged ) then
+        if ( .not. emerged ) then
 
             ! estimate emergence date based on the accumulated phenological heat
             ! units (PHU)
             ! where PHU is the (positive) heat over tmin..
-            tmp = max( meant - mV%tmin , 0d0 )*days_in_step
-            mV%PHU = mV%PHU + tmp
+            tmp = max( meant - tmin , 0d0 )*days_in_step
+            PHU = PHU + tmp
 
             ! set the development stage and emergence..
-            if ( mV%PHU >= mV%PHUem ) then
-                mV%emerged = .true.
-                mV%DS = 0d0
+            if ( PHU >= PHUem ) then
+                emerged = .true.
+                DS = 0d0
             else
-                mV%emerged = .false.
-                mV%DS = -1d0
+                emerged = .false.
+                DS = -1d0
             endif
 
         endif ! emerged or not
 
         ! note that in this case harvest day has been fixed relative to the sow
         ! day
-        if ( harvest_sanity .and. nint(mV%doy) >= mV%harvest_day) then
+        if ( harvest_sanity .and. nint(doy) >= harvest_day) then
             ! the field needs harvesting..
-            call harvest(mV)
+            call harvest
         endif
 
     endif ! sown or not
@@ -1387,86 +1366,84 @@ e variable for use in crop development model
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine harvest (mV)
+  subroutine harvest
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! Declare some local variables
     double precision :: tmp, Ctotal
 
     ! shoot biomass..
-    mV%Cshoot = mV%stock_foliage + mV%stock_stem + mV%stock_storage_organ + mV%stock_labile
+    Cshoot = stock_foliage + stock_stem + stock_storage_organ + stock_labile
     ! Total biomass not including the storage organ
-    Ctotal = mV%stock_foliage + mV%stock_stem + mV%stock_roots
+    Ctotal = stock_foliage + stock_stem + stock_roots
 
     ! Can only work if there is biomass in existance
     if (Ctotal > 0d0) then
 
         ! determine harvest index..
-        mV%HI = mV%stock_storage_organ / mV%Cshoot
+        HI = stock_storage_organ / Cshoot
 
         ! the stuff we actually want from the harvest...
-        mV%yield = mV%stock_storage_organ * mV%days_per_step_1
+        yield = stock_storage_organ * days_per_step_1
 
         ! How much of each pool is extracted during harvest
-        mV%HARVESTextracted_foliage      = mV%stock_foliage * ( 1d0 - lv_res ) * mV%days_per_step_1
-        mV%HARVESTextracted_stem         = mV%stock_stem * ( 1d0 - st_res ) * mV%days_per_step_1
-        mV%HARVESTextracted_dead_foliage = mV%stock_dead_foliage * ( 1d0 - lv_res ) * mV%days_per_step_1
+        HARVESTextracted_foliage      = stock_foliage * ( 1d0 - lv_res ) * days_per_step_1
+        HARVESTextracted_stem         = stock_stem * ( 1d0 - st_res ) * days_per_step_1
+        HARVESTextracted_dead_foliage = stock_dead_foliage * ( 1d0 - lv_res ) * days_per_step_1
         ! How much of each pool remains as litter after harvest
-        mV%HARVESTlitter_foliage      = mV%stock_foliage * lv_res * mV%days_per_step_1
-        mV%HARVESTlitter_stem         = mV%stock_stem * st_res * mV%days_per_step_1
-        mV%HARVESTlitter_dead_foliage = mV%stock_dead_foliage * lv_res * mV%days_per_step_1
-        mV%HARVESTlitter_resp_auto    = mV%stock_resp_auto * mV%days_per_step_1
+        HARVESTlitter_foliage      = stock_foliage * lv_res * days_per_step_1
+        HARVESTlitter_stem         = stock_stem * st_res * days_per_step_1
+        HARVESTlitter_dead_foliage = stock_dead_foliage * lv_res * days_per_step_1
+        HARVESTlitter_resp_auto    = stock_resp_auto * days_per_step_1
 
         ! Labile is a special case due to being distributed within various tissues.
         ! NOTE that extracted is calculated then the litter component is estimates as residual.
         ! The time scale adjustment is applied last, rather than inline (as above)
-        mV%HARVESTextracted_labile = (mV%stock_labile * (mV%stock_foliage / Ctotal) *  (1d0 - lv_res )) & 
-                                + (mV%stock_labile * (mV%stock_stem / Ctotal) *  (1d0 - st_res )) 
-        mV%HARVESTlitter_labile    =  mV%stock_labile - mV%HARVESTextracted_labile
-        mV%HARVESTextracted_labile = mV%HARVESTextracted_labile * mV%days_per_step_1
-        mV%HARVESTlitter_labile    = mV%HARVESTlitter_labile * mV%days_per_step_1
+        HARVESTextracted_labile = (stock_labile * (stock_foliage / Ctotal) *  (1d0 - lv_res )) & 
+                                + (stock_labile * (stock_stem / Ctotal) *  (1d0 - st_res )) 
+        HARVESTlitter_labile    =  stock_labile - HARVESTextracted_labile
+        HARVESTextracted_labile = HARVESTextracted_labile * days_per_step_1
+        HARVESTlitter_labile    = HARVESTlitter_labile * days_per_step_1
 
         ! the biomass that is harvested in addition to the storage-organ..
-        mV%BM_EX  = mV%HARVESTextracted_foliage      &
-               + mV%HARVESTextracted_stem         &
-               + mV%HARVESTextracted_dead_foliage &
-               + mV%HARVESTextracted_labile
+        BM_EX  = HARVESTextracted_foliage      &
+               + HARVESTextracted_stem         &
+               + HARVESTextracted_dead_foliage &
+               + HARVESTextracted_labile
 
         ! what's left (will fall to the ground as litter)..
-        mV%stock_litter  = mV%stock_litter +               &
-                       (mV%HARVESTlitter_foliage +      &
-                        mV%HARVESTlitter_stem +         &
-                        mV%HARVESTlitter_dead_foliage + &
-                        mV%HARVESTlitter_resp_auto +    & 
-                        mV%HARVESTlitter_labile) * mV%days_per_step
+        stock_litter  = stock_litter +               &
+                       (HARVESTlitter_foliage +      &
+                        HARVESTlitter_stem +         &
+                        HARVESTlitter_dead_foliage + &
+                        HARVESTlitter_resp_auto +    & 
+                        HARVESTlitter_labile) * days_per_step
 
     end if ! Ctotal > 0
 
     ! empty the plant stocks..
-    mV%stock_storage_organ = 0d0
-    mV%stock_foliage       = 0d0
-    mV%stock_stem          = 0d0
-    mV%stock_dead_foliage  = 0d0
-    mV%stock_labile        = 0d0
-    mV%stock_resp_auto     = 0d0
+    stock_storage_organ = 0d0
+    stock_foliage       = 0d0
+    stock_stem          = 0d0
+    stock_dead_foliage  = 0d0
+    stock_labile        = 0d0
+    stock_resp_auto     = 0d0
 
     ! roots stay in ground and slowly decompose (until/unless the field is
     ! ploughed)
 
     ! reset logical variables..
-    mV%sown    = .false.
-    mV%emerged = .false.
-    mV%ploughed = .false.
-    mV%DS = -1d0 ; mV%fV = 0d0 ; mV%fT = 0d0 ; mV%fP = 0d0 ; mV%VD = 0d0
+    sown    = .false.
+    emerged = .false.
+    ploughed = .false.
+    DS = -1d0 ; fV = 0d0 ; fT = 0d0 ; fP = 0d0 ; VD = 0d0
 
   end subroutine harvest
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  double precision function photoperiod_impact( PH_crit , PH_sens , mV)
+  double precision function photoperiod_impact( PH_crit , PH_sens )
 
     ! Function to determine the coefficient for !
     ! photoperiod impact on developmental rate. !
@@ -1474,49 +1451,45 @@ e variable for use in crop development model
 
     implicit none
 
-      type(model_working_variables) :: mV
-
     ! arguments..
     double precision,intent(in) :: PH_crit, & ! critical photoperiod below which no development occurs
                                    PH_sens    ! photoperiod sensitivity
 
-    photoperiod_impact = max(0d0, 1d0 - exp ( - PH_Sens * ( mV%dayl_hours - PH_crit ) ))
+    photoperiod_impact = max(0d0, 1d0 - exp ( - PH_Sens * ( dayl_hours - PH_crit ) ))
 
   end function photoperiod_impact
   !
   !--------------------------------------------------------------------------------------------------------------------------------!
   !
-  subroutine plough (mV)
+  subroutine plough
 
     ! this s/r will reset various carbon pools, to mimic the effect of the
     ! farmer ploughing. !
 
     implicit none
 
-      type(model_working_variables) :: mV
-
     ! Track roots transition to litter here, as all others have been reset already
-    mV%PLOUGHlitter_roots = mV%stock_roots * mV%days_per_step_1
+    PLOUGHlitter_roots = stock_roots * days_per_step_1
 
     ! Move all plant stocks into the litter pool.
     ! ( many of these should already be empty after the harvest, )
     ! ( e.g. the stocks for labile, foliage, storage-organ stem. )
-    mV%stock_litter        = mV%stock_litter + mV%stock_dead_foliage &
-                          + mV%stock_foliage + mV%stock_labile    &
-                           + mV%stock_roots + mV%stock_stem       &
-                            + mV%stock_storage_organ
+    stock_litter        = stock_litter + stock_dead_foliage &
+                          + stock_foliage + stock_labile    &
+                           + stock_roots + stock_stem       &
+                            + stock_storage_organ
 
-    mV%stock_dead_foliage  = 0d0
-    mV%stock_foliage       = 0d0
-    mV%stock_labile        = 0d0
-    mV%stock_roots         = 0d0
-    mV%stock_stem          = 0d0
-    mV%stock_storage_organ = 0d0
+    stock_dead_foliage  = 0d0
+    stock_foliage       = 0d0
+    stock_labile        = 0d0
+    stock_roots         = 0d0
+    stock_stem          = 0d0
+    stock_storage_organ = 0d0
 
     ! Reset the development stage & phenological heat units..
-    mV%ploughed = .true. ; mV%DS = -1d0 ; mV%PHU = 0d0
-    mV%max_raso = 0d0 ; mV%raso = 0d0 ; mV%max_raso_old = 0d0 ; mV%raso_old = 0d0
-    mV%alloc_to_storage_organ_old = 0d0
+    ploughed = .true. ; DS = -1d0 ; PHU = 0d0
+    max_raso = 0d0 ; raso = 0d0 ; max_raso_old = 0d0 ; raso_old = 0d0
+    alloc_to_storage_organ_old = 0d0
 
   end subroutine plough
   !
@@ -1674,14 +1647,12 @@ e variable for use in crop development model
   !
   !------------------------------------------------------------------
   !
-  double precision function vernalization( doptmin_v , dmaxmin_v , dttmin_v , days_in_step , mV)
+  double precision function vernalization( doptmin_v , dmaxmin_v , dttmin_v , days_in_step )
 
     ! Function to determine the coefficent for vernalization !
     ! impact on developmental rate. See Streck et al., 2003. !
 
     implicit none
-
-      type(model_working_variables) :: mV
 
     ! arguments..
     double precision,intent(in) :: dmaxmin_v , doptmin_v , dttmin_v & ! temperature differences
@@ -1695,10 +1666,10 @@ e variable for use in crop development model
     dnr = doptmin_v ** ( 2.d0 * a )
     fvn = nmr / dnr
 
-    mV%VD = mV%VD + (fvn*days_in_step)
+    VD = VD + (fvn*days_in_step)
 
     ! final output value..
-    vernalization = max( 0d0 , min( 1d0 , ( mV%VD ** 5 ) / ( ( mV%VDh ** 5 ) + (mV%VD ** 5 ) ) ) )
+    vernalization = max( 0d0 , min( 1d0 , ( VD ** 5 ) / ( ( VDh ** 5 ) + (VD ** 5 ) ) ) )
 
   end function vernalization
   !

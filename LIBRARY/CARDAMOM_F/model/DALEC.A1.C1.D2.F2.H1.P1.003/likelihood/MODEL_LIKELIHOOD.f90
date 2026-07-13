@@ -24,7 +24,7 @@
 !
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains all subroutine and functions relevant to determining the log-likelihood
-! of DALEC.A1.C1.D2.F2.H1.P1 as a function of observations and ecological dynamical constraints.
+! of DALEC.A1.C1.D2.F2.H2.P1 as a function of observations and ecological dynamical constraints.
 !
 ! This code is based on the original C verion of the University of Edinburgh
 ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
@@ -215,10 +215,6 @@ module model_likelihood_module
         print*,local_fluxes(1,:)
         print*,"First time step for all fluxes in run 2"
         print*,M_FLUXES(1,:)
-        print*,"Second time step for all pools in run 1"
-        print*,local_pools(2,:)
-        print*,"Second time step for all pools in run 2"
-        print*,M_POOLS(2,:)
         stop
     end if
 
@@ -401,7 +397,8 @@ module model_likelihood_module
                                    EQF10 = log(10d0), &
                                    EQF15 = log(15d0), &
                                    EQF20 = log(20d0), &
-                                  C_etol = 0.10d0       ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                  C_etol = 0.10d0,    & ! 0.20d0 lots of AGB !0.10d0 global / site more data !0.05d0 global 1 or 2 AGB estimates
+                                H2O_etol = 0.05d0       !
 
 !    ! Debugging print statements
 !    print*,"assess_EDC2: "
@@ -412,9 +409,9 @@ module model_likelihood_module
     infi = 0d0
 
     ! derive mean pools for first year
-    do n = 1, nopools
-       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
-    end do
+!    do n = 1, nopools
+!       mean_pools(n) = cal_mean_pools(M_POOLS(1:steps_per_year,n),steps_per_year)
+!    end do
 
     ! number of time steps per month
     steps_per_month = ceiling(dble(steps_per_year) * 0.08333333d0)
@@ -423,12 +420,22 @@ module model_likelihood_module
     io_start = (steps_per_year*2) + 1 ; io_finish = nodays
     if (DATAin%nos_years < 3) io_start = 1
     do fl = 1, nofluxes
+       ! fl=41 (transpiration) is overwritten below with a flux-weighted calculation; skip here
+       if (fl == 41) cycle
 !       FT(fl) = sum(M_FLUXES(1:nodays,fl)*deltat(1:nodays))
        FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*deltat(io_start:io_finish))
        FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*deltat(1:steps_per_year))
        !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
                        !*deltat((steps_per_year+1):(steps_per_year*2)))
     end do
+!    ! Specific calculation of transpiration extraction from the soil surface layer
+!    fl = 41 ! transpiration multiplied by ...
+!    fs = 48 ! ...fraction of transpiration extracted from 1st rooting layer (the soil surface)
+!    FT(fl) = sum(M_FLUXES(io_start:io_finish,fl)*M_FLUXES(io_start:io_finish,fs)*deltat(io_start:io_finish))
+!    FT_yr1(fl) = sum(M_FLUXES(1:steps_per_year,fl)*M_FLUXES(1:steps_per_year,fs)*deltat(1:steps_per_year))
+!    !FT_yr2(fl) = sum(M_FLUXES((steps_per_year+1):(steps_per_year*2),fl) &
+!                    !*M_FLUXES((steps_per_year+1):(steps_per_year*2),fs) &
+!                    !*deltat((steps_per_year+1):(steps_per_year*2)))
 
     ! get total in and out for each pool
     ! labile
@@ -473,6 +480,14 @@ module model_likelihood_module
     Fout_yr1(6) = FT_yr1(14)+FT_yr1(23)+FT_yr1(36)
 !    Fin_yr2(6)  = FT_yr2(11)+FT_yr2(15)+FT_yr2(27)+FT_yr2(28)
 !    Fout_yr2(6) = FT_yr2(14)+FT_yr2(23)+FT_yr2(36)
+!    ! Surface water pool (0-30cm)
+!    ! 47 = infiltrated, 42 = soil evaporation, 41 = transpiration from top soil, 46 = drainage from top soil
+!    Fin(7)  = FT(47)
+!    Fout(7) = FT(42)+FT(41)+FT(46)
+!    Fin_yr1(7)  = FT_yr1(47)
+!    Fout_yr1(7) = FT_yr1(42)+FT_yr1(41)+FT_yr1(46)
+!!    Fin_yr2(7)  = FT_yr2(47)
+!!    Fout_yr2(7) = FT_yr2(42)+FT_yr2(41)+FT_yr2(46)
 
     !
     ! Begin EDCs here
@@ -507,10 +522,39 @@ module model_likelihood_module
         end if
     end if ! nos_years > 1
 
+    if (DATAin%nos_years > 1) then
+        ! Determine the mean and standard deviation of January wSWPs
+        jan_sd_lai = 0d0 ; jan_mean_lai = 0d0 ; jan_first_lai = 0d0 ! reset
+        jan_first_lai = M_DIAGS(1,10) ! First January wSWP
+        ! Initially sum each January from each year
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1))
+           jan_mean_lai = jan_mean_lai + M_DIAGS(nn,10)
+        end do
+        ! Calculate the mean
+        jan_mean_lai = jan_mean_lai / dble(DATAin%nos_years)
+        ! Calculate the standard deviation now
+        do y = 1, DATAin%nos_years
+           nn = 1 + (steps_per_year * (y - 1))
+           jan_sd_lai = jan_sd_lai + (jan_mean_lai - M_DIAGS(nn,10))**2d0
+        end do
+        jan_sd_lai = sqrt(jan_sd_lai / (dble(DATAin%nos_years - 1)))
+        if ((EDC2 == 1 .or. DIAG == 1) .and. &
+            abs(jan_first_lai-jan_mean_lai) > (jan_sd_lai*2d0) .and. abs(jan_first_lai-jan_mean_lai) > 0.01d0) then
+            EDC2 = 0d0 ; EDCD%PASSFAIL(10) = 0
+        end if
+    end if ! nos_years > 1
+
     ! EDC just for DALEC_CDEA_ACM2_BUCKET due to complications linked to
     ! the empirical phenology but mechanistic hydrology / photosynthesis
     if ((EDC2 == 1 .or. DIAG == 1) .and. maxval(M_DIAGS(1:nodays,1)) > 10d0 ) then
         EDC2 = 0d0 ; EDCD%PASSFAIL(11) = 0
+    end if
+
+    ! The mean annual carbon stock change for soils is unlikely to be >500 gC/m2/yr
+    ! an informed guess.
+    if ((EDC2 == 1 .or. DIAG == 1) .and. abs((M_POOLS(nodays,6)-M_POOLS(1,6))/dble(DATAin%nos_years)) > 500d0) then
+        EDC2 = 0d0 ; EDCD%PASSFAIL(12) = 0
     end if
 
     ! Equilibrium factor (in comparison with initial conditions)
@@ -631,6 +675,18 @@ module model_likelihood_module
            end if
         end do
 
+!        ! Water pool(s)
+!        n = 7  ! surface water pool
+!        ! Restrict rates of increase
+!        if (abs(log(Fin(n)/Fout(n))) > EQF1_5) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(20+n-1) = 0
+!        end if
+!        ! Restrict rates from deviating unrealistically from the mean
+!        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
+!                  abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(30+n-1) = 0
+!        end if
+
     end if ! EDC2 == 1 .or. DIAG == 1
 
     ! Ensure that the mean transit time of foliage and the LCA are consistent with the
@@ -695,15 +751,13 @@ module model_likelihood_module
   !
   double precision function cal_mean_pools(pools,averaging_period)
 
-    ! Function calculate the mean values of model pools / states across the
-    ! entire simulation run
+    ! Function calculate the mean values of model pools / states
 
     implicit none
 
     ! declare input variables
     integer, intent(in) :: averaging_period   !
-
-    double precision,dimension(averaging_period), intent (in) :: pools
+    double precision, dimension(averaging_period), intent (in) :: pools
 
     ! declare local variables
     integer :: c
@@ -728,16 +782,15 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year           & ! which year are we working on
                           ,averaging_period ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
 
     ! calculate some constants
     startday = floor(365.25d0*dble(year-1)/(sum(interval)/dble(averaging_period-1)))+1
-    endday = floor(365.25d0*dble(year)/(sum(interval)/dble(averaging_period-1)))
+    endday   = floor(365.25d0*dble(year)  /(sum(interval)/dble(averaging_period-1)))
 
     ! pool through and work out the annual mean values
     cal_mean_annual_pools = sum(pools(startday:endday))/dble(endday-startday+1)
@@ -759,9 +812,8 @@ module model_likelihood_module
     ! declare input variables
     integer, intent(in) :: year            & ! which year are we working on
                           ,averaging_period  ! number of days in analysis period
-
-    double precision, intent(in) :: pools(averaging_period) & ! input pool state variables
-                                 ,interval((averaging_period-1))      ! model time step in decimal days
+    double precision, dimension(averaging_period), intent(in) :: pools      ! input pool state variables
+    double precision, dimension(averaging_period-1), intent(in) :: interval ! model time step in decimal days
 
     ! declare local variables
     integer :: startday, endday
@@ -1018,14 +1070,14 @@ module model_likelihood_module
     ! declare local variables
     integer :: n
     double precision, dimension(npars) :: local_likelihood
-!print*,"likelihood_p:"
+
     ! set initial value
     likelihood_p = 0d0 ; local_likelihood = 0d0
 
     ! now loop through defined parameters for their uncertainties
     where (parpriors > -9999) local_likelihood = parpriorweight*((pars-parpriors)/parpriorunc)**2
     likelihood_p = sum(local_likelihood) * (-0.5d0)
-!print*,"likelihood_p: done"
+
     ! dont for get to return
     return
 
@@ -1103,6 +1155,13 @@ module model_likelihood_module
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
                                              1d0,M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
+    ! Calculate log-likelihood for surface soil water
+    if (DATAin%nsoilwater > 0) then
+        mod = (M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
+                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
+                                             1d0,mod)
+    endif ! nsoilwater > 0
 
     !
     ! Do fluxes (FLUXES)
@@ -1164,15 +1223,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                             1d0,M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                                      1d0,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
-                                             1d0,M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
+                                                      1d0,M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1251,6 +1310,14 @@ module model_likelihood_module
                                              DATAin%Csom_stock,DATAin%Csom_stock_unc,DATAin%Csom_stock_lag, &
                                              DATAin%Csom_stock_scaling,M_POOLS(1:DATAin%nodays,6))
     endif ! nCsom_stock > 0
+    ! Calculate log-likelihood for surface soil water
+    if (DATAin%nsoilwater > 0) then
+        mod = (M_POOLS(1:DATAin%nodays,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nsoilwater,DATAin%soilwaterpts, &
+                                             DATAin%soilwater,DATAin%soilwater_unc,DATAin%soilwater_lag, &
+                                             DATAin%soilwater_scaling,mod)
+    endif ! nsoilwater > 0
+
 
     !
     ! Do fluxes (FLUXES)
@@ -1312,15 +1379,15 @@ module model_likelihood_module
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood gross increment
     if (DATAin%nCwood_growth > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
-                                             DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
-                                             DATAin%Cwood_growth_scaling,M_FLUXES(1:DATAin%nodays,7))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_growth,DATAin%Cwood_growthpts, &
+                                                      DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
+                                                      DATAin%Cwood_growth_scaling,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
     ! Calculate log-likelihood for total wood mortality
     if (DATAin%nCwood_mortality > 0) then
-        ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
-                                             DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
-                                             DATAin%Cwood_mortality_scaling,M_FLUXES(1:DATAin%nodays,11))
+        ML_obs_out = ML_obs_out + likelihood_asym_pos(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
+                                                      DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag,&
+                                                      DATAin%Cwood_mortality_scaling,M_FLUXES(1:DATAin%nodays,11))
     endif ! nCwood_mortality > 0
 
     return
@@ -1348,8 +1415,14 @@ module model_likelihood_module
     double precision, dimension(1) :: mod
     double precision :: dummy_scaling = 1d0
 
-    ! ...OTHERPRIOR(1)...
-
+    ! Initial soil water condition
+    if (DATAin%otherpriors(1) > -9998) then
+        ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
+        ! scaled by the total litter pool. This is based on the turnover being common.
+        mod = (M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
+    end if
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(2) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
@@ -1361,7 +1434,8 @@ module model_likelihood_module
 
     ! ...OTHERPRIOR(3)...
 
-    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s -> kg/m2/day)
+    ! Evaportranspiration (kgH2O/m2/day) as ratio of precipitation (kg/m2/s ->
+    ! kg/m2/day)
     if (DATAin%otherpriors(4) > -9998) then
         ! Estimate the foliage litter pool based on the ratio of foliage litter input to foliage + fine root litter inputs,
         ! scaled by the total litter pool. This is based on the turnover being common.
@@ -1382,6 +1456,21 @@ module model_likelihood_module
                                    DATAin%otherpriors(5),DATAin%otherpriorunc(5),dummy_lag,dummy_scaling,mod))
     end if
 
+    ! Estimate the biological mean transist time for soil C.
+    ! NOTE: this arrangement explicitly neglects the impact of disturbance on
+    ! residence time (i.e. no fire and biomass removal). This is because the current observation based estimates
+    ! come from soilC / Rhet assumptions.
+    if (DATAin%otherpriors(6) > -9998) then
+        ! Mean SOM pool
+        mod = sum(M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays)
+        ! Divided by the mean Rhet_som
+        mod = mod / (sum(M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays))
+        ! Scaling from number of days to years (1/365.25 = 0.002737851)
+        mod = mod * 0.002737851d0
+        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(6)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
+                                   DATAin%otherpriors(6),DATAin%otherpriorunc(6),dummy_lag,dummy_scaling,mod))
+    end if
+
     return
 
   end subroutine calc_other_likelihoods
@@ -1391,6 +1480,7 @@ module model_likelihood_module
   double precision function likelihood(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
 
     ! Generic function to estimate the likelihood of diagnostic.
+    ! Assumes a symmetric Gausian uncertainty.
 
     ! Arguments
     integer, intent(in) :: nodays, & ! number of time steps
@@ -1434,6 +1524,57 @@ module model_likelihood_module
     end if
 
   end function likelihood
+  !
+  !------------------------------------------------------------------
+  !
+  double precision function likelihood_asym_pos(nodays,nobs,obspts,obs,unc,lag,scaling,mod)
+
+    ! Generic function to estimate the likelihood of diagnostic.
+    ! This function assumes that we asymetrically apply the Gaussian
+    ! function to not limit positive values.
+
+    ! Arguments
+    integer, intent(in) :: nodays, & ! number of time steps
+                             nobs    ! number of observed estimates
+    integer, dimension(nobs), intent(in) :: obspts ! location of observations in time series
+    integer, dimension(nodays), intent(in) :: lag    ! observation lag period
+    double precision, intent(in) :: scaling ! scaling factor to account for differing number of observations
+    double precision, dimension(nodays), intent(in) :: obs, & ! observation time series
+                                                       unc, & ! observation uncertainty
+                                                       mod    ! model equivalent of the obs
+
+    ! local variables
+    integer :: dn, n, s
+    double precision :: infini
+
+    ! Set initial value
+    infini = 0d0
+
+    ! Reset the output variable
+    likelihood_asym_pos = 0d0
+
+    ! Begin looping through observations
+    do n = 1, nobs
+       ! Extract the time location of the current observation
+       dn = obspts(n)
+       ! Determine the lag period starting point
+       s = max(1,dn-lag(dn))
+       ! Estimate the mean over the lag period and accumulate the log-likelihood score
+       likelihood_asym_pos = likelihood_asym_pos + &
+                            ( min(0d0,(sum(mod(s:dn)) / dble(lag(dn)+1)) - obs(dn)) / unc(dn) ) ** 2
+    end do
+    ! Apply the appropriate scaling, flip sign and multiply by 0.5.
+    ! The likelihood scores for each observation should be subject to *-0.5
+    ! in the algebraic formulation of the cost function. To avoid repeat calculation
+    ! it is applied here once per data stream
+    likelihood_asym_pos = -0.5d0 * likelihood_asym_pos * scaling ! e.g. 1/dble(DATAin%nCwood_inc)
+
+    ! check that log-likelihood is an actual number
+    if (likelihood_asym_pos /= likelihood_asym_pos) then
+        likelihood_asym_pos = log(infini)
+    end if
+
+  end function likelihood_asym_pos
   !
   !------------------------------------------------------------------
   !

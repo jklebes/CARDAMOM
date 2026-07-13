@@ -347,7 +347,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2, EDCD)
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
 
@@ -1037,7 +1037,7 @@ module model_likelihood_module
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                         ,M_POOLS,M_FLUXES,M_DIAGS         &
-                        ,DATAin%meantemp,EDC2, EDCD)
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
