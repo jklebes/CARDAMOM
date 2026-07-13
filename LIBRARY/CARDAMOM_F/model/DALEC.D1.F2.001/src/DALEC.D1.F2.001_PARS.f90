@@ -35,6 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -49,8 +50,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or
@@ -67,6 +68,12 @@ module MODEL_PARAMETERS
     !
     ! declare parameters
     !
+
+    type(PARINFO), intent(inout):: PI
+
+    PI%npars = 22
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Decomposition of litter to som (fraction / day-1)
     ! Note is modified by exponential temperature function (p10)

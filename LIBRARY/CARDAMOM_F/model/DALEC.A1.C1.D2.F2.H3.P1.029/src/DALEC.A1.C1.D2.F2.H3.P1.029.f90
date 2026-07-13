@@ -51,7 +51,8 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
-           ,mVs , initialize_mv
+           ,mVs , initialize_mv, &
+           model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -331,23 +332,34 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
+        use cardamom_structures, only: DATAin
         implicit none
 
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
-
-        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
-        double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
-        double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+        double precision, intent(in) :: met(nomet, nodays)     
+        double precision, intent(in) :: deltat(nodays)
         double precision, intent(in) :: lat
+        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
+          !! Needed as arguments from r_interface , otherwise taken from DATAin
 
         integer:: n
 
-        mV%soil_frac_sand = soil_frac_sand
-        mV%soil_frac_clay = soil_frac_clay
+        if (present(soil_frac_sand)) then
+          mV%soil_frac_sand = soil_frac_sand 
+        else
+          mV%soil_frac_sand = DATAin%soil_frac_sand 
+        endif
+        if (present(soil_frac_clay)) then
+          mV%soil_frac_clay = soil_frac_clay
+        else
+          mV%soil_frac_clay = DATAin%soil_frac_clay
+        endif
+
+
        ! allocate variables dimension which are fixed per site only the once
          allocate(mV%deltat_1(nodays),mV%wSWP_time(nodays),mV%rSWP_time(nodays),mV%gs_demand_supply_ratio(nodays), &
                  mV%gs_total_canopy(nodays),mV%gb_total_canopy(nodays),mV%canopy_par_MJday_time(nodays), &

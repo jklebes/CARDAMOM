@@ -36,7 +36,7 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
                   ,nofluxes,nopools,nodays,nos_years,deltat &
                   ,nos_iter,soil_frac_clay_in,soil_frac_sand_in)
 
-  use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, wSWP_time, LWP_time &
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, wSWP_time, LWP_time &
                              ,soil_frac_clay, soil_frac_sand, nos_soil_layers &
                              ,gs_demand_supply_ratio, cica_time &
                              ,gs_total_canopy, gb_total_canopy &
@@ -85,8 +85,6 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
                                         ,GPP & ! Gross primary productivity
                                         ,NEE   ! net ecosystem exchange of CO2
 
-  type(model_working_variables) :: mV
-
   ! zero initial conditions
   lai = 0d0 ; GPP = 0d0 ; NEE = 0d0 ; POOLS = 0d0 ; FLUXES = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0
@@ -103,17 +101,13 @@ subroutine rdalec29(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-  ! initialise this chain's working variables; soil fractions are passed
-  ! explicitly here (R interface) and deltat is now required by initialize_mv
-  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
-
   ! begin iterations
   do i = 1, nos_iter
 
      ! call the models
      call CARBON_MODEL(1,nodays,met,pars(1:nopars,i),deltat,nodays &
                       ,lat,lai,NEE,FLUXES,POOLS &
-                      ,nopars,nomet,nopools,nofluxes,GPP, mV)
+                      ,nopars,nomet,nopools,nofluxes,GPP)
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )
