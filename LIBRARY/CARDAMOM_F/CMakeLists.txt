@@ -29,7 +29,7 @@ set(MODELFILE
 set(ALLMODELNAMES
 #DALEC_1005 
 #DALEC_1005a
-#DALEC.A1.C1.D2.F2.H1.P1.003
+DALEC.A1.C1.D2.F2.H1.P1.003
 DALEC.A1.C1.D2.F2.H2.P1.004
 DALEC.A1.C1.D2.F2.H2.P1.R1.005
 DALEC.A1.C1.D2.F2.H2.P2.018
@@ -43,22 +43,19 @@ DALEC.A1.C2.D2.F2.H2.P1.R1.006
 DALEC.A1.C2.D2.F2.H2.P2.R1.007
 DALEC.A1.C2.D2.F2.H2.P2.R3.019
 DALEC.A1.C2.D2.F2.H2.P3.R1.009
-#DALEC.A1.C2.D2.F2.H2.P4.R2.011
-#DALEC.A1.C2.D2.F2.H2.P7.R2.023
-#DALEC.A1.C2.D2.F2.H2.P8.R2.024
-#DALEC.A1.C2.D2.F2.H2.P9.R2.025
-#DALEC.A2.C1.D2.F2.H2.P1.020
-#DALEC.A3.C1.D2.F2.H2.P1.030
-#DALEC.A3.C3.H2.M1.015
-#DALEC.A3.H2.M2.017
-#DALEC.A4.C6.D2.F2.H2.P11.031
-#DALEC.A4.C6.D2.F2.H2.P12.033
-#DALEC.C1.D1.F2.P1.002
-#DALEC.C3.M1.014
-#DALEC.C4.D1.F2.012
-#DALEC.C5.D1.F2.P1.013
-#DALEC.D1.F2.001
-#DALEC.M2.016
+DALEC.A1.C2.D2.F2.H2.P4.R2.011
+DALEC.A1.C2.D2.F2.H2.P7.R2.023
+DALEC.A2.C1.D2.F2.H2.P1.020
+DALEC.A3.C1.D2.F2.H2.P1.030
+DALEC.A3.C3.H2.M1.015
+DALEC.A3.H2.M2.017
+DALEC.A4.C6.D2.F2.H2.P11.031
+DALEC.C1.D1.F2.P1.002
+DALEC.C3.M1.014
+DALEC.C4.D1.F2.012
+DALEC.C5.D1.F2.P1.013
+DALEC.D1.F2.001
+DALEC.M2.016
 )
 
 add_library(cardamom-samplers-lib
@@ -66,7 +63,7 @@ add_library(cardamom-samplers-lib
               method/random_uniform.f90
               method/samplers_io/samplers_io.f90
               method/samplers_shared.f90
-              method/MHMCMC/APMCMC.f90
+              method/APMCMC/APMCMC.f90
               method/DEMCMC/DEMCz.f90
 )
 
@@ -104,7 +101,7 @@ if(TEST_COMPILE_ALL)
     add_library("cardamom-lib-${n}" STATIC ${FILES})
     add_dependencies("cardamom-lib-${n}" cardamom-samplers-lib) 
     target_link_libraries("cardamom-lib-${n}" PUBLIC cardamom-samplers-lib)
-    add_executable("cardamom-${n}" general/cardamom_main.f90)
+    add_executable("cardamom-${n}" general/cardamom_main_apmcmc.f90)
     target_link_libraries("cardamom-${n}" PUBLIC "cardamom-lib-${n}")
   endforeach()
 endif()
