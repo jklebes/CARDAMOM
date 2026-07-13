@@ -95,9 +95,8 @@ subroutine rdalec2(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-
-  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat)
-
+  ! Initialise any shared memory objects for thread-safe activity
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, (/60d0, 60d0/), (/30d0, 30d0/), met, lat)
 
   ! begin iterations
   do i = 1, nos_iter

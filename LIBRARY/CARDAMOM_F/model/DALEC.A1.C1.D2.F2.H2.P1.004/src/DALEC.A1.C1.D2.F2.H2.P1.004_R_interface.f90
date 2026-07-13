@@ -104,7 +104,6 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   ! Initialise any shared memory objects for thread-safe activity
   call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
-
   ! begin iterations
   do i = 1, nos_iter
 

@@ -97,8 +97,7 @@ subroutine rdalec6(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-  ! initialise this chain's working variables; soil fractions are passed
-  ! explicitly here (R interface) and deltat is now required by initialize_mv
+  ! Initialise any shared memory objects for thread-safe activity
   call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
   ! begin iterations
