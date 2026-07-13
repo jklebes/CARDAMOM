@@ -48,7 +48,7 @@ generate_parameter_maps<-function(PROJECT) {
        #median_loc = 4 ; lower_loc = 1 ; upper_loc = 7 # if == 7
    } else {
        # Approximate
-       median_loc = median(c(1:length(grid_output$num_quantiles)))
+       median_loc = grid_output$num_quantiles[median(c(1:length(grid_output$num_quantiles)))]
        lower_loc = 1 ; upper_loc = length(grid_output$num_quantiles)
    }
 

@@ -36,6 +36,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -50,8 +51,8 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
+  subroutine pars_info(PI)
+    
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -65,7 +66,12 @@ module MODEL_PARAMETERS
 
     !
     ! declare parameters
+    type(PARINFO), intent(inout):: PI
     !
+
+    PI%npars = 33
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     ! Decomposition litter -> som (day-1)
     PI%parmin(1) = 0.00001d0

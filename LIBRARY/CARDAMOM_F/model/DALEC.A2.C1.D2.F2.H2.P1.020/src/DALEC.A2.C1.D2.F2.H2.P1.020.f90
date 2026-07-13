@@ -1382,10 +1382,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! determine the terms for quadratic solution to the assumption that light limited,
     ! i.e. electron transport, matches diffusion.
     aa = 4d0*gc
-    bb = -4d0*(gc_co2 + dark_respiration) + (8d0*co2_comp_point*gc) + &
+    bb = -4d0*(gc_co2 - dark_respiration) + (8d0*co2_comp_point*gc) + &
          light_limited_photosynthesis
-    cc = co2_comp_point &
-       * ((-8d0*gc_co2) + (8d0*gc) - (8d0*dark_respiration) - light_limited_photosynthesis)
+    cc = -8d0*(gc_co2*co2_comp_point + dark_respiration) - &
+         light_limited_photosynthesis*co2_comp_point
     ! Calculate internal CO2 concentration (ppm or umol/mol)
     ci_pl = (-bb+sqrt((bb*bb)-(4d0*aa*cc))) / (2d0*aa)
 

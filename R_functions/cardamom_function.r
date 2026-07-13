@@ -31,7 +31,10 @@
 #########################################################################################
 
 cardamom <-function (projname,model,method,stage) {
+
+# Some useful hardcoding optinons
 #stage <<- 4 ; repair <<- 1 ; use_parallel <<- FALSE
+
   ## load needed functions into R environment
   paths = load_paths()
 

@@ -65,6 +65,7 @@ vpd_to_rh<-function(vpd_in,air_temperature) {
    # Saturation vapour pressure (Pa) calculation from Jones p110"," uses
    # absolute air temperature (oC)
    vpsat = (0.061375*exp((17.502*air_temperature)/(240.97+air_temperature)))*1.0e4
+
    # RH is the ratio of vapour presure in the air and vapour pressure at saturation.
    # Below pressure is estimated from the saturation vapour pressure and vapour pressure deficit.
    # Units (Pa)
