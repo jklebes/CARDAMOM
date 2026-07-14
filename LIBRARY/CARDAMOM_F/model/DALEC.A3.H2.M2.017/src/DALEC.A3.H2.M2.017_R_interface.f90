@@ -91,7 +91,6 @@ subroutine rdalec17(output_dim,MTT_dim,SS_dim &
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
 
-
   ! generate deltat step from input data
   deltat(1) = met(1,1)
   do i = 2, nodays
@@ -100,9 +99,8 @@ subroutine rdalec17(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-
-  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
-
+  ! Initialise any shared memory objects for thread-safe activity
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
   ! begin iterations
   do i = 1, nos_iter

@@ -49,7 +49,7 @@ module CARBON_MODEL_MOD
   public :: CARBON_MODEL     &
            ,nos_soil_layers  &
            ,mVs , initialize_mv, &
-           model_working_variables
+            model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -254,44 +254,48 @@ type model_working_variables
   type(model_working_variables), allocatable, dimension(:):: mVs
 
     contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
-      !! For a single chain's model_working_varibles type object mV, allocate arrays
-        !! and calculate initial values.
-        use cardamom_structures, only: DATAin
-        implicit none
-        type(model_working_variables), intent(out):: mV
-        integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: met(nomet, nodays)     
-        double precision, intent(in) :: deltat(nodays)
-        double precision, intent(in) :: lat
-        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
-          !! Needed as arguments from r_interface , otherwise taken from DATAin
-        integer:: n
+    !! For a single chain's model_working_varibles type object mV, allocate arrays
+    !! and calculate initial values.
+    implicit none
 
-        if (present(soil_frac_sand)) then
-          mV%soil_frac_sand = soil_frac_sand 
-        else
-          mV%soil_frac_sand = DATAin%soil_frac_sand 
-        endif
-        if (present(soil_frac_clay)) then
-          mV%soil_frac_clay = soil_frac_clay
-        else
-          mV%soil_frac_clay = DATAin%soil_frac_clay
-        endif
+    type(model_working_variables), intent(out):: mV
+    integer, intent(in):: nodays, nomet, nopars
+    double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
+    double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
+    double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+    double precision, intent(in) :: lat
 
-        allocate(mV%deltat_1(nodays))
-        mV%deltat_1 = deltat**(-1d0)      
+    integer:: n
 
+    mV%soil_frac_sand = soil_frac_sand
+    mV%soil_frac_clay = soil_frac_clay
+
+    allocate(mV%deltat_1(nodays))
+    mV%deltat_1 = deltat**(-1d0)
+    ! zero variables not done elsewhere
+    mV%water_flux_mmolH2Om2s = 0d0
+    ! initialise some time invarient parameters
+    call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+    call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+    ! call update_soil_initial_conditions(pars(24), mV)
+    ! save the initial conditions for later
+    mV%field_capacity_initial = mV%field_capacity
+    mV%porosity_initial = mV%porosity
+   
   end subroutine initialize_mv
-
-
+  !
+  !--------------------------------------------------------------------
+  !
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
     type(model_working_variables):: mV
         deallocate(mV%deltat_1)
-    end subroutine
-
+  end subroutine
   !
   !--------------------------------------------------------------------
   !

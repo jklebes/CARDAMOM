@@ -98,9 +98,8 @@ subroutine rdalec11(output_dim,MTT_dim,SS_dim &
   ! number of time steps per year
   steps_per_year = nint(dble(nodays)/dble(nos_years))
 
-
-  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
-
+  ! Initialise any shared memory objects for thread-safe activity
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
   ! begin iterations
   do i = 1, nos_iter

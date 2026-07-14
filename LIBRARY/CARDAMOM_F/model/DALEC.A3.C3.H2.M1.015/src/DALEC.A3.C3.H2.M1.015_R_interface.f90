@@ -126,8 +126,8 @@ subroutine rdalec15(output_dim,MTT_dim,SS_dim &
       stop
   end if 
 
-
-  call initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand_in, soil_frac_clay_in)
+  ! Initialise any shared memory objects for thread-safe activity
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
 
   ! Load crop development parameters here
   ! TLS: should the exepath and pathlength be made hardcoded in the assumption that 

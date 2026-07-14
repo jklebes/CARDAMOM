@@ -46,15 +46,15 @@ module cardamom_io
    private
 
    ! allow access to specific functions
-   public ::  update_obs_scaling_normal &
-            , update_obs_scaling_nsamples &
-            , update_obs_scaling_sqrt_nsamples &
-            , update_obs_scaling_log_nsamples &
-            , open_output_files &
-            , cardamom_model_library &
-            , read_options &
-            , read_binary_data &
-            , initialize
+   public :: update_obs_scaling_normal &
+            ,update_obs_scaling_nsamples &
+            ,update_obs_scaling_sqrt_nsamples &
+            ,update_obs_scaling_log_nsamples &
+            ,open_output_files &
+            ,cardamom_model_library &
+            ,read_options &
+            ,read_binary_data &
+            ,initialize
 
    ! declare module level variables
    integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
@@ -82,206 +82,173 @@ contains
     ! testing
     if (DATAin%ID == 0) then
         ! ID = 0 - ACM/ACM-ET
+        ! Note, nopars
         DATAin%nopools = 2
-        DATAin%nopars = 20
         DATAin%nofluxes = 4
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 1) then
         ! ID = 1 - DALEC.D1.F2.001
         DATAin%nopools = 5
-        DATAin%nopars = 22
         DATAin%nofluxes = 35
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 2) then
         ! ID = 2 - DALEC.C1.D1.F2.P1.002
         DATAin%nopools = 6
-        DATAin%nopars = 28
         DATAin%nofluxes = 39
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 3 ) then
         ! ID = 3 - DALEC.A1.C1.D2.F2.H1.P1.003
         DATAin%nopools = 6
-        DATAin%nopars = 31
         DATAin%nofluxes = 51
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 4) then
         ! ID = 4 - DALEC.A1.C1.D2.F2.H2.P1.004
         DATAin%nopools = 7
-        DATAin%nopars = 32
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 5) then
         ! ID = 5 - DALEC.A1.C1.D2.F2.H2.P1.R1.005
         DATAin%nopools = 7
-        DATAin%nopars = 32
         DATAin%nofluxes = 52
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 6) then
         ! ID = 6 - DALEC.A1.C2.D2.F2.H2.P1.R1.006
         DATAin%nopools = 8
-        DATAin%nopars = 35
         DATAin%nofluxes = 57
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 7) then
         ! ID = 7 - DALEC.A1.C2.D2.F2.H2.P2.R1.007
         DATAin%nopools = 8
-        DATAin%nopars = 36
         DATAin%nofluxes = 57
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 8) then
         ! ID = 8 - DALEC.A1.C2.D2.F2.H1.P3.R1.008
         DATAin%nopools = 7
-        DATAin%nopars = 39
         DATAin%nofluxes = 57
         DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 9) then
         ! ID = 9 - DALEC.A1.C2.D2.F2.H2.P3.R1.009
         DATAin%nopools = 8
-        DATAin%nopars = 40
         DATAin%nofluxes = 57
         DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 10) then
         ! ID = 10 - DALEC.A1.C2.D2.F2.H1.P4.R2.010
         DATAin%nopools = 8
-        DATAin%nopars = 43
         DATAin%nofluxes = 57
         DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 11) then
         ! ID = 11 - DALEC.A1.C2.D2.F2.H2.P4.R2.011
         DATAin%nopools = 8
-        DATAin%nopars = 43
         DATAin%nofluxes = 57
         DATAin%nodiags = 21 ! Initial value, will need updating
     else if (DATAin%ID == 12) then
         ! ID = 12 - DALEC.C4.D1.F2.012
         DATAin%nopools = 3
-        DATAin%nopars = 15
         DATAin%nofluxes = 28
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 13) then
         ! ID = 13 - DALEC.C5.D1.F2.P1.013
         DATAin%nopools = 4
-        DATAin%nopars = 21
         DATAin%nofluxes = 32
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 14) then
         ! ID = 14 - DALEC.C3.M1.014
         DATAin%nopools = 9
-        DATAin%nopars = 37
         DATAin%nofluxes = 42
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 15) then
         ! ID = 15 - DALEC.A3.C3.H2.M1.015 i.e. the CROP model
         DATAin%nopools = 10
-        DATAin%nopars = 38
         DATAin%nofluxes = 48
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 16) then
         ! ID = 16 - DALEC.A3.H1.M2.016
         DATAin%nopools = 5
-        DATAin%nopars = 34 ! to update
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 17) then
         ! ID = 17 - DALEC.A3.H2.M2.017
         DATAin%nopools = 6
-        DATAin%nopars = 35
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 18) then
         ! ID = 18 - DALEC.A1.C1.D2.F2.H2.P2.018
         DATAin%nopools = 7
-        DATAin%nopars = 33
         DATAin%nofluxes = 51
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 19) then
         ! ID = 19 - DALEC.A1.C2.D2.F2.H2.P2.R3.019
         DATAin%nopools = 8
-        DATAin%nopars = 38
         DATAin%nofluxes = 57
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 20) then
         ! ID = 20 - DALEC.A2.C1.D2.F2.H2.P1.020
         DATAin%nopools = 7
-        DATAin%nopars = 32
         DATAin%nofluxes = 51
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 21) then
         ! ID = 21 - DALEC.A1.C1.D2.F2.H2.P5.021
         DATAin%nopools = 7
-        DATAin%nopars = 33
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 22) then
         ! ID = 22 - DALEC.A1.C1.D2.F2.H2.P6.022
         DATAin%nopools = 7
-        DATAin%nopars = 34
         DATAin%nofluxes = 51
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 23) then
         ! ID = 23 - DALEC.A1.C2.D2.F2.H2.P7.R2.023
         DATAin%nopools = 8
-        DATAin%nopars = 48
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 24) then
         ! ID = 24 - DALEC.A1.C1.D2.F2.H4.P1.024
         DATAin%nopools = 7
-        DATAin%nopars = 37
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 25) then
         ! ID = 25 - DALEC...025 NOT IN USE
         DATAin%nopools = 8
-        DATAin%nopars = 48
         DATAin%nofluxes = 57
         DATAin%nodiags = 23 ! Initial value, will need updating
     else if (DATAin%ID == 26) then
         ! ID = 26 - DALEC.A4.C6.D2.F2.H3.P10.026
         DATAin%nopools = 8
-        DATAin%nopars = 49
         DATAin%nofluxes = 53
         DATAin%nodiags = 35 ! Initial value, will need updating
     else if (DATAin%ID == 27) then
         ! ID = 27 - DALEC_1005
         DATAin%nopools = 8
-        DATAin%nopars = 38
         DATAin%nofluxes = 43
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 28) then
         ! ID = 28 - DALEC_1005a
         DATAin%nopools = 8
-        DATAin%nopars = 38
         DATAin%nofluxes = 43
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 29) then
         ! ID = 29 -DALEC.A1.C1.D2.F2.H3.P1.029
         DATAin%nopools = 7
-        DATAin%nopars = 33
         DATAin%nofluxes = 51
         DATAin%nodiags = 20 ! Initial value, will need updating
     else if (DATAin%ID == 30) then
         ! ID = 30 - DALEC.A3.C1.D2.F2.H2.P1.030
         DATAin%nopools = 7
-        DATAin%nopars = 38
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating
     else if (DATAin%ID == 31) then
         ! ID = 31 - DALEC.A4.C6.D2.F2.H2.P11.031
         DATAin%nopools = 7
-        DATAin%nopars = 43
         DATAin%nofluxes = 51
         DATAin%nodiags = 24
     else if (DATAin%ID == 32) then
         ! ID = 32 - DALEC.A1.C1.D2.F2.H6.P1.R5.032
         DATAin%nopools = 7
-        DATAin%nopars = 37
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 33) then
         ! ID = 33 - DALEC.A4.C6.D2.F2.H3.P12.033
         DATAin%nopools = 7
-        DATAin%nopars = 46
         DATAin%nofluxes = 51
         DATAin%nodiags = 30       
     else if (DATAin%ID == 34) then
@@ -295,13 +262,11 @@ contains
     else if (DATAin%ID == 36) then
         ! ID = 36 - DALEC.A1.C7.D2.F2.H2.P1.R4.036
         DATAin%nopools = 11
-        DATAin%nopars = 50
         DATAin%nofluxes = 67
         DATAin%nodiags = 20      
     else if (DATAin%ID == 37) then
         ! ID = 37 - DALEC.A1.C1.D2.F2.H5.P1.037
         DATAin%nopools = 7
-        DATAin%nopars = 34
         DATAin%nofluxes = 51
         DATAin%nodiags = 24 ! Initial value, will need updating        
     else if (DATAin%ID == 38) then
@@ -373,28 +338,27 @@ contains
 
       implicit none(type, external)
 
-      type(DATA_type), intent(inout) :: DATAin
-    !! This is a temporary local DATAin object whose fields we are allowed to modify.
-    !! After everything is read, the (protected) global DATAin object
-    !! is set by copying this object.
-
-      ! declare input variables
+      ! Arguements
       character(350), intent(in) :: infile
+      type(DATA_type), intent(inout) :: DATAin ! This is a temporary local DATAin object whose fields we are allowed to modify.
+                                               ! After everything is read, the (protected) global DATAin object
+                                               ! is set by copying this object.
 
-      ! declare local variables
+      ! Local variables
       integer :: nopars_dummy, subsample
       integer :: a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, day &
-                , start &
-                , finish &
-                , totcol & ! total number of columns (met+obs)
-                , totread      ! total number of records already read
+                ,start &
+                ,finish &
+                ,totcol & ! total number of columns (met+obs)
+                ,totread  ! total number of records already read
       double precision :: mz
       double precision, save :: subsample_fraction = 0.20  ! startd at 0.25
       double precision, dimension(:), allocatable :: statdat & ! static data input
-         , mettemp & ! met data input
-         , obstemp   ! obs data input
+                                                    ,mettemp & ! met data input
+                                                    ,obstemp   ! obs data input
 
-      write (*, *) "Input file to be read = ", trim(infile)
+      ! Update user
+      write (*,*) "Input file to be read = ", trim(infile)
 
       ! open the binary file, with direct access for binary (unformatted) at
       ! double precision (double precision = 64 bytes)
@@ -410,16 +374,16 @@ contains
       end do
 
       ! allocate the default run information
-      DATAin%ID = int(statdat(1))
-      DATAin%LAT = statdat(2)
+      DATAin%ID     = int(statdat(1))
+      DATAin%LAT    = statdat(2)
       DATAin%nodays = int(statdat(3))
-      DATAin%nomet = int(statdat(4))
-      DATAin%noobs = int(statdat(5))
-      DATAin%EDC = int(statdat(6))
-      DATAin%PFT = int(statdat(7))
-      DATAin%yield = -9999  ! int(statdat(8))
-      DATAin%age = int(statdat(9))
-      nopars_dummy = int(statdat(10))  ! needed for next dev stage
+      DATAin%nomet  = int(statdat(4))
+      DATAin%noobs  = int(statdat(5))
+      DATAin%EDC    = int(statdat(6))
+      DATAin%PFT    = int(statdat(7))
+      DATAin%yield  = -9999  ! int(statdat(8))
+      DATAin%age    = int(statdat(9))
+      nopars_dummy  = int(statdat(10))  ! needed for next dev stage
       ! Assume 3 soil layers only and that the
       ! top soil layer is assigned the top soil condition
       allocate (DATAin%soil_frac_sand(nos_soil_layers))
@@ -492,58 +456,61 @@ contains
       ! now we know specific information about the dimensions in the file lets use
       ! it to allocate to the module variables
       allocate (mettemp(DATAin%nomet), obstemp(DATAin%noobs) &
-                , DATAin%met(DATAin%nomet, DATAin%nodays) &
-                , DATAin%GPP(DATAin%nodays), DATAin%GPP_unc(DATAin%nodays), DATAin%GPP_lag(DATAin%nodays) &
-                , DATAin%NEE(DATAin%nodays), DATAin%NEE_unc(DATAin%nodays), DATAin%NEE_lag(DATAin%nodays) &
-                , DATAin%LAI(DATAin%nodays), DATAin%LAI_unc(DATAin%nodays), DATAin%LAI_lag(DATAin%nodays) &
-                , DATAin%Reco(DATAin%nodays), DATAin%Reco_unc(DATAin%nodays), DATAin%Reco_lag(DATAin%nodays) &
-                , DATAin%Cfol_stock(DATAin%nodays), DATAin%Cfol_stock_unc(DATAin%nodays), DATAin%Cfol_stock_lag(DATAin%nodays) &
-                , DATAin%Cwood_stock(DATAin%nodays), DATAin%Cwood_stock_unc(DATAin%nodays), DATAin%Cwood_stock_lag(DATAin%nodays) &
-              , DATAin%Croots_stock(DATAin%nodays), DATAin%Croots_stock_unc(DATAin%nodays), DATAin%Croots_stock_lag(DATAin%nodays) &
-                , DATAin%Clit_stock(DATAin%nodays), DATAin%Clit_stock_unc(DATAin%nodays), DATAin%Clit_stock_lag(DATAin%nodays) &
-                , DATAin%Csom_stock(DATAin%nodays), DATAin%Csom_stock_unc(DATAin%nodays), DATAin%Csom_stock_lag(DATAin%nodays) &
-                , DATAin%Cagb_stock(DATAin%nodays), DATAin%Cagb_stock_unc(DATAin%nodays), DATAin%Cagb_stock_lag(DATAin%nodays) &
-,DATAin%Ccoarseroot_stock(DATAin%nodays), DATAin%Ccoarseroot_stock_unc(DATAin%nodays), DATAin%Ccoarseroot_stock_lag(DATAin%nodays) &
-                , DATAin%Evap(DATAin%nodays), DATAin%Evap_unc(DATAin%nodays), DATAin%Evap_lag(DATAin%nodays) &
-                , DATAin%SWE(DATAin%nodays), DATAin%SWE_unc(DATAin%nodays), DATAin%SWE_lag(DATAin%nodays) &
-                , DATAin%NBE(DATAin%nodays), DATAin%NBE_unc(DATAin%nodays), DATAin%NBE_lag(DATAin%nodays) &
-                , DATAin%Fire(DATAin%nodays), DATAin%Fire_unc(DATAin%nodays), DATAin%Fire_lag(DATAin%nodays) &
-                , DATAin%fAPAR(DATAin%nodays), DATAin%fAPAR_unc(DATAin%nodays), DATAin%fAPAR_lag(DATAin%nodays) &
-                , DATAin%Cwood_inc(DATAin%nodays), DATAin%Cwood_inc_unc(DATAin%nodays), DATAin%Cwood_inc_lag(DATAin%nodays) &
-              , DATAin%Cwood_growth(DATAin%nodays), DATAin%Cwood_growth_unc(DATAin%nodays), DATAin%Cwood_growth_lag(DATAin%nodays) &
-     , DATAin%Cwood_mortality(DATAin%nodays), DATAin%Cwood_mortality_unc(DATAin%nodays), DATAin%Cwood_mortality_lag(DATAin%nodays) &
-                , DATAin%harvest(DATAin%nodays), DATAin%harvest_unc(DATAin%nodays), DATAin%harvest_lag(DATAin%nodays) &
-,DATAin%foliage_to_litter(DATAin%nodays), DATAin%foliage_to_litter_unc(DATAin%nodays), DATAin%foliage_to_litter_lag(DATAin%nodays) &
-                , DATAin%soilwater(DATAin%nodays), DATAin%soilwater_unc(DATAin%nodays), DATAin%soilwater_lag(DATAin%nodays))
+               ,DATAin%met(DATAin%nomet, DATAin%nodays) &
+               ,DATAin%GPP(DATAin%nodays), DATAin%GPP_unc(DATAin%nodays), DATAin%GPP_lag(DATAin%nodays) &
+               ,DATAin%NEE(DATAin%nodays), DATAin%NEE_unc(DATAin%nodays), DATAin%NEE_lag(DATAin%nodays) &
+               ,DATAin%LAI(DATAin%nodays), DATAin%LAI_unc(DATAin%nodays), DATAin%LAI_lag(DATAin%nodays) &
+               ,DATAin%Reco(DATAin%nodays), DATAin%Reco_unc(DATAin%nodays), DATAin%Reco_lag(DATAin%nodays) &
+               ,DATAin%Cfol_stock(DATAin%nodays), DATAin%Cfol_stock_unc(DATAin%nodays), DATAin%Cfol_stock_lag(DATAin%nodays) &
+               ,DATAin%Cwood_stock(DATAin%nodays), DATAin%Cwood_stock_unc(DATAin%nodays), DATAin%Cwood_stock_lag(DATAin%nodays) &
+               ,DATAin%Croots_stock(DATAin%nodays), DATAin%Croots_stock_unc(DATAin%nodays), DATAin%Croots_stock_lag(DATAin%nodays)&
+               ,DATAin%Clit_stock(DATAin%nodays), DATAin%Clit_stock_unc(DATAin%nodays), DATAin%Clit_stock_lag(DATAin%nodays) &
+               ,DATAin%Csom_stock(DATAin%nodays), DATAin%Csom_stock_unc(DATAin%nodays), DATAin%Csom_stock_lag(DATAin%nodays) &
+               ,DATAin%Cagb_stock(DATAin%nodays), DATAin%Cagb_stock_unc(DATAin%nodays), DATAin%Cagb_stock_lag(DATAin%nodays) &
+               ,DATAin%Ccoarseroot_stock(DATAin%nodays), DATAin%Ccoarseroot_stock_unc(DATAin%nodays) &
+               ,DATAin%Ccoarseroot_stock_lag(DATAin%nodays) &
+               ,DATAin%Evap(DATAin%nodays), DATAin%Evap_unc(DATAin%nodays), DATAin%Evap_lag(DATAin%nodays) &
+               ,DATAin%SWE(DATAin%nodays), DATAin%SWE_unc(DATAin%nodays), DATAin%SWE_lag(DATAin%nodays) &
+               ,DATAin%NBE(DATAin%nodays), DATAin%NBE_unc(DATAin%nodays), DATAin%NBE_lag(DATAin%nodays) &
+               ,DATAin%Fire(DATAin%nodays), DATAin%Fire_unc(DATAin%nodays), DATAin%Fire_lag(DATAin%nodays) &
+               ,DATAin%fAPAR(DATAin%nodays), DATAin%fAPAR_unc(DATAin%nodays), DATAin%fAPAR_lag(DATAin%nodays) &
+               ,DATAin%Cwood_inc(DATAin%nodays), DATAin%Cwood_inc_unc(DATAin%nodays), DATAin%Cwood_inc_lag(DATAin%nodays) &
+               ,DATAin%Cwood_growth(DATAin%nodays), DATAin%Cwood_growth_unc(DATAin%nodays), DATAin%Cwood_growth_lag(DATAin%nodays)&
+               ,DATAin%Cwood_mortality(DATAin%nodays), DATAin%Cwood_mortality_unc(DATAin%nodays) &
+               ,DATAin%Cwood_mortality_lag(DATAin%nodays) &
+               ,DATAin%harvest(DATAin%nodays), DATAin%harvest_unc(DATAin%nodays), DATAin%harvest_lag(DATAin%nodays) &
+               ,DATAin%foliage_to_litter(DATAin%nodays), DATAin%foliage_to_litter_unc(DATAin%nodays) &
+               ,DATAin%foliage_to_litter_lag(DATAin%nodays) &
+               ,DATAin%soilwater(DATAin%nodays), DATAin%soilwater_unc(DATAin%nodays), DATAin%soilwater_lag(DATAin%nodays))
 
-    !! Zero all variables
-    ! Drivers
-    DATAin%met = 0d0
-    ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
-    DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0
-    DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0
-    DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0
-    DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0
-    DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0
-    DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0
-    DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0
-    DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0
-    DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0
-    DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0
-    DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0
-    DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0
-    DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0
-    DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0
-    DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0
-    DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0
-    DATAin%Cwood_inc = 0d0         ; DATAin%Cwood_inc_unc = 0d0         ; DATAin%Cwood_inc_lag = 0
-    DATAin%Cwood_growth = 0d0      ; DATAin%Cwood_growth_unc = 0d0      ; DATAin%Cwood_growth_lag = 0
-    DATAin%Cwood_mortality = 0d0   ; DATAin%Cwood_mortality_unc = 0d0   ; DATAin%Cwood_mortality_lag = 0
-    DATAin%harvest = 0d0           ; DATAin%harvest_unc = 0d0           ; DATAin%harvest_lag = 0
-    DATAin%foliage_to_litter = 0d0 ; DATAin%foliage_to_litter_unc = 0d0 ; DATAin%foliage_to_litter_lag = 0
-    DATAin%soilwater = 0d0         ; DATAin%soilwater_unc = 0d0         ; DATAin%soilwater_lag = 0
-    ! Temorary arrays
-    mettemp = 0d0 ; obstemp = 0d0
+      ! Zero all variables
+      ! Drivers
+      DATAin%met = 0d0
+      ! Observations which have implicit lag of 0, i.e. they are relevant for the loaded time step
+      DATAin%GPP = 0d0               ; DATAin%GPP_unc = 0d0               ; DATAin%GPP_lag = 0
+      DATAin%NEE = 0d0               ; DATAin%NEE_unc = 0d0               ; DATAin%NEE_lag = 0
+      DATAin%LAI = 0d0               ; DATAin%LAI_unc = 0d0               ; DATAin%LAI_lag = 0
+      DATAin%Reco = 0d0              ; DATAin%Reco_unc = 0d0              ; DATAin%Reco_lag = 0
+      DATAin%Cfol_stock = 0d0        ; DATAin%Cfol_stock_unc = 0d0        ; DATAin%Cfol_stock_lag = 0
+      DATAin%Cwood_stock = 0d0       ; DATAin%Cwood_stock_unc = 0d0       ; DATAin%Cwood_stock_lag = 0
+      DATAin%Croots_stock = 0d0      ; DATAin%Croots_stock_unc = 0d0      ; DATAin%Croots_stock_lag = 0
+      DATAin%Clit_stock = 0d0        ; DATAin%Clit_stock_unc = 0d0        ; DATAin%Clit_stock_lag = 0
+      DATAin%Csom_stock = 0d0        ; DATAin%Csom_stock_unc = 0d0        ; DATAin%Csom_stock_lag = 0
+      DATAin%Cagb_stock = 0d0        ; DATAin%Cagb_stock_unc = 0d0        ; DATAin%Cagb_stock_lag = 0
+      DATAin%Ccoarseroot_stock = 0d0 ; DATAin%Ccoarseroot_stock_unc = 0d0 ; DATAin%Ccoarseroot_stock_lag = 0
+      DATAin%Evap = 0d0              ; DATAin%Evap_unc = 0d0              ; DATAin%Evap_lag = 0
+      DATAin%SWE = 0d0               ; DATAin%SWE_unc = 0d0               ; DATAin%SWE_lag = 0
+      DATAin%NBE = 0d0               ; DATAin%NBE_unc = 0d0               ; DATAin%NBE_lag = 0
+      DATAin%Fire = 0d0              ; DATAin%Fire_unc = 0d0              ; DATAin%Fire_lag = 0
+      DATAin%fAPAR = 0d0             ; DATAin%fAPAR_unc = 0d0             ; DATAin%fAPAR_lag = 0
+      DATAin%Cwood_inc = 0d0         ; DATAin%Cwood_inc_unc = 0d0         ; DATAin%Cwood_inc_lag = 0
+      DATAin%Cwood_growth = 0d0      ; DATAin%Cwood_growth_unc = 0d0      ; DATAin%Cwood_growth_lag = 0
+      DATAin%Cwood_mortality = 0d0   ; DATAin%Cwood_mortality_unc = 0d0   ; DATAin%Cwood_mortality_lag = 0
+      DATAin%harvest = 0d0           ; DATAin%harvest_unc = 0d0           ; DATAin%harvest_lag = 0
+      DATAin%foliage_to_litter = 0d0 ; DATAin%foliage_to_litter_unc = 0d0 ; DATAin%foliage_to_litter_lag = 0
+      DATAin%soilwater = 0d0         ; DATAin%soilwater_unc = 0d0         ; DATAin%soilwater_lag = 0
+      ! Temorary arrays
+      mettemp = 0d0 ; obstemp = 0d0
 
       ! zero the obs counters
       DATAin%total_obs = 0
@@ -742,12 +709,12 @@ contains
       ! Count the total number of observations which are to be used.
       ! This total in some models may be used to inform on a dynamic weighting of the EDCs
       DATAin%total_obs = DATAin%ngpp + DATAin%nlai + DATAin%nnee &
-                         + DATAin%nCwood_inc + DATAin%nreco + DATAin%nCfol_stock &
-                         + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
-                         + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
-                         + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
-                         + DATAin%nCwood_mortality + DATAin%nfoliage_to_litter + DATAin%nFire &
-                         + DATAin%nfAPAR + DATAin%nharvest + DATAin%nsoilwater + DATAin%nCwood_growth
+                       + DATAin%nCwood_inc + DATAin%nreco + DATAin%nCfol_stock &
+                       + DATAin%nCwood_stock + DATAin%nCroots_stock + DATAin%nCsom_stock &
+                       + DATAin%nClit_stock + DATAin%nCagb_stock + DATAin%nCcoarseroot_stock &
+                       + DATAin%nEvap + DATAin%nSWE + DATAin%nNBE &
+                       + DATAin%nCwood_mortality + DATAin%nfoliage_to_litter + DATAin%nFire &
+                       + DATAin%nfAPAR + DATAin%nharvest + DATAin%nsoilwater + DATAin%nCwood_growth
 
       ! allocate to time step
       allocate (DATAin%deltat(DATAin%nodays)); DATAin%deltat = 0d0
@@ -893,8 +860,9 @@ contains
    end subroutine read_binary_data
    !
    !------------------------------------------------------------------
-
+   !
    subroutine initialize(infile)  ! formerly read_pari_data
+
       ! 3 steps must be called in this order
       use cardamom_structures, only: DATA_type, set_datain, set_datain_original
       use model_shared, only: initialize_parinfo
@@ -902,81 +870,93 @@ contains
       character(350), intent(in) :: infile
       type(DATA_type) :: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures :: DATAin
 
-      call initialize_parinfo()  ! TODO not really a file reading thing
+      ! Initialise parameter information, including prior ranges.
+      call initialize_parinfo()  
+      ! Read the input binay file
       call read_check_binary_data(infile, DATAin)
+      ! Initialise model variables
       call initialize_model(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin_original
       call set_datain_original(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
       call set_datain(DATAin)
-   end subroutine initialize
 
-   subroutine read_check_binary_data(infile, DATAin)
-  !! Read infile, modify fields of a (local) DATA_type struct
-  !! subroutine call for input binary to be read and then allocates the input
-  !! data to extracting the data to the correct observation and parameter types
-  !! split from read_pari_data
-      use MODEL_PARAMETERS, only: pars_info
-      use model_shared, only: PI
-      use cardamom_structures, only: DATA_type
+  end subroutine initialize
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine read_check_binary_data(infile, DATAin)
+     use MODEL_PARAMETERS, only: pars_info
+     use model_shared, only: PI
+     use cardamom_structures, only: DATA_type
 
-      implicit none(type, external)
+     implicit none(type, external)
 
-      type(DATA_type), intent(inout) :: DATAin
+     ! Read infile, modify fields of a (local) DATA_type struct
+     ! subroutine call for input binary to be read and then allocates the input
+     ! data to extracting the data to the correct observation and parameter types
+     ! split from read_pari_data
 
-      character(350), intent(in) :: infile
+     ! Arguements
+     character(350), intent(in) :: infile
+     type(DATA_type), intent(inout) :: DATAin
+    
+     ! declare local variables
+     integer :: i
 
-      ! declare local variables
-      integer :: i
+     ! Inform the user
+     write (*,*) "Input file = ", trim(infile)
+     ! initialise data structure and read the binary
+     call read_binary_data(infile, DATAin)
+     ! Load number of parameters from PI->DATAin
+     DATAin%nopars = PI%npars
+!     ! check:
+!     ! PI%npars = DATAin%nopars don't set from DATAin, instead check
+!     if (PI%npars /= DATAin%nopars) then
+!        write (*, *) "ERROR nopars from infile (", DATAin%nopars, ") does not &
+!        & match npars from model _PARS file (", PI%npars, ")"
+!        stop
+!     end if
+     ! ensure any loaded parameter values (from the input file)
+     ! are within the uniform parameter bounds set in the source code
+     do i = 1, PI%npars
+        if (DATAin%parpriors(i) /= -9999) then
+           if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
+              write (*,*) PI%parmin(i)
+              write (*,*) DATAin%parpriors(i)
+              write (*,*) PI%parmax(i)
+              write (*,*) "Supplied parameter prior = ", i, " is outside hardcoded uniform parameter bounds"
+              stop
+           end if
+        end if
+     end do
 
-      ! remind us what file we're about to access
-      write (*, *) "Input file = ", trim(infile)
-      ! initialise data structure and read the binary
-      call read_binary_data(infile, DATAin)
-      ! check:
-      ! PI%npars = DATAin%nopars don't set from DATAin, instead check
-      if (PI%npars /= DATAin%nopars) then
-         write (*, *) "ERROR nopars from infile (", DATAin%nopars, ") does not &
-         & match npars from model _PARS file (", PI%npars, ")"
-         stop
-      end if
-      ! also check initial state:
-      ! ensure any loaded parameter values (from the input file)
-      ! are within the uniform parameter bounds set in the source code
-      do i = 1, PI%npars
-         if (DATAin%parpriors(i) /= -9999) then
-            if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
-               write (*, *) PI%parmin(i)
-               write (*, *) DATAin%parpriors(i)
-               write (*, *) PI%parmax(i)
-               write (*, *) "Supplied parameter prior = ", i, " is outside hardcoded uniform parameter bounds"
-               stop
-            end if
-         end if
-      end do
+  end subroutine read_check_binary_data
+  !
+  !------------------------------------------------------------------
+  !
+  subroutine initialize_model(DATAin)
+     ! split from read_pari_data
+     ! TODO not io, belongs in a differnt file
+     ! depends on having called read_binary_data or read_check_binary_data first
+     ! for DATAin%nodays and nopools
+     use cardamom_structures, only: DATA_type
 
-   end subroutine read_check_binary_data
+     implicit none(type, external)
 
-   subroutine initialize_model(DATAin)
-  !! split from read_pari_data
-  !! TODO not io, belongs in a differnt file
-  !! depends on having called read_binary_data or read_check_binary_data first
-  !! for DATAin%nodays and nopools
-      use cardamom_structures, only: DATA_type
+     type(DATA_type), intent(inout) :: DATAin
+     ! need to allocate memory to the model output variables
+     allocate(DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes) &
+             ,DATAin%M_POOLS((DATAin%nodays + 1), DATAin%nopools), DATAin%M_DIAGS(DATAin%nodays, DATAin%nodiags))
 
-      implicit none(type, external)
+     ! force zero in states and fluxes
+     !DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0; DATAin%M_DIAGS(:,:) = 0d0
 
-      type(DATA_type), intent(inout) :: DATAin
-      ! need to allocate memory to the model output variables
-      allocate (DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes) &
-                , DATAin%M_POOLS((DATAin%nodays + 1), DATAin%nopools), DATAin%M_DIAGS(DATAin%nodays, DATAin%nodiags))
+     ! alert the user
+     write (*,*) "Created fields for model output"
 
-      ! force zero in states and fluxes
-      !DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0; DATAin%M_DIAGS(:,:) = 0d0
-
-      ! alert the user
-      write (*, *) "Created fields for model output"
    end subroutine initialize_model
+   !
    !------------------------------------------------------------------
    !
    subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
@@ -1004,24 +984,24 @@ contains
 
       ! how many accepted parameters to accept before completion
       if (solutions_wanted > 0) then
-         MCO%nOUT = solutions_wanted
+          MCO%nOUT = solutions_wanted
       else
-         MCO%nOUT = 1000
-         write (*, *) "Default MCO%nOUT value used"
+          MCO%nOUT = 1000
+          write (*,*) "Default MCO%nOUT value used"
       end if
       ! how frequently to print information to screen
       if (freq_print >= 0) then
-         MCO%nPRINT = freq_print
+          MCO%nPRINT = freq_print
       else
-         MCO%nPRINT = 1000
-         write (*, *) "Default MCO%nPRINT value used"
+          MCO%nPRINT = 1000
+          write (*,*) "Default MCO%nPRINT value used"
       end if
       ! how frequently to write information to file
       if (freq_write >= 0) then
-         MCO%nWRITE = freq_write
+          MCO%nWRITE = freq_write
       else
-         MCO%nWRITE = 1000
-         write (*, *) "Default MCO%nWRITE value used"
+          MCO%nWRITE = 1000
+          write (*,*) "Default MCO%nWRITE value used"
       end if
 
       ! Assume that sub-sampling process, if completed, will use 10 % of the
@@ -1048,10 +1028,12 @@ contains
    !
    subroutine update_obs_scaling_normal
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type) :: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
+
+      ! we edit a local tmp copy, then write it back to shared storage location
       ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
       ! - but I made it requires more deliberate steps to stop accidental updates
       ! from concurrent parts
+      type(DATA_type) :: DATAin_tmp  
       DATAin_tmp = DATAin_original
 
       ! Subroutine sets the data specific scaling factors
@@ -1091,6 +1073,11 @@ contains
    !
    subroutine update_obs_scaling_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
+
+      ! we edit a local tmp copy, then write it back to shared storage location
+      ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
+      ! - but I made it requires more deliberate steps to stop accidental updates
+      ! from concurrent parts
       type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
@@ -1131,6 +1118,11 @@ contains
    !
    subroutine update_obs_scaling_sqrt_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
+
+      ! we edit a local tmp copy, then write it back to shared storage location
+      ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
+      ! - but I made it requires more deliberate steps to stop accidental updates
+      ! from concurrent parts
       type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
@@ -1164,6 +1156,7 @@ contains
       DATAin_tmp%soilwater_scaling = 1d0/sqrt(dble(DATAin_original%nsoilwater))
 
       call set_datain(DATAin_tmp)
+
       return
 
    end subroutine update_obs_scaling_sqrt_nsamples
@@ -1172,6 +1165,11 @@ contains
    !
    subroutine update_obs_scaling_log_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
+
+      ! we edit a local tmp copy, then write it back to shared storage location
+      ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
+      ! - but I made it requires more deliberate steps to stop accidental updates
+      ! from concurrent parts
       type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
@@ -1205,6 +1203,7 @@ contains
       DATAin_tmp%soilwater_scaling = 1d0/(1d0 + log(dble(DATAin_original%nsoilwater)))
 
       call set_datain(DATAin_tmp)
+
       return
 
    end subroutine update_obs_scaling_log_nsamples

@@ -37,35 +37,14 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
                    ,nos_iter,soil_frac_clay_in,soil_frac_sand_in &
                    ,pathlength)
 
-  use carbon_model_mod, only: carbon_model, nos_soil_layers
+  use CARBON_MODEL_MOD, only: CARBON_MODEL, model_working_variables, initialize_mv, &
+                              nos_soil_layers
+  use cardamom_structures, only: crop_development_parameters, CI
 
   ! subroutine specificially deals with the calling of the fortran code model by
   ! R
 
   implicit none
-  interface
-    subroutine crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                          ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                          ,exepath)
-      implicit none
-      ! declare inputs
-      ! crop specific variables
-      character(350),intent(in) :: exepath
-      double precision :: stock_seed_labile
-      double precision, allocatable, dimension(:) :: DS_shoot, & !
-                                                      DS_root, & !
-                                                     fol_frac, & !
-                                                    stem_frac, & !
-                                                    root_frac, & !
-                                                      DS_LRLV, & !
-                                                         LRLV, & !
-                                                      DS_LRRT, & !
-                                                         LRRT
-      ! local variables..
-      integer :: columns, i, rows, input_crops_unit, ios
-      character(225) :: variables,filename
-    end subroutine crop_development_parameters
-  end interface
 
   ! declare input variables
   integer, intent(in) :: pathlength
@@ -110,6 +89,8 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays,nodiags) :: DIAGS
   double precision, dimension(nodays) :: tmp
 
+  type(model_working_variables) :: mv
+
   ! crop development parameters declared here. These are also found in
   ! MHMCMC_STRUCTURES PI%
   ! crop specific variables
@@ -145,21 +126,22 @@ subroutine rdalec14(output_dim,MTT_dim,SS_dim &
       stop
   end if 
 
+  ! Initialise any shared memory objects for thread-safe activity
+  call initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand_in, soil_frac_clay_in, met, lat)
+
   ! Load crop development parameters here
   ! TLS: should the exepath and pathlength be made hardcoded in the assumption that 
   ! the needed file always has the same name (i.e. copy and rename to EXE to match specific crop types)
   ! and that the file is in the working directory of the PROJECT
-  call crop_development_parameters(stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                                  ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT &
-                                  ,exepath)
+  call crop_development_parameters() ! reads from file to CI in model_shared
 
   ! begin iterations
   do i = 1, nos_iter
      ! call the model
      call carbon_model(1,nodays,met,pars(1:nopars,i),deltat,nodays,lat &
                       ,FLUXES,POOLS,DIAGS,nopars,nomet,nopools,nofluxes &
-                      ,nodiags,stock_seed_labile,DS_shoot,DS_root,fol_frac &
-                      ,stem_frac,root_frac,DS_LRLV,LRLV,DS_LRRT,LRRT)
+                      ,nodiags,mV)
+
 !if (i == 1) then
 !    open(unit=666,file="/home/lsmallma/out.csv", &
 !         status='replace',action='readwrite' )

@@ -404,8 +404,8 @@ module CARBON_MODEL_MOD
     integer:: n
         ! allocate variables dimension which are fixed per site only the once
         deallocate(mV%deltat_1, &
-                     mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
-                     mV%rainfall_time, mV%airt_zero_fraction_time)
+                   mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
+                   mV%rainfall_time, mV%airt_zero_fraction_time)
   end subroutine
   !
   !--------------------------------------------------------------------

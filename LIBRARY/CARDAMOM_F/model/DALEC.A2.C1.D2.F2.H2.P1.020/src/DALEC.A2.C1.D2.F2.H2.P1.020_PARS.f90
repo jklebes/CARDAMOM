@@ -35,6 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
+  use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -49,8 +50,7 @@ module MODEL_PARAMETERS
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info
-    use MCMCOPT, only: PI
+  subroutine pars_info(PI)
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
@@ -61,6 +61,13 @@ module MODEL_PARAMETERS
 
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
     ! 22/11/2019 - try not to lose this information as it is needed for comparability
+
+    ! Arguments
+    type(PARINFO), intent(inout):: PI
+
+    PI%npars = 32
+    if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
+    if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
     !
     ! declare parameters

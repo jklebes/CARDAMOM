@@ -145,6 +145,7 @@ set(DALEC_MODDIR "${PROJECT_BINARY_DIR}/include_dalec")
 set(DALEC_SO     "${CMAKE_CURRENT_SOURCE_DIR}/executable/dalec.so")
 set(DALEC_SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/misc/brent_zero/brent_zero.f90"
+    "${CMAKE_CURRENT_SOURCE_DIR}/general/cardamom_structures.f90"
     "${CMAKE_CURRENT_SOURCE_DIR}/${MODELFILE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/model/${MODEL}/src/${MODEL}_R_interface.f90")
 

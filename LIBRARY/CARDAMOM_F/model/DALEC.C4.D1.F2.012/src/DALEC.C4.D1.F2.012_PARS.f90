@@ -36,7 +36,6 @@
 
 module MODEL_PARAMETERS
 use samplers_shared, only: PARINFO
-use cardamom_structures, only: CI, crop_development_parameters
 
   implicit none
 
@@ -47,12 +46,10 @@ use cardamom_structures, only: CI, crop_development_parameters
   public :: pars_info
 
   contains
-
   !
   !------------------------------------------------------------------
   !
-  subroutine pars_info(PI)
-    
+  subroutine pars_info(PI)   
 
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or

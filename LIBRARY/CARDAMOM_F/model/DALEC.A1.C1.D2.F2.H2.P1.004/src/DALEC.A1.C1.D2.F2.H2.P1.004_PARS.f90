@@ -24,13 +24,13 @@
 
 !!!!!!!!!!!! File specific description !!!!!!!!!!
 ! Module contains uniform prior parameter information for the DALEC.A1.C1.D2.F2.H2.P1 model.
-  !
-  ! This code is based on the original C verion of the University of Edinburgh
-  ! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
-  ! All code translation into Fortran, integration into the University of
-  ! Edinburgh CARDAMOM code and subsequent modifications by:
-  ! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
-  ! See function/subroutine specific comments for exceptions and contributors
+!
+! This code is based on the original C verion of the University of Edinburgh
+! CARDAMOM framework created by A. A. Bloom (now at the Jet Propulsion Laboratory).
+! All code translation into Fortran, integration into the University of
+! Edinburgh CARDAMOM code and subsequent modifications by:
+! T. L. Smallman (t.l.smallman@ed.ac.uk, University of Edinburgh)
+! See function/subroutine specific comments for exceptions and contributors
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -62,14 +62,16 @@ use samplers_shared, only: PARINFO
     ! NOTE: that these parameter ranges have been matched with Bloom's C code
     ! 22/11/2019-try not to lose this information as it is needed for comparability
 
-    !
-    ! declare parameters
+    ! Arguments
     type(PARINFO), intent(inout):: PI
-    !
-
+    
     PI%npars = 32
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
     if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
+
+    !
+    ! declare parameters
+    !
 
     ! Decomposition of litter to som (fraction/day-1)
     ! Note is modified by exponential temperature function (p10)
