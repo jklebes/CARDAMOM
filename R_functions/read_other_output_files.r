@@ -44,7 +44,7 @@ read_other_output_files<- function(PROJECT_in,n,pattern_wanted) {
   is_it = grepl(PROJECT_in$sites[n],cfile) ; cfile = cfile[is_it]
 
   # just in case
-  if (length(cfile) == 0) {return(-9999)}
+  if (length(cfile) <= 1) {return(-9999)}
 
   # calculate the number of chains
   chains = seq(1,length(cfile))

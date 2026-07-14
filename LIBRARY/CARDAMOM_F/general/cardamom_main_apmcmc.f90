@@ -95,34 +95,34 @@ program cardamom_framework
    ! 5) write-to-file frequency
    ! 6) 0/1 flag to use normalised log-likelihood pre-mcmc
    ! 7) Flag to select the cost function normalisation approach
+   ! 8) integer number of chains (optional; defaults to 3 if absent)
 
    implicit none(type, external)
 
    ! declare local variables
-   character(350):: infile, outfile, solution_wanted_char, freq_print_char, &
-                    freq_write_char, do_inflate_char, cost_func_scaling_char
-   integer:: solution_wanted, freq_print, freq_write, time1, time2, time3, &
-             nOUT_save, do_inflate_dble, cost_func_scaling_dble
-   logical:: do_inflate = .false.
-   logical:: sub_sample_complete = .false.
-   double precision:: sub_fraction = 0.2d0
+   character(350) :: infile, outfile, solution_wanted_char, freq_print_char, &
+                    freq_write_char, do_inflate_char, cost_func_scaling_char, &
+                    nchains_char
+   integer :: solution_wanted, freq_print, freq_write, time1, time2, time3, &
+              do_inflate_dble, cost_func_scaling_dble, idum
+   logical :: do_inflate = .false.
+   logical :: sub_sample_complete = .false.
+   double precision :: nOUT_save = 0d0, sub_fraction = 0.2d0
     !! run this percentage of simulation with variant function
-   type(MCMC_OUTPUT), dimension(:), allocatable:: MCOUT_list
+   type(MCMC_OUTPUT), dimension(:), allocatable :: MCOUT_list
     !! array of output objects from each thread
-   type(MCMC_OPTIONS):: MCO
+   type(MCMC_OPTIONS) :: MCO
      !! options for sampler
-   logical:: restart
+   logical :: restart
 
-   ! TODO not to hardcode, from command line argument
-   integer:: nchains = 4
-   integer:: i
+   ! Number of chains. Default value, may be overridden by command line argument 8.
+   integer :: nchains = 3
+   integer :: i
 
    call init_infinity()
 
-   allocate (MCOUT_list(nchains))
-
    ! user update
-   write (*, *) "Beginning read of the command line"
+   write (*,*) "Beginning read of the command line"
 
    ! read user options from the command line
    call get_command_argument(1, infile)
@@ -132,8 +132,13 @@ program cardamom_framework
    call get_command_argument(5, freq_write_char)
    call get_command_argument(6, do_inflate_char)
    call get_command_argument(7, cost_func_scaling_char)
+   ! argument 8 (number of chains) is optional; default retained if absent
+   if (command_argument_count() >= 8) then
+      call get_command_argument(8, nchains_char)
+      read (nchains_char, '(I10)') nchains
+   end if
 
-   ! now convert relevant ones to integeter
+   ! now convert relevant ones to integrator
    ! Note: that I10 is the maximum allowed with the default integer kind (kind = 4).
    !       allow for larger number of iterations integer (kind  = 8) is needed throughout the code.
    read (solution_wanted_char, '(I10)') solution_wanted
@@ -149,47 +154,55 @@ program cardamom_framework
       ! All is well
    else
       ! All is not well-complain
-      print *, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
-      print *, "Command line should have 7 arguments (in addition to the cardamom.exe)."
-      print *, "These are: "
-      print *, "1) input file path."
-      print *, "2) output file path-note that PARS, STEP, COV, COVINFO will be appended to this name path outfile."
-      print *, "3) No. of parameter proposals to make."
-      print *, "4) Iteration freq. for printing to screen (main MCMC phase only)."
-      print *, "5) Iteration freq. for writing results to files."
-      print *, "6) do sample size normalisation phase - "
-      print *, "  0 = FALSE"
-      print *, "  1 = TRUE"
-      print *, "7) Select likelihood cost function - "
-      print *, "  0 = no scaling"
-      print *, "  1 = scaling by sample size (n)"
-      print *, "  2 = scaling by sqrt(n)"
-      print *, "  3 = scaling by log(n)"
+      print*, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
+      print*, "Command line should have 7 arguments (in addition to the cardamom.exe)."
+      print*, "These are: "
+      print*, "1) input file path."
+      print*, "2) output file path-note that PARS, STEP, COV, COVINFO will be appended to this name path outfile."
+      print*, "3) No. of parameter proposals to make."
+      print*, "4) Iteration freq. for printing to screen (main MCMC phase only)."
+      print*, "5) Iteration freq. for writing results to files."
+      print*, "6) do sample size normalisation phase - "
+      print*, "  0 = FALSE"
+      print*, "  1 = TRUE"
+      print*, "7) Select likelihood cost function - "
+      print*, "  0 = no scaling"
+      print*, "  1 = scaling by sample size (n)"
+      print*, "  2 = scaling by sqrt(n)"
+      print*, "  3 = scaling by log(n)"
+      print*, "8) Number of chains (optional, integer >= 1; defaults to 3)."
       stop
    end if
 
-   ! user update
-   write (*, *) "Command line options read, moving on now"
+   ! Sanity check the number of chains.
+   if (nchains < 1) then
+      print*, "ERROR: number of chains (command line argument 8) must be >= 1."
+      print*, "Value supplied = ", nchains
+      stop
+   end if
 
-   ! TODO get n seeds, here or smoewhere else
-   ! TODO make sure seeds are saved
-   ! seed the random number generator
+   ! Now the number of chains is known, allocate the per-chain output array
+   allocate (MCOUT_list(nchains))
+
+   ! user update
+   write (*,*) "Command line options read, moving on now"
+
    ! determine unique (sort of) seed value; based on system time
-   ! call system_clock(time1, time2, time3)
-   ! set seed value outside of the function, idum must be a negative number
-   !idum = dble(time1+time2+time3)
+   call system_clock(time1, time2, time3)
+   ! Set seed value outside of the function
+   idum = time1+time2+time3
    !call rnstrt(nint(idum))
 
    ! Determine whether ot not we are doing a real analysis or running a stress trest
    if (trim(infile) == "StressTest") then
       !call run_stresstest()
-      ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures:: DATAin
+      ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures :: DATAin
       stop
    end if
 
    ! read input data file
    call initialize(infile) ! = initialize_parinfo, read_check_binary_data, initialize_model
-   ! sets cardamom_structures:: DATAin
+   ! sets cardamom_structures :: DATAin
 
    call initialize_carbon_model(nchains)
    do i = 1, nchains
@@ -214,13 +227,13 @@ program cardamom_framework
    end do
 
    ! Report which model ID we are using
-   write (*, *) "Running model version ", DATAin%ID
+   write (*,*) "Running model version ", DATAin%ID
 
    if (.not. MCO%restart) then
       ! Begin search for initial conditions
-      write (*, *) "Beginning search for initial parameter conditions"
+      write (*,*) "Beginning search for initial parameter conditions"
       ! Determine initial values, this requires using the AP-MCMC
-      call find_edc_initial_values(MCO, MCOUT_list, nchains)
+      call find_edc_initial_values(MCO, MCOUT_list, nchains, idum)
       ! Having done EDC search phase, flag to start the next phase from this state
       MCO%fixedpars = .true.
       do i = 1, nchains
@@ -229,13 +242,10 @@ program cardamom_framework
    end if
 
    do i = 1, nchains
-
       ! Reset the MCMC parameters for the next stage
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-
-      ! Reset stepsize and covariance for main DRAM-MCMC
+      ! Reset stepsize and covariance for main MH-MCMC
       call reset_stats(MCOUT_list(i), PI%npars)
-
    end do
 
    ! sub-sampling phase, first sub_fraction% of the simulation with variant loglikelihood
@@ -252,17 +262,20 @@ program cardamom_framework
 
       ! Set flag to indicate this phase has occurred and make a record of the
       ! total iterations to be attempted
-      sub_sample_complete = .true.; nOUT_save = MCO%nOUT
+      sub_sample_complete = .true.
 
       ! Report to the user
-      write (*, *) "Beginning parameter search on sample size normalised likelihoods"
+      write (*,*) "Beginning parameter search on sample size normalised likelihoods"
 
-      MCO%nOUT = nint(dble(nout_save)*sub_fraction)
+      ! Set MCMC parameters
+      nOUT_save = nint(dble(MCO%nOUT)*sub_fraction) ; MCO%nOUT = nOUT_save
       MCO%fADAPT = 1d0
       MCO%fixedpars = .true. ! start from end points of EDC phase
-      ! Second phase, run Mcmc with sub scaling
+      ! Update user again
+      write (*,*) "Nos iterations to be proposed = ", MCO%nOUT
+      ! Second phase, run MCMC with sub scaling
       call update_obs_scaling_nsamples
-      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+      call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains, seed = idum)
       MCO%fixedpars = .true.
       do i = 1, nchains
          ! Use the best parameter set as the starting point for the next stage
@@ -277,9 +290,9 @@ program cardamom_framework
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)
          end if  ! do we need a new covariance matrix or can we use the existing one?
+         ! reset iterations counter.
+         MCOUT_list(i)%nos_iterations = 0
       end do
-
-      MCOUT_list(i)%nos_iterations = 0
 
    end if
 
@@ -287,13 +300,12 @@ program cardamom_framework
    ! into two subroutines to avoid double calling of file name creation
    ! components.
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-
-   MCO%nOUT = nout_save*(1 - sub_fraction)  !number of steps in final phase
+   MCO%nOUT = MCO%nOUT - nOUT_save  ! number of steps in final phase
    MCO%fixedpars = .true.
 
    ! Update the user
-   write (*, *) "Beginning parameter search in real likelihoods"
-   write (*, *) "Nos iterations to be proposed = ", MCO%nOUT
+   write (*,*) "Beginning parameter search in real likelihoods"
+   write (*,*) "Nos iterations to be proposed = ", MCO%nOUT - MCOUT_list(1)%nos_iterations
 
    ! Call the main MCMC
    ! The specific normalisation of the cost function is determined here.
@@ -309,8 +321,8 @@ program cardamom_framework
    else if (cost_func_scaling_dble == 3) then
       call update_obs_scaling_log_nsamples
    end if  ! cost_func_scaling_dble ==
-
-   call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains)
+   !  Finally run the mcmc
+   call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains, seed = idum)
 
    ! Let the user know we are done
    write (*, *) "AP-MCMC done now, moving on ..."
@@ -322,9 +334,10 @@ program cardamom_framework
 
    ! Final message to the user
    write (*, *) "==========================================================="
-   write (*, *) "==== CARDAMOM analysis for the current chain completed ===="
+   write (*, *) "==== CARDAMOM analysis for the current site completed ====="
    write (*, *) "==========================================================="
    write (*, *) "=========================Honestly=========================="
+   write (*, *) "==========================================================="
 contains
 
 end program cardamom_framework

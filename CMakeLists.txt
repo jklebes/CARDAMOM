@@ -8,9 +8,13 @@ enable_language(Fortran)
 include(CTest)
 
 
-# Debug mode with flags 
-set(CMAKE_Fortran_FLAGS_DEBUG "-ffree-line-length-0 -O2 -g -pg -Wall") 
-set(CMAKE_Fortran_FLAGS_RELEASE "-ffree-line-length-0 -O3")
+if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "IntelLLVM") #ifx flags
+  set(CMAKE_Fortran_FLAGS_DEBUG "-O2 -g -pg -warn all") 
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
+else() #default assume gfortran
+  set(CMAKE_Fortran_FLAGS_DEBUG "-ffree-line-length-0 -O2 -g -pg -Wall") 
+  set(CMAKE_Fortran_FLAGS_RELEASE "-ffree-line-length-0 -O3")
+endif()
 
 # Make Release the default CMAKE_BUILD_TYPE
 IF(NOT CMAKE_BUILD_TYPE)
@@ -60,10 +64,10 @@ endif()
 if(ENABLE_TESTING)
   # add the testsuite
   # Code coverage analysis # TODO improve
-target_compile_options(cardamom-samplers-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
-target_link_options(cardamom-samplers-lib PRIVATE -lgcov --coverage) 
-target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
-target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
+  target_compile_options(cardamom-samplers-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+  target_link_options(cardamom-samplers-lib PRIVATE -lgcov --coverage) 
+  target_compile_options(cardamom-lib PRIVATE --coverage -fprofile-arcs -ftest-coverage) 
+  target_link_options(cardamom-lib PRIVATE -lgcov --coverage) 
   enable_testing()
   add_subdirectory("test")
 endif()

@@ -83,7 +83,9 @@ module model_shared
     endif
     allocate(mVs(n_chains))
     do i = 1, n_chains_
-        call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%met, DATAin%deltat, DATAin%lat)
+        call initialize_mv(Mvs(i), DATAin%nodays, DATAin%nomet, DATAin%nopars, DATAin%deltat, &
+                           DATAin%soil_frac_sand, DATAin%soil_frac_clay, DATAin%met, DATAin%lat)
+
     end do
     end subroutine
 

@@ -76,40 +76,46 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
     outfile = paste(PROJECT_in$exepath,"CARDAMOM_ECDF_EXECUTABLES_LIST.txt",sep="")
     # begin writing out the file contents
     # construct the file now
+    # One task per site. Each task is a single process that runs all
+    # PROJECT_in$nochains chains internally via OpenMP (see the cpus-per-task /
+    # OMP_NUM_THREADS settings below), replacing the previous one-task-per-chain
+    # submission model.
     first_pass=TRUE
-    for (c in seq(1, PROJECT_in$nochains)) {
-         for (n in seq(1, PROJECT_in$nosites)) {
-              infile = paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
-              output = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c,"_",sep="")
-              if (first_pass) {
-                  write(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
-                              infile," ",
-                              output," ",
-                              as.integer(nsamples),
-                              " 0 ",
-                              as.integer(PROJECT_in$samplerate)," ",
-                              as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
-                  first_pass=FALSE
-              } else {
-                  write(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
-                              infile," ",
-                              output," ",
-                              as.integer(nsamples),
-                              " 0 ",
-                              as.integer(PROJECT_in$samplerate)," ",
-                              as.integer(pre_mcmc)," ",
-                              as.integer(PROJECT_in$request_cost_function_scaling),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
-              } # first pass or not
-         } # chain no
+    for (n in seq(1, PROJECT_in$nosites)) {
+         infile = paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
+         # Output base only; the chain id and PARS/STEP/COV/COVINFO suffix are
+         # appended by the executable (one set of files per internal chain).
+         output = paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],sep="")
+         if (first_pass) {
+             write(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
+                         infile," ",
+                         output," ",
+                         as.integer(nsamples),
+                         " 0 ",
+                         as.integer(PROJECT_in$samplerate)," ",
+                         as.integer(pre_mcmc)," ",
+                         as.integer(PROJECT_in$request_cost_function_scaling)," ",
+                         as.integer(PROJECT_in$nochains),sep=""),sep=" ", ncolumn=1,file=outfile,append="F")
+             first_pass=FALSE
+         } else {
+             write(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
+                         infile," ",
+                         output," ",
+                         as.integer(nsamples),
+                         " 0 ",
+                         as.integer(PROJECT_in$samplerate)," ",
+                         as.integer(pre_mcmc)," ",
+                         as.integer(PROJECT_in$request_cost_function_scaling)," ",
+                         as.integer(PROJECT_in$nochains),sep=""),sep=" ", ncolumn=1,file=outfile,append="T")
+         } # first pass or not
     } # nosite
 
     ## default information for cluster submission
     # number of tasks per array
     max_nbundle_size = 5000
 
-    # number of tasks required
-    ntasks = PROJECT_in$nochains*PROJECT_in$nosites
+    # number of tasks required (one per site; chains run internally per task)
+    ntasks = PROJECT_in$nosites
     # number of bundles needed for tasks 
     nbundle = ceiling(ntasks/(max_nbundle_size-1))
     # number of tasks per bundle
@@ -141,7 +147,8 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
          write(    c(paste('#SBATCH --account=',slurm_account,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --job-name=Bundle_",b,sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --ntasks=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
-         write(    c("#SBATCH --cpus-per-task=1"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         # One core per chain: the executable parallelises its chains over OpenMP threads
+         write(    c(paste("#SBATCH --cpus-per-task=",as.integer(PROJECT_in$nochains),sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("#SBATCH --mem=1G "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste('#SBATCH --output="',PROJECT_in$oestreampath,'/slurm-%A_%a.out"',sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("#SBATCH --time=",as.numeric(PROJECT_in$chain_runtime),":00:00",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
@@ -152,6 +159,8 @@ submit_processes_to_local_slurm_machine<-function (PROJECT_in) {
          write(    c(" "), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c(paste("sitenum=$((($SLURM_ARRAY_TASK_ID)+",bundle_offset,"))",sep="")), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("task=$( cat $1CARDAMOM_ECDF_EXECUTABLES_LIST.txt | sed $sitenum\\!d )"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
+         # Match the OpenMP thread count to the cores requested so each chain gets a core
+         write(    c("export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
          write(    c("command ${task}"), file = slurm_file, ncolumns = nos_cols, sep=col_sep, append = TRUE)
 
          # Record directory to change back in a moment

@@ -10,6 +10,7 @@ module test_model
   use test_functions
   use test_math, only: approx
   use random_uniform
+  use samplers_math, only: random_int
   use model_shared, only: initialize_carbon_model, destroy_carbon_model
   use cardamom_MHMCMC
   use model_shared, only: PI
@@ -82,7 +83,7 @@ subroutine test_model_sanity_check(error)
     call initialize(infile)
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()
+    seed = random_int()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call model_sanity_check(PARS, 1)
@@ -117,7 +118,7 @@ subroutine test_carbon_model_not_nan(error)
     allocate(diags(DATAin%nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()
+    seed = random_int()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
@@ -160,7 +161,7 @@ subroutine test_model_repeat_evaluation(error)
     allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()  ! TODO record later
+    seed = random_int()  ! TODO record later
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call carbon_model(1, DATAin%nodays, DATAin%MET, PARS, DATAin%deltat &
@@ -216,7 +217,7 @@ integer:: seed, i, clock
     allocate(fluxes1(DATAin%nodays, DATAin%nofluxes), fluxes2(DATAin%nodays, DATAin%nofluxes))
     allocate(diags1(DATAin%nodays, DATAin%nodiags), diags2(DATAin%nodays, DATAin%nodiags))
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()
+    seed = random_int()
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     call initialize_carbon_model(nchains)
@@ -275,7 +276,7 @@ integer:: seed, i, nodays
     allocate(diags1(nodays, DATAin%nodiags), diags2(nodays, DATAin%nodiags), diags3(nodays, DATAin%nodiags))
     call initialize_carbon_model(nchains)
     PARS = DATAin%parpriors(1:PI%npars)
-    seed = irand()  ! TODO record later
+    seed = random_int()  ! TODO record later
     call random_uniform%initialize_random(seed)
     call init_pars_random(PI, PARS, PI%fix_pars, random_uniform)
     do i = 1, nchains

@@ -46,7 +46,7 @@ module cardamom_io
    private
 
    ! allow access to specific functions
-   public::  update_obs_scaling_normal &
+   public ::  update_obs_scaling_normal &
             , update_obs_scaling_nsamples &
             , update_obs_scaling_sqrt_nsamples &
             , update_obs_scaling_log_nsamples &
@@ -57,10 +57,10 @@ module cardamom_io
             , initialize
 
    ! declare module level variables
-   integer:: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
+   integer :: pfile_unit = 10, sfile_unit = 11, cfile_unit = 12, cifile_unit = 13, ifile_unit = 14
 
    ! parameters
-   integer, parameter:: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision
+   integer, parameter :: real_bytes = 8  ! number of bytes in real variable, 8 bytes is to make double precision
 
    save
 
@@ -71,7 +71,7 @@ contains
    subroutine cardamom_model_library(DATAin)
       use cardamom_structures, only: DATA_type
       implicit none(type, external)
-      type(DATA_type), intent(inout):: DATAin
+      type(DATA_type), intent(inout) :: DATAin
     !! a local DATAin object as argument
 
 
@@ -315,7 +315,7 @@ contains
     else
         write(*,*) "Oh dear... model ID not valid = ",DATAin%ID
         stop
-    endif
+    end if
 
    end subroutine cardamom_model_library
    !
@@ -330,10 +330,10 @@ contains
       implicit none(type, external)
 
       ! declare input variables
-      character(350), intent(in):: parname, stepname, covname, covinfoname
+      character(350), intent(in) :: parname, stepname, covname, covinfoname
 
       ! declare local variables
-      integer:: ios, reclen
+      integer :: ios, reclen
       double precision, save :: a = 1d0
 
       ! open files now
@@ -373,24 +373,24 @@ contains
 
       implicit none(type, external)
 
-      type(DATA_type), intent(inout):: DATAin
+      type(DATA_type), intent(inout) :: DATAin
     !! This is a temporary local DATAin object whose fields we are allowed to modify.
     !! After everything is read, the (protected) global DATAin object
     !! is set by copying this object.
 
       ! declare input variables
-      character(350), intent(in):: infile
+      character(350), intent(in) :: infile
 
       ! declare local variables
-      integer:: nopars_dummy, subsample
-      integer:: a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, day &
+      integer :: nopars_dummy, subsample
+      integer :: a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, day &
                 , start &
                 , finish &
                 , totcol & ! total number of columns (met+obs)
                 , totread      ! total number of records already read
-      double precision:: mz
-      double precision, save:: subsample_fraction = 0.20  ! startd at 0.25
-      double precision, dimension(:), allocatable:: statdat & ! static data input
+      double precision :: mz
+      double precision, save :: subsample_fraction = 0.20  ! startd at 0.25
+      double precision, dimension(:), allocatable :: statdat & ! static data input
          , mettemp & ! met data input
          , obstemp   ! obs data input
 
@@ -899,11 +899,12 @@ contains
       use cardamom_structures, only: DATA_type, set_datain, set_datain_original
       use model_shared, only: initialize_parinfo
       implicit none(type, external)
-      character(350), intent(in):: infile
-      type(DATA_type):: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures:: DATAin
+      character(len=*), intent(in) :: infile
+      type(DATA_type) :: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures :: DATAin
 
       call initialize_parinfo()  ! TODO not really a file reading thing
       call read_check_binary_data(infile, DATAin)
+      call initialize_model(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin_original
       call set_datain_original(DATAin)
       ! Save the DATAin from file to cardamom_structures : DATAin (copy to be scaled)
@@ -921,12 +922,12 @@ contains
 
       implicit none(type, external)
 
-      type(DATA_type), intent(inout):: DATAin
+      type(DATA_type), intent(inout) :: DATAin
 
-      character(350), intent(in):: infile
+      character(350), intent(in) :: infile
 
       ! declare local variables
-      integer:: i
+      integer :: i
 
       ! remind us what file we're about to access
       write (*, *) "Input file = ", trim(infile)
@@ -956,6 +957,26 @@ contains
 
    end subroutine read_check_binary_data
 
+   subroutine initialize_model(DATAin)
+  !! split from read_pari_data
+  !! TODO not io, belongs in a differnt file
+  !! depends on having called read_binary_data or read_check_binary_data first
+  !! for DATAin%nodays and nopools
+      use cardamom_structures, only: DATA_type
+
+      implicit none(type, external)
+
+      type(DATA_type), intent(inout) :: DATAin
+      ! need to allocate memory to the model output variables
+      allocate (DATAin%M_FLUXES(DATAin%nodays, DATAin%nofluxes) &
+                , DATAin%M_POOLS((DATAin%nodays + 1), DATAin%nopools), DATAin%M_DIAGS(DATAin%nodays, DATAin%nodiags))
+
+      ! force zero in states and fluxes
+      !DATAin%M_FLUXES(:,:) = 0d0; DATAin%M_POOLS(:,:) = 0d0; DATAin%M_DIAGS(:,:) = 0d0
+
+      ! alert the user
+      write (*, *) "Created fields for model output"
+   end subroutine initialize_model
    !------------------------------------------------------------------
    !
    subroutine read_options(solutions_wanted, freq_print, freq_write, outfile, MCO)
@@ -967,9 +988,9 @@ contains
       implicit none(type, external)
 
       ! declare input variables
-      character(350), intent(inout):: outfile
-      integer, intent(in):: solutions_wanted, freq_print, freq_write
-      class(MCMC_OPTIONS), intent(out):: MCO
+      character(350), intent(inout) :: outfile
+      integer, intent(in) :: solutions_wanted, freq_print, freq_write
+      class(MCMC_OPTIONS), intent(out) :: MCO
 
       ! defining hardcoded MCMC options
       MCO%append = .true.
@@ -1012,7 +1033,7 @@ contains
       ! ensure that the separator is _ , whether the user put it in the stem or not
       if (outfile(len_trim(outfile):len_trim(outfile)) /= "_" ) then
           outfile = trim(outfile)//"_"
-      endif
+      end if
       write (MCO%outfile, fmt='(A)') trim(outfile)//"PARS"
       write (MCO%stepfile, fmt='(A)') trim(outfile)//"STEP"
       write (MCO%covfile, fmt='(A)') trim(outfile)//"COV"
@@ -1027,7 +1048,7 @@ contains
    !
    subroutine update_obs_scaling_normal
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type):: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
+      type(DATA_type) :: DATAin_tmp  ! we edit a local tmp copy, then write it back to shared storage location
       ! it's ok to make changes to elements of DATAin in single-threaded parts of the program
       ! - but I made it requires more deliberate steps to stop accidental updates
       ! from concurrent parts
@@ -1070,7 +1091,7 @@ contains
    !
    subroutine update_obs_scaling_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type):: DATAin_tmp
+      type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
       ! Subroutine sets the data specific scaling factors
@@ -1110,7 +1131,7 @@ contains
    !
    subroutine update_obs_scaling_sqrt_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type):: DATAin_tmp
+      type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
       ! Subroutine sets the data specific scaling factors
@@ -1151,7 +1172,7 @@ contains
    !
    subroutine update_obs_scaling_log_nsamples
       use cardamom_structures, only: DATA_type, DATAin_original, set_datain
-      type(DATA_type):: DATAin_tmp
+      type(DATA_type) :: DATAin_tmp
       DATAin_tmp = DATAin_original
 
       ! Subroutine sets the data specific scaling factors

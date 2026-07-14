@@ -25,6 +25,7 @@ module DEMCz
    use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, filenames_insert_threadid
    use random_uniform, only: UNIF_VECTOR
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
+   use samplers_math, only: random_int
    use OMP_LIB
 
    implicit none(type, external)
@@ -34,11 +35,9 @@ module DEMCz
    !> A collection of input options to the DEMCz sampler run
    !> contains default values
    type, extends(MCMC_options):: DEMCZOPT
-! DEMcz algorithm parameters
-      double precision:: differential_weight = 0.8
-!! differential weight gamma, [0, 2]
-      double precision:: crossover_probability = 0.9
-!! crossover probability CR, [0, 1]
+      ! DEMcz algorithm parameters
+      double precision:: differential_weight = 0.8d0  ! differential weight gamma, [0, 2]
+      double precision:: crossover_probability = 0.9d0 ! crossover probability CR, [0, 1]
    end type DEMCzOPT
 
 contains
@@ -55,37 +54,30 @@ contains
    !>                          .false. -> start from random initial positions
    !> IN : nchains (optional, default 3) : number chains in swarm.
    !> Also writes history to file/output stream and progress to console.
-   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains)
+   subroutine run_DEMCz(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains, seed)
       use samplers_shared, only: metropolis_choice
       use samplers_io, only: write_mcmc_output, open_output_files
       implicit none(type, external)
 
-      !! input and output structs
-      type(PARINFO), intent(in):: PI
-      !!PARINFO struct from model giving number, bounds of parameters
-      type(DEMCZOPT), intent(inout):: MCO
-      !! struct of options for the run, shared between all threads
-      type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout):: MCOUT_list  ! array of MCOUT objects
-      !! Array of MCMC_OUTPUT structs for each thread's results
-      type(MCMC_OUTPUT):: MCOUT
-      !! A single thread's output object
+      ! Arguments
+      type(PARINFO), intent(in) :: PI ! PARINFO struct from model giving number, bounds of parameters    
+      type(DEMCZOPT), intent(inout) :: MCO ! struct of options for the run, shared between all threads
+      type(MCMC_OUTPUT), dimension(:), allocatable, intent(inout) :: MCOUT_list  ! Array of MCMC_OUTPUT structs for each thread's results
+      type(MCMC_OUTPUT) :: MCOUT ! A single thread's output object
 
-      integer, optional, intent(in) :: nchains
-      !! number chains optional, default 1
-
+      integer, optional, intent(in) :: nchains ! number chains optional, default 1
+      integer, intent(in):: seed
+      
       !> Matrix X, (npars x nchains), holding current state of the n chains
-      double precision, allocatable, dimension(:, :):: PARS_current
+      double precision, allocatable, dimension(:,:):: PARS_current
       double precision, dimension(PI%npars):: norPARS
       ! and their current loglikelihood values
       double precision, allocatable, dimension(:):: l0
       ! and their best likelihood values and best pars so far
       double precision, allocatable, dimension(:):: l_best
-      double precision, allocatable, dimension(:, :):: PARS_best
-      double precision             :: l
-      double precision             :: output_loglikelihood
-        !! likelihood of proposed values (private on each thread)
-      double precision, dimension(PI%npars):: proposed_vector
-        !! proposed values (private on each thread)
+      double precision, allocatable, dimension(:,:):: PARS_best
+      double precision             :: l, output_loglikelihood ! likelihood of proposed values (private on each thread)
+      double precision, dimension(PI%npars):: proposed_vector ! proposed values (private on each thread)
 
       !> history Matrix Z, (npars x (nchains*maxiter))
       double precision, allocatable, dimension(:, :):: PARS_history
@@ -95,7 +87,6 @@ contains
 
       integer:: npars, MAXITER
       double precision:: P_target
-      integer:: seed
       integer, dimension(:), allocatable:: ACC
       !! acceptance counter for each thread
       integer, dimension(:), allocatable:: ACCLOC
@@ -114,12 +105,11 @@ contains
       !> Typically a loglikelihood evaluation of a model against observation data
       !> given the inputted parameter values.
       interface
-         subroutine model_likelihood(param_vector, n, ML, id)
+         subroutine model_likelihood(param_vector, n, ML, id) bind(c)
             implicit none(type, external)
-            double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
-            integer, intent(in):: n
-            double precision, intent(out):: ML
-            integer, intent(in), optional:: id
+            integer, intent(in)  :: n, id
+            double precision, intent(inout), dimension(n) :: param_vector
+            double precision, intent(out) :: ML
          end subroutine model_likelihood
       end interface
 
@@ -168,9 +158,7 @@ contains
       allocate (ACCLOC(mco%nchains))
       allocate (PARS_best(npars, mco%nchains))
       allocate (PARS_history(npars, max(1, (MAXITER/mco%nadapt + 1))*mco%nchains))
-
       allocate (random_uniform_vectors(mco%nchains))
-
       allocate (io_space(mco%nchains))
 
       ! where we are in filling in the history matrix so far
@@ -178,7 +166,7 @@ contains
 
       !!! Initial state
 
-!$OMP PARALLEL DO private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
+!$OMP PARALLEL DO default(shared) private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
       do j = 1, mco%nchains
 
          MCOUT = MCOUT_list(j)
@@ -208,8 +196,7 @@ contains
          end if
 
          ! Initialize pregenerated random numbers, if using-local to this chain
-         seed = irand()  ! TODO record later  ! TODO always the same ?
-         call random_uniform_vectors(j)%initialize_random(seed)
+         call random_uniform_vectors(j)%initialize_random(seed+j)
          ! choose initial values
          ! TODO better function for initial state : latin square
          if (.not. MCO%restart) then
@@ -228,6 +215,7 @@ contains
          ! write first values to history matrix
          PARS_history(:, j) = PARS_current(:, j)
          ACC(j) = 0
+
       end do
 !$OMP END PARALLEL DO
 
@@ -240,7 +228,7 @@ contains
       do while (ITER + mco%nadapt <= MAXITER) !TODO could add convergence criteria for early stop
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)
+!$OMP PARALLEL DO default(shared) private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)
          do j = 1, mco%nchains
             MCOUT = MCOUT_list(j)
             ACCLOC(j) = 0
@@ -255,8 +243,8 @@ contains
                do while (R1 == R2)  ! should not equal R1 ("without replacement")
                   R2 = random_int(len_history)
                end do
-               call step_real(proposed_vector, PARS_current(:, j), PARS_history(:, R1), PARS_history(:, R2), differential_weight, &
-                       & random_uniform_vectors(j), PI)
+               call step_real(proposed_vector, PARS_current(:, j), PARS_history(:, R1), PARS_history(:, R2), & 
+                              differential_weight, random_uniform_vectors(j), PI)
                if (bounds_check(PI, proposed_vector)) then
                   call model_likelihood(proposed_vector, PI%npars, l, j)
                   if (metropolis_choice(l, l0(j))) then
@@ -274,15 +262,15 @@ contains
                end if
 
                if (MCO%nprint > 0) then
-               if (mod(ITER, MCO%nprint) == 0) then
-                  write (*, *) "Chain ", j, "of", mco%nchains
-                  write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
-                  write (*, *) "Total accepted = ", ACC(j)
-                  write (*, *) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
-                  write (*, *) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
-                  write (*, *) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
-                  write (*, *) "Maximum likelihood = ", l_best(j)
-               end if
+                   if (mod(ITER, MCO%nprint) == 0) then
+                       write (*,*) "Chain ", j, "of", mco%nchains
+                       write (*,*) "Total proposal = ", ITER, " out of ", MAXITER
+                       write (*,*) "Total accepted = ", ACC(j)
+                       write (*,*) "Overall acceptance rate    = ", dble(ACC)/dble(ITER)
+                       write (*,*) "Local   acceptance rate    = ", dble(ACCLOC(j))/dble(mco%nadapt)
+                       write (*,*) "Current obs   = ", l0(j), "proposed = ", l, " log-likelihood"
+                       write (*,*) "Maximum likelihood = ", l_best(j)
+                   end if
                end if
 
                if (MCO%nwrite > 0) then
@@ -291,12 +279,12 @@ contains
                      ! issues with different phases of the MCMC which may use sub-samples
                      ! of observations or inflated uncertainties to aid parameter
                      ! searching
-                     call model_likelihood_write(PARS_current(:, j), npars, output_loglikelihood, j)
+                     call model_likelihood_write(PARS_current(:,j), npars, output_loglikelihood, j)
                      ! Now write out to files
                      call write_mcmc_output(MCOUT%parvar, dble(ACC(j))/dble(MAXITER), &
                                             MCOUT%covariance, &
                                             MCOUT%meanpar, MCOUT%Nparvar, &
-                                            PARS_current(:, j), output_loglikelihood, npars, ITER == MCO%nOUT, &
+                                            PARS_current(:,j), output_loglikelihood, npars, ITER == MCO%nOUT, &
                                             io_space(j), j)
                   end if
                end if  ! write or not to write
@@ -306,6 +294,7 @@ contains
             ! write the chain's state after nadapt steps to Z
             PARS_history(:, len_history + j) = PARS_current(:, j)
          end do  ! nchains
+
          !$OMP END PARALLEL DO !!Barrier implicit
 
          ! each thread's ITER update are not brought back ot the shared one -
@@ -323,14 +312,14 @@ contains
       end do !end while ITER < MAXITER
 
       ! Final summary output from each chain individually
-      !$OMP PARALLEL DO
+      !$OMP PARALLEL DO default(shared)
       do j = 1, mco%nchains
          ! completed
-         write (*, *) "chain ", j, ": DEMCZ completed"
-         write (*, *) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
-         !write (*, *) "Final local acceptance rate = ", ACCRATE
-         write (*, *) "Best log-likelihood = ", l_best(j)
-         write (*, *) "Best parameters = ", pars_best(:, j)
+         write (*,*) "chain ", j, ": DEMCZ completed"
+         write (*,*) "Overall acceptance rate (approx)  = ", dble(ACC(j))/dble(MAXITER)
+         !write (*,*) "Final local acceptance rate = ", ACCRATE
+         write (*,*) "Best log-likelihood = ", l_best(j)
+         !write (*,*) "Best parameters = ", pars_best(:, j)
       end do
       !$OMP END PARALLEL DO
 
@@ -390,12 +379,5 @@ contains
       end do
       vout = v1 + differential_weight*(v2 - v3) + .000001*rn
    end subroutine step
-
-   integer function random_int(N)
-      integer, intent(in):: N
-      double precision:: r
-      call random_number(r)
-      random_int = floor(N*r) + 1
-   end function random_int
 
 end module DEMCz

@@ -225,7 +225,7 @@ read_parameter_chains<-function(PROJECT_in,n) {
                print('Likely cause is appended solutions in previously existing file')
                print(paste('To solve this, only the last ',PROJECT_in$nsubsamples,' will be used',sep=""))
                # keep only the end of the parameter sets
-               param_sets = param_sets[,(((dim(param_sets)[2]-PROJECT_in$nsubsamples)+1):dim(param_sets)[2])]
+               param_sets = param_sets[,((dim(param_sets)[2]-PROJECT_in$nsubsamples):dim(param_sets)[2])]
                status[c] = 2
                # ...or fewer parameter sets than expected
            } else if (dim(param_sets)[2] < PROJECT_in$nsubsamples) {

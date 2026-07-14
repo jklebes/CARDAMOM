@@ -43,7 +43,7 @@ contains
    end subroutine test_random_int
 
    subroutine test_DEMCz_runs(error)
-      use DEMCz, only: run_DEMCz, PARINFO
+      use DEMCz, only: run_DEMCz, PARINFO, random_int
       implicit none
       type(error_type), allocatable, intent(out):: error
       ! test the main DEMCz function just runs when given a function
@@ -53,27 +53,31 @@ contains
       type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT
      !! new (blank) struct to write results to
 
+      integer :: seed
+
       ! PI: use the PI_xy struct from test_functions quadratic potential
       call init_pi()
 
+      seed=random_int(300000)
+
       ! with MAXITER < nadapt
       options%nout = 10
-      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT, seed=seed)
 
       ! with MAXITER = N*nadapt
       options%nout = 50
       options%nadapt = 10
-      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT, seed=seed)
 
       ! with MAXITER /= N*nadapt
       options%nout = 53
       options%nadapt = 10
-      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT, seed=seed)
 
    end subroutine test_DEMCz_runs
 
    subroutine test_DEMCz_runs_enforce_omp(error)
-      use DEMCz, only: run_DEMCz, PARINFO
+      use DEMCz, only: run_DEMCz, PARINFO, random_int
       implicit none
       type(error_type), allocatable, intent(out):: error
       ! test the main DEMCz function just runs when given a function
@@ -83,15 +87,18 @@ contains
       type(MCMC_OUTPUT), dimension(:), allocatable:: DEMCzOUT
      !! new (blank) struct to write results to
       integer:: nchains
+      integer :: seed
       nchains = 4
 
       ! PI: use the PI_xy struct from test_functions quadratic potential
       call init_pi()
 
+      seed=random_int(300000)
+
       call omp_set_num_threads(nchains)
       options%nout = 10
 
-      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT)
+      call run_DEMCz(ll_normal, PI_xy, options, DEMCzOUT, seed=seed)
 
    end subroutine test_DEMCz_runs_enforce_omp
 

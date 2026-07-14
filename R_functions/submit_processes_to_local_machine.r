@@ -71,39 +71,40 @@ submit_processes_to_local_machine<-function (PROJECT_in) {
         PROJECT_in$request_cost_function_scaling = 0
     }
 
+    # Each site is now a single process that runs all PROJECT_in$nochains chains
+    # internally via OpenMP. Request that thread count for the executable.
+    Sys.setenv(OMP_NUM_THREADS = as.integer(PROJECT_in$nochains))
+
     # begin submitting the different tasks
     cwd = getwd()
     setwd(PROJECT_in$exepath)
     for (n in seq(1, PROJECT_in$nosites)) {
-         # Override background request?
-         bg_override = TRUE ; if (n%%concurrent_sites == 0) {bg_override = FALSE}
-         for (c in seq(1, PROJECT_in$nochains)) {
-              # Create the input / output file names for the current job
-              infile=paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
-              output=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],"_",c,"_",sep="")
-              # Depending on whether or not a background run submit the job
-              if (background == "y" | c != PROJECT_in$nochains | bg_override) {
-                  system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
-                               infile," ",
-                               output," ",
-                               as.integer(nsamples),
-                               " 0 ",
-                               as.integer(PROJECT_in$samplerate)," ",
-                               as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$request_cost_function_scaling)," & ",sep=""))
-              } else {
-                  system(paste(PROJECT_in$exepath,PROJECT_in$exe," ",
-                               infile," ",
-                               output," ",
-                               as.integer(nsamples),
-                               " 0 ",
-                               as.integer(PROJECT_in$samplerate)," ",
-                               as.integer(pre_mcmc)," ",
-                               as.integer(PROJECT_in$request_cost_function_scaling),sep=""))
-              }
-              # To ensure that each chain is submitted at a unique time we want to delay the code - this impacts the seed value used in the random number generator
-              Sys.sleep(1) # wait for 1 seconds
-         } # chain loop
+         # Throttle: every concurrent_sites-th job runs in the foreground so we do
+         # not launch more concurrent sites than the core budget allows.
+         run_background = TRUE ; if (n%%concurrent_sites == 0) {run_background = FALSE}
+         # Create the input / output file names for the current job.
+         infile=paste(PROJECT_in$datapath,PROJECT_in$name,"_",PROJECT_in$sites[n],".bin",sep="")
+         # Output base only; the chain id and PARS/STEP/COV/COVINFO suffix are
+         # appended by the executable (one set of files per internal chain).
+         output=paste(PROJECT_in$resultspath,PROJECT_in$name,"_",PROJECT_in$sites[n],sep="")
+         # Build the command (8 positional arguments, the last being the chain count)
+         command=paste(PROJECT_in$exepath,PROJECT_in$exe," ",
+                       infile," ",
+                       output," ",
+                       as.integer(nsamples),
+                       " 0 ",
+                       as.integer(PROJECT_in$samplerate)," ",
+                       as.integer(pre_mcmc)," ",
+                       as.integer(PROJECT_in$request_cost_function_scaling)," ",
+                       as.integer(PROJECT_in$nochains),sep="")
+         # Depending on whether or not a background run submit the job
+         if (background == "y" | run_background) {
+             system(paste(command," & ",sep=""))
+         } else {
+             system(command)
+         }
+         # To ensure that each site is submitted at a unique time we want to delay the code - this impacts the seed value used in the random number generator
+         Sys.sleep(1) # wait for 1 seconds
     } # site loop
     setwd(cwd) ; rm(cwd)
     print("Command issued to local machine")

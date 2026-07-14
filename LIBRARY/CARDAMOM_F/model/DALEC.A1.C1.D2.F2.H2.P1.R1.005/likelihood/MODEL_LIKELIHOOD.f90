@@ -1097,7 +1097,7 @@ module model_likelihood_module
     if (DATAin%nlai > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nlai,DATAin%laipts,DATAin%LAI,DATAin%LAI_unc,DATAin%LAI_lag, &
                                              1d0,M_DIAGS(1:DATAin%nodays,1))
-    end if ! nLAI > 0
+    end if
 
     !
     ! Do pools (POOLS)

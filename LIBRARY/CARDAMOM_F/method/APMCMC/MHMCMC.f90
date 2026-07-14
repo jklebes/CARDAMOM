@@ -56,7 +56,7 @@ contains
    !
    !--------------------------------------------------------------------
    !
-   subroutine run_parallel_mcmc(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains)
+   subroutine run_parallel_mcmc(model_likelihood, PI, MCO, MCOUT_list, model_likelihood_write_in, nchains, seed)
       !- Run multiple parallel MCMC simulations (adaptive MCMC algorithm with CARDAMOM-specific quirks)
       !
       !/* ***********INPUTS************
@@ -100,6 +100,7 @@ contains
       !! Array of MCMC_OUTPUT structs for each thread's results
 
       integer, optional, intent(in):: nchains
+      integer, intent(in) :: seed
       !! number chains optional, default 1
       integer:: i
       !! internal loop index
@@ -109,12 +110,11 @@ contains
       !> Typically a loglikelihood evaluation of a model against observation data
       !> given the inputted parameter values.
       interface
-         subroutine model_likelihood(param_vector, n, ML, id)
+         subroutine model_likelihood(param_vector, n, ML, id) bind(c)
             implicit none(type, external)
             double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
-            integer, intent(in):: n
+            integer, intent(in):: n, id
             double precision, intent(out):: ML
-            integer, intent(in), optional:: id
          end subroutine model_likelihood
       end interface
 
@@ -152,17 +152,17 @@ contains
       ! each do a complete independent run.  The parallelization structure of this module is
       ! trivial.  It exists mainly as template for samplers with more crossover and more complex
       ! structure in this loop.
-      !$OMP parallel do
+      !$OMP parallel do default(shared)
       do i = 1, MCO%nchains
          ! saves latest, best loglikelihood and associated parameters to MCOUT_list(i)
-         call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i)
+         call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i, seed+i)
       end do
       !$OMP end parallel do
 
    end subroutine run_parallel_mcmc
 
-   subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, chainid)
-   !! Main function for a single adaptive MCMC simulation
+   subroutine run_mcmc(model_likelihood, PI, MCO, MCOUT, model_likelihood_write_in, chainid, seed)
+   !! Main function for a single-thread adaptive MCMC simulation
       use samplers_math, only: log_par2nor, log_nor2par, par2nor, nor2par
       use samplers_shared, only: init_pars_random, bounds_check,  metropolis_choice
       use samplers_io, only: write_parameters, write_variances, write_covariance_matrix &
@@ -177,7 +177,7 @@ contains
 
       integer, intent(in), optional:: chainid
       integer:: chainid_
-      integer:: seed
+      integer, intent(in):: seed
 
       type(io_buffer_space):: io_space
       !! buffer for writing to out files, private to this chain
@@ -216,12 +216,11 @@ contains
       ! make it conform to this form.
 
       interface
-         subroutine model_likelihood(param_vector, n, ML, id)
+         subroutine model_likelihood(param_vector, n, ML, id) bind(c)
             implicit none(type, external)
             double precision, dimension(n), intent(inout):: param_vector  ! intent(in), inout for compatibility with R via C
-            integer, intent(in):: n
+            integer, intent(in):: n, id
             double precision, intent(out):: ML
-            integer, intent(in), optional:: id
          end subroutine model_likelihood
       end interface
 
@@ -260,7 +259,6 @@ contains
       allocate(PARSALL(PI%npars, MCO%nadapt))
 
       ! Initialize pregenerated random numbers, if using-local to this chain
-      seed = irand()  ! TODO record later  ! TODO always the same ?
       call uniform_random_vector%initialize_random(seed)
 
       ! process file names
@@ -545,9 +543,9 @@ contains
          cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
          ! update statistics : increment_covariance matrix adjusts running mean and covariance
-! with th nadapt new states in PARSALL
-! caution : it changes not just its last argument 'covariance', but also its second arguemtn 'mean' and its
-! 4th arguement 'cur' .
+	 ! with th nadapt new states in PARSALL
+         ! caution : it changes not just its last argument 'covariance', but also its second arguemtn 'mean' and its
+         ! 4th arg	uement 'cur' .
          ! here we have length of history (weighting of history in running avg and cov calculation)
          ! = ITER-nadapt instead of being artificially capped at 100
          cur = ITER - nadapt
@@ -624,6 +622,7 @@ contains
 
    !> Generates new proposed state from currect state in real parameter space.
    !> Wraps step_pars
+   !> TODO identical to version in step_pars_real, unify to samplers_shared
    subroutine step_pars_real(PARS0, PARS, PI, multivariate, covariance, beta, opt_scaling, &
                              par_minstepsize, random_uniform_vector)
       use samplers_math, only: log_par2nor, log_nor2par
@@ -634,7 +633,6 @@ contains
       type(UNIF_VECTOR), intent(inout):: random_uniform_vector
       !integer, intent(in):: npars
       type(PARINFO), intent(in):: PI
-      !type(MCSTATS), intent(inout):: stats
       logical, intent(in):: multivariate
       double precision, dimension(:, :), intent(in):: covariance
       double precision, dimension(PI%npars)             :: pars0_norm, pars_norm
@@ -655,7 +653,7 @@ contains
    ! normalized space )
    ! OUT: PARS new proposed state (normalized)
    ! plus take beta from module data
-   !-
+   ! TODO identical to version in step_pars_real, unify to samplers_shared
    subroutine step_pars(PARS0, PARS, npars, multivariate, covariance, beta, opt_scaling, &
                         par_minstepsize, random_uniform_vector)  ! TODO check against original !!
       use samplers_math, only: random_normal, random_multivariate

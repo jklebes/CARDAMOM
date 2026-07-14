@@ -51,8 +51,7 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
-           ,mVs , initialize_mv, &
-           model_working_variables
+           ,mVs , initialize_mv
 
   !!!!!!!!!
   ! Parameters
@@ -310,34 +309,24 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   type(model_working_variables), allocatable, dimension(:):: mVs
   contains
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
       !! For a single chain's model_working_varibles type object mV, allocate arrays
         !! and calculate initial values.
-        use cardamom_structures, only: DATAin
         implicit none
         type(model_working_variables), intent(out):: mV
         integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: met(nomet, nodays)     
-        double precision, intent(in) :: deltat(nodays)
-        double precision, intent(in) :: lat
-        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
-          !! Needed as arguments from r_interface , otherwise taken from DATAin
 
+        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
+        double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
+        double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+        double precision, intent(in) :: lat
 
         integer:: n
 
+        mV%soil_frac_sand = soil_frac_sand
+        mV%soil_frac_clay = soil_frac_clay
 
-        if (present(soil_frac_sand)) then
-          mV%soil_frac_sand = soil_frac_sand 
-        else
-          mV%soil_frac_sand = DATAin%soil_frac_sand 
-        endif
-        if (present(soil_frac_clay)) then
-          mV%soil_frac_clay = soil_frac_clay
-        else
-          mV%soil_frac_clay = DATAin%soil_frac_clay
-        endif
-
+        ! allocate variables dimension which are fixed per site only the once
         allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
                  mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
 
@@ -874,7 +863,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(mV)
-    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29), mV) ! assume no evap or rainfall
 

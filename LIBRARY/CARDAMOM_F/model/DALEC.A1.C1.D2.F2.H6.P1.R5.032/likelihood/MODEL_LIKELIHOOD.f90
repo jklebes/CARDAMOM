@@ -349,7 +349,7 @@ module model_likelihood_module
   !
   subroutine assess_EDC2(npars,nomet,nofluxes,nopools,nodays,nodiags,deltat,steps_per_year &
                         ,parmax,pars,met,M_POOLS,M_FLUXES,M_DIAGS &
-                        ,meantemp,EDC2, EDCD)
+                        ,meantemp,EDC2)
 
     use cardamom_structures, only: DATAin
 
@@ -1033,7 +1033,7 @@ module model_likelihood_module
                         ,DATAin%nodays,DATAin%nodiags,DATAin%deltat            &
                         ,DATAin%steps_per_year,PI%parmax,PARS,DATAin%MET       &
                         ,M_POOLS,M_FLUXES,M_DIAGS         &
-                        ,DATAin%meantemp,EDC2, EDCD)
+                        ,DATAin%meantemp,EDC2)      
 
         ! Add EDC2 log-likelihood to absolute accept reject...
         ML_obs_out = ML_obs_out + log(EDC2)
@@ -1462,9 +1462,9 @@ module model_likelihood_module
     ! come from soilC / Rhet assumptions.
     if (DATAin%otherpriors(6) > -9998) then
         ! Mean SOM pool
-        mod = sum(M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays)
+        mod = sum(M_POOLS(1:DATAin%nodays,6)) / dble(DATAin%nodays) 
         ! Divided by the mean Rhet_som
-        mod = mod / (sum(M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays))
+        mod = mod / (sum(M_FLUXES(1:DATAin%nodays,14)) / dble(DATAin%nodays)) 
         ! Scaling from number of days to years (1/365.25 = 0.002737851)
         mod = mod * 0.002737851d0 
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(6)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
