@@ -85,10 +85,11 @@ if(NOT EXISTS "${PROJECT_BINARY_DIR}/include")
   make_directory("${PROJECT_BINARY_DIR}/include")
 endif()
 
-
-find_package(OpenMP)
-if(OpenMP_Fortran_FOUND)
-  target_link_libraries(cardamom-samplers-lib PUBLIC OpenMP::OpenMP_Fortran)
+if(USE_OMP)
+  find_package(OpenMP)
+  if(OpenMP_Fortran_FOUND)
+    target_link_libraries(cardamom-samplers-lib PUBLIC OpenMP::OpenMP_Fortran)
+  endif()
 endif()
 
 if(TEST_COMPILE_ALL)

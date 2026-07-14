@@ -7,6 +7,7 @@ enable_language(Fortran)
 
 include(CTest)
 
+option(USE_OMP "Use openmp" ON)
 
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "IntelLLVM") #ifx flags
   set(CMAKE_Fortran_FLAGS_DEBUG "-O2 -g -pg -warn all") 
