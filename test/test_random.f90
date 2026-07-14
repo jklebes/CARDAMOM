@@ -1,6 +1,7 @@
 module test_random
   use testdrive, only : new_unittest, unittest_type, error_type, check
   use random_uniform
+  use samplers_math, only: random_int
   implicit none
   private
 
@@ -16,6 +17,8 @@ subroutine collect_randomtests(testsuite)
   type(unittest_type), allocatable, intent(out):: testsuite(:)
 
   testsuite = [ &
+    new_unittest("test random_int(3)", test_random_int ),  &
+    new_unittest("test random_int()", test_random_int_noarg ),  &
     new_unittest("fill random_uniform", test_fill_random_uniform),  &
     new_unittest("initialize random uniform", test_initialize),  &
     new_unittest("get_random_uniform", test_get_random_uniform),  &
@@ -28,6 +31,51 @@ subroutine collect_randomtests(testsuite)
 
 end subroutine collect_randomtests
 
+subroutine test_random_int(error)
+  !! Check behavior of random_int(N) on a small range 1 to N
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  integer, parameter :: n_samples = 100
+  integer :: upper_bound = 3
+  integer, dimension(n_samples) :: results
+  integer :: i
+  do i=1, n_samples
+    results(i) = random_int(upper_bound)
+  end do
+  ! expect integers in range 1 to 3 inclusive.
+  ! check 1 occurs in results
+  call check(error, any(results == 1 ) )
+  ! check 3 occurs in results
+  call check(error, any(results == upper_bound ) )
+  ! check only 1,2,3 occur in results
+  call check(error, all(results > 0 .and. results <= upper_bound  ) )
+end subroutine test_random_int
+
+subroutine test_random_int_noarg(error)
+  !! Check behavior of random_int() with no arg, ints 1 to HUGE
+  implicit none
+  type(error_type), allocatable, intent(out):: error
+  integer, parameter :: n_samples = 1000
+  integer :: expected_upper_bound = HUGE(1)
+  integer, dimension(n_samples) :: results
+  double precision :: avg
+  integer :: i
+  do i=1, n_samples
+    results(i) = random_int()
+  end do
+  ! expect integers in range 1 to HUGE inclusive.
+  ! check all positive
+  call check(error, all(results > 0) )
+  ! Check values are approx evenly distributed in quarters of the range  
+  call check(error, count(results <= (expected_upper_bound * 0.25d0) ) >= n_samples * 0.2  )
+  call check(error, count(results > (expected_upper_bound * 0.25d0) .and. (results <= expected_upper_bound * 0.5d0) ) >= n_samples * 0.2  )
+  call check(error, count(results > (expected_upper_bound * 0.5d0) .and. (results <= expected_upper_bound * 0.75d0) ) >= n_samples * 0.2  )
+  call check(error, count(results > expected_upper_bound * 0.75d0 ) >= n_samples * 0.2  )
+  ! check average is in the ballpark of HUGE/2 
+  avg =sum( results / dble(n_samples))  ! scaling happens before summing to avoid integer overflow
+  call check(error, avg >= expected_upper_bound * 0.4d0 .and. avg <= expected_upper_bound * 0.6d0 )
+end subroutine test_random_int_noarg
+
 subroutine test_fill_random_uniform(error)
   !! Run fill_random_uniform and check that the array
   !! on the object contains values in range 0 to 1
@@ -37,7 +85,7 @@ subroutine test_fill_random_uniform(error)
   integer:: n
   double precision, dimension(:), allocatable:: arr
   integer:: seed
-  seed = irand()
+  seed = random_int()
   call random_uniform%initialize_random(seed)
   n = random_uniform%length
   allocate(arr(n))
@@ -56,7 +104,7 @@ subroutine test_initialize(error)
   type(error_type), allocatable, intent(out):: error
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
-  seed = irand()
+  seed = random_int()
   call random_uniform%initialize_random(seed)
   call check(error, random_uniform%index, 1 )
   call check(error, allocated(random_uniform%u))
@@ -73,7 +121,7 @@ subroutine test_get_random_uniform(error)
   integer:: n
   double precision, dimension(:), allocatable:: x
   integer:: seed
-  seed = irand()
+  seed = random_int()
   call random_uniform%initialize_random(seed)
   n = 1
   x = random_uniform%get_random_uniform(n)
@@ -94,7 +142,7 @@ subroutine test_next_random_uniform(error)
   integer ::  index
   type(UNIF_VECTOR):: random_uniform
   integer:: seed
-  seed = irand()
+  seed = random_int()
   call random_uniform%initialize_random(seed)
   index = random_uniform%index
   x = random_uniform%next_random_uniform()
@@ -170,8 +218,8 @@ subroutine test_threadsafe_refill(error)
   double precision:: value1, value2, value3
   integer:: seed1
   integer:: seed2
-  seed1 = irand()
-  seed2 = irand()
+  seed1 = random_int()
+  seed2 = random_int()
 
   call random_uniform1%initialize_random(seed1)
 

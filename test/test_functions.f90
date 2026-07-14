@@ -11,12 +11,12 @@ module test_functions
 
 contains
 
-subroutine ll_normal(pars, npars, res, id)
+subroutine ll_normal(pars, npars, res, id) bind(C)
 !! A test function E = A*(x-x_0)^2+B*(y-y_0)^2
   integer, intent(in):: npars
 double precision, dimension(npars), intent(inout):: pars  ! has to be inout because of C compatibilty
 double precision, intent(out):: res
-integer, intent(in), optional:: id
+integer, intent(in):: id
 double precision:: x, y  ! the pars to fit
 double precision:: x_0, y_0  ! The correct, energy/loglikelihood-minimizing answer will be x = x0, y = y0
 double precision:: A, B
@@ -30,7 +30,7 @@ B = 1.6  ! covariance matrix expected to have inversely proportional entries on 
 res = -(A*(x-x_0)**2+B*(y-y_0)**2)
 end subroutine ll_normal
 
-subroutine ll_step(pars, npars, res, id)
+subroutine ll_step(pars, npars, res, id) bind(C)
   !! A test function that is a stepped rectangular well
   !! It's "correct" with value ll = 0 for x=(0, 5) and y=(1, 9)
   !! and has penalty of-5 in steps for values outside of the target domain
@@ -38,7 +38,7 @@ subroutine ll_step(pars, npars, res, id)
 double precision, dimension(npars), intent(inout):: pars
 double precision, intent(out):: res
   !! result : loglikelihood penalty
-integer, intent(in), optional:: id
+integer, intent(in) :: id
 double precision:: x, y  ! x, y values recieved as pars vector
 double precision:: x_1, y_1, x_2, y_2  ! the bounds of the target domain
 x_1 = 0d0
@@ -60,7 +60,7 @@ else if (y > y_2) then
 endif
 end subroutine ll_step
 
-subroutine ll_bounded(pars, npars, res, id)
+subroutine ll_bounded(pars, npars, res, id) bind(C)
   !! A test function that is quadratic potential,
   !! plus hard boundaries resticting it to the domain
   !! that can be found by ll_step
@@ -68,7 +68,7 @@ subroutine ll_bounded(pars, npars, res, id)
 double precision, dimension(npars), intent(inout):: pars
 double precision, intent(out):: res
   !! result : loglikelihood penalty
-integer, intent(in), optional:: id
+integer, intent(in) :: id
 double precision:: x, y  ! x, y values recieved as pars vector
 double precision:: x_1, y_1, x_2, y_2  ! the bounds of the target domain
 double precision:: P = 0d0

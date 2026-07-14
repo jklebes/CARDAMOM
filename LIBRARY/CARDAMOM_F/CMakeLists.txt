@@ -51,7 +51,7 @@ DALEC.A3.C3.H2.M1.015
 DALEC.A3.H2.M2.017
 DALEC.A4.C6.D2.F2.H2.P11.031
 DALEC.C1.D1.F2.P1.002
-DALEC.C3.M1.014
+#DALEC.C3.M1.014
 DALEC.C4.D1.F2.012
 DALEC.C5.D1.F2.P1.013
 DALEC.D1.F2.001
@@ -64,6 +64,7 @@ add_library(cardamom-samplers-lib
               method/samplers_io/samplers_io.f90
               method/samplers_shared.f90
               method/APMCMC/APMCMC.f90
+              method/APMCMC/MHMCMC.f90
               method/DEMCMC/DEMCz.f90
 )
 

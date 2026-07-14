@@ -899,7 +899,7 @@ contains
       use cardamom_structures, only: DATA_type, set_datain, set_datain_original
       use model_shared, only: initialize_parinfo
       implicit none(type, external)
-      character(350), intent(in) :: infile
+      character(len=*), intent(in) :: infile
       type(DATA_type) :: DATAin  ! tmp datain object to collect all data before saving to cardamom_structures :: DATAin
 
       call initialize_parinfo()  ! TODO not really a file reading thing

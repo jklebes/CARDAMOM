@@ -168,7 +168,9 @@ contains
       ! each do a complete independent run.  The parallelization structure of this module is
       ! trivial.  It exists mainly as template for samplers with more crossover and more complex
       ! structure.
-      !$OMP parallel do 
+      ! `shared` is already omp default behvaior, just making it explicit.  This is ok because 
+      ! all arguments are read-only / intent(in) except MCOUT_list(i), which has its own array entry.
+      !$OMP parallel do default(shared)
       do i = 1, MCO%nchains
          ! saves latest, best loglikelihood and associated parameters to MCOUT_list(i)
          call run_mcmc(model_likelihood, PI, MCO, MCOUT_list(i), model_likelihood_write, i, seed+i)
@@ -367,7 +369,7 @@ contains
          loglikelihood_previous = MCOUT%ll
       end if
 
-      if (loglikelihood_previous < -999999) then
+      if (loglikelihood_previous == neg_inf) then
          write (*, *) "WARNING  ! loglikelihood = ", loglikelihood_previous, " - &
          & AP-MCMC will get stuck, if so please check initial conditions"
          error stop 1
@@ -566,12 +568,17 @@ contains
 
          cov_backup = MCOUT%covariance; meanpar_backup = MCOUT%meanpar; Nparvar_backup = MCOUT%Nparvar
 
+	 ! 3rd difference between cardamom APMCMC and standard MHMCMC : 
          ! Have started hardcoding a maximum number of observations to be N_before_mv_target.
          ! While not strictly following Haario et al., (2001) or Roberts and Rosenthal, (2009)
          ! this allows for the covariance matrix to be more responsive to its local environment.
          ! in fact this is having the effect of extremely downweighting history
          ! in the running calculations of mean and covariance matrix in new covariance matrix .
          ! They will not converge, and represent mean and covariance for the local neighborhood.
+         ! 
+	 ! caution : subroutine increment_covariance_matrix changes not just its last argument 'covariance', 
+         ! but also its second argument 'mean' and its
+         ! 4th argument 'cur' .  
          Nparvar_local = min(N_before_mv_target, Nparvar_backup)
          call increment_covariance_matrix(PARSALL(1:npars, 1:ACCLOC), MCOUT%meanpar, npars &
                                           , Nparvar_local, ACCLOC, MCOUT%covariance)

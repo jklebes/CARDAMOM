@@ -3,6 +3,7 @@ module test_common
    use random_uniform
    use test_functions
    use samplers_shared
+   use samplers_math, only: random_int
    implicit none
    private
 
@@ -45,7 +46,7 @@ contains
       double precision, dimension(:), allocatable:: pars0
       type(UNIF_VECTOR):: random_uniform
       integer:: seed
-      seed = rand()  ! this test with a different seed each time
+      seed = random_int()  ! this test with a different seed each time
       call random_uniform%initialize_random(seed)
 
       if (.not. allocated(pars0)) allocate (pars0(PI_xy%npars))

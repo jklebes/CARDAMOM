@@ -25,6 +25,7 @@ module DEMCz
    use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, filenames_insert_threadid
    use random_uniform, only: UNIF_VECTOR
    use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
+   use samplers_math, only: random_int
    use OMP_LIB
 
    implicit none(type, external)
@@ -165,7 +166,7 @@ contains
 
       !!! Initial state
 
-!$OMP PARALLEL DO private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
+!$OMP PARALLEL DO default(shared) private(MCOUT, norpars, outfile, stepfile, covfile, covifile)
       do j = 1, mco%nchains
 
          MCOUT = MCOUT_list(j)
@@ -227,7 +228,7 @@ contains
       do while (ITER + mco%nadapt <= MAXITER) !TODO could add convergence criteria for early stop
 
          ! evolve each chain independently for nsteps (nsteps = K in ter Braak & Vrugt)
-!$OMP PARALLEL DO private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)
+!$OMP PARALLEL DO default(shared) private(R1, R2, l, proposed_vector, output_loglikelihood, MCOUT) firstprivate(ITER)
          do j = 1, mco%nchains
             MCOUT = MCOUT_list(j)
             ACCLOC(j) = 0
@@ -311,7 +312,7 @@ contains
       end do !end while ITER < MAXITER
 
       ! Final summary output from each chain individually
-      !$OMP PARALLEL DO
+      !$OMP PARALLEL DO default(shared)
       do j = 1, mco%nchains
          ! completed
          write (*,*) "chain ", j, ": DEMCZ completed"
@@ -378,12 +379,5 @@ contains
       end do
       vout = v1 + differential_weight*(v2 - v3) + .000001*rn
    end subroutine step
-
-   integer function random_int(N)
-      integer, intent(in):: N
-      double precision:: r
-      call random_number(r)
-      random_int = floor(N*r) + 1
-   end function random_int
 
 end module DEMCz
