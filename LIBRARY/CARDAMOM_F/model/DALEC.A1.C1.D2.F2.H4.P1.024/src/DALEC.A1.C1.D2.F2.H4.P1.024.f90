@@ -322,92 +322,90 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   
   end type
   type(model_working_variables), allocatable, dimension(:):: mVs
+
   contains
+  !
+  !--------------------------------------------------------------------
+  !
+  subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
 
-  subroutine initialize_mv(mV, nodays, nomet, nopars, met, deltat, lat, soil_frac_sand, soil_frac_clay)
-      !! For a single chain's model_working_varibles type object mV, allocate arrays
-        !! and calculate initial values.
-        use cardamom_structures, only: DATAin
-        implicit none
-        type(model_working_variables), intent(out):: mV
-        integer, intent(in):: nodays, nomet, nopars
-        double precision, intent(in) :: met(nomet, nodays)     
-        double precision, intent(in) :: deltat(nodays)
-        double precision, intent(in) :: lat
-        double precision, intent(in), dimension(:), optional :: soil_frac_sand, soil_frac_clay
-          !! Needed as arguments from r_interface , otherwise taken from DATAin
+    !! For a single chain's model_working_varibles type object mV, allocate arrays
+    !! and calculate initial values.
+    implicit none
 
-        integer:: n
+    type(model_working_variables), intent(out):: mV
+    integer, intent(in):: nodays, nomet, nopars
+    double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
+    double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
+    double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+    double precision, intent(in) :: lat
 
-        if (present(soil_frac_sand)) then
-          mV%soil_frac_sand = soil_frac_sand 
-        else
-          mV%soil_frac_sand = DATAin%soil_frac_sand 
-        endif
-        if (present(soil_frac_clay)) then
-          mV%soil_frac_clay = soil_frac_clay
-        else
-          mV%soil_frac_clay = DATAin%soil_frac_clay
-        endif
+    integer:: n
 
-        ! allocate variables dimension which are fixed per site only the once
-        allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
-                 mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
-
-        !
-        ! Timing variables which are needed first
-        !
-
-        mV%deltat_1 = deltat**(-1d0)
-
-        !
-        ! Iteration independent variables using functions and thus need to be in a loop
-        !
-
-        ! first those linked to the time period of the analysis
-        do n = 1, nodays
-           ! check positive values only for rainfall input
-           mV%rainfall_time(n) = max(0d0,met(7,n))
-           ! calculate daylength in hours and seconds
-           call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat, mV)
-           mV%daylength_hours(n) = mV%dayl_hours ; mV%daylength_seconds(n) = mV%dayl_seconds
-        end do
-
-        ! calculate inverse for each time step in seconds
-        mV%daylength_seconds_1 = 1d0 / mV%daylength_seconds
-        ! fraction of temperture period above freezing
-        mV%airt_zero_fraction_time = 0d0
-        where (met(2,:) > 0d0) mV%airt_zero_fraction_time = 1d0 
-        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) mV%airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
-
-        ! number of time steps per year
-        mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
-        ! mean days per step
-        mV%mean_days_per_step = sum(deltat) / dble(nodays)
-
-        !
-        ! Initialise the water model
-        !
-
-        ! zero variables not done elsewhere
-        mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
-        ! initialise the soil
-        !call initialise_soils(pars(33), pars(34), pars(35), &
-        !                      pars(36), pars(37), pars(24), mV)        
-
-  end subroutine
+    mV%soil_frac_sand = soil_frac_sand
+    mV%soil_frac_clay = soil_frac_clay
 
 
+    ! allocate variables dimension which are fixed per site only the once
+    allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
+             mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
+
+    !
+    ! Timing variables which are needed first
+    !
+
+    mV%deltat_1 = deltat**(-1d0)
+
+    !
+    ! Iteration independent variables using functions and thus need to be in a loop
+    !
+
+    ! first those linked to the time period of the analysis
+    do n = 1, nodays
+       ! check positive values only for rainfall input
+       mV%rainfall_time(n) = max(0d0,met(7,n))
+       ! calculate daylength in hours and seconds
+       call calculate_daylength((met(6,n)-(deltat(n)*0.5d0)),lat, mV)
+       mV%daylength_hours(n) = mV%dayl_hours ; mV%daylength_seconds(n) = mV%dayl_seconds
+    end do
+
+    ! calculate inverse for each time step in seconds
+    mV%daylength_seconds_1 = 1d0 / mV%daylength_seconds
+    ! fraction of temperture period above freezing
+    mV%airt_zero_fraction_time = 0d0
+    where (met(2,:) > 0d0) mV%airt_zero_fraction_time = 1d0 
+    where (met(3,:) > 0d0 .and. met(2,:) < 0d0) mV%airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+
+    ! number of time steps per year
+    mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
+    ! mean days per step
+    mV%mean_days_per_step = sum(deltat) / dble(nodays)
+
+    !
+    ! Initialise the water model
+    !
+
+    ! zero variables not done elsewhere
+    mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
+    ! initialise the soil
+    !call initialise_soils(pars(33), pars(34), pars(35), &
+    !                      pars(36), pars(37), pars(24), mV)        
+
+  end subroutine initialize_mv
+  !
+  !--------------------------------------------------------------------
+  !
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
+
+    ! Arguments
     type(model_working_variables):: mV
-    integer:: n
-        deallocate(mV%deltat_1, &
-                     mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
-                     mV%rainfall_time, mV%airt_zero_fraction_time)
-    end subroutine
 
+    deallocate(mV%deltat_1, &
+               mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
+               mV%rainfall_time, mV%airt_zero_fraction_time)
 
+  end subroutine
   !
   !--------------------------------------------------------------------
   !

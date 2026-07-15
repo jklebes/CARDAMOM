@@ -490,6 +490,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Iteration independent variables using functions and thus need to be in a loop
     !
 
+    ! Generate some generic location specific variables for radiation balance
+    !call calculate_radiation_commons(lat,pars(33:38))
+    call calculate_radiation_commons(lat, mV)
+
     ! first those linked to the time period of the analysis
     do n = 1, nodays
        ! check positive values only for rainfall input
@@ -543,7 +547,6 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
     type(model_working_variables):: mV
-    integer:: n
         ! allocate variables dimension which are fixed per site only the once
         deallocate(mV%deltat_1, &
                    mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
@@ -562,7 +565,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables) :: mV
+    type(model_working_variables) :: mV
 
     ! declare input variables
     integer, intent(in) :: start    &
@@ -744,7 +747,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Generate some generic location specific variables for radiation balance
     !call calculate_radiation_commons(lat,pars(33:38))
-    call calculate_radiation_commons(lat, mV)
+    !call calculate_radiation_commons(lat, mV)
 
     ! load ACM-GPP-ET parameters
     mV%ceff = pars(11) ! Canopy efficiency (umolC/m2/s)
@@ -761,8 +764,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     POOLS(1,5) = pars(23)
 
     if (.not.allocated(mV%deltat_1)) then 
-      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
-      STOP 1
+        write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
+        STOP 1
     else ! deltat_1 allocated?
 
         !
@@ -810,6 +813,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%seconds_per_step = deltat(1) * seconds_per_day
     mV%days_per_step =  deltat(1)
     mV%days_per_step_1 =  mV%deltat_1(1)
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1)
 
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(mV%leafT,mV%leafT+freeze,mV%vpd_kPa, mV)

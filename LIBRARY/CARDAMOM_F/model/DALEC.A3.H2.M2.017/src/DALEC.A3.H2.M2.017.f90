@@ -131,8 +131,9 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
-           ,mVs , initialize_mv, &
-           model_working_variables
+           ,mVs              &
+           ,initialize_mv    &
+           ,model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -489,6 +490,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Iteration independent variables using functions and thus need to be in a loop
     !
 
+    ! Generate some generic location specific variables for radiation balance
+    !call calculate_radiation_commons(lat,pars(33:38))
+    call calculate_radiation_commons(lat, mV)
+
     ! first those linked to the time period of the analysis
     do n = 1, nodays
        ! check positive values only for rainfall input
@@ -561,7 +566,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables) :: mV
+    type(model_working_variables) :: mV
 
     ! declare input variables
     integer, intent(in) :: start    &
@@ -745,7 +750,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Generate some generic location specific variables for radiation balance
     !call calculate_radiation_commons(lat,pars(33:38))
-    call calculate_radiation_commons(lat, mV)
+    !call calculate_radiation_commons(lat, mV)
 
     ! load ACM-GPP-ET parameters
     mV%ceff = pars(11) ! Canopy efficiency (umolC/m2/s)
@@ -762,8 +767,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     POOLS(1,5) = pars(23)
 
     if (.not.allocated(mV%deltat_1)) then 
-      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
-      STOP 1
+        ! Update user
+        write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_mv()"
+        STOP 1
     else ! deltat_1 allocated?
 
         !
@@ -811,6 +817,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     mV%seconds_per_step = deltat(1) * seconds_per_day
     mV%days_per_step =  deltat(1)
     mV%days_per_step_1 =  mV%deltat_1(1)
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1)
 
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(mV%leafT,mV%leafT+freeze,mV%vpd_kPa, mV)
@@ -1379,8 +1386,8 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
             else
                 ! In all other cases iterate
                 mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                              find_gs_iWUE_,mV%minimum_conductance,mV%potential_conductance,tol_gs*mV%lai,mV%iWUE_step*0.10d0)
-
+                                                 find_gs_iWUE_,mV%minimum_conductance,mV%potential_conductance, & 
+                                                 tol_gs*mV%lai,mV%iWUE_step*0.10d0)
             end if
 
     else
@@ -2207,14 +2214,15 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   !
   !------------------------------------------------------------------
   !
-  subroutine calculate_daylength (mV)
+  subroutine calculate_daylength(mV)
 
     ! Subroutine uses day of year and latitude (-90 / 90 degrees) as inputs,
     ! combined with trigonomic functions to calculate day length in hours and seconds
 
     implicit none
 
-      type(model_working_variables) :: mV
+    ! Arguments
+    type(model_working_variables) :: mV
 
     ! local variables
     double precision :: dec, sinld, cosld, aob
@@ -2621,6 +2629,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
        ! Estimate drythick for the current step
        !drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (soil_waterfrac(1) / field_capacity(1)))))
        mV%drythick = max(min_drythick, top_soil_depth * max(0d0,(1d0 - (mV%soil_waterfrac(1) / mV%porosity(1)))))
+ 
        ! Soil surface (kgH2O.m-2.day-1)
        call calculate_soil_evaporation(Esoil_local, mV)
 
@@ -3326,10 +3335,9 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     implicit none
 
-      type(model_working_variables) :: mV
-
     ! arguments
     double precision, intent(in) :: input_soilwater_frac ! initial soil water status as fraction of field capacity
+    type(model_working_variables) :: mV
 
     ! local variables
     integer :: i

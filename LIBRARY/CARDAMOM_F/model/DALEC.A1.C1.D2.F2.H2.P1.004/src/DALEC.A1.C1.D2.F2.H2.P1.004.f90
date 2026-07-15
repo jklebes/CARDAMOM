@@ -1512,7 +1512,8 @@ module CARBON_MODEL_MOD
 
                 ! In all other cases iterate
                 mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                              find_gs_iWUE_,mV%minimum_conductance,mV%potential_conductance,tol_gs*mV%lai,mV%iWUE_step*0.10d0)
+                                                 find_gs_iWUE_,mV%minimum_conductance,mV%potential_conductance, &
+                                                 tol_gs*mV%lai,mV%iWUE_step*0.10d0)
 
             end if
 

@@ -71,7 +71,6 @@ use samplers_shared, only: PARINFO
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
     if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
 
-
     ! Decomposition rate [1e-5, 0.01]
     PI%parmin(1) = 0.001d0 
     PI%parmax(1) = 0.1d0 
