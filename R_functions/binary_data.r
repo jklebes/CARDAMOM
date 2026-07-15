@@ -177,7 +177,7 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
       modelid = 14
   } else if (modelname == "DALEC.A3.C3.H2.M1.015") {
       modelid = 15
-  } else if (modelname == "DALEC.M2.016") {
+  } else if (modelname == "DALEC.A3.H1.M2.016") {
       modelid = 16
   } else if (modelname == "DALEC.A3.H2.M2.017") {
       modelid = 17
@@ -1444,22 +1444,26 @@ binary_data<-function(met,OBS,file,EDC,lat_degrees,ctessel_pft,modelname,paramet
 #          PARPRIORS[42] = 11.197440            ; PARPRIORUNC[42] = 9.3  # NUE prior derived from Kattge et al., (2011), based on log10 gaussian distribution
 #          PARPRIORS[43] = 275.1452             ; PARPRIORUNC[43] = 296.2767 # Leaf lifespan prior form Kattge et al., 2011, based on log10 gauusian distribution
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
-      } else if (modelname == "DALEC.M2.016") {
+      } else if (modelname == "DALEC.A3.H1.M2.016") {
           # Override the default deforestation fraction forcing with the grassland LAI change variable.
           # Note the positive values, i.e. implied growth, will be ignored by the model
           MET[,8]  = OBS$lai_change  # m2/m2
 
           PARPRIORS[2]  = 0.54                 ; PARPRIORUNC[2] = 0.12 # Ra:GPP Collalti & Prentice (2019), Tree Physiology, 10.1093/treephys/tpz034
-          PARPRIORS[10] = 16.9                 ; PARPRIORUNC[10] = 7.502147 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+          PARPRIORS[11] = 21.1491              ; PARPRIORUNC[11] = 8.534234 #; PARPRIORWEIGHT[11] = 1 # Ceff: derived from multiple trait values from Kattge et al., (2011)
+                                                                            # Note that this prior is difference from DALEC.C1.D1.F2.P1.
+                                                                            # due to the different temperature response functions used in ACM2 vs ACM 1
           #PARPRIORS[15] = OBS$lca              ; PARPRIORUNC[15] = OBS$lca_unc
-          PARPRIORS[15] = 32                   ; PARPRIORUNC[15] = 13 # Grass prior for UK purpose
+          PARPRIORS[15] = 32                   ; PARPRIORUNC[15]=13 # Grass prior for UK purpose
           PARPRIORS[17] = OBS$Cfol_initial     ; PARPRIORUNC[17] = OBS$Cfol_initial_unc # Cfoliar prior
           PARPRIORS[18] = OBS$Croots_initial   ; PARPRIORUNC[18] = OBS$Croots_initial_unc # Croots prior
           PARPRIORS[19] = OBS$Clit_initial     ; PARPRIORUNC[19] = OBS$Clit_initial_unc # Clitter prior
           PARPRIORS[23] = OBS$Csom_initial     ; PARPRIORUNC[23] = OBS$Csom_initial_unc # Csom prior
+          PARPRIORS[25] = OBS$MaxRootDepth     ; PARPRIORUNC[25] = OBS$MaxRootDepth_unc # Maximum rooting depth prior,           
           # other priors
 #          OTHERPRIORS[2] =        ; OTHERPRIORUNC[2] =  # Initial soil water fraction 
 #          OTHERPRIORS[3] = 27.295              ; OTHERPRIORUNC[3] = 11.03755 # Foliar C:N (gC/gN) prior derived from Kattge et al., (2011)
+           OTHERPRIORS[4] = 0.66               ; OTHERPRIORUNC[4] = 0.12 # Prior on mean annual ET/P See Zhang et al., (2018) doi:10.5194/hess-22-241-2018
       } else if (modelname == "DALEC.A3.H2.M2.017") {
           # Override the default deforestation fraction forcing with the grassland LAI change variable.
           # Note the positive values, i.e. implied growth, will be ignored by the model

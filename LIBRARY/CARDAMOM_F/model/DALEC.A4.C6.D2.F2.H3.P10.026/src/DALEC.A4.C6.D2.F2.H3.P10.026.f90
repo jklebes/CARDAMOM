@@ -58,6 +58,7 @@ module CARBON_MODEL_MOD
            ,top_soil_depth   &
            ,nos_soil_layers  &
            ,sw_par_fraction  &
+           ,model_working_variables &
            ,mVs , initialize_mv
 
   !!!!!!!!!
@@ -390,104 +391,114 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
   end type
 
   type(model_working_variables), allocatable, dimension(:):: mVs
+
   contains
+  !
+  !------------------------------------------------------------------
+  !
   subroutine initialize_mv(mV, nodays, nomet, nopars, deltat, soil_frac_sand, soil_frac_clay, met, lat)
-      !! For a single chain's model_working_varibles type object mV, allocate arrays
-        !! and calculate initial values.
-        implicit none
-        type(model_working_variables), intent(out):: mV
-        integer, intent(in):: nodays, nomet, nopars
+     !! For a single chain's model_working_varibles type object mV, allocate arrays
+     !! and calculate initial values.
+     implicit none
+     
+     ! Arguments
+     type(model_working_variables), intent(out):: mV
+     integer, intent(in):: nodays, nomet, nopars
+     double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
+     double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
+     double precision, intent(in) :: met(nomet, nodays)  ! met drivers
+     double precision, intent(in) :: lat
 
-        double precision, intent(in) :: deltat(nodays)     ! time step in decimal days
-        double precision, intent(in), dimension(:) :: soil_frac_sand, soil_frac_clay
-        double precision, intent(in) :: met(nomet, nodays)  ! met drivers
-        double precision, intent(in) :: lat
+     ! Local variables
+     integer:: n
 
-        integer:: n
+     mV%soil_frac_sand = soil_frac_sand
+     mV%soil_frac_clay = soil_frac_clay
 
-        mV%soil_frac_sand = soil_frac_sand
-        mV%soil_frac_clay = soil_frac_clay
+     ! allocate variables dimension which are fixed per site only the once
+     allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
+              mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
 
-       ! allocate variables dimension which are fixed per site only the once
-        allocate(mV%deltat_1(nodays),mV%daylength_hours(nodays),mV%daylength_seconds(nodays), &
-                 mV%daylength_seconds_1(nodays),mV%rainfall_time(nodays),mV%airt_zero_fraction_time(nodays))
+     !
+     ! Timing variables which are needed first
+     !
 
-        !
-        ! Timing variables which are needed first
-        !
+     mV%deltat_1 = deltat**(-1d0)
 
-        mV%deltat_1 = deltat**(-1d0)
+     !
+     ! Iteration independent variables using functions and thus need to be in a loop
+     !
 
-        !
-        ! Iteration independent variables using functions and thus need to be in a loop
-        !
+     ! Generate some generic location specific variables for radiation balance
+     !call calculate_radiation_commons(lat,pars(39:44))
+     call calculate_radiation_commons(lat, mV)
 
-        ! first those linked to the time period of the analysis
-        do n = 1, nodays
-           ! check positive values only for rainfall input
-           mV%rainfall_time(n) = max(0d0,met(7,n))
-           ! Calculate declination for the day of year
-           mV%declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
-           ! calculate daylength in hours and seconds
-           call calculate_daylength(mV)
-           mV%daylength_hours(n) = mV%dayl_hours ; mV%daylength_seconds(n) = mV%dayl_seconds
-        end do
+     ! first those linked to the time period of the analysis
+     do n = 1, nodays
+        ! check positive values only for rainfall input
+        mV%rainfall_time(n) = max(0d0,met(7,n))
+        ! Calculate declination for the day of year
+        mV%declination = calculate_declination((met(6,n)-(deltat(n)*0.5d0)))
+        ! calculate daylength in hours and seconds
+        call calculate_daylength(mV)
+        mV%daylength_hours(n) = mV%dayl_hours ; mV%daylength_seconds(n) = mV%dayl_seconds
+     end do
 
-        ! fraction of temperture period above freezing
-        mV%airt_zero_fraction_time = 0d0
-        where (met(2,:) > 0d0) mV%airt_zero_fraction_time = 1d0
-        where (met(3,:) > 0d0 .and. met(2,:) < 0d0) mV%airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
+     ! fraction of temperture period above freezing
+     mV%airt_zero_fraction_time = 0d0
+     where (met(2,:) > 0d0) mV%airt_zero_fraction_time = 1d0
+     where (met(3,:) > 0d0 .and. met(2,:) < 0d0) mV%airt_zero_fraction_time = (met(3,:)-0d0) / (met(3,:)-met(2,:))
 
-        ! calculate inverse for each time step in seconds
-        mV%daylength_seconds_1 = 1d0 / mV%daylength_seconds
+     ! calculate inverse for each time step in seconds
+     mV%daylength_seconds_1 = 1d0 / mV%daylength_seconds
 
-        ! number of time steps per year
-        mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
-        ! mean days per step
-        mV%mean_days_per_step = sum(deltat) / dble(nodays)
+     ! number of time steps per year
+     mV%steps_per_year = nint(dble(nodays)/(sum(deltat)*0.002737851d0))
+     ! mean days per step
+     mV%mean_days_per_step = sum(deltat) / dble(nodays)
 
-        !
-        ! Initialise the water model
-        !
+     !
+     ! Initialise the water model
+     !
 
-        ! zero variables not done elsewhere
-        mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
-        ! initialise some time invarient parameters
-        call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
-        call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
-        ! save the initial conditions for later
-        mV%field_capacity_initial = mV%field_capacity
-        mV%porosity_initial = mV%porosity
+     ! zero variables not done elsewhere
+     mV%total_water_flux = 0d0 ; mV%water_flux_mmolH2Om2s = 0d0
+     ! initialise some time invarient parameters
+     call saxton_parameters(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+     call initialise_soils(mV%soil_frac_clay,mV%soil_frac_sand, mV)
+     ! save the initial conditions for later
+     mV%field_capacity_initial = mV%field_capacity
+     mV%porosity_initial = mV%porosity
 
-        ! Initialise the ncce gradiant calculation for canopy phenology model
+     ! Initialise the ncce gradiant calculation for canopy phenology model
 
-        ! Determine the number of model time steps over which NCCE will be lagged
-        ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
-        mV%ncce_lag_step = max(2,nint(21d0/mV%mean_days_per_step))
-        allocate(mV%ncce_lag_days(mV%ncce_lag_step),mV%ncce_lag_history(mV%ncce_lag_step))
-        call initialise_ncce(mV%mean_days_per_step,mV%ncce_lag_step,mV%ncce_lag_days)
+     ! Determine the number of model time steps over which NCCE will be lagged
+     ! NOTE: 21 days is the default assumption from the original source paper (Jolly et al., 2005)
+     mV%ncce_lag_step = max(2,nint(21d0/mV%mean_days_per_step))
+     allocate(mV%ncce_lag_days(mV%ncce_lag_step),mV%ncce_lag_history(mV%ncce_lag_step))
+     call initialise_ncce(mV%mean_days_per_step,mV%ncce_lag_step,mV%ncce_lag_days)
 
-        ! Initialise the leaf cohort age structure
-        ! pars(15) = r_opp, pars(45) = leaf_age_ref_days,
-        ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
-        !call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
-        !                        pars(15),pars(45), &
-        !                        pars(46),pars(48),pars(49), mV) !TODO check if required here
-
+     ! Initialise the leaf cohort age structure
+     ! pars(15) = r_opp, pars(45) = leaf_age_ref_days,
+     ! pars(46) = k_N_decline, pars(48) = mean_leaf_doy, pars(49) = sigma_leaf_doy
+     !call initialise_cohorts(POOLS(1,2),nint((met(6,1)-(deltat(1)*0.5d0))), &
+     !                        pars(15),pars(45), &
+     !                        pars(46),pars(48),pars(49), mV) !TODO check if required here
        
-  end subroutine
-
-
+  end subroutine initialize_mv
+  !
+  !------------------------------------------------------------------
+  !
   subroutine destroy_mv(mV)
     !! deallocate arrays in mV
     type(model_working_variables):: mV
-    integer:: n
-        ! allocate variables dimension which are fixed per site only the once
-        deallocate(mV%deltat_1, &
-                     mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
-                     mV%rainfall_time, mV%airt_zero_fraction_time)
-    end subroutine
-
+ 
+    ! allocate variables dimension which are fixed per site only the once
+    deallocate(mV%deltat_1, &
+               mV%daylength_hours, mV%daylength_seconds, mV%daylength_seconds_1, &
+               mV%rainfall_time, mV%airt_zero_fraction_time)
+  
+  end subroutine destroy_mv
   !
   !--------------------------------------------------------------------
   !
@@ -732,7 +743,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Generate some generic location specific variables for radiation balance
     !call calculate_radiation_commons(lat,pars(39:44))
-    call calculate_radiation_commons(lat, mV)
+    !call calculate_radiation_commons(lat, mV)
 
     ! Leaf maintenence respiration constant.
     ! NOTE: This could be replaced with some reference estimate

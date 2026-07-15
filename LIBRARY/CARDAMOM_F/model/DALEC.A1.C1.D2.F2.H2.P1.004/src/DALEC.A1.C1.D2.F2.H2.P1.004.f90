@@ -1967,11 +1967,10 @@ module CARBON_MODEL_MOD
 
     implicit none
 
-      type(model_working_variables) :: mV
-
     ! arguments
     double precision, intent(in) :: doy, lat
-
+    type(model_working_variables) :: mV
+    
     ! local variables
     double precision :: dec, mult, sinld, cosld, aob
 
