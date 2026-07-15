@@ -1732,7 +1732,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     aa = gc
     bb = mV%metabolic_limited_photosynthesis - gc_co2 - mV%dark_respiration + &
          gc_co2_half_sat + (gc_co2_half_sat*O2_O2_half_sat)
-    mV%cc = (mV%co2_half_sat * ((-gc_co2) - mV%dark_respiration - (O2_O2_half_sat*gc_co2) &
+    cc = (mV%co2_half_sat * ((-gc_co2) - mV%dark_respiration - (O2_O2_half_sat*gc_co2) &
                        - (O2_O2_half_sat*mV%dark_respiration))) &
        - (mV%metabolic_limited_photosynthesis*mV%co2_comp_point)
     ! Calculate internal CO2 concentration (ppm or umol/mol)
@@ -1753,7 +1753,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     aa = 4d0*gc
     bb = -4d0*(gc_co2 - mV%dark_respiration) + (8d0*mV%co2_comp_point*gc) + &
          mV%light_limited_photosynthesis
-    mV%cc = -8d0*(gc_co2*mV%co2_comp_point + mV%dark_respiration) - &
+    cc = -8d0*(gc_co2*mV%co2_comp_point + mV%dark_respiration) - &
          mV%light_limited_photosynthesis*mV%co2_comp_point
     ! Calculate internal CO2 concentration (ppm or umol/mol)
     ci_pl = (-bb+sqrt((bb*bb)-(4d0*aa*cc))) / (2d0*aa)
