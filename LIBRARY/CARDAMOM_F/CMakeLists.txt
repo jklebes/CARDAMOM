@@ -92,7 +92,7 @@ if(USE_OMP)
   endif()
 endif()
 
-if(TEST_COMPILE_ALL)
+if(COMPILE_ALL_MODELS)
   #  loop through compiling with each model in list above, to check that they compile
   foreach(n IN LISTS ALLMODELNAMES)
     set(FILES ${FILES1})
@@ -114,16 +114,16 @@ add_dependencies(cardamom-lib cardamom-samplers-lib)
 target_link_libraries(cardamom-lib PUBLIC cardamom-samplers-lib)
 add_executable(cardamom general/cardamom_main_apmcmc.f90)
 target_link_libraries(cardamom PUBLIC cardamom-lib)
-add_executable(cardamom-diffev general/cardamom_main_diffev.f90)
-target_link_libraries(cardamom-diffev PUBLIC cardamom-lib)
+#add_executable(cardamom-diffev general/cardamom_main_diffev.f90)
+#target_link_libraries(cardamom-diffev PUBLIC cardamom-lib)
 
 # Place the runnable executables in the legacy LIBRARY/CARDAMOM_F/executable
 # directory and give them the legacy .exe file names so downstream tooling
 # (cardamom_project_setup.r) can copy them from a fixed, known location.
-set_target_properties(cardamom cardamom-diffev
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/executable")
+#set_target_properties(cardamom cardamom-diffev
+#  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/executable")
 set_target_properties(cardamom        PROPERTIES OUTPUT_NAME "cardamom.exe")
-set_target_properties(cardamom-diffev PROPERTIES OUTPUT_NAME "cardamom-diffev.exe")
+#set_target_properties(cardamom-diffev PROPERTIES OUTPUT_NAME "cardamom-diffev.exe")
 
 # Shared library used by the R post-processing for forward DALEC runs. Emitted
 # as dalec.so (no lib prefix) into the executable directory, with the same MODEL

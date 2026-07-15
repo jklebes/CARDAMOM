@@ -8,6 +8,8 @@ enable_language(Fortran)
 include(CTest)
 
 option(USE_OMP "Use openmp" ON)
+option(COMPILE_ALL_MODELS "Compile all models, resulting in an executable for each.  For checking that all compile." OFF)
+option(ENABLE_TESTING "Compile tests" OFF)
 
 if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "IntelLLVM") #ifx flags
   set(CMAKE_Fortran_FLAGS_DEBUG "-O2 -g -pg -warn all") 
