@@ -922,10 +922,10 @@ contains
      do i = 1, PI%npars
         if (DATAin%parpriors(i) /= -9999) then
            if (DATAin%parpriors(i) > PI%parmax(i) .or. DATAin%parpriors(i) < PI%parmin(i)) then
-              write (*,*) PI%parmin(i)
-              write (*,*) DATAin%parpriors(i)
-              write (*,*) PI%parmax(i)
-              write (*,*) "Supplied parameter prior = ", i, " is outside hardcoded uniform parameter bounds"
+              write(*,*) "Parameter minimum value = ",PI%parmin(i)
+              write(*,*) "Parameter prior value   = ",DATAin%parpriors(i)
+              write(*,*) "Parameter maximum value = ",PI%parmax(i)
+              write(*,*) "Supplied parameter prior = ", i, " is outside hardcoded uniform parameter bounds"
               stop
            end if
         end if
