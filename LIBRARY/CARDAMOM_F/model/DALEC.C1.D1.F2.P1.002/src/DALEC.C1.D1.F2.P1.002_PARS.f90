@@ -35,7 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
+  use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -46,13 +46,11 @@ use samplers_shared, only: PARINFO
   public :: pars_info
 
   contains
-
   !
   !------------------------------------------------------------------
   !
   subroutine pars_info(PI)
     
-
     ! Subroutine contains a list of parameter ranges for the model.
     ! These could or possibly should go into an alternate file which can be read in.
     ! This may improve the usability when it comes to reading these information
@@ -60,15 +58,15 @@ use samplers_shared, only: PARINFO
 
     implicit none
 
-    !
-    ! declare parameters
-    !
-
     type(PARINFO), intent(inout):: PI
 
     PI%npars = 28
     if (.not. allocated(PI%parmin)) allocate(PI%parmin(PI%npars))
     if (.not. allocated(PI%parmax)) allocate(PI%parmax(PI%npars))
+    
+    !
+    ! declare parameters
+    !
 
     ! Decomposition of litter to som (fraction / day-1)
     ! Note is modified by exponential temperature function (p10)

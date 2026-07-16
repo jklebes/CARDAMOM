@@ -378,6 +378,10 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! Iteration independent variables using functions and thus need to be in a loop
     !
 
+    ! Generate some generic location specific variables for radiation balance
+    !call calculate_radiation_commons(lat,pars(39:44))
+    call calculate_radiation_commons(lat, mV)
+    
     ! first those linked to the time period of the analysis
     do n = 1, nodays
        ! check positive values only for rainfall input
@@ -659,7 +663,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
 
     ! Generate some generic location specific variables for radiation balance
     !call calculate_radiation_commons(lat,pars(39:44))
-    call calculate_radiation_commons(lat, mV)
+    !call calculate_radiation_commons(lat, mV)
 
     ! load ACM-GPP-ET parameters
     mV%minlwp = pars(43) ! Minimum leaf water potential

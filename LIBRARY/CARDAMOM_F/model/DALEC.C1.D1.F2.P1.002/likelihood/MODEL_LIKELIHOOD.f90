@@ -42,7 +42,8 @@ module model_likelihood_module
   private
 
   ! which to make open
-  public :: model_likelihood, scaled_model_likelihood, edc_model_likelihood, model_sanity_check, sanity_check
+  public :: model_likelihood, scaled_model_likelihood, &
+            edc_model_likelihood, model_sanity_check, sanity_check
 
   ! declare needed types
   type EDCDIAGNOSTICS
@@ -1096,7 +1097,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nharvest,DATAin%harvestpts,DATAin%harvest,DATAin%harvest_unc,DATAin%harvest_lag, &
                                              1d0,M_FLUXES(1:DATAin%nodays,29))
     endif ! nharvest > 0
-    ! Calculate log-likelihood for net biome productivity 
+    ! Calculate log-likelihood for net biome exchange 
     if (DATAin%nnbe > 0) then
         mod = M_FLUXES(1:DATAin%nodays,3) &  ! Rauto
             + M_FLUXES(1:DATAin%nodays,13) & ! Rhet litter
@@ -1123,7 +1124,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              1d0,mod)
     endif ! nreco > 0
-    ! Calculate log-likelihood for total wood net increment
+    ! Calculate log-likelihood for total wood net increment - not including fire and deforestation
     if (DATAin%nCwood_inc > 0) then
         mod = M_FLUXES(1:DATAin%nodays,7) - M_FLUXES(1:DATAin%nodays,11)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_inc,DATAin%Cwood_incpts, &
@@ -1136,7 +1137,7 @@ module model_likelihood_module
                                              DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
                                              1d0,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
-    ! Calculate log-likelihood for total wood mortality
+    ! Calculate log-likelihood for total wood mortality - not including fire and deforestation
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
                                              DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &
@@ -1258,7 +1259,7 @@ module model_likelihood_module
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nreco,DATAin%recopts,DATAin%Reco,DATAin%Reco_unc,DATAin%Reco_lag, &
                                              DATAin%Reco_scaling,mod)
     endif ! nreco > 0
-    ! Calculate log-likelihood for total wood net increment
+    ! Calculate log-likelihood for total wood net increment - not including fire and deforestation
     if (DATAin%nCwood_inc > 0) then
         mod = M_FLUXES(1:DATAin%nodays,7) - M_FLUXES(1:DATAin%nodays,11)
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_inc,DATAin%Cwood_incpts, &
@@ -1271,7 +1272,7 @@ module model_likelihood_module
                                              DATAin%Cwood_growth,DATAin%Cwood_growth_unc,DATAin%Cwood_growth_lag, &
                                              DATAin%Cwood_growth_scaling,M_FLUXES(1:DATAin%nodays,7))
     endif ! nCwood_inc > 0
-    ! Calculate log-likelihood for total wood mortality
+    ! Calculate log-likelihood for total wood mortality - not including fire and deforestation
     if (DATAin%nCwood_mortality > 0) then
         ML_obs_out = ML_obs_out + likelihood(DATAin%nodays,DATAin%nCwood_mortality,DATAin%Cwood_mortalitypts, &
                                              DATAin%Cwood_mortality,DATAin%Cwood_mortality_unc,DATAin%Cwood_mortality_lag, &

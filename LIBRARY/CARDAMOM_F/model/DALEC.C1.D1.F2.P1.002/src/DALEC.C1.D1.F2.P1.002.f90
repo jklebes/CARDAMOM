@@ -38,16 +38,16 @@
 
 module CARBON_MODEL_MOD
 
-implicit none
+  implicit none
 
-! make all private
-private
+  ! make all private
+  private
 
   ! explicit publics
   public :: CARBON_MODEL     &
            ,nos_soil_layers  &
            ,mVs , initialize_mv, &
-           model_working_variables
+            model_working_variables
 
   !!!!!!!!!
   ! Parameters
@@ -55,38 +55,41 @@ private
 
   ! useful technical parameters
   double precision, parameter :: vsmall = tiny(0d0)*1d3 & ! *1d3 to add a little breathing room
-                                ,vlarge = huge(0d0)
+                                 ,vlarge = huge(0d0)
 
   integer, parameter :: nos_root_layers = 2, nos_soil_layers = nos_root_layers + 1
   double precision, parameter :: pi = 3.1415927d0, &
                          deg_to_rad = 0.01745329d0   ! pi/180d0
   ! timing parameters
   double precision, parameter :: &
-                   seconds_per_hour = 3600d0,       & ! Number of seconds per hour
-                    seconds_per_day = 86400d0,      & ! Number of seconds per day
-                  seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
+                    seconds_per_hour = 3600d0,       & ! Number of seconds per hour
+                     seconds_per_day = 86400d0,      & ! Number of seconds per day
+                   seconds_per_day_1 = 1.157407d-05    ! Inverse of seconds per day
 
   !!!!!!!!!
   ! Module variables
   !!!!!!!!!
-type model_working_variables 
-  ! Variables needed incase of using random forest functions.
-  ! None are currently implemented but variables remain for legacy reasons
-  integer ::    dim_1, & ! dimension 1 of response surface
-                dim_2, & ! dimension 2 of response surface
-            nos_trees, & ! number of trees in randomForest
-           nos_inputs    ! number of driver inputs
-  double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
-                                                      rightDaughter, & ! right daughter for forets
-                                                         nodestatus, & ! nodestatus for forests
-                                                         xbestsplit, & ! for forest
-                                                           nodepred, & ! prediction value for each tree
-                                                            bestvar    ! for randomForests
-  ! Modile level ACM-GPP-ET variables
-  double precision :: ci 
-  double precision, dimension(nos_soil_layers) :: soil_frac_clay, soil_frac_sand
-end type
+
+  type model_working_variables 
+    ! Variables needed incase of using random forest functions.
+    ! None are currently implemented but variables remain for legacy reasons
+    integer ::    dim_1, & ! dimension 1 of response surface
+                  dim_2, & ! dimension 2 of response surface
+              nos_trees, & ! number of trees in randomForest
+             nos_inputs    ! number of driver inputs
+    double precision, allocatable, dimension(:,:) ::     leftDaughter, & ! left daughter for forest
+                                                        rightDaughter, & ! right daughter for forets
+                                                           nodestatus, & ! nodestatus for forests
+                                                           xbestsplit, & ! for forest
+                                                             nodepred, & ! prediction value for each tree
+                                                              bestvar    ! for randomForests
+    ! Modile level ACM-GPP-ET variables
+    double precision :: ci 
+    double precision, dimension(nos_soil_layers) :: soil_frac_clay, soil_frac_sand
+
+  end type
   type(model_working_variables), allocatable, dimension(:):: mVs
+
   contains
   !
   !--------------------------------------------------------------------
@@ -140,7 +143,7 @@ end type
 
     implicit none
 
-      type(model_working_variables) :: mV
+    type(model_working_variables) :: mV
 
     ! declare input variables
     integer, intent(in) :: start    &
@@ -593,8 +596,8 @@ end type
                               + ((Crootcr/C_total)      * rootcr_frac_res(harvest_management) )
               ! Calculate the management scenario specific resistance fraction
               labile_frac_removal = ((POOLS(n+1,3)/C_total) * roots_frac_removal(harvest_management)  ) &
-                                    + ((Cstem/C_total)        * 1d0   ) &
-                                    + ((Crootcr/C_total)      * rootcr_frac_removal(harvest_management) )
+                                    + ((Cstem/C_total)      * 1d0   ) &
+                                    + ((Crootcr/C_total)    * rootcr_frac_removal(harvest_management) )
 
               ! Calculate the total loss from biomass pools
               ! We assume that fractional clearing always equals the fraction
@@ -726,7 +729,7 @@ end type
 
     ! declare input variables
     double precision, intent(in) :: drivers(10) & ! acm input requirements
-                         ,constants(10) ! ACM parameters
+                                   ,constants(10) ! ACM parameters
     double precision, intent(inout) :: ci 
 
     ! declare local variables
@@ -738,14 +741,14 @@ end type
                        ,co2_comp_point,co2_half_sat,lai_coef,lai_const
 
     ! load driver values to correct local vars
-    lai = drivers(1)
-    maxt = drivers(2)
-    mint = drivers(3)
-    nit = drivers(4)
-    co2 = drivers(5)
-    doy = drivers(6)
-    radiation = drivers(8)
-    lat = drivers(7)
+    lai = drivers(1)  ! leaf area (m2/m2)
+    maxt = drivers(2) ! Daily maximum temperature (oC)
+    mint = drivers(3) ! Daily minimum temperature (oC)
+    nit = drivers(4)  ! Load foliar N (gN/m2leaf)
+    co2 = drivers(5)  ! Atmospheric CO2 (ppm)
+    doy = drivers(6)  ! Julian Day of year
+    radiation = drivers(8) ! Short wave radation (MJ/m2/day)
+    lat = drivers(7) ! latitude (degrees)
 
     ! load parameters into correct local vars
     deltaWP = drivers(9)
