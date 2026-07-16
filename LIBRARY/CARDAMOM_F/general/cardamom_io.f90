@@ -50,7 +50,6 @@ module cardamom_io
             , update_obs_scaling_nsamples &
             , update_obs_scaling_sqrt_nsamples &
             , update_obs_scaling_log_nsamples &
-            , open_output_files &
             , cardamom_model_library &
             , read_options &
             , read_binary_data &
@@ -320,42 +319,6 @@ contains
    end subroutine cardamom_model_library
    !
    !------------------------------------------------------------------
-   !
-   subroutine open_output_files(parname, stepname, covname, covinfoname)
-      ! Subroutine opens the needed output files and destroys any previously
-      ! existing files with the same name, just in case mind!
-      ! NOTE: that is unless I have not remove the 'UNKNOWN' status in which case
-      ! then the files are appended to
-
-      implicit none(type, external)
-
-      ! declare input variables
-      character(350), intent(in) :: parname, stepname, covname, covinfoname
-
-      ! declare local variables
-      integer :: ios, reclen
-      double precision, save :: a = 1d0
-
-      ! open files now
-      ! most of these will require new information to be appended to the end at
-      ! all times-therefore we use the unformatted stream access
-      open (pfile_unit, file=trim(parname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
-      if (ios /= 0) print *, "error ", ios, " opening file", trim(parname)
-      open (sfile_unit, file=trim(stepname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
-      if (ios /= 0) print *, "error ", ios, " opening file", trim(stepname)
-      open (cifile_unit, file=trim(covinfoname), form="UNFORMATTED", access="stream", status="UNKNOWN", iostat=ios)
-      if (ios /= 0) print *, "error ", ios, " opening file", trim(covinfoname)
-      ! for the covariance matrix we have a fixed size containing two matrices,
-      ! the initial and the current output-therefore we use
-      inquire (iolength=reclen) a !; print*,reclen
-      open (cfile_unit, file=trim(covname), form="UNFORMATTED", access="direct", recl=reclen, iostat=ios)
-      if (ios /= 0) print *, "error ", ios, " opening file", trim(covname)
-
-      return
-
-   end subroutine open_output_files
-   !
-   !--------------------------------------------------------------------
    !
    subroutine read_binary_data(infile, DATAin)
       use cardamom_structures, only: DATA_type
@@ -990,7 +953,7 @@ contains
       ! declare input variables
       character(350), intent(inout) :: outfile
       integer, intent(in) :: solutions_wanted, freq_print, freq_write
-      class(MCMC_OPTIONS), intent(out) :: MCO
+      class(MCMC_OPTIONS), intent(inout) :: MCO
 
       ! defining hardcoded MCMC options
       MCO%append = .true.

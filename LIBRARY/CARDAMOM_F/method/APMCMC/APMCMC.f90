@@ -62,7 +62,7 @@
 module cardamom_MHMCMC
 
    use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, filenames_insert_threadid, neg_inf
-   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
+   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files, close_output_files
    use OMP_LIB
 
    implicit none(type, external)
@@ -223,6 +223,7 @@ contains
       integer:: MAXITER, nchains, npars
       !> counters-local to this chain's run
       integer:: ITER, ACC, ACC_FIRST, ACCLOC, N_before_mv_target
+      integer :: pfileunit, sfileunit, cfileunit, cifileunit ! file unit numbers
       double precision:: ACCRATE, ACCRATE_GLOBAL
 
       ! declare interface for the model likelihood function.
@@ -291,7 +292,7 @@ contains
       if (MCO%nwrite > 0) then
          ! allocate buffers (different one for each chain)
          call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
-         call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid_, pfileunit, sfileunit, cfileunit, cifileunit)
       end if
 
     !! Calculate derived  settings of the run...
@@ -309,6 +310,13 @@ contains
          ! For aborted simulations
          ! keep MCOUT, starting point, counters statistics collection
          ! implies start from last state
+         ITER = 0
+         MCOUT%complete = .false.
+         ACC = 0
+         ACC_first = 0
+         ACCLOC = 0
+         ACCRATE = 0d0
+         ACCRATE_GLOBAL = 0d0
       else
          ! Not a restart from aborted simulation
          ! start new counters
@@ -354,19 +362,28 @@ contains
       if (.not. MCO%restart .and. .not. MCO%fixedpars) then
          call init_pars_random(PI, PARS_previous, PI%fix_pars, uniform_random_vector)
          ! Inform the user
-         write (*, *) "Have loaded/randomly assigned PI%parini-now begin the AP-MCMC"
+         write (*, *) "Have generated random initial pars"
       else  ! restart or fixedpars case-from aborted simulation or from previous phase-use pars in MCOUT as stating point
          PARS_previous = MCOUT%PARS
+         write (*, *) "Starting from pars from previous phase"
          ! start statistics from previous statistics in MCOUT
       end if
 
       if (.not. MCO%restart) then  ! if new simulation, from fixedpars or random pars
          ! calculate initial ll
          call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
+         ! best value so far = starting value
          BESTPARS = PARS_previous
          llmax = loglikelihood_previous
       else
-         loglikelihood_previous = MCOUT%ll
+         ! TODO recalculatig because not read from file in case of restart , although
+         ! present in column npars+1 
+         !loglikelihood_previous = MCOUT%ll
+         call model_likelihood(PARS_previous, npars, loglikelihood_previous, chainid_)
+         ! BESTPARS = MCOUT%bestll  ! not available from file read
+         BESTPARS = PARS_previous
+         ! recalculating this one too
+         call model_likelihood(BESTPARS, npars, llmax, chainid_)
       end if
 
       if (loglikelihood_previous == neg_inf) then
@@ -484,6 +501,7 @@ contains
          ! Should I be write(*,*)ing to screen or not?
          if (MCO%nPRINT > 0) then
             if (mod(ITER, MCO%nPRINT) == 0) then
+               write (*, *) "ITER ", ITER
                write (*, *) "Chain ", chainid, "of", mco%nchains
                write (*, *) "Using multivariate sampling = ", MCOUT%use_multivariate
                write (*, *) "Total proposal = ", ITER, " out of ", MAXITER
@@ -519,11 +537,14 @@ contains
       deallocate(PARSALL)
 
       ! completed AP-MCMC loop
+      write (*, *) "ITER ", ITER
       write (*, *) "AP-MCMC loop completed"
       write (*, *) "Overall acceptance rate     = ", dble(ACC)/dble(ITER)
       write (*, *) "Final local acceptance rate = ", ACCRATE
       write (*, *) "Best log-likelihood = ", llmax
       !write (*, *) "Best parameters = ", MCOUT%bestpars
+
+      call close_output_files(pfileunit, sfileunit, cfileunit, cifileunit)
 
    end subroutine run_mcmc
    !

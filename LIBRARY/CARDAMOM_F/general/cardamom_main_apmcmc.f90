@@ -180,6 +180,7 @@ program cardamom_framework
       print*, "Value supplied = ", nchains
       stop
    end if
+   MCO%nchains = nchains !note it in the settings object
 
    ! Now the number of chains is known, allocate the per-chain output array
    allocate (MCOUT_list(nchains))
@@ -197,6 +198,8 @@ program cardamom_framework
    if (trim(infile) == "StressTest") then
       !call run_stresstest()
       ! call prepare_for_stress_test(infile, outfile)  ! sets cardamom_structures :: DATAin
+      write(*,*) "StressTest is now located in test/ and called via `ctest`, not by running the main &
+        & cardamom program with the StressTest keyword"
       stop
    end if
 
@@ -215,16 +218,20 @@ program cardamom_framework
    ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
+   ! TODO check for restart could be done on each file independently
    ! check whether this is a restart from aborted simulation
    MCO%restart = .true. !to gather results onto-false as soon as some file is not found
    do i = 1, nchains
       call check_for_existing_output_files(PI%npars, MCO, sub_fraction, i, restart)
       MCO%restart = MCO%restart .and. restart
-      !if all nchains files were found, read them to get a starting point
-      if (MCO%restart) then
-         call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars)
-      end if
    end do
+    
+      !if all nchains files were found, read them to get a starting point
+    if (MCO%restart) then
+       do i = 1, nchains
+         call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars, i)
+       end do
+    end if
 
    ! Report which model ID we are using
    write (*,*) "Running model version ", DATAin%ID
@@ -238,17 +245,22 @@ program cardamom_framework
       MCO%fixedpars = .true.
       do i = 1, nchains
          MCOUT_list(i)%nos_iterations = 0
+         ! Reset stepsize and covariance for main MH-MCMC
+         call reset_stats(MCOUT_list(i), PI%npars)
       end do
    end if
+
+   ! At this point, whether from restart or from edc search , we should have values to start from 
+   ! in MCOUT_list(i)%pars 
+   ! In case of restart, number of steps already done is noted in MCOUT_list(i)%nos_iterations
 
    do i = 1, nchains
       ! Reset the MCMC parameters for the next stage
       call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-      ! Reset stepsize and covariance for main MH-MCMC
-      call reset_stats(MCOUT_list(i), PI%npars)
    end do
 
    ! sub-sampling phase, first sub_fraction% of the simulation with variant loglikelihood
+   ! TODO using MCOUT_list(1)
    if (DATAin%total_obs > 0 .and. MCOUT_list(1)%nos_iterations < (MCO%nOUT*sub_fraction) .and. do_inflate) then
 
       ! Having found an EDC compliant parameter vector, we want to do a MCMC
@@ -268,9 +280,14 @@ program cardamom_framework
       write (*,*) "Beginning parameter search on sample size normalised likelihoods"
 
       ! Set MCMC parameters
-      nOUT_save = nint(dble(MCO%nOUT)*sub_fraction) ; MCO%nOUT = nOUT_save
+      nOUT_save = nint(dble(MCO%nOUT)*sub_fraction) ; MCO%nOUT = nOUT_save !number of steps to do in this phase
+
+      ! Actual number still to do = this minus MCOUT%nos_iterations steps already done pre-restart
+      MCO%nOUT = MCO%nOUT - MCOUT_list(1)%nos_iterations ! TODO again just using 1 , assuming all restart files are same length
+
       MCO%fADAPT = 1d0
-      MCO%fixedpars = .true. ! start from end points of EDC phase
+      MCO%fixedpars = .true. ! start from end points of EDC (or pre-restart) phase , preserve latest MCO%pars already existing in MCO 
+
       ! Update user again
       write (*,*) "Nos iterations to be proposed = ", MCO%nOUT
       ! Second phase, run MCMC with sub scaling
@@ -278,7 +295,7 @@ program cardamom_framework
       call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains, seed = idum)
       MCO%fixedpars = .true.
       do i = 1, nchains
-         ! Use the best parameter set as the starting point for the next stage
+         ! Use the best (instead of latest) parameter set as the starting point for the next stage
          MCOUT_list(i)%pars(1:PI%npars) = MCOUT_list(i)%bestpars(1:PI%npars)
 
          ! Leave parameter and covariance structures as they come out form the
@@ -290,22 +307,47 @@ program cardamom_framework
             ! reset the parameter step size at the beginning of each attempt
             call reset_stats(MCOUT_list(i), PI%npars)
          end if  ! do we need a new covariance matrix or can we use the existing one?
+
+         ! At this point, should be nOUT_save == MCout_list(i)%nos_iterations
+         ! (desired number of steps in this phase == number of steps actually done)
+         ! TODO this phase should NOT be able to exit early due to convergence condition !
+         ! tmp : check
+         if (.not. (nOUT_save == MCOUT_list(i)%nos_iterations) ) then 
+           write(*,*) "WARNING sampling first phase completed an unexpected number of steps, &
+             & ", MCOUT_list(i)%nos_iterations, " on thread " , i, " where ", nOUT_save,  "were expected."
+         endif 
+
          ! reset iterations counter.
          MCOUT_list(i)%nos_iterations = 0
       end do
 
+   elseif (restart) then
+     ! Assume the initial phase was done , and not recorded in the output files before restart
+     ! Continue as if this number of steps has been done
+     ! NOTE always assuming that the number of steps requested (command line argument) is the same
+     ! on original run and restart run
+     nOUT_save = nint(dble(MCO%nOUT)*sub_fraction) 
+   else ! no first phase was done
+     nOUT_save = 0 ! number of steps done in first phase
    end if
 
    ! Restore module variables needed for the run-these components could be split
    ! into two subroutines to avoid double calling of file name creation
    ! components.
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
-   MCO%nOUT = MCO%nOUT - nOUT_save  ! number of steps in final phase
-   MCO%fixedpars = .true.
+
+   MCO%nOUT = MCO%nOUT - nOUT_save  ! number of steps needed in main phase = total number minus number done in first phase
+
+   if ( MCO%restart ) then
+     ! Restart : subtract what's already present in files
+     MCO%nOUT = MCO%nOUT - MCOUT_list(1)%nos_iterations
+   endif 
+
+   MCO%fixedpars = .true. ! start next phase from values in MCOUT%pars, whether from restart, edc, or first phase
 
    ! Update the user
    write (*,*) "Beginning parameter search in real likelihoods"
-   write (*,*) "Nos iterations to be proposed = ", MCO%nOUT - MCOUT_list(1)%nos_iterations
+   write (*,*) "Nos iterations to be proposed = ", MCO%nOUT 
 
    ! Call the main MCMC
    ! The specific normalisation of the cost function is determined here.
@@ -321,16 +363,12 @@ program cardamom_framework
    else if (cost_func_scaling_dble == 3) then
       call update_obs_scaling_log_nsamples
    end if  ! cost_func_scaling_dble ==
+
    !  Finally run the mcmc
    call run_parallel_mcmc(scaled_model_likelihood_fct, PI, MCO, MCOUT_list, model_likelihood_fct, nchains=nchains, seed = idum)
 
    ! Let the user know we are done
    write (*, *) "AP-MCMC done now, moving on ..."
-
-   ! tidy up by closing all files
-   do i = 1, nchains
-      call close_output_files(i)
-   end do
 
    ! Final message to the user
    write (*, *) "==========================================================="
