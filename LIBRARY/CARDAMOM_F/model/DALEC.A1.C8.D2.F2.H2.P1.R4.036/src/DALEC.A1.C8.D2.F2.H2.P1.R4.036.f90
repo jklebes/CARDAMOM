@@ -1111,7 +1111,7 @@ module CARBON_MODEL_MOD
        ! interest approach.
 
        ! Respiration heterotrophic slow som
-       FLUXES(n,14) = (POOLS(n,10)*(1d0-pars(48))*microbial_activity*pars(49)) / max(POOLS(n,9),vsmall)
+       FLUXES(n,14) = min(1d0,(POOLS(n,10)*(1d0-pars(48))*microbial_activity*pars(49)) / max(POOLS(n,9),vsmall))
        FLUXES(n,14) = POOLS(n,9) * (1d0-(1d0-FLUXES(n,14))**mV%days_per_step)*mV%days_per_step_1
        ! Respiration heterotrophic fast som
        FLUXES(n,58) = POOLS(n,8) * (1d0-(1d0-(POOLS(n,10)*(1d0-pars(44))*pars(50)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
@@ -1122,7 +1122,9 @@ module CARBON_MODEL_MOD
        ! Microbial mediated transfer of carbon from slow to fast
        FLUXES(n,61) = POOLS(n,10) * (1d0-(1d0-(pars(48)*microbial_activity*pars(49)))**mV%days_per_step)*mV%days_per_step_1
        ! Accumulation of fast som into microbial carbon
-       FLUXES(n,62) = POOLS(n,8) *  (1d0-(1d0-(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)))**mV%days_per_step)*mV%days_per_step_1
+       FLUXES(n,62) = min(1d0,(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)) )
+       FLUXES(n,62) = POOLS(n,8) *  (1d0-(1d0-FLUXES(n,62))**mV%days_per_step)*mV%days_per_step_1
+!if (FLUXES(n,62) < 0d0) print*,"62 ", FLUXES(n,62), POOLS(n,8),POOLS(n,10),microbial_activity,pars(44),pars(50),mV%days_per_step,mV%days_per_step_1
 
        !!!!!!!!!!
        ! calculate growth respiration and adjust allocation to pools assuming
@@ -1163,6 +1165,9 @@ module CARBON_MODEL_MOD
                                        (FLUXES(n,31)*(1d0-pars(42)))+ &
                                        (FLUXES(n,57)*(1d0-pars(43)))+ &
                                        FLUXES(n,61)-FLUXES(n,58)-FLUXES(n,62))*mV%days_per_step
+!if (POOLS(n+1,8) /= POOLS(n+1,8)) then 
+!print*,"8 ",POOLS(n+1,8),FLUXES(n,15),FLUXES(n,31),FLUXES(n,57),FLUXES(n,61),FLUXES(n,58),FLUXES(n,62),mV%days_per_step 
+!endif 
        ! slow som pool
        POOLS(n+1,9)  = POOLS(n,9)  + ( (FLUXES(n,15)*pars(41))+ &
                                        (FLUXES(n,31)*pars(42))+ &
@@ -1170,6 +1175,14 @@ module CARBON_MODEL_MOD
                                        FLUXES(n,60)-FLUXES(n,14)-FLUXES(n,61))*mV%days_per_step
        ! microbial pool
        POOLS(n+1,10) = POOLS(n,10) + (FLUXES(n,62)-FLUXES(n,59)-FLUXES(n,60))*mV%days_per_step
+
+!if (POOLS(n+1,10) /= POOLS(n+1,10) .or. POOLS(n+1,10) < 0d0) then 
+!print*,"10 ",POOLS(n+1,10),POOLS(n,10),FLUXES(n,62),FLUXES(n,59),FLUXES(n,60),mV%days_per_step 
+!endif        
+       ! Enforce mass reality - note this breaks mass balance as fluxes are not proportionally updated
+       POOLS(n+1,8) = max(0d0,POOLS(n+1,8))
+       POOLS(n+1,9) = max(0d0,POOLS(n+1,9))
+       POOLS(n+1,10) = max(0d0,POOLS(n+1,10))
 
        !!!!!!!!!!
        ! Update soil water balance
@@ -3973,7 +3986,6 @@ module CARBON_MODEL_MOD
      ! Note this is a simplification of the published model due to DALEC operating at >=daily
      ! timesteps. We assume that activity is in steady state with its potential activity.
      microbial_activity = min(1d0,max(0d0, T_scalar * ( fast_som  / ( fast_som + p40 ) ) ))
-
      ! Calculate the microbial death rate
      microbial_death = p45 / (1d0 + (p46 * fast_som))
 
