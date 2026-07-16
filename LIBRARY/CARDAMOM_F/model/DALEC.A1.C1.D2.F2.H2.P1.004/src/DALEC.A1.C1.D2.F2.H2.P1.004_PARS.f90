@@ -35,7 +35,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module MODEL_PARAMETERS
-use samplers_shared, only: PARINFO
+  use samplers_shared, only: PARINFO
 
   implicit none
 
@@ -46,7 +46,6 @@ use samplers_shared, only: PARINFO
   public:: pars_info
 
   contains
-
   !
   !------------------------------------------------------------------
   !

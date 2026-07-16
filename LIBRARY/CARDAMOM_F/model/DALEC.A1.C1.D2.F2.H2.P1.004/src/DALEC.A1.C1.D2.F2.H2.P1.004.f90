@@ -427,9 +427,8 @@ module CARBON_MODEL_MOD
 
     implicit none
 
-      type(model_working_variables) :: mV
-
     ! declare input variables
+    type(model_working_variables) :: mV
     integer, intent(in) :: start    &
                           ,finish   &
                           ,nopars   & ! number of parameters in vector
@@ -454,10 +453,10 @@ module CARBON_MODEL_MOD
                  ,soilevaporation & ! kgH2O/m2/day
                   ,wetcanopy_evap & ! kgH2O/m2/day
                  ,snowsublimation & ! kgH2O/m2/day
-       ,wf,wl,ff,fl,osf,osl,sf,ml   & ! phenological controls
-       ,sla                          & ! specific leaf area: inverse of LMA (m2/gC); precomputed from 1/pars(17)
-       ,ff_wf,fl_wl                  & ! precomputed phenology amplitude coefficients
-       ,sf_over_wf,sf_over_wl          ! precomputed phenology scaling ratios
+       ,wf,wl,ff,fl,osf,osl,sf,ml & ! phenological controls
+       ,sla                       & ! specific leaf area: inverse of LMA (m2/gC); precomputed from 1/pars(17)
+       ,ff_wf,fl_wl               & ! precomputed phenology amplitude coefficients
+       ,sf_over_wf,sf_over_wl       ! precomputed phenology scaling ratios
 
     ! JFE added 4 May 2018 - combustion efficiencies and fire resilience
     double precision :: burnt_area
@@ -615,8 +614,8 @@ module CARBON_MODEL_MOD
 
     ! load ACM-GPP-ET parameters
     mV%ceff = pars(11) ! Canopy efficiency (umolC/m2/s)
-                    ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
-                    ! and average foliar nitrogen gN/m2leaf
+                       ! This is in the full model the product of Nitrogen use efficiency (umolC/gN/m2leaf)
+                       ! and average foliar nitrogen gN/m2leaf
     ! Rooting parameters
     mV%root_k = pars(26) ; mV%max_depth = pars(27)
     ! Specific leaf area: precomputed reciprocal of LMA (pars(17)) to replace per-step division
@@ -631,7 +630,7 @@ module CARBON_MODEL_MOD
     POOLS(1,6) = pars(23) ! som
     !POOLS(1,7) = assigned later ! soil water (0-10cm)
 
-       ! Some time consuming variables we only want to set once
+    ! Some time consuming variables we only want to set once
     if (.not.allocated(mV%deltat_1)) then !never used - initialize_model() is always called before carbon_model()
       write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
       STOP 1
@@ -839,6 +838,7 @@ module CARBON_MODEL_MOD
     mV%seconds_per_step = deltat(1) * seconds_per_day
     mV%days_per_step =  deltat(1)
     mV%days_per_step_1 =  mV%deltat_1(1)
+    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) 
 
     ! calculate some temperature dependent meteorologial properties
     call meteorological_constants(mV%leafT,mV%leafT+freeze,mV%vpd_kPa, mV)
@@ -856,7 +856,6 @@ module CARBON_MODEL_MOD
     mV%previous_depth = sum(mV%layer_thickness(1:2))
     ! Needed to initialise soils
     call calculate_Rtot(mV)
-    mV%dayl_seconds_1 = mV%daylength_seconds_1(1) !new
     call calculate_update_soil_water(transpiration,soilevaporation,snowsublimation,&
                                      0d0,FLUXES(1,29), mV) ! assume no evap or rainfall
 
@@ -1276,7 +1275,7 @@ module CARBON_MODEL_MOD
   !
   !------------------------------------------------------------------
   !
-  subroutine acm_gpp_stage_1 (mV)
+  subroutine acm_gpp_stage_1(mV)
 
     ! Estimate the light and temperature limited photosynthesis components.
     ! See acm_gpp_stage_2() for estimation of CO2 supply limitation and
@@ -1284,7 +1283,8 @@ module CARBON_MODEL_MOD
 
     implicit none
 
-      type(model_working_variables) :: mV
+    ! Argument
+    type(model_working_variables) :: mV
 
     ! Declare local variables
     double precision :: a, b, c, Pl_max, PAR_m2, airt_ad

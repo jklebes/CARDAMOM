@@ -85,7 +85,6 @@ subroutine rdalec4(output_dim,MTT_dim,SS_dim &
   double precision, dimension(nodays) :: tmp
   type(model_working_variables) :: mv
 
-
   ! zero initial conditions
   POOLS = 0d0 ; FLUXES = 0d0 ; DIAGS = 0d0
   out_var1 = 0d0 ; out_var2 = 0d0 ; out_var3 = 0d0 ; out_var4 = 0d0 ; out_var5 = 0d0 
