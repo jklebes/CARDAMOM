@@ -180,6 +180,7 @@ program cardamom_framework
       print*, "Value supplied = ", nchains
       stop
    end if
+   MCO%nchains = nchains !note it in the settings object
 
    ! Now the number of chains is known, allocate the per-chain output array
    allocate (MCOUT_list(nchains))
@@ -225,13 +226,10 @@ program cardamom_framework
       MCO%restart = MCO%restart .and. restart
    end do
     
-   write(*,*) "Found all restart files:" , MCO%restart
-
       !if all nchains files were found, read them to get a starting point
     if (MCO%restart) then
        do i = 1, nchains
          call update_for_restart_simulation(MCO, MCOUT_list(i), PI%npars, i)
-         write(*,*) "Taking latest status from restart files"
        end do
     end if
 
@@ -323,6 +321,12 @@ program cardamom_framework
          MCOUT_list(i)%nos_iterations = 0
       end do
 
+   elseif (restart) then
+     ! Assume the initial phase was done , and not recorded in the output files before restart
+     ! Continue as if this number of steps has been done
+     ! NOTE always assuming that the number of steps requested (command line argument) is the same
+     ! on original run and restart run
+     nOUT_save = nint(dble(MCO%nOUT)*sub_fraction) 
    else ! no first phase was done
      nOUT_save = 0 ! number of steps done in first phase
    end if
@@ -332,15 +336,14 @@ program cardamom_framework
    ! components.
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
 
-   MCO%nOUT = MCO%nOUT - nOUT_save  ! number of steps in final phase = total number minus number done in first phase
+   MCO%nOUT = MCO%nOUT - nOUT_save  ! number of steps needed in main phase = total number minus number done in first phase
 
-   ! First phase was skipped due to this being a restart from later :
-   if ( MCO%restart .and.  MCOUT_list(1)%nos_iterations >= (MCO%nOUT*sub_fraction) ) then
-     ! subtract steps already done before restart instead
+   if ( MCO%restart ) then
+     ! Restart : subtract what's already present in files
      MCO%nOUT = MCO%nOUT - MCOUT_list(1)%nos_iterations
    endif 
 
-   MCO%fixedpars = .true. ! start next phase from values in MCOUT%npars, whether from restart, edc, or first phase
+   MCO%fixedpars = .true. ! start next phase from values in MCOUT%pars, whether from restart, edc, or first phase
 
    ! Update the user
    write (*,*) "Beginning parameter search in real likelihoods"
@@ -366,11 +369,6 @@ program cardamom_framework
 
    ! Let the user know we are done
    write (*, *) "AP-MCMC done now, moving on ..."
-
-   ! tidy up by closing all files
-   do i = 1, nchains
-      call close_output_files(i)
-   end do
 
    ! Final message to the user
    write (*, *) "==========================================================="

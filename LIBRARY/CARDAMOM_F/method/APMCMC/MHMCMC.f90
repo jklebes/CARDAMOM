@@ -44,7 +44,7 @@ module MHMCMC
    !-
 
    use samplers_shared, only: PARINFO, MCMC_output, MCMC_options, filenames_insert_threadid, neg_inf
-   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
+   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files, close_output_files
    use OMP_LIB
 
 
@@ -207,6 +207,7 @@ contains
       integer:: MAXITER, nchains, npars
       !> counters-local to this chain's run
       integer:: ITER, ACC, ACC_FIRST, ACCLOC, N_before_mv_target
+      integer :: pfileunit, sfileunit, cfileunit, cifileunit ! file unit numbers, not really of interest here
       double precision:: ACCRATE, ACCRATE_GLOBAL
 
       ! declare interface for the model likelihood function.
@@ -274,7 +275,7 @@ contains
       if (MCO%nwrite > 0) then
          ! allocate buffers (different one for each chain)
          call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space)
-         call open_output_files(outfile, stepfile, covfile, covifile, chainid_)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid_,  pfileunit, sfileunit, cfileunit, cifileunit)
       end if
 
     !! Calculate derived  settings of the run...
@@ -501,6 +502,8 @@ contains
       write (*, *) "Final local acceptance rate = ", ACCRATE
       write (*, *) "Best log-likelihood = ", llmax
       write (*, *) "Best parameters = ", MCOUT%bestpars
+
+      call close_output_files(pfileunit, sfileunit, cfileunit, cifileunit)
 
    end subroutine run_mcmc
 

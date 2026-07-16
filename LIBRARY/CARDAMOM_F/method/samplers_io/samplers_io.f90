@@ -109,7 +109,7 @@ contains
       !! simulation settings object-to read nOut, nWrite, filenames
       double precision, intent(in):: sub_fraction
       character(350):: outfile, stepfile, covfile, covifile 
-         !! filenames - numbered by thread if applicable 
+         !! filenames stems + numbering 
       integer :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
          !! file unit numbers for this thread
       integer, intent(in) :: chainid
@@ -133,8 +133,6 @@ contains
       if (MCO%nchains > 1)  then
           call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
       end if
-      ! Get this thread's file unit numbers too
-      call calculate_file_ids(chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
 
       ! Check that all files exist
       inquire (file=trim(outfile), exist=par_exists)
@@ -149,7 +147,8 @@ contains
          ! lets see if there is anything in the files that we might use
          ! count the number of remaining lines in the file..
          ! open the relevant output files
-         call open_output_files(outfile, stepfile, covfile, covifile, chainid)
+         call open_output_files(outfile, stepfile, covfile, covifile, chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
+
          status = 0; num_lines = 0
          do
             read (pfile_unit_thread, iostat=status) dummy 
@@ -172,7 +171,7 @@ contains
             print *, "Output files are present, however they are too small for a restart"
          end if
          ! Either way we open the file up later on so now we need to close them
-         call close_output_files(chainid)
+         call close_output_files(pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
 
       else  ! par_exists .and. step_exists
 
@@ -193,7 +192,7 @@ contains
       !! information into the current object MCOUT.
       !! modifies: arg MCOUT%pars. To be used as starting point for next run.
       !! Also MCOUT%nos_iterations , %parvar, %covariance, %meanpar, %nparvar
-      use samplers_shared, only: MCMC_OUTPUT, MCMC_OPTIONS
+      use samplers_shared, only: MCMC_OUTPUT, MCMC_OPTIONS, filenames_insert_threadid
       use samplers_math, only: std, covariance_matrix, inverse_matrix, par2nor
 
       implicit none(type, external)
@@ -203,6 +202,8 @@ contains
       type(MCMC_OUTPUT), intent(inout):: MCOUT
       integer, intent(in):: npars
       integer, intent(in):: chainid
+      character(350):: outfile, stepfile, covfile, covifile 
+         !! filenames 
 
       ! local variables
       integer:: a, b, c, i, j, num_lines, status
@@ -211,9 +212,19 @@ contains
       integer  :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
         !! file unit numbers for this thread
 
-      ! determine file unit numbers 
-      call calculate_file_ids(chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
+      ! process file names- reconstruct numbered file names as they would have been written by
+      ! a simulation recieving the same MCO settings object
+      outfile = MCO%outfile
+      stepfile = MCO%stepfile
+      covfile = MCO%covfile
+      covifile = MCO%covifile
+      if (MCO%nchains > 1)  then
+          call filenames_insert_threadid(outfile, stepfile, covfile, covifile, chainid)
+      end if
 
+      ! open output files, determine file unit numbers 
+      ! last 4 arguments set with the unit numbers opened
+      call open_output_files(outfile, stepfile, covfile, covifile, chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
 
       ! the parameter and step files should have already been openned so
       ! read the parameter and step files to get to the end
@@ -254,6 +265,7 @@ contains
       end do  ! i for combinations
 
       ! Determine the total number of iterations processed so far
+      ! NOTE assuming restart command has same write interval as original simulation
       MCOUT%nos_iterations = num_lines*MCO%nWRITE
       ! Extract the final parameter set and load into the initial parameter vector
       ! for the analysis. NOTE: This parameter set will be normalised on entry
@@ -316,6 +328,9 @@ contains
       end do
 
       ! Determine whether there is 1 or more matrice here
+      write(*,*) "Cfile unit" , cfile_unit_thread
+      write(*,*) "Cov file nlines" , num_lines
+      write(*,*) "Cov file nlines/npars/npars" , (num_lines/npars)/npars 
       if ((num_lines/npars)/npars == 1) then
          ! the size of the file is consistent with a single matrix having been
          ! saved
@@ -340,6 +355,13 @@ contains
             end do  ! j for parameter
          end do  ! i for combinations
       end do
+
+      if (a > 0) then
+         ! Have at least a first covariance matrix
+         ! Set this flag so that the restarted simulation will not overwrite first 
+         ! covariance matrix in the file with first after restart
+         MCOUT%cov = .true.
+      endif
 
       ! extract current variance information
       do i = 1, npars
@@ -382,22 +404,21 @@ contains
       MCOUT%meanpar = tmp(num_lines, 1:npars)
       MCOUT%Nparvar = tmp(num_lines, npars + 1)
 
+      call close_output_files(pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
+
       return
 
    end subroutine update_for_restart_simulation
    !
    !------------------------------------------------------------------
    !
-   subroutine close_output_files(chainid)
+   subroutine close_output_files(pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
 
       ! where you open a file you've got to make sure that you close them too. It
       ! just tidy
 
       implicit none(type, external)
-      integer, intent(in):: chainid
-      integer :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
-
-      call calculate_file_ids(chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
+      integer, intent(in) :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
 
       ! close the files we have in memory
       close (pfile_unit_thread)
@@ -410,12 +431,13 @@ contains
    !------------------------------------------------------------------
    !
 
-   subroutine open_output_files(parname, stepname, covname, covinfoname, chainid)
+   subroutine open_output_files(parname, stepname, covname, covinfoname, chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
 
       ! Subroutine opens the needed output files and destroys any previously
       ! existing files with the same name, just in case mind!
       ! NOTE: that is unless I have not remove the 'UNKNOWN' status in which case
       ! then the files are appended to
+      ! last 4 args are for reporting the file unit numbers opened
 
       implicit none(type, external)
 
@@ -429,7 +451,7 @@ contains
       double precision, save:: a = 1d0
 
       integer, intent(in):: chainid
-      integer :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
+      integer, intent(out) :: pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread
         !! file unit numbers for this thread
 
       call calculate_file_ids(chainid, pfile_unit_thread, sfile_unit_thread, cfile_unit_thread, cifile_unit_thread)
@@ -483,7 +505,7 @@ contains
       implicit none(type, external)
 
       ! arguments
-      logical, intent(in):: initial_cov
+      logical, intent(in):: initial_cov ! Is it the first valid covariance matrix found?
       integer, intent(in):: npars
       double precision, dimension(npars, npars), intent(in):: covariance
 

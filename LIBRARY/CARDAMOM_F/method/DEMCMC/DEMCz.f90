@@ -24,7 +24,7 @@ module DEMCz
    !-
    use samplers_shared, only: PARINFO, bounds_check, init_pars_random, MCMC_OUTPUT, MCMC_options, filenames_insert_threadid
    use random_uniform, only: UNIF_VECTOR
-   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files
+   use samplers_io, only: io_buffer_space, initialize_buffers, open_output_files, close_output_files
    use samplers_math, only: random_int
    use OMP_LIB
 
@@ -99,6 +99,7 @@ contains
       !! collection of io_space objects holding file writing buffers, one for each chain
       character(350):: outfile, stepfile, covfile, covifile
       !! file names tagges with chainid, private to each chain
+      integer :: pfileunit, sfileunit, cfileunit, cifileunit ! file unit numbers reported on opening
 
       !> the function to maximize.
       !> Completely agnostic, samples any functions vector -> double
@@ -192,7 +193,7 @@ contains
 
             ! allocate buffers io_space (different one for each chain)
             call initialize_buffers(npars, MAXITER/MCO%nwrite, io_space(j))
-            call open_output_files(outfile, stepfile, covfile, covifile, j)
+            call open_output_files(outfile, stepfile, covfile, covifile, j, sfileunit, pfileunit, cfileunit, cifileunit)
          end if
 
          ! Initialize pregenerated random numbers, if using-local to this chain
@@ -322,6 +323,8 @@ contains
          !write (*,*) "Best parameters = ", pars_best(:, j)
       end do
       !$OMP END PARALLEL DO
+
+      call close_output_files(pfileunit, sfileunit, cfileunit, cifileunit)
 
    end subroutine run_DEMCz
 
