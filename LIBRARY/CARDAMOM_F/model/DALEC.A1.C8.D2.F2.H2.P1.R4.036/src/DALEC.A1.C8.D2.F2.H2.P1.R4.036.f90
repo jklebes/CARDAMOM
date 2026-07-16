@@ -661,8 +661,8 @@ module CARBON_MODEL_MOD
 
     ! Some time consuming variables we only want to set once
     if (.not.allocated(mV%deltat_1)) then !never used - initialize_model() is always called before carbon_model()
-      write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
-      STOP 1
+        write(*,*) "Error - arrays not allocated - probably carbon_model() was called without initialize_model()"
+        STOP 1
     else ! deltat_1 allocated?
 
         !
@@ -1079,24 +1079,24 @@ module CARBON_MODEL_MOD
        !
 
        ! total labile release
-       FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,8) = POOLS(n,1)*(1d0-(1d0-FLUXES(n,16))**mV%days_per_step)*mV%days_per_step_1
        ! total leaf litter production
-       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,10) = POOLS(n,2)*(1d0-(1d0-FLUXES(n,9))**mV%days_per_step)*mV%days_per_step_1
        ! total wood production
-       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,11) = POOLS(n,4)*(1d0-(1d0-pars(6))**mV%days_per_step)*mV%days_per_step_1
        ! total root litter production
-       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,12) = POOLS(n,3)*(1d0-(1d0-pars(7))**mV%days_per_step)*mV%days_per_step_1
 
        !
        ! those with temperature AND time dependancies
        !
 
        ! Turnover of foliage litter 
-       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,13) = POOLS(n,5)*(1d0-(1d0-FLUXES(n,2)*pars(8))**mV%days_per_step)*mV%days_per_step_1
        ! Turnover of wood litter
-       FLUXES(n,30) = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(35))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,30) = POOLS(n,7)*(1d0-(1d0-FLUXES(n,2)*pars(35))**mV%days_per_step)*mV%days_per_step_1
        ! Turnover of fine root litter
-       FLUXES(n,56) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,56) = POOLS(n,6)*(1d0-(1d0-FLUXES(n,2)*pars(9))**mV%days_per_step)*mV%days_per_step_1
 
        ! Decomposition of foliage litter to som and update heterotrophic flux
        FLUXES(n,15) = FLUXES(n,13) * pars(1) ; FLUXES(n,13) = FLUXES(n,13) - FLUXES(n,15)
@@ -1112,17 +1112,17 @@ module CARBON_MODEL_MOD
 
        ! Respiration heterotrophic slow som
        FLUXES(n,14) = (POOLS(n,10)*(1d0-pars(48))*microbial_activity*pars(49)) / max(POOLS(n,9),vsmall)
-       FLUXES(n,14) = POOLS(n,9) * (1d0-(1d0-FLUXES(n,14))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,14) = POOLS(n,9) * (1d0-(1d0-FLUXES(n,14))**mV%days_per_step)*mV%days_per_step_1
        ! Respiration heterotrophic fast som
-       FLUXES(n,58) = POOLS(n,8) * (1d0-(1d0-(POOLS(n,10)*(1d0-pars(44))*pars(50)*microbial_activity))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,58) = POOLS(n,8) * (1d0-(1d0-(POOLS(n,10)*(1d0-pars(44))*pars(50)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
        ! Respiration heterotrophic microbial
-       FLUXES(n,59) = POOLS(n,10) * (1d0-(1d0-(pars(47)*microbial_activity))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,59) = POOLS(n,10) * (1d0-(1d0-(pars(47)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
        ! Microbial death allocation to slow som
-       FLUXES(n,60) = POOLS(n,10) * (1d0-(1d0-(FLUXES(n,2)*microbial_death*microbial_activity))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,60) = POOLS(n,10) * (1d0-(1d0-(FLUXES(n,2)*microbial_death*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
        ! Microbial mediated transfer of carbon from slow to fast
-       FLUXES(n,61) = POOLS(n,10) * (1d0-(1d0-(pars(48)*microbial_activity*pars(49)))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,61) = POOLS(n,10) * (1d0-(1d0-(pars(48)*microbial_activity*pars(49)))**mV%days_per_step)*mV%days_per_step_1
        ! Accumulation of fast som into microbial carbon
-       FLUXES(n,62) = POOLS(n,8) *  (1d0-(1d0-(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)))**mV%days_per_step)/mV%days_per_step
+       FLUXES(n,62) = POOLS(n,8) *  (1d0-(1d0-(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)))**mV%days_per_step)*mV%days_per_step_1
 
        !!!!!!!!!!
        ! calculate growth respiration and adjust allocation to pools assuming
@@ -1414,7 +1414,7 @@ module CARBON_MODEL_MOD
     ! 1.37 (Jones appendix 2). Note conversion to resistance for easiler merging
     ! with stomatal conductance in acm_gpp_stage_2).
     mV%rb_mol_1 = (mV%aerodynamic_conductance * mV%convert_ms1_mol_1 * gb_H2O_CO2 * &
-              mV%leaf_canopy_wind_scaling) ** (-1d0)
+                   mV%leaf_canopy_wind_scaling) ** (-1d0)
 
     ! Arrhenious Temperature adjustments for Michaelis-Menten coefficients
     ! for CO2 (kc) and O2 (ko) and CO2 compensation point
