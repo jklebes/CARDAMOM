@@ -1114,7 +1114,8 @@ module CARBON_MODEL_MOD
        FLUXES(n,14) = min(1d0,(POOLS(n,10)*(1d0-pars(48))*microbial_activity*pars(49)) / max(POOLS(n,9),vsmall))
        FLUXES(n,14) = POOLS(n,9) * (1d0-(1d0-FLUXES(n,14))**mV%days_per_step)*mV%days_per_step_1
        ! Respiration heterotrophic fast som
-       FLUXES(n,58) = POOLS(n,8) * (1d0-(1d0-(POOLS(n,10)*(1d0-pars(44))*pars(50)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
+       FLUXES(n,58) = min(1d0,(POOLS(n,10)*(1d0-pars(44))*pars(50)*microbial_activity))
+       FLUXES(n,58) = POOLS(n,8) * (1d0-(1d0-FLUXES(n,58))**mV%days_per_step)*mV%days_per_step_1
        ! Respiration heterotrophic microbial
        FLUXES(n,59) = POOLS(n,10) * (1d0-(1d0-(pars(47)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
        ! Microbial death allocation to slow som
@@ -1162,16 +1163,16 @@ module CARBON_MODEL_MOD
        POOLS(n+1,7)  = POOLS(n,7)  + (FLUXES(n,11)-FLUXES(n,30)-FLUXES(n,31))*mV%days_per_step
        ! fast som pool
        POOLS(n+1,8)  = POOLS(n,8)  + ( (FLUXES(n,15)*(1d0-pars(41)))+ &
-                                       (FLUXES(n,31)*(1d0-pars(42)))+ &
-                                       (FLUXES(n,57)*(1d0-pars(43)))+ &
+                                       (FLUXES(n,31)*(1d0-pars(43)))+ &
+                                       (FLUXES(n,57)*(1d0-pars(42)))+ &
                                        FLUXES(n,61)-FLUXES(n,58)-FLUXES(n,62))*mV%days_per_step
 !if (POOLS(n+1,8) /= POOLS(n+1,8)) then 
 !print*,"8 ",POOLS(n+1,8),FLUXES(n,15),FLUXES(n,31),FLUXES(n,57),FLUXES(n,61),FLUXES(n,58),FLUXES(n,62),mV%days_per_step 
 !endif 
        ! slow som pool
        POOLS(n+1,9)  = POOLS(n,9)  + ( (FLUXES(n,15)*pars(41))+ &
-                                       (FLUXES(n,31)*pars(42))+ &
-                                       (FLUXES(n,57)*pars(43))+ &
+                                       (FLUXES(n,31)*pars(43))+ &
+                                       (FLUXES(n,57)*pars(42))+ &
                                        FLUXES(n,60)-FLUXES(n,14)-FLUXES(n,61))*mV%days_per_step
        ! microbial pool
        POOLS(n+1,10) = POOLS(n,10) + (FLUXES(n,62)-FLUXES(n,59)-FLUXES(n,60))*mV%days_per_step
