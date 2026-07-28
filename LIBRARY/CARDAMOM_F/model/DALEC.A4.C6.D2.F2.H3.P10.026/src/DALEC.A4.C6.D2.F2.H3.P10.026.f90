@@ -690,7 +690,7 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! p(12) = minimum leaf water potential for photosynthesis (MPa)
     ! p(13) = NCCE half saturation for canopy growth index suppression (gC/gCleaf/day)
     ! p(14) = NCCE gradient 50% value for canopy growth index suppression (gC/gCleaf/day)
-    ! p(15) = NCCE return threshold required for foliar growth to proceed (gC/gC)
+    ! p(15) = daily opportunity cost rate of leaf carbon (day-1)
     ! p(16) = potential leaf loss rate based on NCCE history (fraction/day)
     ! p(17) = leaf mass per area LMA (gC/m2)
     ! p(18) = initial labile C pool (gC/m2)
@@ -720,12 +720,11 @@ metabolic_limited_photosynthesis, & ! temperature, leaf area and foliar N limite
     ! p(42) = soil water potential at which leaf growth suppression begins (MPa)
     ! p(43) = baseline leaf maintenance respiration coefficient (Heskel polynomial)
     ! p(44) = intrinsic canopy water use efficiency (gC/mmolH2O/m2leaf/s)
-    ! p(45) = daily opportunity cost rate of leaf carbon (day-1)
-    ! p(46) = reference leaf lifespan for economic threshold amortisation (days)
-    ! p(47) = leaf nitrogen decline rate with cohort age (month-1)
-    ! p(48) = fraction of shed cohort carbon resorbed to labile pool (fraction)
-    ! p(49) = peak leaf-out day of year for cohort age initialisation (day of year)
-    ! p(50) = seasonal spread for cohort age initialisation (days)
+    ! p(45) = reference leaf lifespan for economic threshold amortisation (days)
+    ! p(46) = leaf nitrogen decline rate with cohort age (month-1)
+    ! p(47) = fraction of shed cohort carbon resorbed to labile pool (fraction)
+    ! p(48) = peak leaf-out day of year for cohort age initialisation (day of year)
+    ! p(49) = seasonal spread for cohort age initialisation (days)
 
 !    ! Debugging print statements
 !    print*,"carbon_model: "

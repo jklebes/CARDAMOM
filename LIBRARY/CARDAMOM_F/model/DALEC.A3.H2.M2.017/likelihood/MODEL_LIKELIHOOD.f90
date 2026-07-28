@@ -1318,7 +1318,7 @@ module model_likelihood_module
 
     ! Initial soil water condition
     if (DATAin%otherpriors(1) > -9998) then
-        mod = (M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
+        mod = (M_POOLS(1,6) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
         ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
                                    DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
     end if

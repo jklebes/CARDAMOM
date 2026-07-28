@@ -21,6 +21,10 @@ else()
   message(WARNING "Unrecognised Fortran compiler '${CMAKE_Fortran_COMPILER_ID}'; using CMake default flags.")
 endif()
 
+# Explicitly mark the stack non-executable at link time so the intended,
+# secure behaviour is asserted rather than inferred.
+add_link_options(-Wl,-z,noexecstack)
+
 # Make Release the default CMAKE_BUILD_TYPE
 IF(NOT CMAKE_BUILD_TYPE)
     get_property(

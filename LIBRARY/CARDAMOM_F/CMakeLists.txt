@@ -29,7 +29,7 @@ set(MODELFILE
 set(ALLMODELNAMES
 #DALEC_1005 
 #DALEC_1005a
-#DALEC.A1.C1.D2.F2.H1.P1.003
+DALEC.A1.C1.D2.F2.H1.P1.003
 DALEC.A1.C1.D2.F2.H2.P1.004
 DALEC.A1.C1.D2.F2.H2.P1.R1.005
 DALEC.A1.C1.D2.F2.H2.P2.018
@@ -155,6 +155,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "DEGUG")
 else ()
   set(DALEC_FFLAGS -O2 -ffree-line-length-0 -fPIC -shared)
 endif()
+
+# This custom command compiles and links dalec.so in one gfortran invocation,
+# so it does not inherit CMake's project-wide add_link_options().
+list(APPEND DALEC_FFLAGS -Wl,-z,noexecstack)
 
 file(MAKE_DIRECTORY "${DALEC_MODDIR}")
 add_custom_command(

@@ -624,7 +624,7 @@ module model_likelihood_module
         ! Restrict rates from deviating unrealistically from the mean
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(40+n-1) = 0
         end if
 !        ! Wood pool hack, note that in CDEA EDCs Fin has already been multiplied by time step
 !        n = 4
@@ -633,7 +633,7 @@ module model_likelihood_module
 !        end if
 !        if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
 !                  abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-!            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
+!            EDC2 = 0d0 ; EDCD%PASSFAIL(40+n-1) = 0
 !        end if
 
         ! Dead pools - foliar litter, root litter, wood litter, fast som, slow som, microbial
@@ -645,7 +645,7 @@ module model_likelihood_module
            ! Restrict rates from deviating unrealistically from the mean
            if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                      abs(log(Fin(n)/Fout(n))) ) > C_etol ) then
-               EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
+               EDC2 = 0d0 ; EDCD%PASSFAIL(40+n-1) = 0
            end if
         end do
 
@@ -658,7 +658,7 @@ module model_likelihood_module
         ! Restrict rates from deviating unrealistically from the mean
         if ( abs( abs(log(Fin_yr1(n)/Fout_yr1(n))) - &
                   abs(log(Fin(n)/Fout(n))) ) > H2O_etol ) then
-            EDC2 = 0d0 ; EDCD%PASSFAIL(35+n-1) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(40+n-1) = 0
         end if
 
     end if ! EDC2 == 1 .or. DIAG == 1
@@ -682,11 +682,11 @@ module model_likelihood_module
         tmp2 = max(1d0,0.08333333d0*(0.0031d0*(pars(17)*2.083333d0)**1.82d0))
         if (tmp < tmp1) then
             ! The current leaf lifespan is shorter than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(47) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(55) = 0
         endif        
         if (tmp > tmp2) then
             ! The current leaf life span is longer than expected
-            EDC2 = 0d0 ; EDCD%PASSFAIL(48) = 0
+            EDC2 = 0d0 ; EDCD%PASSFAIL(56) = 0
         endif        
     endif ! EDC2 == 1 .or. DIAG == 1
 
@@ -703,14 +703,14 @@ module model_likelihood_module
           if (minval(M_POOLS(1:nodays,n)) < 0d0 .or. &
               maxval(abs(M_POOLS(1:nodays,n))) == abs(log(infi)) .or. &
               minval(M_POOLS(1:nodays,n)) /= minval(M_POOLS(1:nodays,n))) then
-              EDC2 = 0d0 ; EDCD%PASSFAIL(55+n) = 0
+              EDC2 = 0d0 ; EDCD%PASSFAIL(60+n) = 0
           endif
        end do
 
        do n = 1, nofluxes
           if (maxval(abs(M_FLUXES(:,n))) == abs(log(infi)) .or. &
               minval(M_FLUXES(:,n)) /= minval(M_FLUXES(:,n))) then
-              EDC2 = 0d0 ; EDCD%PASSFAIL(55+nopools+n) = 0
+              EDC2 = 0d0 ; EDCD%PASSFAIL(70+nopools+n) = 0
           endif
        end do
 

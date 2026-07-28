@@ -1264,12 +1264,10 @@ module model_likelihood_module
     double precision, dimension(1) :: mod
     double precision :: dummy_scaling = 1d0
 
-    ! Initial soil water condition
-    if (DATAin%otherpriors(1) > -9998) then
-        mod = (M_POOLS(1,7) * 1d-3) / top_soil_depth ! convert mm -> m3/m3
-        ML_obs_out = ML_obs_out + (DATAin%otherpriorweight(1)*likelihood(dummy_nodays,dummy_noobs,dummy_pts, &
-                                   DATAin%otherpriors(1),DATAin%otherpriorunc(1),dummy_lag,dummy_scaling,mod))
-    end if
+    ! Unused
+!    if (DATAin%otherpriors(1) > -9998) then
+!
+!    end if
     ! Ra:GPP fraction is in this model a derived property
     if (DATAin%otherpriors(2) > -9998) then
         mod = sum(M_FLUXES(1:DATAin%nodays,3)) / sum(M_FLUXES(1:DATAin%nodays,1)) ! sum(Rauto) / sum(GPP)

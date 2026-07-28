@@ -1119,11 +1119,12 @@ module CARBON_MODEL_MOD
        ! Respiration heterotrophic microbial
        FLUXES(n,59) = POOLS(n,10) * (1d0-(1d0-(pars(47)*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
        ! Microbial death allocation to slow som
-       FLUXES(n,60) = POOLS(n,10) * (1d0-(1d0-(FLUXES(n,2)*microbial_death*microbial_activity))**mV%days_per_step)*mV%days_per_step_1
+       FLUXES(n,60) = min(1d0,(FLUXES(n,2)*microbial_death*microbial_activity))
+       FLUXES(n,60) = POOLS(n,10) * (1d0-(1d0-FLUXES(n,60))**mV%days_per_step)*mV%days_per_step_1
        ! Microbial mediated transfer of carbon from slow to fast
        FLUXES(n,61) = POOLS(n,10) * (1d0-(1d0-(pars(48)*microbial_activity*pars(49)))**mV%days_per_step)*mV%days_per_step_1
        ! Accumulation of fast som into microbial carbon
-       FLUXES(n,62) = min(1d0,(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)) )
+       FLUXES(n,62) = min(1d0,(POOLS(n,10)*(pars(44)*pars(50)*microbial_activity)))
        FLUXES(n,62) = POOLS(n,8) *  (1d0-(1d0-FLUXES(n,62))**mV%days_per_step)*mV%days_per_step_1
 !if (FLUXES(n,62) < 0d0) print*,"62 ", FLUXES(n,62), POOLS(n,8),POOLS(n,10),microbial_activity,pars(44),pars(50),mV%days_per_step,mV%days_per_step_1
 
@@ -1183,7 +1184,7 @@ module CARBON_MODEL_MOD
        ! Enforce mass reality - note this breaks mass balance as fluxes are not proportionally updated
        POOLS(n+1,8) = max(0d0,POOLS(n+1,8))
        POOLS(n+1,9) = max(0d0,POOLS(n+1,9))
-       POOLS(n+1,10) = max(0d0,POOLS(n+1,10))
+       POOLS(n+1,10) = max(vsmall,POOLS(n+1,10))
 
        !!!!!!!!!!
        ! Update soil water balance

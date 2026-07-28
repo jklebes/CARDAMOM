@@ -207,12 +207,12 @@ module MODEL_PARAMETERS
 
     ! Maximum microbial death rate  (fraction/day)
     ! original value from Xenakis & Williams (2014)
-    PI%parmin(45) = 0.24d0-(0.24d0*0.d0)
-    PI%parmax(45) = 0.24d0+(0.24d0*0.5d0)
+    PI%parmin(45) = 0.24d0-(0.24d0*0.25d0)
+    PI%parmax(45) = 0.24d0+(0.24d0*0.75d0)
     ! Inhibition constant for microbial death 
     ! original value from Xenakis & Williams (2014)
-    PI%parmin(46) = 0.213d0-(0.213d0*0.5d0)
-    PI%parmax(46) = 0.213d0+(0.213d0*0.5d0)
+    PI%parmin(46) = 0.213d0-(0.213d0*0.25d0)
+    PI%parmax(46) = 0.213d0+(0.213d0*0.75d0)
 
     ! Microbial maintenance respiration coefficient 
     PI%parmin(47) = 0.45d0
