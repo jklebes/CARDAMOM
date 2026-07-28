@@ -3299,10 +3299,10 @@ module CARBON_MODEL_MOD
     double precision  :: tmp1,tmp2,tmp3, tmp4 &
                              ,pot_drainage_k0 & ! estimates of time step potential drainage rate (m/s)
                              ,pot_drainage_k1 &
-                             ,pot_drainage_k2 &
+                             ,pot_drainage_k2 & 
                              ,pot_drainage_k3 &
                              ,pot_drainage_k4 &
-                                      ,liquid & ! liquid water in local soil layer (m3/m3)
+                                      ,liquid & ! liquid water in local soil layer (m3/m3)                             
                                        ,unsat & ! unsaturated pore space in soil layer below the current (m3/m3)
                                       ,change   ! absolute volume of water drainage in current layer (m3/day)
 
@@ -3324,12 +3324,12 @@ module CARBON_MODEL_MOD
 
     ! Integrate drainage over each 30 min within day until time period has been reached or
     ! each soil layer has reached field capacity
-    do while (d < 4 .and. maxval(avail_to_flow) > vsmall)
+    do while (d < 4 .and. maxval(avail_to_flow) > vsmall) 
 
         ! ...then from the top down
         do s = 1, nos_soil_layers
 
-           ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is
+           ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is 
            ! able to accept any water (i.e. is less than porosity).
            if (avail_to_flow(s) > 0d0 .and. mV%soil_waterfrac(s+1) < mV%porosity(s+1)) then
 
@@ -3357,7 +3357,7 @@ module CARBON_MODEL_MOD
                ! Load the current soil water content into a local variable to be updated
                soil_waterfrac_local = mV%soil_waterfrac
                ! Estimate the local liquid content in the current layer
-               liquid = soil_waterfrac_local(s) * liquid_fraction(s)
+               liquid = soil_waterfrac_local(s) * liquid_fraction(s) 
 
                !! Estimate K1 - rate at the start
                ! Estimate the soil water conductance (k1) at the start of the step
@@ -3369,8 +3369,8 @@ module CARBON_MODEL_MOD
                call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
                                                         mV%layer_thickness,mV%field_capacity(s),mV%porosity)
                ! Estimate the soil water conductance at this new state
-               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )
-               call calculate_soil_conductivity(s,liquid,pot_drainage_k1, mV)
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )      
+               call calculate_soil_conductivity(s,liquid,pot_drainage_k2, mV)
 
                !! Estimate K3 - rate at the corrected mid-point
                ! Load the current soil water content into a local variable to be updated
@@ -3380,7 +3380,7 @@ module CARBON_MODEL_MOD
                call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
                                                         mV%layer_thickness,mV%field_capacity(s),mV%porosity)
                ! Estimate the soil water conductance at this new state
-               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )         
                call calculate_soil_conductivity(s,liquid,pot_drainage_k3, mV)
 
                !! Estimate K4 - rate at the end
@@ -3391,7 +3391,7 @@ module CARBON_MODEL_MOD
                call gravitational_drainage_local_update(s,soil_waterfrac_local,pot_drainage_k0,liquid_fraction(s), &
                                                         mV%layer_thickness,mV%field_capacity(s),mV%porosity)
                ! Estimate the soil water conductance at this new state
-               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )
+               liquid = (soil_waterfrac_local(s) * liquid_fraction(s) )         
                call calculate_soil_conductivity(s,liquid,pot_drainage_k4, mV)
 
                ! Calculate the Simpson's rule weighted average of the rates to estimate the effective average
@@ -3413,7 +3413,7 @@ module CARBON_MODEL_MOD
                ! Also track only the positive flows from one layer to another (MgH2O/m2/day)
                mV%water_grav_flow(s) = mV%water_grav_flow(s) + change
 
-               ! Update the current and below layer, note to avoid a min() bound being used we are allowing the core layer to be updated to.
+               ! Update the current and below layer, note to avoid a min() bound being used we are allowing the core layer to be updated to. 
                ! This MUST be corrected outside of this loop back to the field capacity
                mV%soil_waterfrac(s:(s+1)) = mV%soil_waterfrac(s:(s+1)) + (mV%waterchange(s:(s+1))/mV%layer_thickness(s:(s+1)))
 
@@ -3470,7 +3470,7 @@ module CARBON_MODEL_MOD
      ! Determine how much liquid water is available to flow in the current profile
      avail_to_flow = (soil_waterfrac_local(s) * liquid_fraction ) - field_capacity_local
 
-     ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is
+     ! Determine whethere we have any liquid water in the current layer available to flow and the layer below is 
      ! able to accept any water (i.e. is less than porosity).
      if (avail_to_flow > 0d0 .and. soil_waterfrac_local(s+1) < porosity_local(s+1)) then
 
@@ -3494,7 +3494,7 @@ module CARBON_MODEL_MOD
     ! Return back to user
     return
 
-  end subroutine gravitational_drainage_local_update
+  end subroutine gravitational_drainage_local_update  
   !
   !-----------------------------------------------------------------
   !
