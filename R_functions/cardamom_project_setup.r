@@ -231,10 +231,12 @@ cardamom_project_setup <- function (paths,PROJECT) {
                                         # (it does project() + add_subdirectory(LIBRARY/CARDAMOM_F)).
                                         ,paste("scp ",username,"@",home_computer,":",paths$cardamom,"CMakeLists.txt ",paths$cardamom_ecdf,"/",sep="")
                                         ,paste("rm -rf ",ecdf_source,"CARDAMOM_F/build",sep="")
+                                        ,paste("cmake --build . --clean-first",sep="")
                                         ,paste("cmake -S ",paths$cardamom_ecdf," -B ",ecdf_source,"CARDAMOM_F/build",
                                                " -DCMAKE_BUILD_TYPE=",build_type,
                                                " -DMODEL=",modelname,
                                                " -DCMAKE_Fortran_COMPILER=",compiler,sep="")
+                                        ,paste("cmake --build ",ecdf_source,"CARDAMOM_F/build --clean-first",sep="")                                        
                                         ,paste("cmake --build ",ecdf_source,"CARDAMOM_F/build --target ",target," -j",sep="")
                                         ,paste("cp ",ecdf_source,"CARDAMOM_F/executable/",built_exe," ",eexepath,"/",exe,sep="")))
               # If a crop model the copy the crop development files into place too
@@ -302,6 +304,7 @@ cardamom_project_setup <- function (paths,PROJECT) {
                            " -DCMAKE_BUILD_TYPE=",build_type,
                            " -DMODEL=",modelname,
                            " -DCMAKE_Fortran_COMPILER=",compiler,sep=""))
+              system(paste("cmake --build ",buildpath," --clean-first",sep=""))                           
               # Build the chosen sampler executable
               system(paste("cmake --build ",buildpath," --target ",target," -j",sep=""))
               # Copy the built executable (source name = CMake OUTPUT_NAME) to the

@@ -150,7 +150,7 @@ set(DALEC_SRCS
     "${CMAKE_CURRENT_SOURCE_DIR}/model/${MODEL}/src/${MODEL}_R_interface.f90")
 
 # gfortran flags for dalec.so
-if(CMAKE_BUILD_TYPE STREQUAL "DEGUG")
+if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
   set(DALEC_FFLAGS -O0 -g -fcheck=all -ffree-line-length-0 -fPIC -shared)
 else ()
   set(DALEC_FFLAGS -O2 -ffree-line-length-0 -fPIC -shared)
