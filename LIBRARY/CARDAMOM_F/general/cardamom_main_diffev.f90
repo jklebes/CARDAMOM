@@ -115,23 +115,23 @@ program cardamom_DEMCz
       ! All is well
    else
       ! All is not well-complain
-      print *, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
-      print *, "Command line should have 7 arguments (in addition to the cardamom.exe)."
-      print *, "These are: "
-      print *, "1) input file path."
-      print *, "2) output file path-note that PARS, STEP, COV, COVINFO will be appended to this name path outfile."
-      print *, "3) No. of parameter proposals to make."
-      print *, "4) Iteration freq. for printing to screen (main MCMC phase only)."
-      print *, "5) Iteration freq. for writing results to files."
-      print *, "6) do sample size normalisation phase - "
-      print *, "  0 = FALSE"
-      print *, "  1 = TRUE"
-      print *, "7) Select likelihood cost function - "
-      print *, "  0 = no scaling"
-      print *, "  1 = scaling by sample size (n)"
-      print *, "  2 = scaling by sqrt(n)"
-      print *, "  3 = scaling by log(n)"
-      print *, "8) Number of chains (optional, integer >= 3; defaults to 3)."
+      print*, "ERROR: Command line argument to specify the cost function or write to file frequency is incorrect."
+      print*, "Command line should have 7 arguments (in addition to the cardamom.exe)."
+      print*, "These are: "
+      print*, "1) input file path."
+      print*, "2) output file path-note that PARS, STEP, COV, COVINFO will be appended to this name path outfile."
+      print*, "3) No. of parameter proposals to make."
+      print*, "4) Iteration freq. for printing to screen (main MCMC phase only)."
+      print*, "5) Iteration freq. for writing results to files."
+      print*, "6) do sample size normalisation phase - "
+      print*, "  0 = FALSE"
+      print*, "  1 = TRUE"
+      print*, "7) Select likelihood cost function - "
+      print*, "  0 = no scaling"
+      print*, "  1 = scaling by sample size (n)"
+      print*, "  2 = scaling by sqrt(n)"
+      print*, "  3 = scaling by log(n)"
+      print*, "8) Number of chains (optional, integer >= 3; defaults to 3)."
       stop
    end if
 
@@ -174,6 +174,7 @@ program cardamom_DEMCz
    ! load module variables needed for restart check
    ! NOTE: THIS MUST HAPPEN BEFORE CHECKING FOR RESTART
    call read_options(solution_wanted, freq_print, freq_write, outfile, MCO)
+
    ! check whether this is a restart?
    ! PI lives in model_shared and its info can be read after call to initiialize_model
    ! TODO not sure about MCO at this point
@@ -234,7 +235,6 @@ program cardamom_DEMCz
    ! Update the user
    write (*,*) "Beginning parameter search in real likelihoods"
    write (*,*) "Nos iterations to be proposed = ", MCO%nOUT-MCOUT_list(1)%nos_iterations   
-print*, MCO%nOUT,MCOUT_list(1)%nos_iterations
    MCO%restart = .true.
 
    ! Call the main MCMC

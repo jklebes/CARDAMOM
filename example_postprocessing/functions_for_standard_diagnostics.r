@@ -11605,7 +11605,7 @@ summary_plots<-function() {
     ## North temperate
     # Determine axes size
     yrange = range(as.vector(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C), na.rm=TRUE)
-    if (any(is.infinite(yrange) == FALSE))) { 
+    if (any(is.infinite(yrange) == FALSE)) { 
         # Create initial plot
         plot(grid_output$agg_seasonal_north_temperate_daily_min_temperature_C[,1], type="l", lwd=2, col = colour_choices_years[2], 
              cex.main=1.3, cex.lab=1.2, cex.axis=1.2, ylim=yrange,

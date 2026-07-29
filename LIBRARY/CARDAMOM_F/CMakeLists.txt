@@ -8,6 +8,9 @@ set(MODEL "DALEC.A1.C1.D2.F2.H2.P1.004" CACHE STRING "DALEC model to compile")
 set(MODELPARS
                   model/${MODEL}/src/${MODEL}_PARS.f90
                 )
+set(MODELMEM
+                  model/${MODEL}/src/${MODEL}_MOD.f90
+                )
 set(FILES2
                   model/model_shared.f90
                   general/cardamom_io.f90
@@ -110,13 +113,16 @@ if(TEST_COMPILE_ALL)
 endif()
 
 # now with the model we chose to run with
-add_library(cardamom-lib ${FILES1} ${MODELPARS} ${FILES2} ${MODELLIKELIHOODFILE} ${MODELFILE})
+add_library(cardamom-lib ${FILES1} ${MODELMEM} ${MODELPARS} ${FILES2} ${MODELLIKELIHOODFILE} ${MODELFILE})
 add_dependencies(cardamom-lib cardamom-samplers-lib) 
 target_link_libraries(cardamom-lib PUBLIC cardamom-samplers-lib)
 add_executable(cardamom general/cardamom_main_apmcmc.f90)
 target_link_libraries(cardamom PUBLIC cardamom-lib)
 add_executable(cardamom-diffev general/cardamom_main_diffev.f90)
 target_link_libraries(cardamom-diffev PUBLIC cardamom-lib)
+
+#target_link_options(cardamom        PRIVATE -Wl,-z,execstack)
+#target_link_options(cardamom-diffev PRIVATE -Wl,-z,execstack)
 
 # Place the runnable executables in the legacy LIBRARY/CARDAMOM_F/executable
 # directory and give them the legacy .exe file names so downstream tooling
@@ -144,6 +150,7 @@ find_program(GFORTRAN_EXECUTABLE gfortran REQUIRED)
 set(DALEC_MODDIR "${PROJECT_BINARY_DIR}/include_dalec")
 set(DALEC_SO     "${CMAKE_CURRENT_SOURCE_DIR}/executable/dalec.so")
 set(DALEC_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/model/${MODEL}/src/${MODEL}_MOD.f90"
     "${CMAKE_CURRENT_SOURCE_DIR}/misc/brent_zero/brent_zero.f90"
     "${CMAKE_CURRENT_SOURCE_DIR}/general/cardamom_structures.f90"
     "${CMAKE_CURRENT_SOURCE_DIR}/${MODELFILE}"
@@ -159,7 +166,7 @@ endif()
 # This custom command compiles and links dalec.so in one gfortran invocation,
 # so it does not inherit CMake's project-wide add_link_options().
 list(APPEND DALEC_FFLAGS -Wl,-z,noexecstack)
-
+#list(APPEND DALEC_FFLAGS -Wl,-z,execstack)
 file(MAKE_DIRECTORY "${DALEC_MODDIR}")
 add_custom_command(
   OUTPUT  "${DALEC_SO}"

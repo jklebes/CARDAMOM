@@ -324,7 +324,7 @@ contains
    !
    subroutine read_binary_data(infile, DATAin)
       use cardamom_structures, only: DATA_type
-      use CARBON_MODEL_MOD, only: nos_soil_layers
+      use carbon_model_memory, only: nos_soil_layers
 
       ! subroutine opens and reads the binary data files provided by/for the
       ! CARDAMOM framework. This data is then loaded into the DATAin type

@@ -17,8 +17,8 @@
 # Set working directory for CARDAMOM codebase
 cardamom_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/"
 # Set directory for the CARDAMOM project to be analysed
-#project_dir = "~/gcel_ceph/cardamom_analyses/lsmallma/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR_hashimoto_SGDB/"
-project_dir = "~/gcel_ceph/cardamom_analyses/lsmallma/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR/"
+project_dir = "~/gcel_ceph/cardamom_analyses/lsmallma/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv15_LCA_TWB_GPP_fAPAR_hashimoto_SGDB/"
+#project_dir = "~/gcel_ceph/cardamom_analyses/lsmallma/CARDAMOM_OUTPUTS/DALEC.A1.C1.D2.F2.H2.P1.004_MHMCMC/global_0.5deg_dalec4_trendyv14_LCA_TWB_GPP_fAPAR/"
 # Set the current working directory for this script
 script_dir = "/home/lsmallma/WORK/GREENHOUSE/models/CARDAMOM/example_postprocessing/"
 # Set output directory, if left empty then the FIGURES directory of the specific project will be assumed to be the location

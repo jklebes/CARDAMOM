@@ -113,7 +113,8 @@ module model_shared
   !
   subroutine initialize_carbon_model(n_chains)
      use cardamom_structures, only: DATAin
-     use CARBON_MODEL_MOD, only: mVs, initialize_mv
+     use carbon_model_memory, only: mVs
+     use carbon_model_mod, only: initialize_mv
 
      ! prepare N model_working_variables type objects to hold seperate sets of persistent values for
      ! each independent parallel chain.
@@ -132,6 +133,7 @@ module model_shared
      else
          n_chains_ = 1
      endif
+
      ! Allocate number of model memories for each chain
      allocate(mVs(n_chains))
 
@@ -146,7 +148,7 @@ module model_shared
   !------------------------------------------------------------------
   !
   subroutine destroy_carbon_model()
-     use CARBON_MODEL_MOD, only: mVs
+     use carbon_model_memory, only: mVs
 
      ! deallocate members of model_working_variables struct(s) mVs
      if (allocated(mVs)) deallocate(mVs)

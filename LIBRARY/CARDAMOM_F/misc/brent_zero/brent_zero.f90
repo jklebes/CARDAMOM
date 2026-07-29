@@ -1,6 +1,8 @@
 module brent_zero
   contains
-function zbrent ( called_from, f, a, b,  t_2, ftol )
+function zbrent ( called_from, f, mV, a, b,  t_2, ftol )
+
+use carbon_model_memory, only: model_working_variables
 
 !*****************************************************************************80
 !
@@ -70,6 +72,8 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !                    I use intrinsic
 !       - argument t halved on entry to match cardamom zbrent
   implicit none (type, external)
+    
+  type(model_working_variables) :: mV
   integer, parameter:: dp = kind(1.d0)
   real ( kind = dp )  :: zbrent
   character(len=*), intent(in):: called_from  ! name of procedure calling (used to pass through for errors)
@@ -88,18 +92,21 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
   real ( kind = dp ) :: s
   real ( kind = dp ) :: sa
   real ( kind = dp ) :: sb
-  real ( kind = dp ), intent(in) ::  ftol   ! tolerance on magnitude of f
+  real ( kind = dp ), intent(in) ::  ftol ! tolerance on magnitude of f
   real ( kind = dp ), intent(in) ::  t_2  ! input, = 2*t
-  real ( kind = dp )  ::  t
+  real ( kind = dp ) ::  t
   real ( kind = dp ) :: tol      ! for iteratively updated tolerance
   integer            :: iter
   integer, parameter:: ITMAX = 10
 
 
   interface
-     function f( val )
+     function f( val, mV )
+      use carbon_model_memory, only: model_working_variables
       integer, parameter:: dp = selected_real_kind(15, 9)
+      type(model_working_variables) :: mV
       real ( kind = dp ), intent(in):: val
+      
       real ( kind = dp )            :: f
     end function f
   end interface
@@ -112,8 +119,8 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
 !
   sa = a
   sb = b
-  fa = f ( sa )
-  fb = f ( sb )
+  fa = f( sa, mV)
+  fb = f( sb, mV)
 
   c = sa
   fc = fa
@@ -196,7 +203,7 @@ function zbrent ( called_from, f, a, b,  t_2, ftol )
       sb = sb-tol
     end if
 
-    fb = f ( sb )
+    fb = f(sb, mV)
 
     if ( ( 0.0D+00 < fb .and. 0.0D+00 < fc ) .or. &
          ( fb <= 0.0D+00 .and. fc <= 0.0D+00 ) ) then
