@@ -1227,7 +1227,7 @@ module CARBON_MODEL_MOD
 
                 ! In all other cases iterate
                 mV%stomatal_conductance = zbrent('calculate_gs:find_gs_iWUE', &
-                                                 find_gs_iWUE,mV,mV%minimum_conductance,mV%potential_conductance, & 
+                                                 find_gs_iWUE_,mV%minimum_conductance,mV%potential_conductance, & 
                                                  tol_gs*mV%lai,mV%iWUE_step*0.10d0)
 
             end if
@@ -1239,6 +1239,12 @@ module CARBON_MODEL_MOD
         mV%stomatal_conductance = vsmall
 
     endif ! if aerodynamic conductance > vsmall
+
+    contains 
+    double precision function find_gs_iWUE_(x) 
+      double precision, intent(in):: x 
+      find_gs_iWUE_ = find_gs_iWUE(x, mV)
+    end function
 
   end subroutine calculate_stomatal_conductance
   !
@@ -1665,8 +1671,14 @@ module CARBON_MODEL_MOD
        mV%water_retention_pass = i
        ! field capacity is water content at which SWP = -10 kPa
        mV%field_capacity(i) = zbrent('water_retention:water_retention_saxton_eqns', &
-                                     water_retention_saxton_eqns, mV, x1 , x2 , 0.001d0, 0d0 )
+                                     water_retention_saxton_eqns_, x1 , x2 , 0.001d0, 0d0 )
     enddo
+
+    contains
+      double precision function water_retention_saxton_eqns_(x)
+      double precision, intent(in):: x
+      water_retention_saxton_eqns_ = water_retention_saxton_eqns(x, mV)
+    end function
     
   end subroutine calculate_field_capacity
   !

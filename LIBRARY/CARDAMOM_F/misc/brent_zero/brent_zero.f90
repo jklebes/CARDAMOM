@@ -1,8 +1,7 @@
 module brent_zero
   contains
-function zbrent ( called_from, f, mV, a, b,  t_2, ftol )
+function zbrent ( called_from, f, a, b,  t_2, ftol )
 
-use carbon_model_memory, only: model_working_variables
 
 !*****************************************************************************80
 !
@@ -73,7 +72,6 @@ use carbon_model_memory, only: model_working_variables
 !       - argument t halved on entry to match cardamom zbrent
   implicit none (type, external)
     
-  type(model_working_variables) :: mV
   integer, parameter:: dp = kind(1.d0)
   real ( kind = dp )  :: zbrent
   character(len=*), intent(in):: called_from  ! name of procedure calling (used to pass through for errors)
@@ -101,10 +99,9 @@ use carbon_model_memory, only: model_working_variables
 
 
   interface
-     function f( val, mV )
+     function f( val )
       use carbon_model_memory, only: model_working_variables
       integer, parameter:: dp = selected_real_kind(15, 9)
-      type(model_working_variables) :: mV
       real ( kind = dp ), intent(in):: val
       
       real ( kind = dp )            :: f
@@ -119,8 +116,8 @@ use carbon_model_memory, only: model_working_variables
 !
   sa = a
   sb = b
-  fa = f( sa, mV)
-  fb = f( sb, mV)
+  fa = f( sa)
+  fb = f( sb)
 
   c = sa
   fc = fa
@@ -203,7 +200,7 @@ use carbon_model_memory, only: model_working_variables
       sb = sb-tol
     end if
 
-    fb = f(sb, mV)
+    fb = f(sb)
 
     if ( ( 0.0D+00 < fb .and. 0.0D+00 < fc ) .or. &
          ( fb <= 0.0D+00 .and. fc <= 0.0D+00 ) ) then
