@@ -1,3 +1,7 @@
+<!-- QUALITY_BADGE_START -->
+[![Software quality](https://img.shields.io/badge/FAIRness-27%25-red "score: 27% | passed: 11 | failed: 30 | errors: 1")](RSFC_REPORT.md)
+<!-- QUALITY_BADGE_END -->
+
 ## Build instructions
 
 TO change number chains edit `vim CARDAMOM/LIBRARY/CARDAMOM_F/general/cardamom_main.f90` and edit line
